@@ -1,0 +1,122 @@
+The repo's suites, one project at a time, with every test's name kept while they ran. run-all-suites.sh: exit code, totals. On 9d994a4b with each stage's patch.
+
+== cut11-r1
+The repo's suites on 9d994a4b with: 9 files changed, 376 insertions(+), 65 deletions(-)
+Kronikol.Tests (983 s, exit 0): Total tests: 11818  Passed: 11816  Skipped: 2 
+Kronikol.Tests.StepTracking (38 s, exit 0): Total tests: 61  Passed: 61 
+Kronikol.Tests.LightBDD.xUnit2 (52 s, exit 0): Total tests: 11  Passed: 11 
+Kronikol.Tests.LightBDD.xUnit3 (66 s, exit 0): Total tests: 35  Passed: 35 
+Kronikol.Tests.LightBDD.TUnit (56 s, exit 0): Total tests: 26  Passed: 26 
+Kronikol.Tests.xUnit2 (433 s, exit 0): Total tests: 111  Passed: 111 
+Kronikol.Tests.xUnit3 (56 s, exit 0): Total tests: 33  Passed: 33 
+Kronikol.Tests.NUnit4 (38 s, exit 0): Total tests: 49  Passed: 49 
+Kronikol.Tests.MSTest (24 s, exit 0): Total tests: 85  Passed: 85 
+Kronikol.Tests.TUnit (34 s, exit 0): Total tests: 50  Passed: 50 
+Kronikol.Tests.Grpc (21 s, exit 0): Total tests: 261  Passed: 261 
+Kronikol.Tests.ServiceBus (24 s, exit 0): Total tests: 248  Passed: 248 
+FINISHED
+
+== cut11-r2
+The repo's suites on 9d994a4b with: 11 files changed, 531 insertions(+), 93 deletions(-)
+Kronikol.Tests (1316 s, exit 1): Total tests: 11818  Passed: 11815  Failed: 1  Skipped: 2 
+  Failed Kronikol.Tests.PlantUml.NodeJsPlantUmlRendererTests.A_stdlib_include_draws_the_engines_own_picture_instead_of_timing_out [19 s]
+Kronikol.Tests.StepTracking (59 s, exit 0): Total tests: 61  Passed: 61 
+Kronikol.Tests.LightBDD.xUnit2 (72 s, exit 0): Total tests: 11  Passed: 11 
+Kronikol.Tests.LightBDD.xUnit3 (53 s, exit 0): Total tests: 35  Passed: 35 
+Kronikol.Tests.LightBDD.TUnit (49 s, exit 0): Total tests: 26  Passed: 26 
+Kronikol.Tests.xUnit2 (321 s, exit 0): Total tests: 111  Passed: 111 
+Kronikol.Tests.xUnit3 (17 s, exit 0): Total tests: 33  Passed: 33 
+Kronikol.Tests.NUnit4 (14 s, exit 0): Total tests: 49  Passed: 49 
+Kronikol.Tests.MSTest (14 s, exit 0): Total tests: 85  Passed: 85 
+Kronikol.Tests.TUnit (15 s, exit 0): Total tests: 50  Passed: 50 
+Kronikol.Tests.Grpc (23 s, exit 0): Total tests: 261  Passed: 261 
+Kronikol.Tests.ServiceBus (19 s, exit 0): Total tests: 248  Passed: 248 
+FINISHED
+
+== cut11-r3
+The repo's suites on 9d994a4b with: 11 files changed, 557 insertions(+), 94 deletions(-)
+Kronikol.Tests (964 s, exit 0): Total tests: 11818  Passed: 11816  Skipped: 2 
+Kronikol.Tests.AssertionTracking (1015 s, exit 0): Total tests: 1460  Passed: 1432  Skipped: 28 
+Kronikol.Tests.AtlasDataApi (38 s, exit 0): Total tests: 58  Passed: 58 
+Kronikol.Tests.BigQuery (53 s, exit 0): Total tests: 608  Passed: 608 
+Kronikol.Tests.Bigtable (53 s, exit 0): Total tests: 53  Passed: 53 
+Kronikol.Tests.BlobStorage (29 s, exit 0): Total tests: 475  Passed: 475 
+Kronikol.Tests.ClickHouse (97 s, exit 0): Total tests: 139  Passed: 130  Skipped: 9 
+Kronikol.Tests.CloudStorage (47 s, exit 0): Total tests: 370  Passed: 370 
+Kronikol.Tests.CosmosDB (24 s, exit 0): Total tests: 118  Passed: 118 
+Kronikol.Tests.Dapper (38 s, exit 0): Total tests: 151  Passed: 151 
+Kronikol.Tests.DispatchProxy (30 s, exit 0): Total tests: 6  Passed: 6 
+Kronikol.Tests.DynamoDB (46 s, exit 0): Total tests: 94  Passed: 94 
+Kronikol.Tests.EfCore.Relational (70 s, exit 0): Total tests: 251  Passed: 247  Skipped: 4 
+Kronikol.Tests.Elasticsearch (33 s, exit 0): Total tests: 60  Passed: 60 
+Kronikol.Tests.EventBridge (30 s, exit 0): Total tests: 278  Passed: 278 
+Kronikol.Tests.EventHubs (37 s, exit 0): Total tests: 158  Passed: 158 
+Kronikol.Tests.Grpc (35 s, exit 0): Total tests: 261  Passed: 261 
+Kronikol.Tests.Kafka (56 s, exit 0): Total tests: 403  Passed: 400  Skipped: 3 
+Kronikol.Tests.Kafka.BuildInterception (111 s, exit 0): Total tests: 76  Passed: 76 
+Kronikol.Tests.LightBDD.TUnit (58 s, exit 0): Total tests: 26  Passed: 26 
+Kronikol.Tests.LightBDD.xUnit2 (48 s, exit 0): Total tests: 11  Passed: 11 
+Kronikol.Tests.LightBDD.xUnit3 (45 s, exit 0): Total tests: 35  Passed: 35 
+Kronikol.Tests.MSTest (21 s, exit 0): Total tests: 85  Passed: 85 
+Kronikol.Tests.MassTransit (26 s, exit 0): Total tests: 92  Passed: 92 
+Kronikol.Tests.MediatR (23 s, exit 0): Total tests: 6  Passed: 6 
+Kronikol.Tests.MongoDB (46 s, exit 0): Total tests: 318  Passed: 313  Skipped: 5 
+Kronikol.Tests.MongoDB.V2 (50 s, exit 0): Total tests: 318  Passed: 313  Skipped: 5 
+Kronikol.Tests.MySqlConnector (40 s, exit 0): Total tests: 23  Passed: 23 
+Kronikol.Tests.NUnit4 (46 s, exit 0): Total tests: 49  Passed: 49 
+Kronikol.Tests.Npgsql (33 s, exit 0): Total tests: 27  Passed: 27 
+Kronikol.Tests.OpenTelemetry (28 s, exit 0): Total tests: 4  Passed: 4 
+Kronikol.Tests.Oracle (24 s, exit 0): Total tests: 30  Passed: 30 
+Kronikol.Tests.Otlp (40 s, exit 0): Total tests: 447  Passed: 447 
+Kronikol.Tests.PlantUml.Ikvm (157 s, exit 0): Total tests: 85  Passed: 85 
+Kronikol.Tests.Playwright (28 s, exit 0): Total tests: 10  Passed: 10 
+Kronikol.Tests.ProxyTap (53 s, exit 0): Total tests: 207  Passed: 203  Skipped: 4 
+Kronikol.Tests.PubSub (24 s, exit 0): Total tests: 130  Passed: 130 
+Kronikol.Tests.Redis (22 s, exit 0): Total tests: 164  Passed: 164 
+Kronikol.Tests.S3 (21 s, exit 0): Total tests: 119  Passed: 119 
+Kronikol.Tests.SNS (21 s, exit 0): Total tests: 140  Passed: 140 
+Kronikol.Tests.SQS (21 s, exit 0): Total tests: 154  Passed: 154 
+Kronikol.Tests.SearchEngine (31 s, exit 0): Total tests: 787  Passed: 787 
+Kronikol.Tests.ServiceBus (18 s, exit 0): Total tests: 248  Passed: 248 
+Kronikol.Tests.Spanner (29 s, exit 0): Total tests: 215  Passed: 215 
+Kronikol.Tests.SqlClient (16 s, exit 0): Total tests: 25  Passed: 25 
+Kronikol.Tests.Sqlite (18 s, exit 0): Total tests: 30  Passed: 30 
+Kronikol.Tests.StepTracking (24 s, exit 0): Total tests: 61  Passed: 61 
+Kronikol.Tests.StorageQueues (14 s, exit 0): Total tests: 470  Passed: 470 
+Kronikol.Tests.TUnit (17 s, exit 0): Total tests: 50  Passed: 50 
+Kronikol.Tests.TcpTap (37 s, exit 0): Total tests: 513  Passed: 506  Skipped: 7 
+Kronikol.Tests.TcpTap.Bson3 (11 s, exit 0): Total tests: 1  Passed: 1 
+Kronikol.Tests.xUnit2 (316 s, exit 0): Total tests: 111  Passed: 111 
+Kronikol.Tests.xUnit3 (22 s, exit 0): Total tests: 33  Passed: 33 
+FINISHED
+
+== cut11-r3-core2
+The repo's suites on 9d994a4b with: 11 files changed, 557 insertions(+), 94 deletions(-)
+Kronikol.Tests (968 s, exit 0): Total tests: 11818  Passed: 11816  Skipped: 2 
+FINISHED
+
+== cut11-r3 browser suite (Kronikol.Tests.EndToEnd)
+Total tests: 2121  Passed: 2092  Failed: 1  Skipped: 28 
+  Failed Kronikol.Tests.EndToEnd.SearchButtonTests.The_search_box_and_the_switch_share_their_top_and_bottom_at_every_width [28 s]
+  Error Message:
+   System.TimeoutException : The page painted no animation frame within 15000 ms.
+That fact alone, 3 runs:
+Passed!  - Failed: 0, Passed: 1, Total: 1, 3 to 4 s
+Passed!  - Failed: 0, Passed: 1, Total: 1, 3 to 4 s
+Passed!  - Failed: 0, Passed: 1, Total: 1, 3 to 4 s
+
+== cut11-r2, the one core failure: NodeJsPlantUmlRendererTests.A_stdlib_include_draws_the_engines_own_picture_instead_of_timing_out: the include took 19761 ms. The two renderer facts alone, 3 runs:
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 5 s - Kronikol.Test
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 3 s - Kronikol.Test
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 3 s - Kronikol.Test
+
+== Integration on all three stages (results/examples/final/integration-output.txt): 258 of 259
+[xUnit.net 00:12:31.54]       ---- System.Exception : Url 'http://localhost:15037' is currently in use, and cannot be bound. =
+That fact alone, ReqNRoll.xUnit3's row, 3 runs: passed each time (its nested results file, 11 of 11). In those runs the fact's rows for TUnit and xUnit2 stopped at NETSDK1004, as the runner had removed those two projects' obj: the worktree's state, not the fix.
+
+== Reference consumer: BDDfy lane's first run, 210 of 210: Url 'http://localhost:5161' is currently in use. Re-run:
+Test run summary: Passed!
+  total: 212
+  failed: 0
+  succeeded: 212
+BDDFY_LANE11_DONE

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">5.28.2</KronikolVersion>
+    <RestoreNoCache>false</RestoreNoCache>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Kronikol" Version="$(KronikolVersion)" />
+  </ItemGroup>
+</Project>

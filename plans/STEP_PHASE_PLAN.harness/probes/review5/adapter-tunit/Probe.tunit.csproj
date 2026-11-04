@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Kronikol.TUnit" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(KronikolVersion)" PrivateAssets="all" />
+    <PackageReference Include="TUnit" Version="1.53.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\adapters-shared\*.cs" />
+  </ItemGroup>
+</Project>

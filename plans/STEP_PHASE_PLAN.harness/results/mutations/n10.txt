@@ -1,0 +1,35 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=4
+first: rev4/rev4-a: F05_A_hand_step_of_another_id_inside_a_Given: Request: f05-label-under-given phase=Setup src=TestContext > f05-label-under-given phase=Action src=TestContext; Response: f05-label-under-given phase=Setup src=TestContext > f05-label-under
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-a] rev4-a.txt: racing, shape seen F02_Poller_silenced_with_the_public_setter
+[rev4/rev4-a] rev4-a.txt: SOLID F05_A_hand_step_of_another_id_inside_a_Given
+    Request: f05-label-under-given phase=Setup src=TestContext > f05-label-under-given phase=Action src=TestContext; Response: f05-label-under-given phase=Setup src=TestContext > f05-label-under-given phase=Action src=TestContext; Request: f05-after-label phase=Setup src=TestContext > f05-after-label phase=Action src=TestContext; Response: f05-after-label phase=Setup src=TestContext > f05-after-la
+      - Request f05-label-under-given phase=Setup src=TestContext
+      - Response f05-label-under-given phase=Setup src=TestContext
+      - Request f05-after-label phase=Setup src=TestContext
+      - Response f05-after-label phase=Setup src=TestContext
+      + --- MARKER ---
+      + Request f05-label-under-given phase=Action src=TestContext
+      + Response f05-label-under-given phase=Action src=TestContext
+      + Request f05-after-label phase=Action src=TestContext
+      + Response f05-after-label phase=Action src=TestContext
+      - --- MARKER ---
+      + end
+      - end
+[rev5/rev5-a] rev5-a.txt: SOLID H12_A_hand_step_of_another_id_inside_a_Given
+    Request: h12-label-under-given phase=Setup src=TestContext > h12-label-under-given phase=Action src=TestContext; Response: h12-label-under-given phase=Setup src=TestContext > h12-label-under-given phase=Action src=TestContext; Request: h12-after-label phase=Setup src=TestContext > h12-after-label phase=Action src=TestContext; Response: h12-after-label phase=Setup src=TestContext > h12-after-la
+      - Request h12-label-under-given phase=Setup src=TestContext
+      - Response h12-label-under-given phase=Setup src=TestContext
+      - Request h12-after-label phase=Setup src=TestContext
+      - Response h12-after-label phase=Setup src=TestContext
+      + --- MARKER ---
+      + Request h12-label-under-given phase=Action src=TestContext
+      + Response h12-label-under-given phase=Action src=TestContext
+      + Request h12-after-label phase=Action src=TestContext
+      + Response h12-after-label phase=Action src=TestContext
+      - --- MARKER ---
+      + end
+      - end
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L02_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L04_Parallel_ForEach_of_sync_Givens_at_the_top_then_When_with_nested_Given

@@ -1,0 +1,170 @@
+== bddfy-xunit3: 4 calls moved in 2 of 13 tests
+  B02_a_When_step_calls_a_woven_Given: b02-after-sub: Setup/Setup > Action/Action; b02-in-sub: Setup/Setup > Action/Action
+  B03_a_Given_step_calls_a_woven_When: b03-after-sub: Action/Action > Setup/Setup; b03-in-sub: Action/Action > Setup/Setup
+== lightbdd-xunit2: 51 calls moved in 15 of 16 tests
+  L01 plain Given When Then: l01-and: Setup/Unknown > Setup/Setup; l01-given: Setup/Unknown > Setup/Setup; l01-then: Unknown/Unknown > Action/Action; l01-then-but: Unknown/Unknown > Action/Action; l01-when: Action/Unknown > Action/Action; l01-when-and: Unknown/Unknown > Action/Action
+  L02 When composite with a Given sub step: l02-composite-body: Action/Unknown > Action/Action; l02-first-untyped-sub: Unknown/Unknown > Action/Action; l02-given: Setup/Unknown > Setup/Setup; l02-given-sub: Unknown/Unknown > Action/Action; l02-then: Unknown/Unknown > Action/Action; l02-untyped-sub-after-given: Unknown/Unknown > Action/Action
+  L03 Given composite with a When sub step: l03-composite-body: Setup/Unknown > Setup/Setup; l03-untyped-sub-after-when: Setup/Unknown > Setup/Setup; l03-when: Action/Unknown > Action/Action; l03-when-sub: Setup/Unknown > Setup/Setup
+  L04 a LightBDD When calls a woven Given: l04-after-sub: Setup/Setup > Action/Action; l04-before-sub: Action/Unknown > Action/Action; l04-given: Setup/Unknown > Setup/Setup; l04-in-sub: Setup/Setup > Action/Action; l04-then: Unknown/Unknown > Action/Action
+  L05 a LightBDD Given calls a woven When: l05-after-sub: Setup/Action > Setup/Setup; l05-before-sub: Setup/Unknown > Setup/Setup; l05-in-sub: Setup/Action > Setup/Setup; l05-when: Action/Unknown > Action/Action
+  L06 first scenario on a shared handler: l06-given: Setup/Unknown > Setup/Setup; l06-then: Unknown/Unknown > Action/Action; l06-when: Action/Unknown > Action/Action
+  L07 second scenario on a shared handler: l07-given: Unknown/Unknown > Setup/Setup; l07-then: Unknown/Unknown > Action/Action; l07-when: Unknown/Unknown > Action/Action
+  L09 a When with no HTTP call then an And: l09-given: Setup/Unknown > Setup/Setup; l09-then: Action/Unknown > Action/Action; l09-when-and: Setup/Unknown > Action/Action; l09-when-message: -/Unknown > -/Action
+  L10 a Given with no HTTP call: l10-given-message: -/Unknown > -/Setup; l10-when: Action/Unknown > Action/Action
+  L11 a message tracker that does not track setup: l11-given: Setup/Unknown > Setup/-; l11-when: Action/Unknown > Action/Action
+  L12 an untyped step after a typed one: l12-given: Setup/Unknown > Setup/Setup; l12-when: Action/Unknown > Action/Action
+  L13 LightBDDs own setup step type: l13-setup: Unknown/Unknown > Setup/Setup; l13-when: Action/Unknown > Action/Action
+  L14 a bypassed sub step in a Given composite: l14-and: Setup/Unknown > Setup/Setup; l14-body: Setup/Unknown > Setup/Setup; l14-untyped-sub: Setup/Unknown > Setup/Setup; l14-when: Action/Unknown > Action/Action; l14-when-sub: Setup/Unknown > Setup/Setup
+  L15 an And first over a Given sub step: l15-given-sub: Setup/Unknown > Setup/Setup; l15-when: Action/Unknown > Action/Action
+  L16 an And first then a When: l16-when: Action/Unknown > Action/Action
+== mstest: 15 calls moved in 8 of 86 tests
+  T02_a_When_on_a_flowed_thread_inside_a_Given: t02-after-when-on-thread: Action/Action > Setup/Setup; t02-when-on-thread: Action/Action > Setup/Setup
+  T14_a_nested_Task_step_that_throws_before_returning_in_a_Giv: t14-nested-when: Action/Action > Setup/Setup
+  X01_When_with_nested_Given_async: x01-after-sub: Setup/Setup > Action/Action; x01-in-sub: Setup/Setup > Action/Action
+  X02_Given_with_nested_When_async: x02-after-sub: Action/Action > Setup/Setup; x02-in-sub: Action/Action > Setup/Setup
+  X03_When_with_nested_Given_sync: x03-after-sub: Setup/Setup > Action/Action; x03-after-when-step: Setup/Setup > Action/Action; x03-in-sub: Setup/Setup > Action/Action
+  X13_caught_failure_of_a_nested_Given: x13-after-sub: Setup/Setup > Action/Action; x13-in-sub: Setup/Setup > Action/Action
+  X17_explicit_StartSetup_after_a_nested_When: x17-in-sub: Action/Action > Setup/Setup
+  X30_a_skipped_sub_step_then_a_real_one_in_a_When: x30-after: Setup/Setup > Action/Action; x30-real-sub: Setup/Setup > Action/Action
+== nunit4: 15 calls moved in 8 of 91 tests
+  T02_a_When_on_a_flowed_thread_inside_a_Given: t02-after-when-on-thread: Action/Action > Setup/Setup; t02-when-on-thread: Action/Action > Setup/Setup
+  T14_a_nested_Task_step_that_throws_before_returning_in_a_Giv: t14-nested-when: Action/Action > Setup/Setup
+  X01_When_with_nested_Given_async: x01-after-sub: Setup/Setup > Action/Action; x01-in-sub: Setup/Setup > Action/Action
+  X02_Given_with_nested_When_async: x02-after-sub: Action/Action > Setup/Setup; x02-in-sub: Action/Action > Setup/Setup
+  X03_When_with_nested_Given_sync: x03-after-sub: Setup/Setup > Action/Action; x03-after-when-step: Setup/Setup > Action/Action; x03-in-sub: Setup/Setup > Action/Action
+  X13_caught_failure_of_a_nested_Given: x13-after-sub: Setup/Setup > Action/Action; x13-in-sub: Setup/Setup > Action/Action
+  X17_explicit_StartSetup_after_a_nested_When: x17-in-sub: Action/Action > Setup/Setup
+  X30_a_skipped_sub_step_then_a_real_one_in_a_When: x30-after: Setup/Setup > Action/Action; x30-real-sub: Setup/Setup > Action/Action
+== reqnroll-nunit: 39 calls moved in 23 of 35 tests
+  N01 a When binding runs a Gherkin Given through ITestRunner: n01-nested-given: Setup/Setup > Action/Action
+  N02 a Given binding runs a Gherkin When through ITestRunner: n02-nested-when: Action/Action > Setup/Setup
+  N03 a When binding runs Gherkin And and But through ITestRun: n03-and-after: Setup/Setup > Action/Action; n03-nested-and: Setup/Setup > Action/Action; n03-nested-but: Setup/Setup > Action/Action
+  N04 a nested Gherkin Given whose binding calls a woven Given: n04-after-woven: Setup/Setup > Action/Action; n04-in-nested: Setup/Setup > Action/Action; n04-in-woven: Setup/Setup > Action/Action
+  N05 a sync When binding blocks on a nested Gherkin Given: n05-nested-given: Setup/Setup > Action/Action
+  N06 the first step is a When binding with a nested Gherkin G: n06-nested-given: Setup/Setup > Action/Action
+  N08 a When binding runs a nested Gherkin Given, then a Given: n08-nested-given: Setup/Setup > Action/Action
+  Q01 a retried scenario with a handler per attempt: q01-then: Setup/Setup > Action/Action
+  Q02 a retried scenario with a shared handler: q02-then: Setup/Setup > Action/Action
+  R00 the issue's own scenario: r00-discounts-SAVE10: Action/Setup > Action/Action; r00-orders: Setup/Setup > Action/Action
+  R01 async Given sub-step in a When step (the issue): r01-after-sub: Setup/Setup > Action/Action; r01-in-sub: Setup/Setup > Action/Action
+  R02 sync Given sub-step in a When step: r02-after-sub: Setup/Setup > Action/Action; r02-in-sub: Setup/Setup > Action/Action
+  R03 async When sub-step in a Given step: r03-after-sub: Action/Action > Setup/Setup; r03-in-sub: Action/Action > Setup/Setup
+  R04 async Then sub-step in a Given step: r04-after-sub: Action/Action > Setup/Setup; r04-in-sub: Action/Action > Setup/Setup
+  R06 And and But after each keyword (#195): r06-then-and: Setup/Setup > Action/Action; r06-then-but: Setup/Setup > Action/Action; r06-when-and: Setup/Setup > Action/Action; r06-when-but: Setup/Setup > Action/Action
+  R07 star keyword: r07-star3: Setup/Setup > Action/Action
+  R08 TrackDuringSetup false: r08-after-sub: Setup/Setup > Action/Action; r08-in-sub: Setup/Setup > Action/Action
+  R09 a When binding woven as a GivenStep: r09-in-binding: Action/Setup > Action/Action
+  R10 ButWhen sub-step in a Given step: r10-after-sub: Action/Action > Setup/Setup; r10-in-sub: Action/Action > Setup/Setup
+  R14 caught failure of a Given sub-step in a When step: r14-after-sub: Setup/Setup > Action/Action; r14-in-sub: Action/Setup > Action/Action
+  R16 a When sub-step in a keyword-free sub-step in a Given st: r16-in-sub-after-inner-when: Action/Action > Setup/Setup; r16-in-sub-inner-when: Action/Action > Setup/Setup
+  R20 a When with no HTTP call, then an And: r20-when-and: Setup/Setup > Action/Action
+  R21 WhenTriggersAction false: r21-and: Setup/Setup > Action/Action
+== reqnroll-server: 15 calls moved in 6 of 7 tests
+  S01 a When binding with a nested GivenStep, on the default T: s01-after-sub: Setup/Setup > Action/Action; s01-in-sub: Setup/Setup > Action/Action
+  S02 a When binding with a nested Gherkin Given, on the defau: s02-nested-given: Setup/Setup > Action/Action
+  S03 a Given binding with a nested WhenStep, on the default T: s03-after-sub: Action/Action > Setup/Setup; s03-in-sub: Action/Action > Setup/Setup
+  S04 And and But after a When, on the default TestServer: s04-when-and: Setup/Setup > Action/Action; s04-when-but: Setup/Setup > Action/Action
+  S11 a When binding with a nested GivenStep, with the test's : s11-after-sub: Setup/Setup > Action/Action; s11-in-sub: Setup/Setup > Action/Action; svc-s11-after-sub: Setup/- > Action/-; svc-s11-in-sub: Setup/- > Action/-; svcmsg-s11-after-sub: -/Setup > -/Action; svcmsg-s11-in-sub: -/Setup > -/Action
+  S21 a When binding with a nested GivenStep, on Kestrel: s21-after-sub: Setup/Setup > Action/Action; s21-in-sub: Setup/Setup > Action/Action
+== reqnroll-tunit: 37 calls moved in 21 of 33 tests
+  N01 a When binding runs a Gherkin Given through ITestRunner: n01-nested-given: Setup/Setup > Action/Action
+  N02 a Given binding runs a Gherkin When through ITestRunner: n02-nested-when: Action/Action > Setup/Setup
+  N03 a When binding runs Gherkin And and But through ITestRun: n03-and-after: Setup/Setup > Action/Action; n03-nested-and: Setup/Setup > Action/Action; n03-nested-but: Setup/Setup > Action/Action
+  N04 a nested Gherkin Given whose binding calls a woven Given: n04-after-woven: Setup/Setup > Action/Action; n04-in-nested: Setup/Setup > Action/Action; n04-in-woven: Setup/Setup > Action/Action
+  N05 a sync When binding blocks on a nested Gherkin Given: n05-nested-given: Setup/Setup > Action/Action
+  N06 the first step is a When binding with a nested Gherkin G: n06-nested-given: Setup/Setup > Action/Action
+  N08 a When binding runs a nested Gherkin Given, then a Given: n08-nested-given: Setup/Setup > Action/Action
+  R00 the issue's own scenario: r00-discounts-SAVE10: Action/Setup > Action/Action; r00-orders: Setup/Setup > Action/Action
+  R01 async Given sub-step in a When step (the issue): r01-after-sub: Setup/Setup > Action/Action; r01-in-sub: Setup/Setup > Action/Action
+  R02 sync Given sub-step in a When step: r02-after-sub: Setup/Setup > Action/Action; r02-in-sub: Setup/Setup > Action/Action
+  R03 async When sub-step in a Given step: r03-after-sub: Action/Action > Setup/Setup; r03-in-sub: Action/Action > Setup/Setup
+  R04 async Then sub-step in a Given step: r04-after-sub: Action/Action > Setup/Setup; r04-in-sub: Action/Action > Setup/Setup
+  R06 And and But after each keyword (#195): r06-then-and: Setup/Setup > Action/Action; r06-then-but: Setup/Setup > Action/Action; r06-when-and: Setup/Setup > Action/Action; r06-when-but: Setup/Setup > Action/Action
+  R07 star keyword: r07-star3: Setup/Setup > Action/Action
+  R08 TrackDuringSetup false: r08-after-sub: Setup/Setup > Action/Action; r08-in-sub: Setup/Setup > Action/Action
+  R09 a When binding woven as a GivenStep: r09-in-binding: Action/Setup > Action/Action
+  R10 ButWhen sub-step in a Given step: r10-after-sub: Action/Action > Setup/Setup; r10-in-sub: Action/Action > Setup/Setup
+  R14 caught failure of a Given sub-step in a When step: r14-after-sub: Setup/Setup > Action/Action; r14-in-sub: Action/Setup > Action/Action
+  R16 a When sub-step in a keyword-free sub-step in a Given st: r16-in-sub-after-inner-when: Action/Action > Setup/Setup; r16-in-sub-inner-when: Action/Action > Setup/Setup
+  R20 a When with no HTTP call, then an And: r20-when-and: Setup/Setup > Action/Action
+  R21 WhenTriggersAction false: r21-and: Setup/Setup > Action/Action
+== reqnroll-xunit2: 39 calls moved in 23 of 35 tests
+  N01 a When binding runs a Gherkin Given through ITestRunner: n01-nested-given: Setup/Setup > Action/Action
+  N02 a Given binding runs a Gherkin When through ITestRunner: n02-nested-when: Action/Action > Setup/Setup
+  N03 a When binding runs Gherkin And and But through ITestRun: n03-and-after: Setup/Setup > Action/Action; n03-nested-and: Setup/Setup > Action/Action; n03-nested-but: Setup/Setup > Action/Action
+  N04 a nested Gherkin Given whose binding calls a woven Given: n04-after-woven: Setup/Setup > Action/Action; n04-in-nested: Setup/Setup > Action/Action; n04-in-woven: Setup/Setup > Action/Action
+  N05 a sync When binding blocks on a nested Gherkin Given: n05-nested-given: Setup/Setup > Action/Action
+  N06 the first step is a When binding with a nested Gherkin G: n06-nested-given: Setup/Setup > Action/Action
+  N08 a When binding runs a nested Gherkin Given, then a Given: n08-nested-given: Setup/Setup > Action/Action
+  Q01 a retried scenario with a handler per attempt: q01-then: Setup/Setup > Action/Action
+  Q02 a retried scenario with a shared handler: q02-then: Setup/Setup > Action/Action
+  R00 the issue's own scenario: r00-discounts-SAVE10: Action/Setup > Action/Action; r00-orders: Setup/Setup > Action/Action
+  R01 async Given sub-step in a When step (the issue): r01-after-sub: Setup/Setup > Action/Action; r01-in-sub: Setup/Setup > Action/Action
+  R02 sync Given sub-step in a When step: r02-after-sub: Setup/Setup > Action/Action; r02-in-sub: Setup/Setup > Action/Action
+  R03 async When sub-step in a Given step: r03-after-sub: Action/Action > Setup/Setup; r03-in-sub: Action/Action > Setup/Setup
+  R04 async Then sub-step in a Given step: r04-after-sub: Action/Action > Setup/Setup; r04-in-sub: Action/Action > Setup/Setup
+  R06 And and But after each keyword (#195): r06-then-and: Setup/Setup > Action/Action; r06-then-but: Setup/Setup > Action/Action; r06-when-and: Setup/Setup > Action/Action; r06-when-but: Setup/Setup > Action/Action
+  R07 star keyword: r07-star3: Setup/Setup > Action/Action
+  R08 TrackDuringSetup false: r08-after-sub: Setup/Setup > Action/Action; r08-in-sub: Setup/Setup > Action/Action
+  R09 a When binding woven as a GivenStep: r09-in-binding: Action/Setup > Action/Action
+  R10 ButWhen sub-step in a Given step: r10-after-sub: Action/Action > Setup/Setup; r10-in-sub: Action/Action > Setup/Setup
+  R14 caught failure of a Given sub-step in a When step: r14-after-sub: Setup/Setup > Action/Action; r14-in-sub: Action/Setup > Action/Action
+  R16 a When sub-step in a keyword-free sub-step in a Given st: r16-in-sub-after-inner-when: Action/Action > Setup/Setup; r16-in-sub-inner-when: Action/Action > Setup/Setup
+  R20 a When with no HTTP call, then an And: r20-when-and: Setup/Setup > Action/Action
+  R21 WhenTriggersAction false: r21-and: Setup/Setup > Action/Action
+== reqnroll-xunit3: 37 calls moved in 21 of 33 tests
+  N01 a When binding runs a Gherkin Given through ITestRunner: n01-nested-given: Setup/Setup > Action/Action
+  N02 a Given binding runs a Gherkin When through ITestRunner: n02-nested-when: Action/Action > Setup/Setup
+  N03 a When binding runs Gherkin And and But through ITestRun: n03-and-after: Setup/Setup > Action/Action; n03-nested-and: Setup/Setup > Action/Action; n03-nested-but: Setup/Setup > Action/Action
+  N04 a nested Gherkin Given whose binding calls a woven Given: n04-after-woven: Setup/Setup > Action/Action; n04-in-nested: Setup/Setup > Action/Action; n04-in-woven: Setup/Setup > Action/Action
+  N05 a sync When binding blocks on a nested Gherkin Given: n05-nested-given: Setup/Setup > Action/Action
+  N06 the first step is a When binding with a nested Gherkin G: n06-nested-given: Setup/Setup > Action/Action
+  N08 a When binding runs a nested Gherkin Given, then a Given: n08-nested-given: Setup/Setup > Action/Action
+  R00 the issue's own scenario: r00-discounts-SAVE10: Action/Setup > Action/Action; r00-orders: Setup/Setup > Action/Action
+  R01 async Given sub-step in a When step (the issue): r01-after-sub: Setup/Setup > Action/Action; r01-in-sub: Setup/Setup > Action/Action
+  R02 sync Given sub-step in a When step: r02-after-sub: Setup/Setup > Action/Action; r02-in-sub: Setup/Setup > Action/Action
+  R03 async When sub-step in a Given step: r03-after-sub: Action/Action > Setup/Setup; r03-in-sub: Action/Action > Setup/Setup
+  R04 async Then sub-step in a Given step: r04-after-sub: Action/Action > Setup/Setup; r04-in-sub: Action/Action > Setup/Setup
+  R06 And and But after each keyword (#195): r06-then-and: Setup/Setup > Action/Action; r06-then-but: Setup/Setup > Action/Action; r06-when-and: Setup/Setup > Action/Action; r06-when-but: Setup/Setup > Action/Action
+  R07 star keyword: r07-star3: Setup/Setup > Action/Action
+  R08 TrackDuringSetup false: r08-after-sub: Setup/Setup > Action/Action; r08-in-sub: Setup/Setup > Action/Action
+  R09 a When binding woven as a GivenStep: r09-in-binding: Action/Setup > Action/Action
+  R10 ButWhen sub-step in a Given step: r10-after-sub: Action/Action > Setup/Setup; r10-in-sub: Action/Action > Setup/Setup
+  R14 caught failure of a Given sub-step in a When step: r14-after-sub: Setup/Setup > Action/Action; r14-in-sub: Action/Setup > Action/Action
+  R16 a When sub-step in a keyword-free sub-step in a Given st: r16-in-sub-after-inner-when: Action/Action > Setup/Setup; r16-in-sub-inner-when: Action/Action > Setup/Setup
+  R20 a When with no HTTP call, then an And: r20-when-and: Setup/Setup > Action/Action
+  R21 WhenTriggersAction false: r21-and: Setup/Setup > Action/Action
+== tunit: 15 calls moved in 8 of 96 tests
+  T02_a_When_on_a_flowed_thread_inside_a_Given: t02-after-when-on-thread: Action/Action > Setup/Setup; t02-when-on-thread: Action/Action > Setup/Setup
+  T14_a_nested_Task_step_that_throws_before_returning_in_a_Giv: t14-nested-when: Action/Action > Setup/Setup
+  X01_When_with_nested_Given_async: x01-after-sub: Setup/Setup > Action/Action; x01-in-sub: Setup/Setup > Action/Action
+  X02_Given_with_nested_When_async: x02-after-sub: Action/Action > Setup/Setup; x02-in-sub: Action/Action > Setup/Setup
+  X03_When_with_nested_Given_sync: x03-after-sub: Setup/Setup > Action/Action; x03-after-when-step: Setup/Setup > Action/Action; x03-in-sub: Setup/Setup > Action/Action
+  X13_caught_failure_of_a_nested_Given: x13-after-sub: Setup/Setup > Action/Action; x13-in-sub: Setup/Setup > Action/Action
+  X17_explicit_StartSetup_after_a_nested_When: x17-in-sub: Action/Action > Setup/Setup
+  X30_a_skipped_sub_step_then_a_real_one_in_a_When: x30-after: Setup/Setup > Action/Action; x30-real-sub: Setup/Setup > Action/Action
+== xunit2: 15 calls moved in 8 of 63 tests
+  T02_a_When_on_a_flowed_thread_inside_a_Given: t02-after-when-on-thread: Action/Action > Setup/Setup; t02-when-on-thread: Action/Action > Setup/Setup
+  T14_a_nested_Task_step_that_throws_before_returning_in_a_Giv: t14-nested-when: Action/Action > Setup/Setup
+  X01_When_with_nested_Given_async: x01-after-sub: Setup/Setup > Action/Action; x01-in-sub: Setup/Setup > Action/Action
+  X02_Given_with_nested_When_async: x02-after-sub: Action/Action > Setup/Setup; x02-in-sub: Action/Action > Setup/Setup
+  X03_When_with_nested_Given_sync: x03-after-sub: Setup/Setup > Action/Action; x03-after-when-step: Setup/Setup > Action/Action; x03-in-sub: Setup/Setup > Action/Action
+  X13_caught_failure_of_a_nested_Given: x13-after-sub: Setup/Setup > Action/Action; x13-in-sub: Setup/Setup > Action/Action
+  X17_explicit_StartSetup_after_a_nested_When: x17-in-sub: Action/Action > Setup/Setup
+  X30_a_skipped_sub_step_then_a_real_one_in_a_When: x30-after: Setup/Setup > Action/Action; x30-real-sub: Setup/Setup > Action/Action
+== xunit3: 15 calls moved in 8 of 89 tests
+  T02_a_When_on_a_flowed_thread_inside_a_Given: t02-after-when-on-thread: Action/Action > Setup/Setup; t02-when-on-thread: Action/Action > Setup/Setup
+  T14_a_nested_Task_step_that_throws_before_returning_in_a_Giv: t14-nested-when: Action/Action > Setup/Setup
+  X01_When_with_nested_Given_async: x01-after-sub: Setup/Setup > Action/Action; x01-in-sub: Setup/Setup > Action/Action
+  X02_Given_with_nested_When_async: x02-after-sub: Action/Action > Setup/Setup; x02-in-sub: Action/Action > Setup/Setup
+  X03_When_with_nested_Given_sync: x03-after-sub: Setup/Setup > Action/Action; x03-after-when-step: Setup/Setup > Action/Action; x03-in-sub: Setup/Setup > Action/Action
+  X13_caught_failure_of_a_nested_Given: x13-after-sub: Setup/Setup > Action/Action; x13-in-sub: Setup/Setup > Action/Action
+  X17_explicit_StartSetup_after_a_nested_When: x17-in-sub: Action/Action > Setup/Setup
+  X30_a_skipped_sub_step_then_a_real_one_in_a_When: x30-after: Setup/Setup > Action/Action; x30-real-sub: Setup/Setup > Action/Action
+== xunit3-plain: 12 calls moved in 6 of 30 tests
+  X01_When_with_nested_Given_async: x01-after-sub: Setup/Setup > Action/Action; x01-in-sub: Setup/Setup > Action/Action
+  X02_Given_with_nested_When_async: x02-after-sub: Action/Action > Setup/Setup; x02-in-sub: Action/Action > Setup/Setup
+  X03_When_with_nested_Given_sync: x03-after-sub: Setup/Setup > Action/Action; x03-after-when-step: Setup/Setup > Action/Action; x03-in-sub: Setup/Setup > Action/Action
+  X13_caught_failure_of_a_nested_Given: x13-after-sub: Setup/Setup > Action/Action; x13-in-sub: Setup/Setup > Action/Action
+  X17_explicit_StartSetup_after_a_nested_When: x17-in-sub: Action/Action > Setup/Setup
+  X30_a_skipped_sub_step_then_a_real_one_in_a_When: x30-after: Setup/Setup > Action/Action; x30-real-sub: Setup/Setup > Action/Action

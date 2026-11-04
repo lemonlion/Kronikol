@@ -1,0 +1,113 @@
+## N01 plain Given When Then (TestName field: N01 plain Given When Then)
+  @startuml
+  partition #F6F6F6 Setup
+  shop -[#438DD5]-> probe: OK
+  n01Given -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  n01When -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n01When2 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n01Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## N02 a When calls a woven Given (TestName field: N02 a When calls a woven Given)
+  @startuml
+  partition #F6F6F6 Setup
+  shop -[#438DD5]-> probe: OK
+  n02Given -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n02Before -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>Given Woven given
+  shop -[#438DD5]-> probe: OK
+  n02Sub -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n02After -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n02After2 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n02Then -[#9B59B6]-> probe: Responded
+  n02Then2 -[#9B59B6]-> probe: Responded
+  @enduml
+
+## N03 a Given calls a woven Given then When Then (TestName field: N03 a Given calls a woven Given then When Then)
+  @startuml
+  shop -[#438DD5]-> probe: OK
+  n03Before -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Given Woven given
+  shop -[#438DD5]-> probe: OK
+  n03Sub -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n03After -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n03When -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n03Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## N04 a Given calls a woven When (TestName field: N04 a Given calls a woven When)
+  @startuml
+  shop -[#438DD5]-> probe: OK
+  n04Before -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>When Woven when
+  shop -[#438DD5]-> probe: OK
+  n04Sub -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n04After -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n04When -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n04Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## N05 a woven plain sub step (TestName field: N05 a woven plain sub step)
+  @startuml
+  partition #F6F6F6 Setup
+  shop -[#438DD5]-> probe: OK
+  n05Given -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  n05Before -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Woven plain
+  shop -[#438DD5]-> probe: OK
+  n05Sub -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n05After -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n05Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## N06 one client a Given calls a woven Given then When Then (TestName field: N06 one client a Given calls a woven Given then When Then)
+  @startuml
+  partition #F6F6F6 Setup
+  shop -[#438DD5]-> probe: OK
+  n06Before -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Given Woven given
+  shop -[#438DD5]-> probe: OK
+  n06Sub -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  n06When -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n06Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## N07 one client a When calls a woven Given (TestName field: N07 one client a When calls a woven Given)
+  @startuml
+  partition #F6F6F6 Setup
+  shop -[#438DD5]-> probe: OK
+  n07Given -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  n07Before -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Given Woven given
+  shop -[#438DD5]-> probe: OK
+  n07Sub -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n07After -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  n07Then -[#9B59B6]-> probe: Responded
+  @enduml
+

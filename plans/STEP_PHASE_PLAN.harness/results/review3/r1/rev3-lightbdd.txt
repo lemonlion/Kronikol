@@ -1,0 +1,137 @@
+## M01 a Given leaves a worker running
+  [Step] <color:white>GIVEN a worker left running [label: "m01"]
+  m01-worker-start                             http Setup    
+  --- ACTION START MARKER ---
+  m01-when                                     http Action   
+  m01-worker-start                             msg  Setup    
+  m01-when                                     msg  Action   
+  m01-when-and                                 http Action   
+  m01-when-and                                 msg  Action   
+  m01-then                                     http Action   
+  m01-then                                     msg  Action   
+  m01-worker-end                               http Setup    
+  m01-worker-end                               msg  Setup    
+  steps:
+    GIVEN a worker left running [label: "m01"]  [Passed]
+      (none) Worker step  [Passed]
+      WHEN a call named [label: "m01-when"]  [Passed]
+      AND a call named [label: "m01-when-and"]  [Passed]
+      THEN a call named [label: "m01-then"]  [Passed]
+      THEN AND the worker is released  [Passed]
+
+## M02 a background Then loop then an And in setup
+  [Step] <color:white>GIVEN a Then loop starts [label: "m02"]
+  m02-poll0                                    http Setup    
+  m02-poll0                                    msg  Setup    
+  m02-poll1                                    http Setup    
+  m02-poll1                                    msg  Setup    
+  m02-poll2                                    http Setup    
+  m02-poll2                                    msg  Setup    
+  m02-poll3                                    http Setup    
+  m02-poll3                                    msg  Setup    
+  [Step] <color:white>Then Poll then
+  m02-given-and                                http Setup    
+  m02-given-and                                msg  Setup    
+  [Step] <color:white>WHEN a call named [label: "m02-when"]
+  --- ACTION START MARKER ---
+  m02-when                                     http Action   
+  m02-when                                     msg  Action   
+  [Step] <color:white>THEN a call named [label: "m02-then"]
+  m02-then                                     http Action   
+  m02-then                                     msg  Action   
+  [Step] <color:white>And AND the loop is stopped
+  steps:
+    GIVEN a Then loop starts [label: "m02"]  [Passed]
+      Then Poll then  [Passed]
+      Then Poll then  [Passed]
+      Then Poll then  [Passed]
+      Then Poll then  [Passed]
+    Then Poll then  [Passed]
+      AND a call named [label: "m02-given-and"]  [Failed]
+    WHEN a call named [label: "m02-when"]  [Passed]
+    THEN a call named [label: "m02-then"]  [Passed]
+    And AND the loop is stopped  [Failed]
+
+## M03 a background Given loop then an And in action
+  [Step] <color:white>GIVEN a call named [label: "m03-given"]
+  m03-given                                    http Setup    
+  m03-given                                    msg  Setup    
+  [Step] <color:white>WHEN a call named [label: "m03-when"]
+  --- ACTION START MARKER ---
+  m03-when                                     http Action   
+  m03-when                                     msg  Action   
+  [Step] <color:white>GIVEN a Given loop starts [label: "m03"]
+  m03-poll0                                    http Setup    
+  m03-poll0                                    msg  Setup    
+  [Step] <color:white>WHEN a call named [label: "m03-second-when"]
+  m03-second-when                              http Action   
+  m03-poll1                                    http Setup    
+  m03-second-when                              msg  Action   
+  m03-then                                     http Action   
+  m03-poll1                                    msg  Setup    
+  m03-then                                     msg  Action   
+  [Step] <color:white>AND a nosetup call named [label: "m03-then-and-nosetup"]
+  m03-then-and-nosetup                         http Action   
+  m03-poll2                                    http Setup    
+  m03-then-and-nosetup                         msg  Action   
+  m03-untyped-nosetup                          http Unknown  
+  m03-poll2                                    msg  Setup    
+  m03-untyped-nosetup                          msg  Unknown  
+  [Step] <color:white>THEN the loop is stopped
+  steps:
+    GIVEN a call named [label: "m03-given"]  [Passed]
+    WHEN a call named [label: "m03-when"]  [Passed]
+    GIVEN a Given loop starts [label: "m03"]  [Passed]
+      Given Poll given  [Passed]
+    WHEN a call named [label: "m03-second-when"]  [Passed]
+      Given Poll given  [Passed]
+      THEN a call named [label: "m03-then"]  [Passed]
+    AND a nosetup call named [label: "m03-then-and-nosetup"]  [Passed]
+      Given Poll given  [Passed]
+      (none) A nosetup call named [label: "m03-untyped-nosetup"]  [Passed]
+    THEN the loop is stopped  [Passed]
+
+## M04 phase set directly in a Given then an And
+  [Step] <color:white>GIVEN a step sets the phase directly [label: "m04-given"]
+  m04-given                                    http Setup    
+  m04-given                                    msg  Setup    
+  [Step] <color:white>AND a call named [label: "m04-and"]
+  m04-and                                      http Setup    
+  m04-and                                      msg  Setup    
+  [Step] <color:white>THEN a call named [label: "m04-then"]
+  --- ACTION START MARKER ---
+  m04-then                                     http Action   
+  m04-then                                     msg  Action   
+  steps:
+    GIVEN a step sets the phase directly [label: "m04-given"]  [Passed]
+    AND a call named [label: "m04-and"]  [Passed]
+    THEN a call named [label: "m04-then"]  [Passed]
+
+## M05 StartAction in a Given then an And and a When
+  [Step] <color:white>GIVEN a step calls StartAction [label: "m05-given"]
+  m05-given                                    http Setup    
+  m05-given                                    msg  Setup    
+  --- ACTION START MARKER ---
+  [Step] <color:white>AND a call named [label: "m05-and"]
+  m05-and                                      http Action   
+  m05-and                                      msg  Action   
+  [Step] <color:white>WHEN a call named [label: "m05-when"]
+  --- ACTION START MARKER ---
+  m05-when                                     http Action   
+  m05-when                                     msg  Action   
+  steps:
+    GIVEN a step calls StartAction [label: "m05-given"]  [Passed]
+    AND a call named [label: "m05-and"]  [Passed]
+    WHEN a call named [label: "m05-when"]  [Passed]
+
+## M06 untyped steps only
+  [Step] <color:white>A call named [label: "m06-a"]
+  m06-a                                        http Unknown  
+  m06-a                                        msg  Unknown  
+  [Step] <color:white>A nosetup call named [label: "m06-b"]
+  m06-b                                        http Unknown  
+  m06-b                                        msg  Unknown  
+  steps:
+    (none) A call named [label: "m06-a"]  [Passed]
+    (none) A nosetup call named [label: "m06-b"]  [Passed]
+

@@ -1,0 +1,33 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=4
+first: rev5/rev5-bddfy: B06_Async_void_support_off_with_a_nested_Given_and_a_failing: gone: [Step] <color:white>When with given sub b06-when; gone: [Step] <color:white>Then when throws b06-then; Response: b06-when-before phase=Action src=TestContext > b06-given phase=Setup sr
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: racing, shape seen PhaseProbe.Bddfy.Scenarios.B11_async_steps_with_AsyncVoidSupport_off
+[rev4/rev4-bddfy] rev4-bddfy.txt: racing, shape seen B05_Async_void_support_off
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B06_Async_void_support_off_with_a_nested_Given_and_a_failing_step
+    gone: [Step] <color:white>When with given sub b06-when; gone: [Step] <color:white>Then when throws b06-then; Response: b06-when-before phase=Action src=TestContext > b06-given phase=Setup src=TestContext; gone: [Step] <color:white>Given Woven given; Request: b06-when-sub phase=Setup src=TestContext > b06-when-sub phase=Action src=TestContext; Response: b06-given phase=Setup src=TestContext > b
+      - [Step] <color:white>When with given sub b06-when
+      - [Step] <color:white>Then when throws b06-then
+      + Response b06-given phase=Setup src=TestContext
+      + Response b06-when-before phase=Action src=TestContext
+      - Response b06-when-before phase=Action src=TestContext
+      - [Step] <color:white>Given Woven given
+      - Request b06-when-sub phase=Setup src=TestContext
+      - Response b06-given phase=Setup src=TestContext
+      - Response b06-when-sub phase=Setup src=TestContext
+      - Request b06-when-after phase=Setup src=TestContext
+      - Response b06-when-after phase=Setup src=TestContext
+      + Request b06-when-sub phase=Action src=TestContext
+      + Response b06-when-sub phase=Action src=TestContext
+      + Request b06-when-after phase=Action src=TestContext
+      + Response b06-when-after phase=Action src=TestContext
+      - When with given sub b06-when [Passed]
+      - Then when throws b06-then [Passed]
+      - Given Woven given [Passed]
+      + When with given sub b06-when [Passed]
+      + Then when throws b06-then [Passed]
+      + Given Woven given [Failed]
+      - hnote across <<stepDelimiter>> #black:<color:white>When with given sub b06-when
+      - hnote across <<stepDelimiter>> #black:<color:white>Then when throws b06-then
+      - shop -[#438DD5]-> probe: OK
+[review/rev3-bddfy] rev3-bddfy.plantuml.txt: racing, shape seen PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running

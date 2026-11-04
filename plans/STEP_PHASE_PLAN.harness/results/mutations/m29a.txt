@@ -1,0 +1,18 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=3
+first: review/rev3-bddfy: Z15_a_failing_sync_scenario_with_a_teardown_in_a_woven_Given: new: hnote across <<stepDelimiter>> #black:<color:white>A teardown z15-inner-teardown; new: hnote across <<stepDelimiter>> #black:<color:white>Plain woven
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[review/rev3-bddfy] rev3-bddfy.plantuml.txt: racing, shape seen PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running
+[review/rev3-bddfy] rev3-bddfy.plantuml.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z15_a_failing_sync_scenario_with_a_teardown_in_a_woven_Given_then_a_When
+    new: hnote across <<stepDelimiter>> #black:<color:white>A teardown z15-inner-teardown; new: hnote across <<stepDelimiter>> #black:<color:white>Plain woven
+      + hnote across <<stepDelimiter>> #black:<color:white>A teardown z15-inner-teardown
+      + hnote across <<stepDelimiter>> #black:<color:white>Plain woven
+[review/rev3-bddfy] rev3-bddfy.txt: racing, shape seen PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running
+[review/rev3-bddfy] rev3-bddfy.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z15_a_failing_sync_scenario_with_a_teardown_in_a_woven_Given_then_a_When
+    (none): A teardown z15-inner-teardown [Passed] > A teardown z15-inner-teardown [Passed]; (none): Plain woven [Passed] > Plain woven [Passed]; new: [Step] <color:white>A teardown z15-inner-teardown; new: [Step] <color:white>Plain woven
+      + [Step] <color:white>A teardown z15-inner-teardown
+      + [Step] <color:white>Plain woven
+      - (none) A teardown z15-inner-teardown [Passed]
+      - (none) Plain woven [Passed]
+      + (none) A teardown z15-inner-teardown [Passed]
+      + (none) Plain woven [Passed]

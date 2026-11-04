@@ -1,0 +1,2 @@
+handler that drew a boundary for an earlier scenario: tracked, no exception
+handler that has drawn none: tracked, no exception

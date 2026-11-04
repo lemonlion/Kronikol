@@ -1,0 +1,16 @@
+<Project DefaultTargets="Build">
+  <ItemGroup>
+    <P Include="..\wt\src\Kronikol\Kronikol.csproj" />
+    <P Include="..\wt\src\Kronikol.StepTracking\Kronikol.StepTracking.csproj" />
+    <P Include="..\wt\src\Kronikol.ReqNRoll.Core\Kronikol.ReqNRoll.Core.csproj" />
+    <P Include="..\wt\src\Kronikol.ReqNRoll.xUnit2\Kronikol.ReqNRoll.xUnit2.csproj" />
+    <P Include="..\wt\src\Kronikol.LightBDD.Core\Kronikol.LightBDD.Core.csproj" />
+    <P Include="..\wt\src\Kronikol.LightBDD.xUnit2\Kronikol.LightBDD.xUnit2.csproj" />
+    <P Include="..\wt\src\Kronikol.xUnit2\Kronikol.xUnit2.csproj" />
+    <P Include="..\wt\src\Kronikol.xUnit3\Kronikol.xUnit3.csproj" />
+    <P Include="..\wt\src\Kronikol.BDDfy.xUnit3\Kronikol.BDDfy.xUnit3.csproj" />
+    <P Include="..\wt\src\Kronikol.AssertionTracking\Kronikol.AssertionTracking.csproj" />
+  </ItemGroup>
+  <Target Name="Restore"><MSBuild Projects="@(P)" Targets="Restore" /></Target>
+  <Target Name="Build"><MSBuild Projects="@(P)" Targets="Build" /></Target>
+</Project>

@@ -1,0 +1,2 @@
+wrote 212 diagrams, 1978 KB → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\31780689-26c4-4084-b1b5-c4efb9a6fd42\scratchpad\rr\results\consumer\base\BDDfy\diagrams
+each file is named by its address; scenarios --json maps an address to its id

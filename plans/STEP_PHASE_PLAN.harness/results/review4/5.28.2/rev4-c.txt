@@ -1,0 +1,2454 @@
+## C01_Identical_service_calls_after_the_When
+  [Step] <color:white>Given Async
+  
+  Request  c01-seed                       phase=Setup   src=TestContext
+  Response c01-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  c01-act                        phase=Action  src=TestContext
+  Response c01-act                        phase=Action  src=TestContext
+  Request  c01-q                          phase=Unknown src=Scope +variants
+  Response c01-q                          phase=Unknown src=Scope +variants
+  Request  c01-q                          phase=Unknown src=Scope +variants
+  Response c01-q                          phase=Unknown src=Scope +variants
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+
+## C02_Identical_service_calls_across_the_When
+  [Step] <color:white>Given Async
+  
+  Request  c02-seed                       phase=Setup   src=TestContext
+  Response c02-seed                       phase=Setup   src=TestContext
+  Request  c02-q                          phase=Unknown src=Scope +variants
+  Response c02-q                          phase=Unknown src=Scope +variants
+  Request  c02-q                          phase=Unknown src=Scope +variants
+  Response c02-q                          phase=Unknown src=Scope +variants
+  [Step] <color:white>When No call
+  
+  Request  c02-q                          phase=Unknown src=Scope +variants
+  Response c02-q                          phase=Unknown src=Scope +variants
+  Request  c02-q                          phase=Unknown src=Scope +variants
+  Response c02-q                          phase=Unknown src=Scope +variants
+  steps:
+    Given Async [Passed]
+    When No call [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+        note: "body": "SETUP-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "SETUP-PAYLOAD"
+        note: "body": "SETUP-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "SETUP-PAYLOAD"
+      hnote across <<stepDelimiter>> #black:<color:white>When No call
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+
+## C03_One_service_call_each_side_of_the_When
+  [Step] <color:white>Given Async
+  
+  Request  c03-seed                       phase=Setup   src=TestContext
+  Response c03-seed                       phase=Setup   src=TestContext
+  Request  c03-q                          phase=Unknown src=Scope +variants
+  Response c03-q                          phase=Unknown src=Scope +variants
+  [Step] <color:white>When No call
+  
+  Request  c03-q                          phase=Unknown src=Scope +variants
+  Response c03-q                          phase=Unknown src=Scope +variants
+  steps:
+    Given Async [Passed]
+    When No call [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+        note: "body": "SETUP-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "SETUP-PAYLOAD"
+      hnote across <<stepDelimiter>> #black:<color:white>When No call
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+
+## C04_Big_given_then_a_When_with_no_call_delimiters_off
+  Request  c04-big                        phase=Setup   src=TestContext
+  Response c04-big                        phase=Setup   src=TestContext
+  steps:
+    Given Big [Passed]
+    When No call [Passed]
+  diagram separateSetup:
+    diagram 1:
+      shop -[#438DD5]-> probe: OK
+
+## P
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P3                             phase=Setup   src=TestContext
+  Response P3                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P3                             phase=Action  src=TestContext
+  Response P3                             phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+    diagram 2:
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## P
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P4                             phase=Setup   src=TestContext
+  Response P4                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P4                             phase=Action  src=TestContext
+  Response P4                             phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+    diagram 2:
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## P
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P1                             phase=Setup   src=TestContext
+  Response P1                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P1                             phase=Action  src=TestContext
+  Response P1                             phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+    diagram 2:
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## P
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P8                             phase=Setup   src=TestContext
+  Response P8                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P8                             phase=Action  src=TestContext
+  Response P8                             phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+    diagram 2:
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## P
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P2                             phase=Setup   src=TestContext
+  Response P2                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P2                             phase=Action  src=TestContext
+  Response P2                             phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+    diagram 2:
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## P
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P7                             phase=Setup   src=TestContext
+  Response P7                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P7                             phase=Action  src=TestContext
+  Response P7                             phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+    diagram 2:
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## P
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P6                             phase=Setup   src=TestContext
+  Response P6                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P6                             phase=Action  src=TestContext
+  Response P6                             phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+    diagram 2:
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## P
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  P5                             phase=Setup   src=TestContext
+  Response P5                             phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  P5                             phase=Action  src=TestContext
+  Response P5                             phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+    diagram 2:
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## R01_Wiki_recipe_in_InitializeAsync_then_steps
+  Request  r01-clear                      phase=Setup   src=TestContext IGNORED
+  Response r01-clear                      phase=Setup   src=TestContext IGNORED
+  Request  r01-seed                       phase=Setup   src=TestContext IGNORED
+  Response r01-seed                       phase=Setup   src=TestContext IGNORED
+  [Step] <color:white>Given Async
+  
+  Request  r01-given                      phase=Setup   src=TestContext
+  Response r01-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  r01-when                       phase=Action  src=TestContext
+  Response r01-when                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## R02_Recipe_and_Reset_after_a_When_on_the_flow
+  [Step] <color:white>Given Async
+  
+  Request  r02-given                      phase=Setup   src=TestContext
+  Response r02-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  r02-when                       phase=Action  src=TestContext
+  Response r02-when                       phase=Action  src=TestContext
+  Request  r02-reseed                     phase=Setup   src=TestContext IGNORED
+  Response r02-reseed                     phase=Setup   src=TestContext IGNORED
+  Request  r02-reseed-child               phase=Setup   src=TestContext IGNORED
+  Response r02-reseed-child               phase=Setup   src=TestContext IGNORED
+  Request  r02-after-unknown              phase=Unknown src=TestContext
+  Response r02-after-unknown              phase=Unknown src=TestContext
+  Request  r02-after-reset                phase=Unknown src=TestContext
+  Response r02-after-reset                phase=Unknown src=TestContext
+  [Step] <color:white>Then Async
+  
+  Request  r02-then                       phase=Action  src=TestContext
+  Response r02-then                       phase=Action  src=TestContext
+  Request  r02-after-then                 phase=Action  src=TestContext
+  Response r02-after-then                 phase=Action  src=TestContext
+  Request  r02-after-reset-2              phase=Unknown src=TestContext
+  Response r02-after-reset-2              phase=Unknown src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+

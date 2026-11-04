@@ -1,0 +1,151 @@
+KILLED solid=14 order=0 racing-new=0 racing-seen=1
+first: rev5/rev5-lightbdd-legacy: L01 plain given when then: Request: l01-when-nosetup phase=Action src=TestContext > l01-when-nosetup phase=Unknown src=TestContext; Response: l01-when-nosetup phase=Action src=TestContext > l01-when-nosetup phase=Unkn
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L01 plain given when then
+    Request: l01-when-nosetup phase=Action src=TestContext > l01-when-nosetup phase=Unknown src=TestContext; Response: l01-when-nosetup phase=Action src=TestContext > l01-when-nosetup phase=Unknown src=TestContext; Request: l01-when-noaction phase=Action src=TestContext IGNORED > l01-when-noaction phase=Unknown src=TestContext; Response: l01-when-noaction phase=Action src=TestContext IGNORED > l01
+      - Request l01-when-nosetup phase=Action src=TestContext
+      - Response l01-when-nosetup phase=Action src=TestContext
+      - Request l01-when-noaction phase=Action src=TestContext IGNORED
+      - Response l01-when-noaction phase=Action src=TestContext IGNORED
+      + Request l01-when-nosetup phase=Unknown src=TestContext
+      + Response l01-when-nosetup phase=Unknown src=TestContext
+      + Request l01-when-noaction phase=Unknown src=TestContext
+      + Response l01-when-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L02 given but when then but
+    Request: l02-when-nosetup phase=Action src=TestContext > l02-when-nosetup phase=Unknown src=TestContext; Response: l02-when-nosetup phase=Action src=TestContext > l02-when-nosetup phase=Unknown src=TestContext; Request: l02-when-noaction phase=Action src=TestContext IGNORED > l02-when-noaction phase=Unknown src=TestContext; Response: l02-when-noaction phase=Action src=TestContext IGNORED > l02
+      - Request l02-when-nosetup phase=Action src=TestContext
+      - Response l02-when-nosetup phase=Action src=TestContext
+      - Request l02-when-noaction phase=Action src=TestContext IGNORED
+      - Response l02-when-noaction phase=Action src=TestContext IGNORED
+      + Request l02-when-nosetup phase=Unknown src=TestContext
+      + Response l02-when-nosetup phase=Unknown src=TestContext
+      + Request l02-when-noaction phase=Unknown src=TestContext
+      + Response l02-when-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L03 and first then when
+    Request: l03-when-nosetup phase=Action src=TestContext > l03-when-nosetup phase=Unknown src=TestContext; Response: l03-when-nosetup phase=Action src=TestContext > l03-when-nosetup phase=Unknown src=TestContext; Request: l03-when-noaction phase=Action src=TestContext IGNORED > l03-when-noaction phase=Unknown src=TestContext; Response: l03-when-noaction phase=Action src=TestContext IGNORED > l03
+      - Request l03-when-nosetup phase=Action src=TestContext
+      - Response l03-when-nosetup phase=Action src=TestContext
+      - Request l03-when-noaction phase=Action src=TestContext IGNORED
+      - Response l03-when-noaction phase=Action src=TestContext IGNORED
+      + Request l03-when-nosetup phase=Unknown src=TestContext
+      + Response l03-when-nosetup phase=Unknown src=TestContext
+      + Request l03-when-noaction phase=Unknown src=TestContext
+      + Response l03-when-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L04 a custom step type after a when
+    Request: l04-when-nosetup phase=Action src=TestContext > l04-when-nosetup phase=Unknown src=TestContext; Response: l04-when-nosetup phase=Action src=TestContext > l04-when-nosetup phase=Unknown src=TestContext; Request: l04-when-noaction phase=Action src=TestContext IGNORED > l04-when-noaction phase=Unknown src=TestContext; Response: l04-when-noaction phase=Action src=TestContext IGNORED > l04
+      - Request l04-when-nosetup phase=Action src=TestContext
+      - Response l04-when-nosetup phase=Action src=TestContext
+      - Request l04-when-noaction phase=Action src=TestContext IGNORED
+      - Response l04-when-noaction phase=Action src=TestContext IGNORED
+      + Request l04-when-nosetup phase=Unknown src=TestContext
+      + Response l04-when-nosetup phase=Unknown src=TestContext
+      + Request l04-when-noaction phase=Unknown src=TestContext
+      + Response l04-when-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L06 a when runs a woven given
+    Request: l06-before-nosetup phase=Action src=TestContext > l06-before-nosetup phase=Unknown src=TestContext; Response: l06-before-nosetup phase=Action src=TestContext > l06-before-nosetup phase=Unknown src=TestContext; Request: l06-before-noaction phase=Action src=TestContext IGNORED > l06-before-noaction phase=Unknown src=TestContext; Response: l06-before-noaction phase=Action src=TestContext
+      - Request l06-before-nosetup phase=Action src=TestContext
+      - Response l06-before-nosetup phase=Action src=TestContext
+      - Request l06-before-noaction phase=Action src=TestContext IGNORED
+      - Response l06-before-noaction phase=Action src=TestContext IGNORED
+      + Request l06-before-nosetup phase=Unknown src=TestContext
+      + Response l06-before-nosetup phase=Unknown src=TestContext
+      + Request l06-before-noaction phase=Unknown src=TestContext
+      + Response l06-before-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L07 a given runs a woven when
+    Request: l07-when-nosetup phase=Action src=TestContext > l07-when-nosetup phase=Unknown src=TestContext; Response: l07-when-nosetup phase=Action src=TestContext > l07-when-nosetup phase=Unknown src=TestContext; Request: l07-when-noaction phase=Action src=TestContext IGNORED > l07-when-noaction phase=Unknown src=TestContext; Response: l07-when-noaction phase=Action src=TestContext IGNORED > l07
+      - Request l07-when-nosetup phase=Action src=TestContext
+      - Response l07-when-nosetup phase=Action src=TestContext
+      - Request l07-when-noaction phase=Action src=TestContext IGNORED
+      - Response l07-when-noaction phase=Action src=TestContext IGNORED
+      + Request l07-when-nosetup phase=Unknown src=TestContext
+      + Response l07-when-nosetup phase=Unknown src=TestContext
+      + Request l07-when-noaction phase=Unknown src=TestContext
+      + Response l07-when-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L08 a given composite with typed sub steps
+    Request: l08-when-nosetup phase=Action src=TestContext > l08-when-nosetup phase=Unknown src=TestContext; Response: l08-when-nosetup phase=Action src=TestContext > l08-when-nosetup phase=Unknown src=TestContext; Request: l08-when-noaction phase=Action src=TestContext IGNORED > l08-when-noaction phase=Unknown src=TestContext; Response: l08-when-noaction phase=Action src=TestContext IGNORED > l08
+      - Request l08-when-nosetup phase=Action src=TestContext
+      - Response l08-when-nosetup phase=Action src=TestContext
+      - Request l08-when-noaction phase=Action src=TestContext IGNORED
+      - Response l08-when-noaction phase=Action src=TestContext IGNORED
+      + Request l08-when-nosetup phase=Unknown src=TestContext
+      + Response l08-when-nosetup phase=Unknown src=TestContext
+      + Request l08-when-noaction phase=Unknown src=TestContext
+      + Response l08-when-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L10 a step fails with a composite parent
+    Request: l10-sub-given-nosetup phase=Action src=TestContext > l10-sub-given-nosetup phase=Unknown src=TestContext; Response: l10-sub-given-nosetup phase=Action src=TestContext > l10-sub-given-nosetup phase=Unknown src=TestContext; Request: l10-sub-given-noaction phase=Action src=TestContext IGNORED > l10-sub-given-noaction phase=Unknown src=TestContext; Response: l10-sub-given-noaction phase=A
+      - Request l10-sub-given-nosetup phase=Action src=TestContext
+      - Response l10-sub-given-nosetup phase=Action src=TestContext
+      - Request l10-sub-given-noaction phase=Action src=TestContext IGNORED
+      - Response l10-sub-given-noaction phase=Action src=TestContext IGNORED
+      + Request l10-sub-given-nosetup phase=Unknown src=TestContext
+      + Response l10-sub-given-nosetup phase=Unknown src=TestContext
+      + Request l10-sub-given-noaction phase=Unknown src=TestContext
+      + Response l10-sub-given-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L11 a bypassed given then when
+    Request: l11-when-nosetup phase=Action src=TestContext > l11-when-nosetup phase=Unknown src=TestContext; Response: l11-when-nosetup phase=Action src=TestContext > l11-when-nosetup phase=Unknown src=TestContext; Request: l11-when-noaction phase=Action src=TestContext IGNORED > l11-when-noaction phase=Unknown src=TestContext; Response: l11-when-noaction phase=Action src=TestContext IGNORED > l11
+      - Request l11-when-nosetup phase=Action src=TestContext
+      - Response l11-when-nosetup phase=Action src=TestContext
+      - Request l11-when-noaction phase=Action src=TestContext IGNORED
+      - Response l11-when-noaction phase=Action src=TestContext IGNORED
+      + Request l11-when-nosetup phase=Unknown src=TestContext
+      + Response l11-when-nosetup phase=Unknown src=TestContext
+      + Request l11-when-noaction phase=Unknown src=TestContext
+      + Response l11-when-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L12 a marking then
+    Request: l12-when-nosetup phase=Action src=TestContext > l12-when-nosetup phase=Unknown src=TestContext; Response: l12-when-nosetup phase=Action src=TestContext > l12-when-nosetup phase=Unknown src=TestContext; Request: l12-when-noaction phase=Action src=TestContext IGNORED > l12-when-noaction phase=Unknown src=TestContext; Response: l12-when-noaction phase=Action src=TestContext IGNORED > l12
+      - Request l12-when-nosetup phase=Action src=TestContext
+      - Response l12-when-nosetup phase=Action src=TestContext
+      - Request l12-when-noaction phase=Action src=TestContext IGNORED
+      - Response l12-when-noaction phase=Action src=TestContext IGNORED
+      + Request l12-when-nosetup phase=Unknown src=TestContext
+      + Response l12-when-nosetup phase=Unknown src=TestContext
+      + Request l12-when-noaction phase=Unknown src=TestContext
+      + Response l12-when-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L13 a marking when after an unmarked when
+    Request: l13-when1-nosetup phase=Action src=TestContext > l13-when1-nosetup phase=Unknown src=TestContext; Response: l13-when1-nosetup phase=Action src=TestContext > l13-when1-nosetup phase=Unknown src=TestContext; Request: l13-when1-noaction phase=Action src=TestContext IGNORED > l13-when1-noaction phase=Unknown src=TestContext; Response: l13-when1-noaction phase=Action src=TestContext IGNORE
+      - Request l13-when1-nosetup phase=Action src=TestContext
+      - Response l13-when1-nosetup phase=Action src=TestContext
+      - Request l13-when1-noaction phase=Action src=TestContext IGNORED
+      - Response l13-when1-noaction phase=Action src=TestContext IGNORED
+      + Request l13-when1-nosetup phase=Unknown src=TestContext
+      + Response l13-when1-nosetup phase=Unknown src=TestContext
+      + Request l13-when1-noaction phase=Unknown src=TestContext
+      + Response l13-when1-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: SOLID L14 then first then given when
+    Request: l14-when-nosetup phase=Action src=TestContext > l14-when-nosetup phase=Unknown src=TestContext; Response: l14-when-nosetup phase=Action src=TestContext > l14-when-nosetup phase=Unknown src=TestContext; Request: l14-when-noaction phase=Action src=TestContext IGNORED > l14-when-noaction phase=Unknown src=TestContext; Response: l14-when-noaction phase=Action src=TestContext IGNORED > l14
+      - Request l14-when-nosetup phase=Action src=TestContext
+      - Response l14-when-nosetup phase=Action src=TestContext
+      - Request l14-when-noaction phase=Action src=TestContext IGNORED
+      - Response l14-when-noaction phase=Action src=TestContext IGNORED
+      + Request l14-when-nosetup phase=Unknown src=TestContext
+      + Response l14-when-nosetup phase=Unknown src=TestContext
+      + Request l14-when-noaction phase=Unknown src=TestContext
+      + Response l14-when-noaction phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[review/rev3-lightbdd-legacy] rev3-lightbdd-legacy.plantuml.txt: SOLID N02 a When calls a woven Given
+    shop: -[#438DD5]-> probe: OK > -[#438DD5]-> probe: OK; gone: shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+      + shop -[#438DD5]-> probe: OK
+[review/rev3-lightbdd-legacy] rev3-lightbdd-legacy.txt: SOLID N02 a When calls a woven Given
+    n02-after: http Action > http Setup IGNORED; n02-after2: http Action > http Setup IGNORED; n02-then: http Action > http Unknown; n02-then2: http Setup IGNORED > http Unknown
+      - n02-after http Action
+      + n02-after http Setup IGNORED
+      - n02-after2 http Action
+      + n02-after2 http Setup IGNORED
+      - n02-then http Action
+      + n02-then http Unknown
+      - n02-then2 http Setup IGNORED
+      + n02-then2 http Unknown

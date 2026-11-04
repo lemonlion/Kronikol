@@ -1,0 +1,77 @@
+## L1 the default setup step type
+call                               http     message  ignored
+[bar] <color:white>SETUP a call named [label: "l1-setup"]
+l1-setup                           Unknown  Unknown  
+[bar] <color:white>WHEN a call named [label: "l1-when"]
+l1-when                            Action   Action   
+[bar] <color:white>THEN a call named [label: "l1-then"]
+l1-then                            Action   Action   
+steps:
+  SETUP a call named [label: "l1-setup"]  [Passed]
+  WHEN a call named [label: "l1-when"]  [Passed]
+  THEN a call named [label: "l1-then"]  [Passed]
+
+## L2 a bypassed sub step in a Given composite
+call                               http     message  ignored
+[bar] <color:white>GIVEN composite with a bypassed sub step then a When [label: "l2"]
+[bar] <color:white>WHEN a call named [label: "l2-when-sub"]
+--- ACTION START MARKER ---
+l2-when-sub                        Action   Action   
+[bar] <color:white>A call named [label: "l2-untyped-sub"]
+l2-untyped-sub                     Action   Action   
+[bar] <color:white>AND a call named [label: "l2-and"]
+l2-and                             Action   Action   
+[bar] <color:white>WHEN a call named [label: "l2-when"]
+l2-when                            Action   Action   
+steps:
+  GIVEN composite with a bypassed sub step then a When [label: "l2"]  [Passed]
+    (none) A step that bypasses [label: "l2-bypassed"]  [Failed]
+  WHEN a call named [label: "l2-when-sub"]  [Passed]
+  (none) A call named [label: "l2-untyped-sub"]  [Passed]
+  AND a call named [label: "l2-and"]  [Passed]
+  WHEN a call named [label: "l2-when"]  [Passed]
+
+## L3 an And first with typed sub steps
+call                               http     message  ignored
+[bar] <color:white>AND composite with typed sub steps [label: "l3"]
+l3-given-sub                       Unknown  Unknown  
+l3-when-sub                        Unknown  Unknown  
+[bar] <color:white>A call named [label: "l3-after"]
+l3-after                           Unknown  Unknown  
+steps:
+  AND composite with typed sub steps [label: "l3"]  [Passed]
+    GIVEN a call named [label: "l3-given-sub"]  [Passed]
+    WHEN a call named [label: "l3-when-sub"]  [Passed]
+  (none) A call named [label: "l3-after"]  [Passed]
+
+## L4 repeated keyword types
+call                               http     message  ignored
+[bar] <color:white>GIVEN a call named [label: "l4-given"]
+l4-given                           Setup    Setup    
+[bar] <color:white>And a call named [label: "l4-given-2"]
+l4-given-2                         Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l4-when"]
+--- ACTION START MARKER ---
+l4-when                            Action   Action   
+[bar] <color:white>And a call named [label: "l4-when-2"]
+l4-when-2                          Action   Action   
+[bar] <color:white>THEN a call named [label: "l4-then"]
+l4-then                            Action   Action   
+steps:
+  GIVEN a call named [label: "l4-given"]  [Passed]
+  And a call named [label: "l4-given-2"]  [Passed]
+  WHEN a call named [label: "l4-when"]  [Passed]
+  And a call named [label: "l4-when-2"]  [Passed]
+  THEN a call named [label: "l4-then"]  [Passed]
+
+## L5 a shared handler draws a boundary
+call                               http     message  ignored
+[bar] <color:white>GIVEN a shared call
+l5-given                           Setup    -        
+[bar] <color:white>WHEN a shared call
+--- ACTION START MARKER ---
+l5-when                            Action   -        
+steps:
+  GIVEN a shared call  [Passed]
+  WHEN a shared call  [Passed]
+

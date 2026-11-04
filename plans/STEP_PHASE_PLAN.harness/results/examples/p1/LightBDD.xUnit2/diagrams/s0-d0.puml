@@ -1,0 +1,117 @@
+@startuml
+!pragma teoz true
+skinparam defaultFontName system-ui
+skinparam shadowing false
+skinparam SequenceMessagePadding 4
+skinparam sequenceMessageAlignment center
+<style>
+sequenceDiagram { participant { RoundCorner 12; Padding 8 14; Margin 0 10; LineThickness 1 } }
+sequenceDiagram { actor, database, queue, collections, boundary, control, entity { Margin 0 10; LineThickness 1 } }
+sequenceDiagram { lifeLine { LineStyle 0; LineThickness 1 } }
+sequenceDiagram { note { LineThickness 1 } }
+sequenceDiagram { group { RoundCorner 16; LineThickness 1; LineColor #CDD5E0; BackgroundColor #F4F7FB; FontStyle plain } }
+sequenceDiagram { groupHeader { LineThickness 1; LineColor #CDD5E0; BackgroundColor #E9EEF6 } }
+sequenceDiagram { partition { RoundCorner 16; LineThickness 1; LineColor #D5DBE4 } }
+</style>
+<style>
+ .eventNote {
+     BackgroundColor #cfecf7
+     FontSize 11
+     RoundCorner 10
+ }
+</style>
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+participant "Dessert Provider" as dessertProvider
+participant "Cow Service" as cowService
+queue "Event broker" as eventBroker
+
+partition #F6F6F6 Setup
+
+hnote across <<stepDelimiter>> #black:<color:white>GIVEN A valid post request for the Cake endpoint
+
+caller -[#438DD5]> dessertProvider: [[#iflow-37965639-5af2-412c-b035-af749a002d17 GET: /milk]]
+note left
+<color:#686868>[traceparent=00-6a73a2cdd1f592d0eb765873048ed5dd-7af4601f57e4ce97-00]
+end note
+dessertProvider -[#438DD5]> cowService: [[#iflow-967c8cba-8349-43bc-bf9b-af4057b321bb GET: /milk]]
+cowService -[#438DD5]-> dessertProvider: OK
+note right
+<color:#686868>[Date=Tue, 03 Nov 2026 08:59:43 GMT]
+<color:#686868>[Server=Kestrel]
+<color:#686868>[Transfer-Encoding=chunked]
+
+{
+  "milk": "Some_Fresh_Milk"
+}
+end note
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "milk": "Some_Fresh_Milk"
+}
+end note
+caller -[#438DD5]> dessertProvider: [[#iflow-e41adc79-937d-4a5a-bdcf-b2e9e71d8848 GET: /eggs]]
+note left
+<color:#686868>[traceparent=00-d58fb409b14d71898f5e538dc7092501-1676103374906015-00]
+end note
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "eggs": "Some_Eggs"
+}
+end note
+caller -[#438DD5]> dessertProvider: [[#iflow-eb3545c4-e9e4-463d-a7e2-651086bc539f GET: /flour]]
+note left
+<color:#686868>[traceparent=00-9f52f4e92f44d3c0b728be2e4ce50175-464afc818d51d784-00]
+end note
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "flour": "Some_Flour"
+}
+end note
+end
+
+hnote across <<stepDelimiter>> #black:<color:white>WHEN The request is sent to the cake post endpoint
+
+caller -[#438DD5]> dessertProvider: [[#iflow-99414fc3-99c8-4fce-a934-64df58fd59cb POST: /cake]]
+note left
+<color:#686868>[traceparent=00-f4059559b367a4b187175ffcd22623f1-412121f12927d2db-00]
+
+{
+  "milk": "Some_Fresh_Milk",
+  "flour": "Some_Flour",
+  "eggs": "Some_Eggs"
+}
+end note
+dessertProvider -[#9B59B6]> eventBroker: [[#iflow-503182ec-c1d3-4e06-8c12-f459ae836beb Send (Event Protocol): /cake_events]]
+note<<eventNote>> left
+{
+  "BatchId": "d45d1754-4dd0-4b3a-9f02-6854653ac618",
+  "Ingredients": [
+    "Some_Eggs",
+    "Some_Fresh_Milk",
+    "Some_Flour"
+  ]
+}
+end note
+eventBroker -[#9B59B6]-> dessertProvider: Responded
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "batchId": "d45d1754-4dd0-4b3a-9f02-6854653ac618",
+  "ingredients": [
+    "Some_Eggs",
+    "Some_Fresh_Milk",
+    "Some_Flour"
+  ]
+}
+end note
+
+hnote across <<stepDelimiter>> #black:<color:white>THEN The response should be successful
+
+@enduml

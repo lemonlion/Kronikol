@@ -1,0 +1,27 @@
+## PhaseProbe.Rev3.Collapse.Suite.K03_control_with_delimiters_on
+  hnote across <<stepDelimiter>> #black:<color:white>Given Two same
+  loop ×2 · 1–16 ms
+  shop -[#438DD5]-> probe: OK
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When Two same
+  loop ×2 · 12–16 ms
+  shop -[#438DD5]-> probe: OK
+  end
+
+## PhaseProbe.Rev3.Collapse.Suite.K01_two_same_in_a_Given_two_same_in_a_When_delimiters_off
+  loop ×4 · 4–21 ms
+  shop -[#438DD5]-> probe: OK
+  end
+
+## PhaseProbe.Rev3.Collapse.Suite.K02_one_same_in_a_Given_one_same_in_a_When_delimiters_off
+  loop ×2 · 20 ms
+  shop -[#438DD5]-> probe: OK
+  end
+
+## PhaseProbe.Rev3.Collapse.Suite.K04_ambient_manual_bypass_under_a_sync_Given
+  hnote across <<stepDelimiter>> #black:<color:white>Given With ambient manual bypass
+  hnote across <<stepDelimiter>> #black:<color:white>When K04
+  shop -[#438DD5]-> probe: OK
+  hnote across <<stepDelimiter>> #black:<color:white>Then K04
+  shop -[#438DD5]-> probe: OK
+

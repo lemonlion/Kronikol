@@ -1,0 +1,143 @@
+KILLED solid=15 order=0 racing-new=0 racing-seen=0
+first: main/lightbdd-xunit2: L01 plain Given When Then: l01-given: Setup Setup > Setup Unknown; l01-and: Setup Setup > Setup Unknown; l01-when: Action Action > Action Unknown; l01-when-and: Action Action > Unknown Unknown; l01-then: Action Action
+
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L01 plain Given When Then
+    l01-given: Setup Setup > Setup Unknown; l01-and: Setup Setup > Setup Unknown; l01-when: Action Action > Action Unknown; l01-when-and: Action Action > Unknown Unknown; l01-then: Action Action > Unknown Unknown; l01-then-but: Action Action > Unknown Unknown
+      -l01-given Setup Setup
+      +l01-given Setup Unknown
+      -l01-and Setup Setup
+      +l01-and Setup Unknown
+      -l01-when Action Action
+      +l01-when Action Unknown
+      -l01-when-and Action Action
+      +l01-when-and Unknown Unknown
+      -l01-then Action Action
+      +l01-then Unknown Unknown
+      -l01-then-but Action Action
+      +l01-then-but Unknown Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L02 When composite with a Given sub step
+    l02-given: Setup Setup > Setup Unknown; l02-composite-body: Action Action > Action Unknown; l02-first-untyped-sub: Action Action > Unknown Unknown; l02-given-sub: Action Action > Unknown Unknown; l02-untyped-sub-after-given: Action Action > Unknown Unknown; l02-then: Action Action > Unknown Unknown
+      -l02-given Setup Setup
+      +l02-given Setup Unknown
+      -l02-composite-body Action Action
+      -l02-first-untyped-sub Action Action
+      -l02-given-sub Action Action
+      -l02-untyped-sub-after-given Action Action
+      +l02-composite-body Action Unknown
+      +l02-first-untyped-sub Unknown Unknown
+      +l02-given-sub Unknown Unknown
+      +l02-untyped-sub-after-given Unknown Unknown
+      -l02-then Action Action
+      +l02-then Unknown Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L03 Given composite with a When sub step
+    l03-composite-body: Setup Setup > Setup Unknown; l03-when-sub: Setup Setup > Setup Unknown; l03-untyped-sub-after-when: Setup Setup > Setup Unknown; l03-when: Action Action > Action Unknown
+      -l03-composite-body Setup Setup
+      -l03-when-sub Setup Setup
+      -l03-untyped-sub-after-when Setup Setup
+      +l03-composite-body Setup Unknown
+      +l03-when-sub Setup Unknown
+      +l03-untyped-sub-after-when Setup Unknown
+      -l03-when Action Action
+      +l03-when Action Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L04 a LightBDD When calls a woven Given
+    l04-given: Setup Setup > Setup Unknown; l04-before-sub: Action Action > Action Unknown; l04-in-sub: Action Action > Setup Setup; l04-after-sub: Action Action > Setup Setup; l04-then: Action Action > Unknown Unknown
+      -l04-given Setup Setup
+      +l04-given Setup Unknown
+      -l04-before-sub Action Action
+      -l04-in-sub Action Action
+      -l04-after-sub Action Action
+      +l04-before-sub Action Unknown
+      +l04-in-sub Setup Setup
+      +l04-after-sub Setup Setup
+      -l04-then Action Action
+      +l04-then Unknown Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L05 a LightBDD Given calls a woven When
+    l05-before-sub: Setup Setup > Setup Unknown; l05-in-sub: Setup Setup > Action Action; l05-after-sub: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---; l05-when: Action Action > Unknown Unknown
+      -l05-before-sub Setup Setup
+      -l05-in-sub Setup Setup
+      -l05-after-sub Setup Setup
+      +l05-before-sub Setup Unknown
+      +--- ACTION START MARKER ---
+      +l05-in-sub Action Action
+      +l05-after-sub Action Action
+      ---- ACTION START MARKER ---
+      -l05-when Action Action
+      +l05-when Unknown Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L06 first scenario on a shared handler
+    l06-given: Setup Setup > Setup Unknown; l06-when: Action Action > Action Unknown; l06-then: Action Action > Unknown Unknown
+      -l06-given Setup Setup
+      +l06-given Setup Unknown
+      -l06-when Action Action
+      +l06-when Action Unknown
+      -l06-then Action Action
+      +l06-then Unknown Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L07 second scenario on a shared handler
+    l07-given: Setup Setup > Setup Unknown; l07-when: Action Action > Action Unknown; l07-then: Action Action > Unknown Unknown
+      -l07-given Setup Setup
+      +l07-given Setup Unknown
+      -l07-when Action Action
+      +l07-when Action Unknown
+      -l07-then Action Action
+      +l07-then Unknown Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L09 a When with no HTTP call then an And
+    l09-given: Setup Setup > Setup Unknown; l09-when-message: - Action > - Unknown; [bar]: <color:white>AND a call named [label: "l09-when-and"] > <color:white>AND a call named [label: "l09-when-and"]; l09-when-and: Action Action > Setup Unknown; [bar]: <color:white>THEN a call named [label: "l09-then"] > <color:white>THEN a call named [label: "l09-then"]; l09-then: Action Action > Action Unknown
+      -l09-given Setup Setup
+      +l09-given Setup Unknown
+      +l09-when-message - Unknown
+      +[bar] <color:white>AND a call named [label: "l09-when-and"]
+      +l09-when-and Setup Unknown
+      +[bar] <color:white>THEN a call named [label: "l09-then"]
+      -l09-when-message - Action
+      -[bar] <color:white>AND a call named [label: "l09-when-and"]
+      -l09-when-and Action Action
+      -[bar] <color:white>THEN a call named [label: "l09-then"]
+      -l09-then Action Action
+      +l09-then Action Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L10 a Given with no HTTP call
+    l10-given-message: - Setup > - Unknown; gone: --- ACTION START MARKER ---; l10-when: Action Action > Action Unknown
+      -l10-given-message - Setup
+      +l10-given-message - Unknown
+      ---- ACTION START MARKER ---
+      -l10-when Action Action
+      +l10-when Action Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L11 a message tracker that does not track setup
+    l11-given: Setup - > Setup Unknown; l11-when: Action Action > Action Unknown
+      -l11-given Setup -
+      +l11-given Setup Unknown
+      -l11-when Action Action
+      +l11-when Action Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L12 an untyped step after a typed one
+    l12-given: Setup Setup > Setup Unknown; l12-when: Action Action > Action Unknown
+      -l12-given Setup Setup
+      +l12-given Setup Unknown
+      -l12-when Action Action
+      +l12-when Action Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L13 LightBDDs own setup step type
+    l13-setup: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---; l13-when: Action Action > Action Unknown
+      -l13-setup Setup Setup
+      +l13-setup Unknown Unknown
+      ---- ACTION START MARKER ---
+      -l13-when Action Action
+      +l13-when Action Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L14 a bypassed sub step in a Given composite
+    l14-body: Setup Setup > Setup Unknown; l14-when-sub: Setup Setup > Setup Unknown; l14-untyped-sub: Setup Setup > Setup Unknown; l14-and: Setup Setup > Setup Unknown; l14-when: Action Action > Action Unknown
+      -l14-body Setup Setup
+      -l14-when-sub Setup Setup
+      -l14-untyped-sub Setup Setup
+      +l14-body Setup Unknown
+      +l14-when-sub Setup Unknown
+      +l14-untyped-sub Setup Unknown
+      -l14-and Setup Setup
+      +l14-and Setup Unknown
+      -l14-when Action Action
+      +l14-when Action Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L15 an And first over a Given sub step
+    l15-given-sub: Setup Setup > Setup Unknown; l15-when: Action Action > Action Unknown
+      -l15-given-sub Setup Setup
+      +l15-given-sub Setup Unknown
+      -l15-when Action Action
+      +l15-when Action Unknown
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L16 an And first then a When
+    l16-when: Action Action > Action Unknown
+      -l16-when Action Action
+      +l16-when Action Unknown

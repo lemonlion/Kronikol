@@ -1,0 +1,17 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=4
+first: rev5/rev5-bddfy: B17_StartAction_before_a_story_with_a_tear_down: end:  > ; new: --- MARKER ---
+
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L02_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L04_Parallel_ForEach_of_sync_Givens_at_the_top_then_When_with_nested_Given
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B17_StartAction_before_a_story_with_a_tear_down
+    end:  > ; new: --- MARKER ---
+      + --- MARKER ---
+      - end
+      + end
+[rev6/rev6-a] rev6-a.txt: racing, shape seen B06_A_Parallel_For_of_skipped_and_real_inside_a_When
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B22_By_name_story_Setup_after_StartAction
+    new: --- MARKER ---; new: partition Setup; new: end
+      + --- MARKER ---
+      + partition Setup
+      + end

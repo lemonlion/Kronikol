@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Kronikol.ReqNRoll.Core" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(KronikolVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="Reqnroll.NUnit" Version="3.3.4" />
+    <PackageReference Include="Reqnroll.Tools.MsBuild.Generation" Version="3.3.4" />
+    <PackageReference Include="NUnit" Version="4.6.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+    <PackageReference Include="NUnitRetry.ReqnrollPlugin" Version="2.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="reqnroll.json" />
+    <AdditionalFiles Include="reqnroll.json" />
+    <Compile Include="..\shared\*.cs" />
+  </ItemGroup>
+</Project>

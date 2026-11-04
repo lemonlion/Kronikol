@@ -1,0 +1,32 @@
+phase   caller                service                          calls errors   median      max bodies     bytes
+Setup   Caller                Breakfast Provider                 234      0    16 ms   2.58 s    106   37.2 KB
+-       Breakfast Provider    CosmosDB                           226      7     0 ms   808 ms    196  243.4 KB
+Action  Caller                Breakfast Provider                 217     95    39 ms   5.41 s    191  380.5 KB
+-       Breakfast Provider    Reporting Database (SQL Server)    189      0     0 ms   423 ms     54   42.1 KB
+-       Breakfast Provider    Google Cloud Pub/Sub                68      0     0 ms     1 ms      1   11.1 KB
+-       Breakfast Provider    Cow Service                         49      2    45 ms   224 ms      4    1.2 KB
+-       Kafka Broker          Breakfast Provider                  40      0     0 ms     0 ms      1    7.7 KB
+-       Breakfast Provider    Kafka Broker                        40      0     3 ms   888 ms      0    9.7 KB
+-       Azure Event Hub       Breakfast Provider                  39      0     0 ms     0 ms      1    7.7 KB
+-       Breakfast Provider    Kitchen Service                     38      2    36 ms   129 ms      4    5.1 KB
+-       Breakfast Provider    Notification Service (gRPC)         38      0    26 ms   210 ms     38   12.6 KB
+-       Google Cloud Pub/Sub  Breakfast Provider                  35      0     0 ms     0 ms      1    5.7 KB
+Setup   Breakfast Provider    CosmosDB                            34      0     0 ms     8 ms     24   20.5 KB
+-       Breakfast Provider    Event Grid                          33      0     0 ms     2 ms      1    5.6 KB
+-       Breakfast Provider    Breakfast Database (SQL Server)     31      0     1 ms     7 ms     18    7.5 KB
+-       Breakfast Provider    MongoDB                             15      0     1 ms   132 ms      7    4.3 KB
+-       Breakfast Provider    BigQuery                            14      0    10 ms   723 ms      9     29 KB
+-       Breakfast Provider    Spanner                             12      0    38 ms   390 ms     12    2.2 KB
+-       Breakfast Provider    ClickHouse                          11      0     6 ms   418 ms      5    2.8 KB
+-       Breakfast Provider    Supplier Service                     9      1    40 ms   305 ms      3     296 B
+-       Breakfast Provider    Goat Service                         9      1    72 ms   317 ms      4     174 B
+Action  Breakfast Provider    CosmosDB                             4      0    42 ms    47 ms      3     41 KB
+Action  Breakfast Provider    Notification Service (gRPC)          3      0    21 ms    34 ms      3    1001 B
+Action  Kafka Broker          Breakfast Provider                   2      0     0 ms     0 ms      1     422 B
+Action  Breakfast Provider    Kitchen Service                      2      0    76 ms    76 ms      2     265 B
+Action  Google Cloud Pub/Sub  Breakfast Provider                   1      0     0 ms     0 ms      1     258 B
+Action  Breakfast Provider    MongoDB                              1      0     0 ms     0 ms      1     369 B
+Action  Breakfast Provider    Supplier Service                     1      0    98 ms    98 ms      1     199 B
+Action  Breakfast Provider    BigQuery                             1      0     0 ms     0 ms      1     372 B
+Action  Breakfast Provider    ClickHouse                           1      0   418 ms   418 ms      1     208 B
+30 buckets

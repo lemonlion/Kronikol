@@ -1,0 +1,366 @@
+hook:before-step a Given binding runs a woven When on an unflowed thread, then calls n30 ambient=Setup    resolver=a1d23dfe-765 scope=none         thread=7
+n30-before-thread                            ambient=Setup    resolver=a1d23dfe-765 scope=none         thread=7
+n30-when-on-thread                           ambient=Action   resolver=none         scope=a1d23dfe-765 thread=18
+n30-after-thread                             ambient=Setup    resolver=a1d23dfe-765 scope=none         thread=5
+hook:after-step a Given binding runs a woven When on an unflowed thread, then calls n30 ambient=Setup    resolver=a1d23dfe-765 scope=none         thread=17
+hook:before-step a call named n30-and        ambient=Setup    resolver=a1d23dfe-765 scope=none         thread=17
+n30-and                                      ambient=Setup    resolver=a1d23dfe-765 scope=none         thread=17
+hook:after-step a call named n30-and         ambient=Setup    resolver=a1d23dfe-765 scope=none         thread=5
+hook:before-step a call named n30-when       ambient=Action   resolver=a1d23dfe-765 scope=none         thread=7
+n30-when                                     ambient=Action   resolver=a1d23dfe-765 scope=none         thread=7
+hook:after-step a call named n30-when        ambient=Action   resolver=a1d23dfe-765 scope=none         thread=7
+hook:before-step a call named n30-then       ambient=Action   resolver=a1d23dfe-765 scope=none         thread=7
+n30-then                                     ambient=Action   resolver=a1d23dfe-765 scope=none         thread=7
+hook:after-step a call named n30-then        ambient=Action   resolver=a1d23dfe-765 scope=none         thread=7
+hook:before-step a call named n20-given      ambient=Setup    resolver=25fde6c1-74f scope=none         thread=7
+n20-given                                    ambient=Setup    resolver=25fde6c1-74f scope=none         thread=7
+hook:after-step a call named n20-given       ambient=Setup    resolver=25fde6c1-74f scope=none         thread=7
+hook:before-step a call named n20-given-and  ambient=Setup    resolver=25fde6c1-74f scope=none         thread=7
+n20-given-and                                ambient=Setup    resolver=25fde6c1-74f scope=none         thread=7
+hook:after-step a call named n20-given-and   ambient=Setup    resolver=25fde6c1-74f scope=none         thread=5
+n20-teardown-when                            ambient=Action   resolver=25fde6c1-74f scope=none         thread=5
+hook:before-step a call named n08-given      ambient=Setup    resolver=c977de9b-06c scope=none         thread=17
+n08-given                                    ambient=Setup    resolver=c977de9b-06c scope=none         thread=17
+hook:after-step a call named n08-given       ambient=Setup    resolver=c977de9b-06c scope=none         thread=5
+hook:before-step a When binding runs a nested Gherkin Given, then calls n08 ambient=Action   resolver=c977de9b-06c scope=none         thread=5
+n08-before-nested                            ambient=Action   resolver=c977de9b-06c scope=none         thread=5
+hook:before-step a call named n08-nested-given ambient=Action   resolver=c977de9b-06c scope=none         thread=7
+n08-nested-given                             ambient=Action   resolver=c977de9b-06c scope=none         thread=7
+hook:after-step a call named n08-nested-given ambient=Action   resolver=c977de9b-06c scope=none         thread=5
+n08-after-nested                             ambient=Action   resolver=c977de9b-06c scope=none         thread=5
+hook:after-step a When binding runs a nested Gherkin Given, then calls n08 ambient=Action   resolver=c977de9b-06c scope=none         thread=7
+hook:before-step a call named n08-second-given ambient=Setup    resolver=c977de9b-06c scope=none         thread=7
+n08-second-given                             ambient=Setup    resolver=c977de9b-06c scope=none         thread=7
+hook:after-step a call named n08-second-given ambient=Setup    resolver=c977de9b-06c scope=none         thread=7
+hook:before-step a call named n08-second-when ambient=Action   resolver=c977de9b-06c scope=none         thread=7
+n08-second-when                              ambient=Action   resolver=c977de9b-06c scope=none         thread=7
+hook:after-step a call named n08-second-when ambient=Action   resolver=c977de9b-06c scope=none         thread=7
+hook:before-step a call named n07-given      ambient=Setup    resolver=e41c9bb4-d14 scope=none         thread=7
+n07-given                                    ambient=Setup    resolver=e41c9bb4-d14 scope=none         thread=7
+hook:after-step a call named n07-given       ambient=Setup    resolver=e41c9bb4-d14 scope=none         thread=5
+hook:before-step a When binding runs a nested Gherkin When, then calls n07 ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=5
+n07-before-nested                            ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=5
+hook:before-step a call named n07-nested-when ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=5
+n07-nested-when                              ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=5
+hook:after-step a call named n07-nested-when ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=7
+n07-after-nested                             ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=7
+hook:after-step a When binding runs a nested Gherkin When, then calls n07 ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=5
+hook:before-step a call named n07-then       ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=5
+n07-then                                     ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=5
+hook:after-step a call named n07-then        ambient=Action   resolver=e41c9bb4-d14 scope=none         thread=5
+hook:before-step a When binding runs a nested Gherkin Given, then calls n06 ambient=Action   resolver=ea623019-443 scope=none         thread=5
+n06-before-nested                            ambient=Action   resolver=ea623019-443 scope=none         thread=5
+hook:before-step a call named n06-nested-given ambient=Action   resolver=ea623019-443 scope=none         thread=7
+n06-nested-given                             ambient=Action   resolver=ea623019-443 scope=none         thread=7
+hook:after-step a call named n06-nested-given ambient=Action   resolver=ea623019-443 scope=none         thread=7
+n06-after-nested                             ambient=Action   resolver=ea623019-443 scope=none         thread=7
+hook:after-step a When binding runs a nested Gherkin Given, then calls n06 ambient=Action   resolver=ea623019-443 scope=none         thread=7
+hook:before-step a call named n06-then       ambient=Action   resolver=ea623019-443 scope=none         thread=7
+n06-then                                     ambient=Action   resolver=ea623019-443 scope=none         thread=7
+hook:after-step a call named n06-then        ambient=Action   resolver=ea623019-443 scope=none         thread=7
+hook:before-step a call named n05-given      ambient=Setup    resolver=46f3f44d-668 scope=none         thread=7
+n05-given                                    ambient=Setup    resolver=46f3f44d-668 scope=none         thread=7
+hook:after-step a call named n05-given       ambient=Setup    resolver=46f3f44d-668 scope=none         thread=7
+hook:before-step a sync When binding blocks on a nested Gherkin Given, then calls n05 ambient=Action   resolver=46f3f44d-668 scope=none         thread=7
+n05-before-nested                            ambient=Action   resolver=46f3f44d-668 scope=none         thread=7
+hook:before-step a call named n05-nested-given ambient=Action   resolver=46f3f44d-668 scope=none         thread=7
+n05-nested-given                             ambient=Action   resolver=46f3f44d-668 scope=none         thread=7
+hook:after-step a call named n05-nested-given ambient=Action   resolver=46f3f44d-668 scope=none         thread=5
+n05-after-nested                             ambient=Action   resolver=46f3f44d-668 scope=none         thread=7
+hook:after-step a sync When binding blocks on a nested Gherkin Given, then calls n05 ambient=Action   resolver=46f3f44d-668 scope=none         thread=7
+hook:before-step a call named n05-then       ambient=Action   resolver=46f3f44d-668 scope=none         thread=7
+n05-then                                     ambient=Action   resolver=46f3f44d-668 scope=none         thread=7
+hook:after-step a call named n05-then        ambient=Action   resolver=46f3f44d-668 scope=none         thread=7
+hook:before-step a call named n04-given      ambient=Setup    resolver=c94c9210-6bb scope=none         thread=7
+n04-given                                    ambient=Setup    resolver=c94c9210-6bb scope=none         thread=7
+hook:after-step a call named n04-given       ambient=Setup    resolver=c94c9210-6bb scope=none         thread=7
+hook:before-step a When binding runs a nested Gherkin Given with a woven sub-step, then calls n04 ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+n04-before-nested                            ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+hook:before-step a Given binding with a woven sub-step calls n04 ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+n04-in-nested                                ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+n04-in-woven                                 ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+n04-after-woven                              ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+hook:after-step a Given binding with a woven sub-step calls n04 ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+n04-after-nested                             ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+hook:after-step a When binding runs a nested Gherkin Given with a woven sub-step, then calls n04 ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+hook:before-step a call named n04-then       ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+n04-then                                     ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+hook:after-step a call named n04-then        ambient=Action   resolver=c94c9210-6bb scope=none         thread=7
+hook:before-step a call named n03-given      ambient=Setup    resolver=7cf6f8bb-cf4 scope=none         thread=7
+n03-given                                    ambient=Setup    resolver=7cf6f8bb-cf4 scope=none         thread=7
+hook:after-step a call named n03-given       ambient=Setup    resolver=7cf6f8bb-cf4 scope=none         thread=17
+hook:before-step a When binding runs nested Gherkin And and But, then calls n03 ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+hook:before-step a call named n03-nested-and ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+n03-nested-and                               ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+hook:after-step a call named n03-nested-and  ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=7
+n03-between                                  ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=7
+hook:before-step a call named n03-nested-but ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=7
+n03-nested-but                               ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=7
+hook:after-step a call named n03-nested-but  ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=7
+n03-after-nested                             ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=7
+hook:after-step a When binding runs nested Gherkin And and But, then calls n03 ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+hook:before-step a call named n03-and-after  ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+n03-and-after                                ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+hook:after-step a call named n03-and-after   ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+hook:before-step a call named n03-then       ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+n03-then                                     ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+hook:after-step a call named n03-then        ambient=Action   resolver=7cf6f8bb-cf4 scope=none         thread=17
+hook:before-step a Given binding runs a nested Gherkin When, then calls n02 ambient=Setup    resolver=86b122a0-01e scope=none         thread=17
+n02-before-nested                            ambient=Setup    resolver=86b122a0-01e scope=none         thread=17
+hook:before-step a call named n02-nested-when ambient=Setup    resolver=86b122a0-01e scope=none         thread=17
+n02-nested-when                              ambient=Setup    resolver=86b122a0-01e scope=none         thread=17
+hook:after-step a call named n02-nested-when ambient=Setup    resolver=86b122a0-01e scope=none         thread=17
+n02-after-nested                             ambient=Setup    resolver=86b122a0-01e scope=none         thread=17
+hook:after-step a Given binding runs a nested Gherkin When, then calls n02 ambient=Setup    resolver=86b122a0-01e scope=none         thread=17
+hook:before-step a call named n02-and        ambient=Setup    resolver=86b122a0-01e scope=none         thread=17
+n02-and                                      ambient=Setup    resolver=86b122a0-01e scope=none         thread=17
+hook:after-step a call named n02-and         ambient=Setup    resolver=86b122a0-01e scope=none         thread=5
+hook:before-step a call named n02-when       ambient=Action   resolver=86b122a0-01e scope=none         thread=5
+n02-when                                     ambient=Action   resolver=86b122a0-01e scope=none         thread=5
+hook:after-step a call named n02-when        ambient=Action   resolver=86b122a0-01e scope=none         thread=5
+hook:before-step a call named n02-then       ambient=Action   resolver=86b122a0-01e scope=none         thread=5
+n02-then                                     ambient=Action   resolver=86b122a0-01e scope=none         thread=5
+hook:after-step a call named n02-then        ambient=Action   resolver=86b122a0-01e scope=none         thread=17
+hook:before-step a call named n01-given      ambient=Setup    resolver=7de85f4d-c1e scope=none         thread=17
+n01-given                                    ambient=Setup    resolver=7de85f4d-c1e scope=none         thread=17
+hook:after-step a call named n01-given       ambient=Setup    resolver=7de85f4d-c1e scope=none         thread=17
+hook:before-step a When binding runs a nested Gherkin Given, then calls n01 ambient=Action   resolver=7de85f4d-c1e scope=none         thread=17
+n01-before-nested                            ambient=Action   resolver=7de85f4d-c1e scope=none         thread=17
+hook:before-step a call named n01-nested-given ambient=Action   resolver=7de85f4d-c1e scope=none         thread=5
+n01-nested-given                             ambient=Action   resolver=7de85f4d-c1e scope=none         thread=5
+hook:after-step a call named n01-nested-given ambient=Action   resolver=7de85f4d-c1e scope=none         thread=17
+n01-after-nested                             ambient=Action   resolver=7de85f4d-c1e scope=none         thread=17
+hook:after-step a When binding runs a nested Gherkin Given, then calls n01 ambient=Action   resolver=7de85f4d-c1e scope=none         thread=5
+hook:before-step a call named n01-then       ambient=Action   resolver=7de85f4d-c1e scope=none         thread=5
+n01-then                                     ambient=Action   resolver=7de85f4d-c1e scope=none         thread=5
+hook:after-step a call named n01-then        ambient=Action   resolver=7de85f4d-c1e scope=none         thread=5
+hook:before-step a call named n21-given      ambient=Setup    resolver=cd196f26-223 scope=none         thread=5
+n21-given                                    ambient=Setup    resolver=cd196f26-223 scope=none         thread=5
+hook:after-step a call named n21-given       ambient=Setup    resolver=cd196f26-223 scope=none         thread=4
+hook:before-step a call named n21-when       ambient=Action   resolver=cd196f26-223 scope=none         thread=4
+n21-when                                     ambient=Action   resolver=cd196f26-223 scope=none         thread=4
+hook:after-step a call named n21-when        ambient=Action   resolver=cd196f26-223 scope=none         thread=4
+n21-teardown-when                            ambient=Action   resolver=cd196f26-223 scope=none         thread=4
+hook:before-step a Given step calls an async When sub-step, then calls r21 ambient=Setup    resolver=ac4b3d2b-bb4 scope=none         thread=4
+r21-before-sub                               ambient=Setup    resolver=ac4b3d2b-bb4 scope=none         thread=4
+r21-in-sub                                   ambient=Setup    resolver=ac4b3d2b-bb4 scope=none         thread=4
+r21-after-sub                                ambient=Setup    resolver=ac4b3d2b-bb4 scope=none         thread=4
+hook:after-step a Given step calls an async When sub-step, then calls r21 ambient=Setup    resolver=ac4b3d2b-bb4 scope=none         thread=17
+hook:before-step a When step calls an async Given sub-step, then calls r21b ambient=Action   resolver=ac4b3d2b-bb4 scope=none         thread=17
+r21b-before-sub                              ambient=Action   resolver=ac4b3d2b-bb4 scope=none         thread=17
+r21b-in-sub                                  ambient=Action   resolver=ac4b3d2b-bb4 scope=none         thread=4
+r21b-after-sub                               ambient=Action   resolver=ac4b3d2b-bb4 scope=none         thread=4
+hook:after-step a When step calls an async Given sub-step, then calls r21b ambient=Action   resolver=ac4b3d2b-bb4 scope=none         thread=17
+hook:before-step a call named r21-and        ambient=Action   resolver=ac4b3d2b-bb4 scope=none         thread=17
+r21-and                                      ambient=Action   resolver=ac4b3d2b-bb4 scope=none         thread=17
+hook:after-step a call named r21-and         ambient=Action   resolver=ac4b3d2b-bb4 scope=none         thread=17
+hook:before-step a call named r00-given      ambient=Setup    resolver=fde5600c-a12 scope=none         thread=17
+r00-given                                    ambient=Setup    resolver=fde5600c-a12 scope=none         thread=17
+hook:after-step a call named r00-given       ambient=Setup    resolver=fde5600c-a12 scope=none         thread=17
+hook:before-step the customer applies a discount through a Given sub-step ambient=Action   resolver=fde5600c-a12 scope=none         thread=17
+r00-discounts-SAVE10                         ambient=Action   resolver=fde5600c-a12 scope=none         thread=17
+r00-orders                                   ambient=Action   resolver=fde5600c-a12 scope=none         thread=17
+hook:after-step the customer applies a discount through a Given sub-step ambient=Action   resolver=fde5600c-a12 scope=none         thread=17
+hook:before-step a call named r00-then       ambient=Action   resolver=fde5600c-a12 scope=none         thread=17
+r00-then                                     ambient=Action   resolver=fde5600c-a12 scope=none         thread=17
+hook:after-step a call named r00-then        ambient=Action   resolver=fde5600c-a12 scope=none         thread=17
+hook:before-step a call named r20-given      ambient=Setup    resolver=d43e79fd-832 scope=none         thread=17
+r20-given                                    ambient=Setup    resolver=d43e79fd-832 scope=none         thread=17
+hook:after-step a call named r20-given       ambient=Setup    resolver=d43e79fd-832 scope=none         thread=17
+hook:before-step a message named r20-when-message ambient=Action   resolver=d43e79fd-832 scope=none         thread=17
+r20-when-message                             ambient=Action   resolver=d43e79fd-832 scope=none         thread=17
+hook:after-step a message named r20-when-message ambient=Action   resolver=d43e79fd-832 scope=none         thread=17
+hook:before-step a call named r20-when-and   ambient=Action   resolver=d43e79fd-832 scope=none         thread=17
+r20-when-and                                 ambient=Action   resolver=d43e79fd-832 scope=none         thread=17
+hook:after-step a call named r20-when-and    ambient=Action   resolver=d43e79fd-832 scope=none         thread=17
+hook:before-step a call named r20-then       ambient=Action   resolver=d43e79fd-832 scope=none         thread=17
+r20-then                                     ambient=Action   resolver=d43e79fd-832 scope=none         thread=17
+hook:after-step a call named r20-then        ambient=Action   resolver=d43e79fd-832 scope=none         thread=5
+hook:before-step a call named r19-given      ambient=Setup    resolver=589bdf0b-c5d scope=none         thread=5
+r19-given                                    ambient=Setup    resolver=589bdf0b-c5d scope=none         thread=5
+hook:after-step a call named r19-given       ambient=Setup    resolver=589bdf0b-c5d scope=none         thread=5
+hook:before-step a message named r19-when-message ambient=Action   resolver=589bdf0b-c5d scope=none         thread=5
+r19-when-message                             ambient=Action   resolver=589bdf0b-c5d scope=none         thread=5
+hook:after-step a message named r19-when-message ambient=Action   resolver=589bdf0b-c5d scope=none         thread=5
+hook:before-step a call named r19-then       ambient=Action   resolver=589bdf0b-c5d scope=none         thread=5
+r19-then                                     ambient=Action   resolver=589bdf0b-c5d scope=none         thread=5
+hook:after-step a call named r19-then        ambient=Action   resolver=589bdf0b-c5d scope=none         thread=4
+hook:before-step a message named r18-given-message ambient=Setup    resolver=220779ab-2f8 scope=none         thread=4
+r18-given-message                            ambient=Setup    resolver=220779ab-2f8 scope=none         thread=4
+hook:after-step a message named r18-given-message ambient=Setup    resolver=220779ab-2f8 scope=none         thread=4
+hook:before-step a call named r18-when       ambient=Action   resolver=220779ab-2f8 scope=none         thread=4
+r18-when                                     ambient=Action   resolver=220779ab-2f8 scope=none         thread=4
+hook:after-step a call named r18-when        ambient=Action   resolver=220779ab-2f8 scope=none         thread=4
+r17-in-before-scenario                       ambient=Unknown  resolver=c33801ce-b9e scope=none         thread=4
+hook:before-step a call named r17-given      ambient=Setup    resolver=c33801ce-b9e scope=none         thread=4
+r17-given                                    ambient=Setup    resolver=c33801ce-b9e scope=none         thread=4
+hook:after-step a call named r17-given       ambient=Setup    resolver=c33801ce-b9e scope=none         thread=4
+hook:before-step a call named r17-when       ambient=Action   resolver=c33801ce-b9e scope=none         thread=4
+r17-when                                     ambient=Action   resolver=c33801ce-b9e scope=none         thread=4
+hook:after-step a call named r17-when        ambient=Action   resolver=c33801ce-b9e scope=none         thread=4
+r17-in-after-scenario                        ambient=Action   resolver=c33801ce-b9e scope=none         thread=4
+r15-in-hook                                  ambient=Setup    resolver=27a959d2-2b0 scope=none         thread=4
+hook:before-step a call named r15-when       ambient=Action   resolver=27a959d2-2b0 scope=none         thread=17
+r15-when                                     ambient=Action   resolver=27a959d2-2b0 scope=none         thread=17
+hook:after-step a call named r15-when        ambient=Action   resolver=27a959d2-2b0 scope=none         thread=17
+hook:before-step a call named r15-then       ambient=Action   resolver=27a959d2-2b0 scope=none         thread=17
+r15-then                                     ambient=Action   resolver=27a959d2-2b0 scope=none         thread=17
+hook:after-step a call named r15-then        ambient=Action   resolver=27a959d2-2b0 scope=none         thread=17
+hook:before-step a call named r14-given      ambient=Setup    resolver=6505a712-4a7 scope=none         thread=17
+r14-given                                    ambient=Setup    resolver=6505a712-4a7 scope=none         thread=17
+hook:after-step a call named r14-given       ambient=Setup    resolver=6505a712-4a7 scope=none         thread=5
+hook:before-step a When step catches a failing Given sub-step, then calls r14 ambient=Action   resolver=6505a712-4a7 scope=none         thread=5
+r14-in-sub                                   ambient=Action   resolver=6505a712-4a7 scope=none         thread=5
+r14-after-sub                                ambient=Action   resolver=6505a712-4a7 scope=none         thread=5
+hook:after-step a When step catches a failing Given sub-step, then calls r14 ambient=Action   resolver=6505a712-4a7 scope=none         thread=5
+hook:before-step a call named r13-when       ambient=Action   resolver=f17164ca-5d1 scope=none         thread=5
+r13-when                                     ambient=Action   resolver=f17164ca-5d1 scope=none         thread=5
+hook:after-step a call named r13-when        ambient=Action   resolver=f17164ca-5d1 scope=none         thread=5
+hook:before-step a call named r13-then       ambient=Action   resolver=f17164ca-5d1 scope=none         thread=5
+r13-then                                     ambient=Action   resolver=f17164ca-5d1 scope=none         thread=5
+hook:after-step a call named r13-then        ambient=Action   resolver=f17164ca-5d1 scope=none         thread=5
+hook:before-step a call named r12-given      ambient=Setup    resolver=c0bd729c-211 scope=none         thread=5
+r12-given                                    ambient=Setup    resolver=c0bd729c-211 scope=none         thread=5
+hook:after-step a call named r12-given       ambient=Setup    resolver=c0bd729c-211 scope=none         thread=5
+hook:before-step a call named r12-when       ambient=Action   resolver=c0bd729c-211 scope=none         thread=5
+r12-when                                     ambient=Action   resolver=c0bd729c-211 scope=none         thread=5
+hook:after-step a call named r12-when        ambient=Action   resolver=c0bd729c-211 scope=none         thread=4
+hook:before-step a call named r11-given      ambient=Setup    resolver=030dd4d0-29a scope=none         thread=4
+r11-given                                    ambient=Setup    resolver=030dd4d0-29a scope=none         thread=4
+hook:after-step a call named r11-given       ambient=Setup    resolver=030dd4d0-29a scope=none         thread=4
+hook:before-step a call named r11-when       ambient=Action   resolver=030dd4d0-29a scope=none         thread=4
+r11-when                                     ambient=Action   resolver=030dd4d0-29a scope=none         thread=4
+hook:after-step a call named r11-when        ambient=Action   resolver=030dd4d0-29a scope=none         thread=4
+hook:before-step a Given step calls a ButWhen sub-step, then calls r10 ambient=Setup    resolver=97acdcd8-060 scope=none         thread=4
+r10-before-sub                               ambient=Setup    resolver=97acdcd8-060 scope=none         thread=4
+r10-in-sub                                   ambient=Setup    resolver=97acdcd8-060 scope=none         thread=4
+r10-after-sub                                ambient=Setup    resolver=97acdcd8-060 scope=none         thread=4
+hook:after-step a Given step calls a ButWhen sub-step, then calls r10 ambient=Setup    resolver=97acdcd8-060 scope=none         thread=5
+hook:before-step a call named r10-when       ambient=Action   resolver=97acdcd8-060 scope=none         thread=5
+r10-when                                     ambient=Action   resolver=97acdcd8-060 scope=none         thread=5
+hook:after-step a call named r10-when        ambient=Action   resolver=97acdcd8-060 scope=none         thread=4
+hook:before-step a call named r09-given      ambient=Setup    resolver=0579a541-009 scope=none         thread=4
+r09-given                                    ambient=Setup    resolver=0579a541-009 scope=none         thread=4
+hook:after-step a call named r09-given       ambient=Setup    resolver=0579a541-009 scope=none         thread=4
+hook:before-step a When binding woven as a GivenStep calls r09 ambient=Action   resolver=0579a541-009 scope=none         thread=4
+r09-in-binding                               ambient=Action   resolver=0579a541-009 scope=none         thread=4
+hook:after-step a When binding woven as a GivenStep calls r09 ambient=Action   resolver=0579a541-009 scope=none         thread=5
+hook:before-step a call named r09-then       ambient=Action   resolver=0579a541-009 scope=none         thread=5
+r09-then                                     ambient=Action   resolver=0579a541-009 scope=none         thread=5
+hook:after-step a call named r09-then        ambient=Action   resolver=0579a541-009 scope=none         thread=4
+hook:before-step a call named r08-given      ambient=Setup    resolver=ada70442-51b scope=none         thread=4
+r08-given                                    ambient=Setup    resolver=ada70442-51b scope=none         thread=4
+hook:after-step a call named r08-given       ambient=Setup    resolver=ada70442-51b scope=none         thread=5
+hook:before-step a When step calls an async Given sub-step, then calls r08 ambient=Action   resolver=ada70442-51b scope=none         thread=5
+r08-before-sub                               ambient=Action   resolver=ada70442-51b scope=none         thread=5
+r08-in-sub                                   ambient=Action   resolver=ada70442-51b scope=none         thread=5
+r08-after-sub                                ambient=Action   resolver=ada70442-51b scope=none         thread=17
+hook:after-step a When step calls an async Given sub-step, then calls r08 ambient=Action   resolver=ada70442-51b scope=none         thread=17
+hook:before-step a call named r08-then       ambient=Action   resolver=ada70442-51b scope=none         thread=17
+r08-then                                     ambient=Action   resolver=ada70442-51b scope=none         thread=17
+hook:after-step a call named r08-then        ambient=Action   resolver=ada70442-51b scope=none         thread=5
+hook:before-step a call named r07-star1      ambient=Setup    resolver=020eaddf-136 scope=none         thread=5
+r07-star1                                    ambient=Setup    resolver=020eaddf-136 scope=none         thread=5
+hook:after-step a call named r07-star1       ambient=Setup    resolver=020eaddf-136 scope=none         thread=4
+hook:before-step a call named r07-given      ambient=Setup    resolver=020eaddf-136 scope=none         thread=4
+r07-given                                    ambient=Setup    resolver=020eaddf-136 scope=none         thread=4
+hook:after-step a call named r07-given       ambient=Setup    resolver=020eaddf-136 scope=none         thread=4
+hook:before-step a call named r07-star2      ambient=Setup    resolver=020eaddf-136 scope=none         thread=4
+r07-star2                                    ambient=Setup    resolver=020eaddf-136 scope=none         thread=4
+hook:after-step a call named r07-star2       ambient=Setup    resolver=020eaddf-136 scope=none         thread=4
+hook:before-step a call named r07-when       ambient=Action   resolver=020eaddf-136 scope=none         thread=4
+r07-when                                     ambient=Action   resolver=020eaddf-136 scope=none         thread=4
+hook:after-step a call named r07-when        ambient=Action   resolver=020eaddf-136 scope=none         thread=4
+hook:before-step a call named r07-star3      ambient=Action   resolver=020eaddf-136 scope=none         thread=4
+r07-star3                                    ambient=Action   resolver=020eaddf-136 scope=none         thread=4
+hook:after-step a call named r07-star3       ambient=Action   resolver=020eaddf-136 scope=none         thread=17
+hook:before-step a call named r06-given      ambient=Setup    resolver=4ddd9020-56b scope=none         thread=17
+r06-given                                    ambient=Setup    resolver=4ddd9020-56b scope=none         thread=17
+hook:after-step a call named r06-given       ambient=Setup    resolver=4ddd9020-56b scope=none         thread=17
+hook:before-step a call named r06-given-and  ambient=Setup    resolver=4ddd9020-56b scope=none         thread=17
+r06-given-and                                ambient=Setup    resolver=4ddd9020-56b scope=none         thread=17
+hook:after-step a call named r06-given-and   ambient=Setup    resolver=4ddd9020-56b scope=none         thread=17
+hook:before-step a call named r06-given-but  ambient=Setup    resolver=4ddd9020-56b scope=none         thread=17
+r06-given-but                                ambient=Setup    resolver=4ddd9020-56b scope=none         thread=17
+hook:after-step a call named r06-given-but   ambient=Setup    resolver=4ddd9020-56b scope=none         thread=5
+hook:before-step a call named r06-when       ambient=Action   resolver=4ddd9020-56b scope=none         thread=5
+r06-when                                     ambient=Action   resolver=4ddd9020-56b scope=none         thread=5
+hook:after-step a call named r06-when        ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+hook:before-step a call named r06-when-and   ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+r06-when-and                                 ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+hook:after-step a call named r06-when-and    ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+hook:before-step a call named r06-when-but   ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+r06-when-but                                 ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+hook:after-step a call named r06-when-but    ambient=Action   resolver=4ddd9020-56b scope=none         thread=5
+hook:before-step a call named r06-then       ambient=Action   resolver=4ddd9020-56b scope=none         thread=5
+r06-then                                     ambient=Action   resolver=4ddd9020-56b scope=none         thread=5
+hook:after-step a call named r06-then        ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+hook:before-step a call named r06-then-and   ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+r06-then-and                                 ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+hook:after-step a call named r06-then-and    ambient=Action   resolver=4ddd9020-56b scope=none         thread=5
+hook:before-step a call named r06-then-but   ambient=Action   resolver=4ddd9020-56b scope=none         thread=5
+r06-then-but                                 ambient=Action   resolver=4ddd9020-56b scope=none         thread=5
+hook:after-step a call named r06-then-but    ambient=Action   resolver=4ddd9020-56b scope=none         thread=17
+hook:before-step a call named r05-given      ambient=Setup    resolver=d0ea1653-bad scope=none         thread=17
+r05-given                                    ambient=Setup    resolver=d0ea1653-bad scope=none         thread=17
+hook:after-step a call named r05-given       ambient=Setup    resolver=d0ea1653-bad scope=none         thread=4
+hook:before-step a When step calls a keyword-free sub-step, then calls r05 ambient=Action   resolver=d0ea1653-bad scope=none         thread=4
+r05-before-sub                               ambient=Action   resolver=d0ea1653-bad scope=none         thread=4
+r05-in-sub                                   ambient=Action   resolver=d0ea1653-bad scope=none         thread=4
+r05-after-sub                                ambient=Action   resolver=d0ea1653-bad scope=none         thread=4
+hook:after-step a When step calls a keyword-free sub-step, then calls r05 ambient=Action   resolver=d0ea1653-bad scope=none         thread=17
+hook:before-step a call named r05-then       ambient=Action   resolver=d0ea1653-bad scope=none         thread=17
+r05-then                                     ambient=Action   resolver=d0ea1653-bad scope=none         thread=17
+hook:after-step a call named r05-then        ambient=Action   resolver=d0ea1653-bad scope=none         thread=17
+hook:before-step a Given step calls an async Then sub-step, then calls r04 ambient=Setup    resolver=76ae3190-87c scope=none         thread=17
+r04-before-sub                               ambient=Setup    resolver=76ae3190-87c scope=none         thread=17
+r04-in-sub                                   ambient=Setup    resolver=76ae3190-87c scope=none         thread=17
+r04-after-sub                                ambient=Setup    resolver=76ae3190-87c scope=none         thread=17
+hook:after-step a Given step calls an async Then sub-step, then calls r04 ambient=Setup    resolver=76ae3190-87c scope=none         thread=17
+hook:before-step a call named r04-when       ambient=Action   resolver=76ae3190-87c scope=none         thread=17
+r04-when                                     ambient=Action   resolver=76ae3190-87c scope=none         thread=17
+hook:after-step a call named r04-when        ambient=Action   resolver=76ae3190-87c scope=none         thread=17
+hook:before-step a Given step calls an async When sub-step, then calls r03 ambient=Setup    resolver=35baead0-384 scope=none         thread=17
+r03-before-sub                               ambient=Setup    resolver=35baead0-384 scope=none         thread=17
+r03-in-sub                                   ambient=Setup    resolver=35baead0-384 scope=none         thread=17
+r03-after-sub                                ambient=Setup    resolver=35baead0-384 scope=none         thread=17
+hook:after-step a Given step calls an async When sub-step, then calls r03 ambient=Setup    resolver=35baead0-384 scope=none         thread=17
+hook:before-step a call named r03-and        ambient=Setup    resolver=35baead0-384 scope=none         thread=17
+r03-and                                      ambient=Setup    resolver=35baead0-384 scope=none         thread=17
+hook:after-step a call named r03-and         ambient=Setup    resolver=35baead0-384 scope=none         thread=17
+hook:before-step a call named r03-when       ambient=Action   resolver=35baead0-384 scope=none         thread=17
+r03-when                                     ambient=Action   resolver=35baead0-384 scope=none         thread=17
+hook:after-step a call named r03-when        ambient=Action   resolver=35baead0-384 scope=none         thread=17
+hook:before-step a call named r03-then       ambient=Action   resolver=35baead0-384 scope=none         thread=17
+r03-then                                     ambient=Action   resolver=35baead0-384 scope=none         thread=17
+hook:after-step a call named r03-then        ambient=Action   resolver=35baead0-384 scope=none         thread=17
+hook:before-step a call named r02-given      ambient=Setup    resolver=a921e46c-905 scope=none         thread=17
+r02-given                                    ambient=Setup    resolver=a921e46c-905 scope=none         thread=17
+hook:after-step a call named r02-given       ambient=Setup    resolver=a921e46c-905 scope=none         thread=17
+hook:before-step a When step calls a sync Given sub-step, then calls r02 ambient=Action   resolver=a921e46c-905 scope=none         thread=17
+r02-before-sub                               ambient=Action   resolver=a921e46c-905 scope=none         thread=17
+r02-in-sub                                   ambient=Action   resolver=a921e46c-905 scope=none         thread=17
+r02-after-sub                                ambient=Action   resolver=a921e46c-905 scope=none         thread=17
+hook:after-step a When step calls a sync Given sub-step, then calls r02 ambient=Action   resolver=a921e46c-905 scope=none         thread=4
+hook:before-step a call named r02-then       ambient=Action   resolver=a921e46c-905 scope=none         thread=4
+r02-then                                     ambient=Action   resolver=a921e46c-905 scope=none         thread=4
+hook:after-step a call named r02-then        ambient=Action   resolver=a921e46c-905 scope=none         thread=17
+hook:before-step a Given step nests When under a keyword-free sub-step, then calls r16 ambient=Setup    resolver=0323735b-e73 scope=none         thread=17
+r16-in-sub-inner-when                        ambient=Setup    resolver=0323735b-e73 scope=none         thread=17
+r16-in-sub-after-inner-when                  ambient=Setup    resolver=0323735b-e73 scope=none         thread=17
+r16-after-sub                                ambient=Setup    resolver=0323735b-e73 scope=none         thread=17
+hook:after-step a Given step nests When under a keyword-free sub-step, then calls r16 ambient=Setup    resolver=0323735b-e73 scope=none         thread=4
+hook:before-step a call named r16-when       ambient=Action   resolver=0323735b-e73 scope=none         thread=4
+r16-when                                     ambient=Action   resolver=0323735b-e73 scope=none         thread=4
+hook:after-step a call named r16-when        ambient=Action   resolver=0323735b-e73 scope=none         thread=4
+hook:before-step a call named r01-given      ambient=Setup    resolver=8a91a079-37d scope=none         thread=4
+r01-given                                    ambient=Setup    resolver=8a91a079-37d scope=none         thread=4
+hook:after-step a call named r01-given       ambient=Setup    resolver=8a91a079-37d scope=none         thread=4
+hook:before-step a When step calls an async Given sub-step, then calls r01 ambient=Action   resolver=8a91a079-37d scope=none         thread=4
+r01-before-sub                               ambient=Action   resolver=8a91a079-37d scope=none         thread=4
+r01-in-sub                                   ambient=Action   resolver=8a91a079-37d scope=none         thread=4
+r01-after-sub                                ambient=Action   resolver=8a91a079-37d scope=none         thread=4
+hook:after-step a When step calls an async Given sub-step, then calls r01 ambient=Action   resolver=8a91a079-37d scope=none         thread=4
+hook:before-step a call named r01-then       ambient=Action   resolver=8a91a079-37d scope=none         thread=4
+r01-then                                     ambient=Action   resolver=8a91a079-37d scope=none         thread=4
+hook:after-step a call named r01-then        ambient=Action   resolver=8a91a079-37d scope=none         thread=4

@@ -1,0 +1,236 @@
+## L40 a When leaves a woven step running a later Then marks
+  [Step] <color:white>GIVEN a call named [label: "l40-seed"]
+  
+  Request  l40-seed                       phase=Setup   src=TestContext
+  Response l40-seed                       phase=Setup   src=TestContext
+  Request  l40-seed-nosetup               phase=Setup   src=TestContext IGNORED
+  Response l40-seed-nosetup               phase=Setup   src=TestContext IGNORED
+  Request  l40-seed-noaction              phase=Setup   src=TestContext
+  Response l40-seed-noaction              phase=Setup   src=TestContext
+  [Step] <color:white>WHEN a step leaves a woven given running [label: "l40-act"]
+  
+  --- MARKER ---
+  Request  l40-act                        phase=Action  src=TestContext
+  Response l40-act                        phase=Action  src=TestContext
+  Request  l40-act-nosetup                phase=Action  src=TestContext
+  Response l40-act-nosetup                phase=Action  src=TestContext
+  Request  l40-act-noaction               phase=Action  src=TestContext IGNORED
+  Response l40-act-noaction               phase=Action  src=TestContext IGNORED
+  Request  l40-then                       phase=Action  src=TestContext
+  Response l40-then                       phase=Action  src=TestContext
+  Request  l40-then-nosetup               phase=Action  src=TestContext
+  Response l40-then-nosetup               phase=Action  src=TestContext
+  Request  l40-then-noaction              phase=Action  src=TestContext IGNORED
+  Response l40-then-noaction              phase=Action  src=TestContext IGNORED
+  Request  l40-act-left                   phase=Action  src=TestContext
+  Response l40-act-left                   phase=Action  src=TestContext
+  Request  l40-release                    phase=Action  src=TestContext
+  Response l40-release                    phase=Action  src=TestContext
+  Request  l40-release-nosetup            phase=Action  src=TestContext
+  Response l40-release-nosetup            phase=Action  src=TestContext
+  Request  l40-release-noaction           phase=Action  src=TestContext IGNORED
+  Response l40-release-noaction           phase=Action  src=TestContext IGNORED
+  steps:
+    GIVEN a call named [label: "l40-seed"] [Passed]
+    WHEN a step leaves a woven given running [label: "l40-act"] [Passed]
+      Given Woven slow [Passed]
+      THEN a marking check named [label: "l40-then"] [Passed]
+      THEN the left step is released [label: "l40-release"] [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>GIVEN a call named [label: "l40-seed"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>WHEN a step leaves a woven given running [label: "l40-act"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L41 a When runs skipped woven steps
+  [Step] <color:white>GIVEN a call named [label: "l41-seed"]
+  
+  Request  l41-seed                       phase=Setup   src=TestContext
+  Response l41-seed                       phase=Setup   src=TestContext
+  Request  l41-seed-nosetup               phase=Setup   src=TestContext IGNORED
+  Response l41-seed-nosetup               phase=Setup   src=TestContext IGNORED
+  Request  l41-seed-noaction              phase=Setup   src=TestContext
+  Response l41-seed-noaction              phase=Setup   src=TestContext
+  [Step] <color:white>WHEN a step runs skipped woven steps [label: "l41"]
+  
+  --- MARKER ---
+  Request  l41-before                     phase=Action  src=TestContext
+  Response l41-before                     phase=Action  src=TestContext
+  Request  l41-before-nosetup             phase=Action  src=TestContext
+  Response l41-before-nosetup             phase=Action  src=TestContext
+  Request  l41-before-noaction            phase=Action  src=TestContext IGNORED
+  Response l41-before-noaction            phase=Action  src=TestContext IGNORED
+  Request  l41-after-sync                 phase=Action  src=TestContext
+  Response l41-after-sync                 phase=Action  src=TestContext
+  Request  l41-after-sync-nosetup         phase=Action  src=TestContext
+  Response l41-after-sync-nosetup         phase=Action  src=TestContext
+  Request  l41-after-sync-noaction        phase=Action  src=TestContext IGNORED
+  Response l41-after-sync-noaction        phase=Action  src=TestContext IGNORED
+  Request  l41-after-async                phase=Action  src=TestContext
+  Response l41-after-async                phase=Action  src=TestContext
+  Request  l41-after-async-nosetup        phase=Action  src=TestContext
+  Response l41-after-async-nosetup        phase=Action  src=TestContext
+  Request  l41-after-async-noaction       phase=Action  src=TestContext IGNORED
+  Response l41-after-async-noaction       phase=Action  src=TestContext IGNORED
+  Request  l41-sub                        phase=Action  src=TestContext
+  Response l41-sub                        phase=Action  src=TestContext
+  Request  l41-sub-nosetup                phase=Action  src=TestContext
+  Response l41-sub-nosetup                phase=Action  src=TestContext
+  Request  l41-sub-noaction               phase=Action  src=TestContext IGNORED
+  Response l41-sub-noaction               phase=Action  src=TestContext IGNORED
+  Request  l41-after                      phase=Action  src=TestContext
+  Response l41-after                      phase=Action  src=TestContext
+  Request  l41-after-nosetup              phase=Action  src=TestContext
+  Response l41-after-nosetup              phase=Action  src=TestContext
+  Request  l41-after-noaction             phase=Action  src=TestContext IGNORED
+  Response l41-after-noaction             phase=Action  src=TestContext IGNORED
+  [Step] <color:white>THEN a call named [label: "l41-then"]
+  
+  Request  l41-then                       phase=Action  src=TestContext
+  Response l41-then                       phase=Action  src=TestContext
+  Request  l41-then-nosetup               phase=Action  src=TestContext
+  Response l41-then-nosetup               phase=Action  src=TestContext
+  Request  l41-then-noaction              phase=Action  src=TestContext IGNORED
+  Response l41-then-noaction              phase=Action  src=TestContext IGNORED
+  steps:
+    GIVEN a call named [label: "l41-seed"] [Passed]
+    WHEN a step runs skipped woven steps [label: "l41"] [Passed]
+      Given Skip sync [Bypassed]
+      Given Skip async [Bypassed]
+      Given Skip task [Bypassed]
+      When Skip when int [Bypassed]
+      Given Woven given [Passed]
+    THEN a call named [label: "l41-then"] [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>GIVEN a call named [label: "l41-seed"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>WHEN a step runs skipped woven steps [label: "l41"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>THEN a call named [label: "l41-then"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L42 a Given runs a woven Given whose getter makes calls
+  [Step] <color:white>GIVEN a step runs a woven given with a getter [label: "l42-seed"]
+  
+  Request  getter                         phase=Setup   src=TestContext
+  Response getter                         phase=Setup   src=TestContext
+  Request  getter-nosetup                 phase=Setup   src=TestContext IGNORED
+  Response getter-nosetup                 phase=Setup   src=TestContext IGNORED
+  Request  getter-noaction                phase=Setup   src=TestContext
+  Response getter-noaction                phase=Setup   src=TestContext
+  Request  l42-seed                       phase=Setup   src=TestContext
+  Response l42-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>WHEN a call named [label: "l42-act"]
+  
+  --- MARKER ---
+  Request  l42-act                        phase=Action  src=TestContext
+  Response l42-act                        phase=Action  src=TestContext
+  Request  l42-act-nosetup                phase=Action  src=TestContext
+  Response l42-act-nosetup                phase=Action  src=TestContext
+  Request  l42-act-noaction               phase=Action  src=TestContext IGNORED
+  Response l42-act-noaction               phase=Action  src=TestContext IGNORED
+  [Step] <color:white>THEN a call named [label: "l42-then"]
+  
+  Request  l42-then                       phase=Action  src=TestContext
+  Response l42-then                       phase=Action  src=TestContext
+  Request  l42-then-nosetup               phase=Action  src=TestContext
+  Response l42-then-nosetup               phase=Action  src=TestContext
+  Request  l42-then-noaction              phase=Action  src=TestContext IGNORED
+  Response l42-then-noaction              phase=Action  src=TestContext IGNORED
+  steps:
+    GIVEN a step runs a woven given with a getter [label: "l42-seed"] [Passed]
+      Given Woven given with getter [Passed]
+    WHEN a call named [label: "l42-act"] [Passed]
+    THEN a call named [label: "l42-then"] [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>GIVEN a step runs a woven given with a getter [label: "l42-
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>WHEN a call named [label: "l42-act"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>THEN a call named [label: "l42-then"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L43 a When bypasses a hand step
+  [Step] <color:white>GIVEN a call named [label: "l43-seed"]
+  
+  Request  l43-seed                       phase=Setup   src=TestContext
+  Response l43-seed                       phase=Setup   src=TestContext
+  Request  l43-seed-nosetup               phase=Setup   src=TestContext IGNORED
+  Response l43-seed-nosetup               phase=Setup   src=TestContext IGNORED
+  Request  l43-seed-noaction              phase=Setup   src=TestContext
+  Response l43-seed-noaction              phase=Setup   src=TestContext
+  [Step] <color:white>WHEN a step bypasses by hand [label: "l43-act"]
+  
+  --- MARKER ---
+  Request  l43-act-before                 phase=Action  src=TestContext
+  Response l43-act-before                 phase=Action  src=TestContext
+  Request  l43-act-before-nosetup         phase=Action  src=TestContext
+  Response l43-act-before-nosetup         phase=Action  src=TestContext
+  Request  l43-act-before-noaction        phase=Action  src=TestContext IGNORED
+  Response l43-act-before-noaction        phase=Action  src=TestContext IGNORED
+  Request  l43-act                        phase=Action  src=TestContext
+  Response l43-act                        phase=Action  src=TestContext
+  Request  l43-act-nosetup                phase=Action  src=TestContext
+  Response l43-act-nosetup                phase=Action  src=TestContext
+  Request  l43-act-noaction               phase=Action  src=TestContext IGNORED
+  Response l43-act-noaction               phase=Action  src=TestContext IGNORED
+  [Step] <color:white>THEN a call named [label: "l43-then"]
+  
+  Request  l43-then                       phase=Action  src=TestContext
+  Response l43-then                       phase=Action  src=TestContext
+  Request  l43-then-nosetup               phase=Action  src=TestContext
+  Response l43-then-nosetup               phase=Action  src=TestContext
+  Request  l43-then-noaction              phase=Action  src=TestContext IGNORED
+  Response l43-then-noaction              phase=Action  src=TestContext IGNORED
+  steps:
+    GIVEN a call named [label: "l43-seed"] [Passed]
+    WHEN a step bypasses by hand [label: "l43-act"] [Passed]
+      Given l43-act-manual [Bypassed]
+    THEN a call named [label: "l43-then"] [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>GIVEN a call named [label: "l43-seed"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>WHEN a step bypasses by hand [label: "l43-act"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>THEN a call named [label: "l43-then"]
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+

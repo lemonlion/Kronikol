@@ -1,0 +1,125 @@
+KILLED solid=9 order=0 racing-new=1 racing-seen=9
+first: rev5/rev5-a: A01_And_after_Reset_on_the_same_flow: Request: a01-and phase=Unknown src=TestContext > a01-and phase=Setup src=TestContext; Response: a01-and phase=Unknown src=TestContext > a01-and phase=Setup src=TestContext; Request: a01-and-
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev5/rev5-a] rev5-a.txt: SOLID A01_And_after_Reset_on_the_same_flow
+    Request: a01-and phase=Unknown src=TestContext > a01-and phase=Setup src=TestContext; Response: a01-and phase=Unknown src=TestContext > a01-and phase=Setup src=TestContext; Request: a01-and-nosetup phase=Unknown src=TestContext > a01-and-nosetup phase=Setup src=TestContext IGNORED; Response: a01-and-nosetup phase=Unknown src=TestContext > a01-and-nosetup phase=Setup src=TestContext IGNORED; Re
+      - Request a01-and phase=Unknown src=TestContext
+      - Response a01-and phase=Unknown src=TestContext
+      - Request a01-and-nosetup phase=Unknown src=TestContext
+      - Response a01-and-nosetup phase=Unknown src=TestContext
+      - Request a01-and-noaction phase=Unknown src=TestContext
+      - Response a01-and-noaction phase=Unknown src=TestContext
+      + Request a01-and phase=Setup src=TestContext
+      + Response a01-and phase=Setup src=TestContext
+      + Request a01-and-nosetup phase=Setup src=TestContext IGNORED
+      + Response a01-and-nosetup phase=Setup src=TestContext IGNORED
+      + Request a01-and-noaction phase=Setup src=TestContext
+      + Response a01-and-noaction phase=Setup src=TestContext
+      - shop -[#438DD5]-> probe: OK
+[rev5/rev5-a] rev5-a.txt: SOLID A02_And_after_Unknown_direct_write_in_a_Then
+    Request: a02-and phase=Unknown src=TestContext > a02-and phase=Action src=TestContext; Response: a02-and phase=Unknown src=TestContext > a02-and phase=Action src=TestContext; Request: a02-and-nosetup phase=Unknown src=TestContext > a02-and-nosetup phase=Action src=TestContext; Response: a02-and-nosetup phase=Unknown src=TestContext > a02-and-nosetup phase=Action src=TestContext; Request: a02-a
+      - Request a02-and phase=Unknown src=TestContext
+      - Response a02-and phase=Unknown src=TestContext
+      - Request a02-and-nosetup phase=Unknown src=TestContext
+      - Response a02-and-nosetup phase=Unknown src=TestContext
+      - Request a02-and-noaction phase=Unknown src=TestContext
+      - Response a02-and-noaction phase=Unknown src=TestContext
+      + Request a02-and phase=Action src=TestContext
+      + Response a02-and phase=Action src=TestContext
+      + Request a02-and-nosetup phase=Action src=TestContext
+      + Response a02-and-nosetup phase=Action src=TestContext
+      + Request a02-and-noaction phase=Action src=TestContext IGNORED
+      + Response a02-and-noaction phase=Action src=TestContext IGNORED
+      - shop -[#438DD5]-> probe: OK
+[rev5/rev5-a] rev5-a.txt: SOLID A03_And_on_a_flow_forked_before_the_Given
+    Request: a03-bg-and phase=Unknown src=TestContext > a03-bg-and phase=Setup src=TestContext; Response: a03-bg-and phase=Unknown src=TestContext > a03-bg-and phase=Setup src=TestContext; Request: a03-bg-and-nosetup phase=Unknown src=TestContext > a03-bg-and-nosetup phase=Setup src=TestContext IGNORED; Response: a03-bg-and-nosetup phase=Unknown src=TestContext > a03-bg-and-nosetup phase=Setup src
+      - Request a03-bg-and phase=Unknown src=TestContext
+      - Response a03-bg-and phase=Unknown src=TestContext
+      - Request a03-bg-and-nosetup phase=Unknown src=TestContext
+      - Response a03-bg-and-nosetup phase=Unknown src=TestContext
+      - Request a03-bg-and-noaction phase=Unknown src=TestContext
+      - Response a03-bg-and-noaction phase=Unknown src=TestContext
+      + Request a03-bg-and phase=Setup src=TestContext
+      + Response a03-bg-and phase=Setup src=TestContext
+      + Request a03-bg-and-nosetup phase=Setup src=TestContext IGNORED
+      + Response a03-bg-and-nosetup phase=Setup src=TestContext IGNORED
+      + Request a03-bg-and-noaction phase=Setup src=TestContext
+      + Response a03-bg-and-noaction phase=Setup src=TestContext
+      - shop -[#438DD5]-> probe: OK
+[rev5/rev5-a] rev5-a.txt: SOLID A04_And_on_a_flow_forked_before_the_When_and_running_after_it
+    Request: a04-bg-and phase=Unknown src=TestContext > a04-bg-and phase=Action src=TestContext; Response: a04-bg-and phase=Unknown src=TestContext > a04-bg-and phase=Action src=TestContext; Request: a04-bg-and-nosetup phase=Unknown src=TestContext > a04-bg-and-nosetup phase=Action src=TestContext; Response: a04-bg-and-nosetup phase=Unknown src=TestContext > a04-bg-and-nosetup phase=Action src=Tes
+      - Request a04-bg-and phase=Unknown src=TestContext
+      - Response a04-bg-and phase=Unknown src=TestContext
+      - Request a04-bg-and-nosetup phase=Unknown src=TestContext
+      - Response a04-bg-and-nosetup phase=Unknown src=TestContext
+      - Request a04-bg-and-noaction phase=Unknown src=TestContext
+      - Response a04-bg-and-noaction phase=Unknown src=TestContext
+      + Request a04-bg-and phase=Action src=TestContext
+      + Response a04-bg-and phase=Action src=TestContext
+      + Request a04-bg-and-nosetup phase=Action src=TestContext
+      + Response a04-bg-and-nosetup phase=Action src=TestContext
+      + Request a04-bg-and-noaction phase=Action src=TestContext IGNORED
+      + Response a04-bg-and-noaction phase=Action src=TestContext IGNORED
+      - shop -[#438DD5]-> probe: OK
+[rev5/rev5-a] rev5-a.txt: SOLID A05_And_with_a_scope_on_an_unnamed_flow
+    Request: a05-service-and phase=Unknown src=Scope > a05-service-and phase=Action src=Scope; Response: a05-service-and phase=Unknown src=Scope > a05-service-and phase=Action src=Scope; Request: a05-service-and-nosetup phase=Unknown src=Scope > a05-service-and-nosetup phase=Action src=Scope; Response: a05-service-and-nosetup phase=Unknown src=Scope > a05-service-and-nosetup phase=Action src=Scope
+      - Request a05-service-and phase=Unknown src=Scope
+      - Response a05-service-and phase=Unknown src=Scope
+      - Request a05-service-and-nosetup phase=Unknown src=Scope
+      - Response a05-service-and-nosetup phase=Unknown src=Scope
+      - Request a05-service-and-noaction phase=Unknown src=Scope
+      - Response a05-service-and-noaction phase=Unknown src=Scope
+      + Request a05-service-and phase=Action src=Scope
+      + Response a05-service-and phase=Action src=Scope
+      + Request a05-service-and-nosetup phase=Action src=Scope
+      + Response a05-service-and-nosetup phase=Action src=Scope
+      + Request a05-service-and-noaction phase=Action src=Scope IGNORED
+      + Response a05-service-and-noaction phase=Action src=Scope IGNORED
+      - shop -[#438DD5]-> probe: OK
+[rev5/rev5-a] rev5-a.txt: RACING-NEW L02_Parallel_ForEach_of_sync_Givens_inside_a_When (baseline variants 3, 2 shapes)
+    Request: l02-a phase=Action src=TestContext > l02-d phase=Action src=TestContext; Response: l02-c phase=Action src=TestContext > l02-c phase=Action src=TestContext; Request: l02-d phase=Action src=TestContext > l02-a phase=Action src=TestContext; Response: l02-d phase=Action src=TestContext > l02-d phase=Action src=TestContext; Given: Sync [Passed] > Sync [Passed]
+      - Request l02-a phase=Action src=TestContext
+      + Request l02-d phase=Action src=TestContext
+      + Request l02-a phase=Action src=TestContext
+      + Response l02-c phase=Action src=TestContext
+      + Response l02-d phase=Action src=TestContext
+      - Response l02-c phase=Action src=TestContext
+      - Request l02-d phase=Action src=TestContext
+      - Response l02-d phase=Action src=TestContext
+      - Given Sync [Passed]
+      + Given Sync [Passed]
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L04_Parallel_ForEach_of_sync_Givens_at_the_top_then_When_with_nested_Given
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.B_LeftRunning.B06_sync_Given_with_a_Task_Run_worker_step_then_When
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+[review/rev3-plain] rev3-plain.plantuml.txt: SOLID PhaseProbe.Rev3.G_More.G03_manual_lower_case_and_setup_keywords
+    new: partition #F6F6F6 Setup; new: end
+      + partition #F6F6F6 Setup
+      + end
+[review/rev3-plain] rev3-plain.plantuml.txt: SOLID PhaseProbe.Rev3.G_More.G04_manual_And_after_a_phase_set_directly
+    new: partition #F6F6F6 Setup; new: end
+      + partition #F6F6F6 Setup
+      + end
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+[review/rev3-plain] rev3-plain.txt: SOLID PhaseProbe.Rev3.G_More.G03_manual_lower_case_and_setup_keywords
+    g03-after-lower-given: http Unknown > http Setup; g03-after-lower-given: msg Unknown > msg Setup; g03-after-setup: http Unknown > http Setup; g03-after-setup: msg Unknown > msg Setup; g03-after-upper-when: http Unknown > http Action; g03-after-upper-when: msg Unknown > msg Action; new: --- ACTION START MARKER ---
+      - g03-after-lower-given http Unknown
+      - g03-after-lower-given msg Unknown
+      + g03-after-lower-given http Setup
+      + g03-after-lower-given msg Setup
+      - g03-after-setup http Unknown
+      - g03-after-setup msg Unknown
+      + g03-after-setup http Setup
+      + g03-after-setup msg Setup
+      - g03-after-upper-when http Unknown
+      - g03-after-upper-when msg Unknown
+      + --- ACTION START MARKER ---
+      + g03-after-upper-when http Action
+      + g03-after-upper-when msg Action
+[review/rev3-plain] rev3-plain.txt: SOLID PhaseProbe.Rev3.G_More.G04_manual_And_after_a_phase_set_directly
+    new: --- ACTION START MARKER ---
+      + --- ACTION START MARKER ---

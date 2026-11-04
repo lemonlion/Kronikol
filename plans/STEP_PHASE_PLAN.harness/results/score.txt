@@ -1,0 +1,20 @@
+variant        reqnroll-xunit2      xunit3-plain   lightbdd-xunit2      bddfy-xunit3       all  (cells that differ from the rule's answer, of the total)
+5.28.2                  49/179            28/266            67/112             12/74156/   631
+issue                   14/179            54/266            67/112              4/74139/   631
+r1                       0/179             0/266             0/111              4/74  4/   630
+r2                       0/179             0/266             0/111              4/74  4/   630
+r3                       0/179             0/266             0/111              0/74  0/   630
+
+variant        reqnroll-xunit2      xunit3-plain   lightbdd-xunit2      bddfy-xunit3       all  (cells right at 5.28.2 and wrong here: what the variant breaks)
+issue                        0                50                 0                 0        50
+r1                           0                 0                 0                 0         0
+r2                           0                 0                 0                 0         0
+r3                           0                 0                 0                 0         0
+  issue breaks: x04-wrapped-given/http, x04-wrapped-given/message, x04-wrapper-after-given/http, x04-wrapper-after-given/message, x04-wrapped-when/http, x04-wrapped-when/message, x04-wrapper-after-when/http, x04-wrapper-after-when/message, x05-wrapped-given/http, x05-wrapped-given/message, x05-wrapper-after-given/http, x05-wrapper-after-given/message, x05-wrapped-when/http, x05-wrapped-when/message, x05-wrapper-after-when/http, x05-wrapper-after-when/message, x05-after-wrapper/http, x05-after-wrapper/message, x09-when-while-open/http, x09-when-while-open/message, x09-after-when-while-open/http, x09-after-when-while-open/message, x09-after-closed/http, x09-after-closed/message, x10-when/http, x10-when/message, x10-after/http, x10-after/message, x21-when/http, x21-when/message, x21-after/http, x21-after/message, x23-wrapped-when/http, x23-wrapped-when/message, x25-when/http, x25-when/message, x25-then/http, x25-then/message, x26-given/http, x26-given/message, x27-when/http, x27-when/message, x32-when/http, x32-when/message, x33-when/http, x33-when/message, x33-after-when/http, x33-after-when/message, x35-when-1/http, x35-when-1/message
+
+variant        reqnroll-xunit2      xunit3-plain   lightbdd-xunit2      bddfy-xunit3  (tests with a Setup/Action boundary, of the tests)
+5.28.2                   18/22              3/36             12/16              9/11
+issue                    18/22              3/36             12/16              9/11
+r1                       18/22              3/36             12/16              9/11
+r2                       21/22             31/36             15/16             11/11
+r3                       21/22             31/36             15/16             11/11

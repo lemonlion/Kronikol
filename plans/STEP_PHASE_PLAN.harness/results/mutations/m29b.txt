@@ -1,0 +1,51 @@
+KILLED solid=5 order=0 racing-new=0 racing-seen=3
+first: main/bddfy-xunit3: B04_an_async_When_step_calls_a_woven_Given: b04-in-sub: Action Action > Setup Setup; b04-after-sub: Action Action > Setup Setup; Given: Woven given [Passed] > Woven given [Passed]; new: [bar] <color:white>Given Woven given
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B04_an_async_When_step_calls_a_woven_Given
+    b04-in-sub: Action Action > Setup Setup; b04-after-sub: Action Action > Setup Setup; Given: Woven given [Passed] > Woven given [Passed]; new: [bar] <color:white>Given Woven given
+      -b04-in-sub Action Action
+      -b04-after-sub Action Action
+      +[bar] <color:white>Given Woven given
+      +b04-in-sub Setup Setup
+      +b04-after-sub Setup Setup
+      - Given Woven given [Passed]
+      + Given Woven given [Passed]
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[review/rev3-bddfy] rev3-bddfy.plantuml.txt: racing, shape seen PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running
+[review/rev3-bddfy] rev3-bddfy.plantuml.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z03_async_Given_with_woven_sub_steps
+    hnote: across <<stepDelimiter>> #black:<color:white>When a call z03-when > across <<stepDelimiter>> #black:<color:white>Plain woven; new: hnote across <<stepDelimiter>> #black:<color:white>When Woven when; new: hnote across <<stepDelimiter>> #black:<color:white>And a call z03-when
+      + hnote across <<stepDelimiter>> #black:<color:white>Plain woven
+      + hnote across <<stepDelimiter>> #black:<color:white>When Woven when
+      - hnote across <<stepDelimiter>> #black:<color:white>When a call z03-when
+      + hnote across <<stepDelimiter>> #black:<color:white>And a call z03-when
+[review/rev3-bddfy] rev3-bddfy.txt: racing, shape seen PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running
+[review/rev3-bddfy] rev3-bddfy.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z03_async_Given_with_woven_sub_steps
+    z03-when-sub: http Setup > http Action; z03-when-sub: msg Setup > msg Action; z03-after: http Setup > http Action; z03-after: msg Setup > msg Action; [Step]: <color:white>When a call z03-when > <color:white>Plain woven; (none): Plain woven [Passed] > Plain woven [Passed]; When: Woven when [Passed] > Woven when [Passed]; gone: When a call z03-when [Passed]; new: [Step] <color:white>When Woven w
+      + [Step] <color:white>Plain woven
+      - z03-when-sub http Setup
+      - z03-when-sub msg Setup
+      - z03-after http Setup
+      - z03-after msg Setup
+      - [Step] <color:white>When a call z03-when
+      + [Step] <color:white>When Woven when
+      + z03-when-sub http Action
+      + z03-when-sub msg Action
+      + z03-after http Action
+      + z03-after msg Action
+      + [Step] <color:white>And a call z03-when
+      - (none) Plain woven [Passed]
+      - When Woven when [Passed]
+      - When a call z03-when [Passed]
+      + (none) Plain woven [Passed]
+      + When Woven when [Passed]
+      + And a call z03-when [Passed]
+[review/rev3-bddfy] rev3-bddfy.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z04_async_step_fails_scenario_reports_it
+    When: async fails z04-when [Failed] > async fails z04-when [Passed]
+      - When async fails z04-when [Failed]
+      + When async fails z04-when [Passed]
+[review/rev3-bddfy] rev3-bddfy.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z13_a_failing_async_scenario_in_a_woven_parent
+    (none): Async scenario inside a step [Passed] > Async scenario inside a step [Failed]; When: async fails z13-when [Failed] > async fails z13-when [Passed]
+      - (none) Async scenario inside a step [Passed]
+      + (none) Async scenario inside a step [Failed]
+      - When async fails z13-when [Failed]
+      + When async fails z13-when [Passed]

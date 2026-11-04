@@ -1,0 +1,33 @@
+KILLED solid=4 order=0 racing-new=0 racing-seen=0
+first: rev6/rev6-bddfy: B32_A_When_leaves_a_woven_step_running_a_later_Then_marks: hnote: across <<stepDelimiter>> #black:<color:white>When leaves running b32-act > across <<stepDelimiter>> #black:<color:white>When leaves running b32-act; shop: -[#438DD5]-> probe: OK > -[#
+
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B32_A_When_leaves_a_woven_step_running_a_later_Then_marks
+    hnote: across <<stepDelimiter>> #black:<color:white>When leaves running b32-act > across <<stepDelimiter>> #black:<color:white>When leaves running b32-act; shop: -[#438DD5]-> probe: OK > -[#438DD5]-> probe: OK; new: --- MARKER ---
+      + --- MARKER ---
+      + hnote across <<stepDelimiter>> #black:<color:white>When leaves running b32-act
+      + shop -[#438DD5]-> probe: OK
+      - hnote across <<stepDelimiter>> #black:<color:white>When leaves running b32-act
+      - shop -[#438DD5]-> probe: OK
+[rev6/rev6-lightbdd-x2] rev6-lightbdd-x2.txt: SOLID L40 a When leaves a woven step running a later Then marks
+    hnote: across <<stepDelimiter>> #black:<color:white>WHEN a step leaves a woven given running [label: "l40-act"] > across <<stepDelimiter>> #black:<color:white>WHEN a step leaves a woven given running [label: "l40-act"]; shop: -[#438DD5]-> probe: OK > -[#438DD5]-> probe: OK; gone: shop -[#438DD5]-> probe: OK; new: --- MARKER ---
+      + --- MARKER ---
+      + hnote across <<stepDelimiter>> #black:<color:white>WHEN a step leaves a woven given running [label: "l40-act"]
+      + shop -[#438DD5]-> probe: OK
+      + shop -[#438DD5]-> probe: OK
+      - hnote across <<stepDelimiter>> #black:<color:white>WHEN a step leaves a woven given running [label: "l40-act"]
+      - shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+[rev6/rev6-reqnroll] rev6-reqnroll.txt: SOLID R40 a When leaves a woven step running, a later Then marks
+    hnote: across <<stepDelimiter>> #black:<color:white>When a binding leaves a woven Given running named r40-act > across <<stepDelimiter>> #black:<color:white>When a binding leaves a woven Given running named r40-act; shop: -[#438DD5]-> probe: OK > -[#438DD5]-> probe: OK; new: --- MARKER ---
+      + --- MARKER ---
+      + hnote across <<stepDelimiter>> #black:<color:white>When a binding leaves a woven Given running named r40-act
+      + shop -[#438DD5]-> probe: OK
+      - hnote across <<stepDelimiter>> #black:<color:white>When a binding leaves a woven Given running named r40-act
+      - shop -[#438DD5]-> probe: OK
+[rev6/rev6-reqnroll-x3] rev6-reqnroll.txt: SOLID R40 a When leaves a woven step running, a later Then marks
+    hnote: across <<stepDelimiter>> #black:<color:white>When a binding leaves a woven Given running named r40-act > across <<stepDelimiter>> #black:<color:white>When a binding leaves a woven Given running named r40-act; shop: -[#438DD5]-> probe: OK > -[#438DD5]-> probe: OK; new: --- MARKER ---
+      + --- MARKER ---
+      + hnote across <<stepDelimiter>> #black:<color:white>When a binding leaves a woven Given running named r40-act
+      + shop -[#438DD5]-> probe: OK
+      - hnote across <<stepDelimiter>> #black:<color:white>When a binding leaves a woven Given running named r40-act
+      - shop -[#438DD5]-> probe: OK

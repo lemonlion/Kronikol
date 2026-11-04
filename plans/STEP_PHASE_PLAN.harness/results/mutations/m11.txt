@@ -1,0 +1,8 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=0
+first: main/lightbdd-xunit2: L13 LightBDDs own setup step type: l13-setup: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---
+
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L13 LightBDDs own setup step type
+    l13-setup: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---
+      -l13-setup Setup Setup
+      +l13-setup Unknown Unknown
+      ---- ACTION START MARKER ---

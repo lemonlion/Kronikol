@@ -1,0 +1,13 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=1
+first: main/xunit3-plain: X30_a_skipped_sub_step_then_a_real_one_in_a_When: x30-real-sub: Action Action > Setup Setup; x30-after: Action Action > Setup Setup; Given: Async [Passed] > Async [Passed]; new: [bar] <color:white>Given Async
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X30_a_skipped_sub_step_then_a_real_one_in_a_When
+    x30-real-sub: Action Action > Setup Setup; x30-after: Action Action > Setup Setup; Given: Async [Passed] > Async [Passed]; new: [bar] <color:white>Given Async
+      -x30-real-sub Action Action
+      -x30-after Action Action
+      +[bar] <color:white>Given Async
+      +x30-real-sub Setup Setup
+      +x30-after Setup Setup
+      - Given Async [Passed]
+      + Given Async [Passed]

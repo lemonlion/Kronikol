@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Kronikol.ReqNRoll.TUnit" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(KronikolVersion)" PrivateAssets="all" />
+    <PackageReference Include="Reqnroll.TUnit" Version="3.3.4" />
+    <PackageReference Include="TUnit" Version="1.53.0" />
+    <PackageReference Include="Reqnroll.Tools.MsBuild.Generation" Version="3.3.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="reqnroll.json" />
+    <AdditionalFiles Include="reqnroll.json" />
+    <Compile Include="../shared/*.cs" />
+  </ItemGroup>
+</Project>

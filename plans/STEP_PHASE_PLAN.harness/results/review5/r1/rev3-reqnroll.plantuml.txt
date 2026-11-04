@@ -1,0 +1,183 @@
+## Q01 a sync Given binding leaves a woven worker step running (TestName field: 5ad55211-955c-42a6-9270-5662bdd2b654)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a sync binding leaves a worker running as q01
+  end
+  shop -[#438DD5]-> probe: OK
+  shop -[#438DD5]-> probe: OK
+  q01When -[#9B59B6]-> probe: Responded
+  q01WorkerStart -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q01WhenAnd -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q01Then -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q01WorkerEnd -[#9B59B6]-> probe: Responded
+  @enduml
+
+## Q02 an async Given binding leaves a woven worker step running (TestName field: a8460e22-990c-41e0-a6a9-a413b2dbc32d)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given an async binding leaves a worker running as q02
+  shop -[#438DD5]-> probe: OK
+  shop -[#438DD5]-> probe: OK
+  q02WorkerStart -[#9B59B6]-> probe: Responded
+  q02GivenCall -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  q02When -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q02Then -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q02WorkerEnd -[#9B59B6]-> probe: Responded
+  @enduml
+
+## Q03 a sync Given binding leaves a worker running with TrackDuringSetup false (TestName field: 685e171d-cef5-4f0e-b38a-2328caa66bc8)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given a sync binding leaves a worker running as q03
+  shop -[#438DD5]-> probe: OK
+  q03WorkerStart -[#9B59B6]-> probe: Responded
+  q03When -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q03Then -[#9B59B6]-> probe: Responded
+  q03WorkerEnd -[#9B59B6]-> probe: Responded
+  @enduml
+
+## Q04 a Given binding starts a background loop of keyword-free steps (TestName field: 8df4802a-99a3-46c8-b79b-04abc0fc892f)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a binding starts a keyword free loop as q04
+  hnote across <<stepDelimiter>> #black:<color:white>When a call named q04-when
+  shop -[#438DD5]-> probe: OK
+  q04When -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  q04Poll0 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q04Then -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>And the loop is stopped
+  @enduml
+
+## Q05 a Given binding starts a background loop of Then steps (TestName field: 3310b33f-9d47-4df5-b019-191cdb050cf7)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a binding starts a Then loop as q05
+  shop -[#438DD5]-> probe: OK
+  q05Poll0 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q05Poll1 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q05Poll2 -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>And a call named q05-given-and
+  shop -[#438DD5]-> probe: OK
+  q05GivenAnd -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  q05When -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q05Poll3 -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call named q05-then
+  shop -[#438DD5]-> probe: OK
+  q05Then -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>And the loop is stopped
+  @enduml
+
+## Q06 a woven Given in a BeforeScenario hook then a When (TestName field: cf8cd5a8-2ff7-448a-b1d3-b3ce6af88a3d)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given Seed given
+  shop -[#438DD5]-> probe: OK
+  hookSeed -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>When a call named q06-when
+  shop -[#438DD5]-> probe: OK
+  q06When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call named q06-then
+  shop -[#438DD5]-> probe: OK
+  q06Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## Q07 a keyword-free woven step in an AfterScenario hook (TestName field: 2de3f0a1-cc40-4b68-91fd-8f48479aa08a)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call named q07-given
+  shop -[#438DD5]-> probe: OK
+  q07Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When a call named q07-when
+  shop -[#438DD5]-> probe: OK
+  q07When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Cleanup plain
+  shop -[#438DD5]-> probe: OK
+  hookCleanup -[#9B59B6]-> probe: Responded
+  @enduml
+
+## Q08 a woven Given in a BeforeScenario hook then a Then with TrackDuringSetup false (TestName field: 719c460e-6ca8-4551-868c-b78e67e6a230)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given Seed given
+  hookSeed -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call named q08-then
+  shop -[#438DD5]-> probe: OK
+  q08Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## Q09 a binding with a manual bypassed sub-step (TestName field: 655283d2-eb6f-41e7-b071-c64951855452)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a binding bypasses a manual sub-step as q09
+  shop -[#438DD5]-> probe: OK
+  q09Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When a call named q09-when
+  shop -[#438DD5]-> probe: OK
+  q09When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call named q09-then
+  shop -[#438DD5]-> probe: OK
+  q09Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## Q10 a binding fails and is the last step (TestName field: 30730a0e-96c4-4b29-b7d9-956e662cc572)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call named q10-given
+  shop -[#438DD5]-> probe: OK
+  q10Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When a call named q10-when
+  shop -[#438DD5]-> probe: OK
+  q10When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call named q10-then
+  shop -[#438DD5]-> probe: OK
+  q10Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## Q11 a Given with no calls then a When that draws its own boundary after a call (TestName field: 55df8412-4c26-4433-bd51-176135be6d63)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given nothing happens
+  hnote across <<stepDelimiter>> #black:<color:white>When a binding calls then marks the boundary as q11
+  shop -[#438DD5]-> probe: OK
+  q11Arrange -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  q11Act -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call named q11-then
+  shop -[#438DD5]-> probe: OK
+  q11Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## Q12 a Given with a call then a When that draws its own boundary after a call (TestName field: 705bd833-e394-4430-8cb8-1f76cdab5f5c)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call named q12-given
+  shop -[#438DD5]-> probe: OK
+  q12Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When a binding calls then marks the boundary as q12
+  shop -[#438DD5]-> probe: OK
+  q12Arrange -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  q12Act -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call named q12-then
+  shop -[#438DD5]-> probe: OK
+  q12Then -[#9B59B6]-> probe: Responded
+  @enduml
+

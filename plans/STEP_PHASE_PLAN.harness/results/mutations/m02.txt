@@ -1,0 +1,97 @@
+KILLED solid=24 order=0 racing-new=1 racing-seen=0
+first: main/bddfy-xunit3: B03_a_Given_step_calls_a_woven_When: gone: --- ACTION START MARKER ---
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B03_a_Given_step_calls_a_woven_When
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R15 a woven Given step in a BeforeScenario hook
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X01_When_with_nested_Given_async
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X02_Given_with_nested_When_async
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X04_keyword_free_wrapper_async
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X06_every_top_level_keyword_in_turn
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: RACING-NEW PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When (known to race)
+    gone: --- ACTION START MARKER ---; x09-when-while-open: Action Action > Setup Setup; x09-after-when-while-open: Action Action > Setup Setup; x09-after-closed: Action Action > Setup Setup
+      ---- ACTION START MARKER ---
+      -x09-when-while-open Action Action
+      -x09-after-when-while-open Action Action
+      -x09-after-closed Action Action
+      +x09-when-while-open Setup Setup
+      +x09-after-when-while-open Setup Setup
+      +x09-after-closed Setup Setup
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X10_WhenAll_of_a_Given_and_a_When
+    gone: --- ACTION START MARKER ---; x10-when: Action Action > Setup Setup; x10-after: Action Action > Setup Setup; gone: late message: x10-given
+      ---- ACTION START MARKER ---
+      -x10-when Action Action
+      -x10-after Action Action
+      -late message: x10-given
+      +x10-when Setup Setup
+      +x10-after Setup Setup
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X11_a_When_step_in_Task_Run
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X15_a_skipped_When_step
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X16_a_Task_of_T_step_and_a_non_async_Task_step
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X18_a_failed_top_level_Given_then_a_call
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X21_a_Given_left_running_then_a_When
+    gone: --- ACTION START MARKER ---; x21-when: Action Action > Setup Setup; x21-after: Action Action > Setup Setup; gone: late message: x21-background
+      ---- ACTION START MARKER ---
+      -x21-when Action Action
+      -x21-after Action Action
+      -late message: x21-background
+      +x21-when Setup Setup
+      +x21-after Setup Setup
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X22_a_When_step_with_a_call_before_an_explicit_StartAction
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X23_a_step_and_a_call_after_an_async_wrapper_holding_a_When
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X24_a_skipped_When_then_a_real_Given_and_When
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X26_a_When_running_with_a_sub_step_after_a_Given_starts
+    x26-given: Setup Setup > Action Action
+      -x26-given Setup Setup
+      +x26-given Action Action
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X27_a_Given_running_with_a_sub_step_after_a_When_starts
+    gone: --- ACTION START MARKER ---; x27-when: Action Action > Setup Setup
+      ---- ACTION START MARKER ---
+      -x27-when Action Action
+      +x27-when Setup Setup
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X28_a_StartSetup_scoped_to_a_helper_in_a_When_then_a_step
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X30_a_skipped_sub_step_then_a_real_one_in_a_When
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X31_a_skipped_step_in_a_wrapper_in_a_Given_then_a_When
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X33_a_guard_clause_under_ThrowsAsync_then_a_When
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X34_a_Task_step_that_returns_inside_a_try
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X35_a_generic_Task_of_T_step_that_is_not_async
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X37_a_Task_parent_not_async_whose_last_act_is_a_skipped_sub_step
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---

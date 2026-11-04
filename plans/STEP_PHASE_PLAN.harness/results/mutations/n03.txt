@@ -1,0 +1,34 @@
+KILLED solid=6 order=0 racing-new=0 racing-seen=1
+first: rev5/rev5-bddfy: B11_A_step_that_marks_the_boundary_later_in_the_story: end:  > ; new: --- MARKER ---
+
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B11_A_step_that_marks_the_boundary_later_in_the_story
+    end:  > ; new: --- MARKER ---
+      + --- MARKER ---
+      - end
+      + end
+[rev5/rev5-lightbdd-x2] rev5-lightbdd-x2.txt: SOLID L12 a marking then
+    end:  > ; new: --- MARKER ---
+      + --- MARKER ---
+      - end
+      + end
+[rev5/rev5-lightbdd-x2] rev5-lightbdd-x2.txt: SOLID L13 a marking when after an unmarked when
+    end:  > ; new: --- MARKER ---
+      + --- MARKER ---
+      - end
+      + end
+[rev5/rev5-reqnroll] rev5-reqnroll.txt: SOLID R01 a Then binding that marks the boundary, with a When before it
+    end:  > ; new: --- MARKER ---
+      + --- MARKER ---
+      - end
+      + end
+[rev5/rev5-reqnroll] rev5-reqnroll.txt: SOLID R02 a second When binding marks, the first does not
+    end:  > ; new: --- MARKER ---
+      + --- MARKER ---
+      - end
+      + end
+[rev5/rev5-reqnroll] rev5-reqnroll.txt: SOLID R03 an after-scenario hook marks before its clean-up
+    end:  > ; new: --- MARKER ---
+      + --- MARKER ---
+      - end
+      + end

@@ -1,0 +1,7 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=1
+first: main/lightbdd-xunit2: L16 an And first then a When: gone: --- ACTION START MARKER ---
+
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L16 an And first then a When
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When

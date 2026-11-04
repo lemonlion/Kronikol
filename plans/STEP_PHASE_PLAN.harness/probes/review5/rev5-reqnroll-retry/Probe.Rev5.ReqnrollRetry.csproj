@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Kronikol.ReqNRoll.xUnit2" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(KronikolVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="Reqnroll.xUnit" Version="3.3.4" /><PackageReference Include="xRetry.Reqnroll" Version="1.1.0" />
+    <PackageReference Include="Reqnroll.Tools.MsBuild.Generation" Version="3.3.4" />
+    <PackageReference Include="xunit.assert" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="reqnroll.json" />
+    <AdditionalFiles Include="reqnroll.json" />
+    <Compile Include="../shared/*.cs" />
+  </ItemGroup>
+</Project>

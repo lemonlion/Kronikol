@@ -1,0 +1,14 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=7
+first: review/rev3-plain: E04_explicit_StartAction_later_than_the_When_bar: gone: partition #F6F6F6 Setup; gone: end
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.plantuml.txt: SOLID PhaseProbe.Rev3.E_Marker.E04_explicit_StartAction_later_than_the_When_bar
+    gone: partition #F6F6F6 Setup; gone: end
+      - partition #F6F6F6 Setup
+      - end
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps

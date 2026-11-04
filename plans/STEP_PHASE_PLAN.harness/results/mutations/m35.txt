@@ -1,0 +1,11 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=1
+first: rev4/rev4-c: C04_Big_given_then_a_When_with_no_call_delimiters_off: new: diagram 2:; new: diagram 2:
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-c] rev4-c-diagrams.txt: SOLID C04_Big_given_then_a_When_with_no_call_delimiters_off
+    new: diagram 2:; new: diagram 2:
+      + diagram 2:
+      + diagram 2:
+[rev4/rev4-c] rev4-c.txt: SOLID C04_Big_given_then_a_When_with_no_call_delimiters_off
+    new: diagram 2:
+      + diagram 2:

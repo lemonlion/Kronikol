@@ -1,0 +1,51 @@
+== BDDfy
+  totals base : {'-': 896, 'Setup': 268, 'Action': 234}
+  totals final: {'-': 896, 'Setup': 268, 'Action': 233}
+  buckets moved: 1 of 30
+     ('Action Breakfast Provider CosmosDB', 5, 4)
+  diagrams: 212 base, 212 final, 129 same once masked
+  fingerprints: version 11->11; 212 scenarios; set moved 0; order only 4; only-one-side 0
+== LightBDD
+  totals base : {'-': 935, 'Setup': 234, 'Action': 198}
+  totals final: {'-': 866, 'Setup': 259, 'Action': 243}
+  buckets moved: 21 of 31
+     ('- Breakfast Provider BigQuery', 15, 14)
+     ('- Breakfast Provider ClickHouse', 12, 11)
+     ('- Breakfast Provider CosmosDB', 235, 196)
+     ('- Breakfast Provider Kitchen Service', 40, 38)
+     ('- Breakfast Provider MongoDB', 16, 15)
+     ('- Breakfast Provider Notification Service (gRPC)', 41, 38)
+     ('- Breakfast Provider Supplier Service', 10, 9)
+     ('- Caller Breakfast Provider', 18, 0)
+     ('- Google Cloud Pub/Sub Breakfast Provider', 36, 35)
+     ('- Kafka Broker Breakfast Provider', 42, 40)
+     ('Action Breakfast Provider BigQuery', 0, 1)
+     ('Action Breakfast Provider ClickHouse', 0, 1)
+     ('Action Breakfast Provider CosmosDB', 0, 14)
+     ('Action Breakfast Provider Kitchen Service', 0, 2)
+     ('Action Breakfast Provider MongoDB', 0, 1)
+     ('Action Breakfast Provider Notification Service (gRPC)', 0, 3)
+     ('Action Breakfast Provider Supplier Service', 0, 1)
+     ('Action Caller Breakfast Provider', 198, 217)
+     ('Action Google Cloud Pub/Sub Breakfast Provider', 0, 1)
+     ('Action Kafka Broker Breakfast Provider', 0, 2)
+     ('Setup Breakfast Provider CosmosDB', 0, 25)
+  diagrams: 187 base, 187 final, 110 same once masked
+  fingerprints: version 11->11; 184 scenarios; set moved 1; order only 3; only-one-side 0
+    SET Sending A Request With An Unsupported Content Type Should Return An Un calls 0 -> 1
+== ReqNRoll
+  totals base : {'-': 844, 'Setup': 263, 'Action': 237}
+  totals final: {'-': 844, 'Setup': 259, 'Action': 241}
+  buckets moved: 4 of 30
+     ('Action Breakfast Provider CosmosDB', 9, 11)
+     ('Action Caller Breakfast Provider', 216, 218)
+     ('Setup Breakfast Provider CosmosDB', 36, 34)
+     ('Setup Caller Breakfast Provider', 227, 225)
+  diagrams: 214 base, 214 final, 130 same once masked
+  fingerprints: version 11->11; 166 scenarios; set moved 0; order only 5; only-one-side 0
+== xUnit
+  totals base : {'-': 1393, 'Setup': 5, 'Action': 1}
+  totals final: {'-': 1393, 'Setup': 5, 'Action': 1}
+  buckets moved: 0 of 21
+  diagrams: 212 base, 212 final, 132 same once masked
+  fingerprints: version 11->11; 212 scenarios; set moved 0; order only 5; only-one-side 0

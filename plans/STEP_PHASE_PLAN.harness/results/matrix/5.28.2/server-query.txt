@@ -1,0 +1,92 @@
+== s0    pass    0.3s    20 calls  S01 a When binding with a nested GivenStep, on the default TestServer
+step  phase   method  path                    calls errors   median      max bodies     bytes
+0     Setup   GET     /s01-given                  1      0    47 ms    47 ms      1      21 B
+0     -       GET     /svc-s01-given              1      0    17 ms    17 ms      1       2 B
+0     -       bus     /svcmsg-s01-given           1      0     0 ms     0 ms      1       2 B
+0     Setup   bus     /s01-given                  1      0     0 ms     0 ms      1       2 B
+1     Action  GET     /s01-before-sub             1      0    21 ms    21 ms      1      26 B
+1     -       GET     /svc-s01-before-sub         1      0    19 ms    19 ms      1       2 B
+1     -       bus     /svcmsg-s01-before-sub      1      0     0 ms     0 ms      1       2 B
+1     Action  bus     /s01-before-sub             1      0     0 ms     0 ms      1       2 B
+1     Setup   GET     /s01-in-sub                 1      0    30 ms    30 ms      1      22 B
+1     -       GET     /svc-s01-in-sub             1      0    10 ms    10 ms      1       2 B
+1     -       bus     /svcmsg-s01-in-sub          1      0     0 ms     0 ms      1       2 B
+1     Setup   bus     /s01-in-sub                 1      0     0 ms     0 ms      1       2 B
+1     Setup   GET     /s01-after-sub              1      0    31 ms    31 ms      1      25 B
+1     -       GET     /svc-s01-after-sub          1      0    17 ms    17 ms      1       2 B
+1     -       bus     /svcmsg-s01-after-sub       1      0     0 ms     0 ms      1       2 B
+1     Setup   bus     /s01-after-sub              1      0     0 ms     0 ms      1       2 B
+2     Action  GET     /s01-then                   1      0    67 ms    67 ms      1      20 B
+2     -       GET     /svc-s01-then               1      0    33 ms    33 ms      1       2 B
+2     -       bus     /svcmsg-s01-then            1      0     0 ms     0 ms      1       2 B
+2     Action  bus     /s01-then                   1      0     0 ms     0 ms      1       2 B
+20 buckets
+== s1    pass   0.24s    20 calls  S02 a When binding with a nested Gherkin Given, on the default TestServer
+step  phase   method  path                       calls errors   median      max bodies     bytes
+0     Setup   GET     /s02-given                     1      0    42 ms    42 ms      1      21 B
+0     -       GET     /svc-s02-given                 1      0    22 ms    22 ms      1       2 B
+0     -       bus     /svcmsg-s02-given              1      0     0 ms     0 ms      1       2 B
+0     Setup   bus     /s02-given                     1      0     0 ms     0 ms      1       2 B
+-     Action  GET     /s02-before-nested             1      0    28 ms    28 ms      1      29 B
+-     -       GET     /svc-s02-before-nested         1      0    15 ms    15 ms      1       2 B
+-     -       bus     /svcmsg-s02-before-nested      1      0     0 ms     0 ms      1       2 B
+-     Action  bus     /s02-before-nested             1      0     0 ms     0 ms      1       2 B
+-     Setup   GET     /s02-nested-given              1      0    24 ms    24 ms      1      28 B
+-     -       GET     /svc-s02-nested-given          1      0    12 ms    12 ms      1       2 B
+-     -       bus     /svcmsg-s02-nested-given       1      0     0 ms     0 ms      1       2 B
+-     Setup   bus     /s02-nested-given              1      0     0 ms     0 ms      1       2 B
+-     Action  GET     /s02-after-nested              1      0    31 ms    31 ms      1      28 B
+-     -       GET     /svc-s02-after-nested          1      0    16 ms    16 ms      1       2 B
+-     -       bus     /svcmsg-s02-after-nested       1      0     0 ms     0 ms      1       2 B
+-     Action  bus     /s02-after-nested              1      0     0 ms     0 ms      1       2 B
+-     Action  GET     /s02-then                      1      0    30 ms    30 ms      1      20 B
+-     -       GET     /svc-s02-then                  1      0    15 ms    15 ms      1       2 B
+-     -       bus     /svcmsg-s02-then               1      0     0 ms     0 ms      1       2 B
+-     Action  bus     /s02-then                      1      0     0 ms     0 ms      1       2 B
+20 buckets
+== s4    pass   0.26s    20 calls  S11 a When binding with a nested GivenStep, with the test's execution context pr…
+step  phase   method  path                    calls errors   median      max bodies     bytes
+0     Setup   GET     /s11-given                  1      0   102 ms   102 ms      1      21 B
+0     Setup   GET     /svc-s11-given              1      0    18 ms    18 ms      1       2 B
+0     Setup   bus     /svcmsg-s11-given           1      0     0 ms     0 ms      1       2 B
+0     Setup   bus     /s11-given                  1      0     0 ms     0 ms      1       2 B
+1     Action  GET     /s11-before-sub             1      0    30 ms    30 ms      1      26 B
+1     Action  GET     /svc-s11-before-sub         1      0    13 ms    13 ms      1       2 B
+1     Action  bus     /svcmsg-s11-before-sub      1      0     0 ms     0 ms      1       2 B
+1     Action  bus     /s11-before-sub             1      0     0 ms     0 ms      1       2 B
+1     Setup   GET     /s11-in-sub                 1      0    32 ms    32 ms      1      22 B
+1     Setup   GET     /svc-s11-in-sub             1      0    14 ms    14 ms      1       2 B
+1     Setup   bus     /svcmsg-s11-in-sub          1      0     0 ms     0 ms      1       2 B
+1     Setup   bus     /s11-in-sub                 1      0     0 ms     0 ms      1       2 B
+1     Setup   GET     /s11-after-sub              1      0    32 ms    32 ms      1      25 B
+1     Setup   GET     /svc-s11-after-sub          1      0    14 ms    14 ms      1       2 B
+1     Setup   bus     /svcmsg-s11-after-sub       1      0     0 ms     0 ms      1       2 B
+1     Setup   bus     /s11-after-sub              1      0     0 ms     0 ms      1       2 B
+2     Action  GET     /s11-then                   1      0    14 ms    14 ms      1      20 B
+2     Action  GET     /svc-s11-then               1      0    13 ms    13 ms      1       2 B
+2     Action  bus     /svcmsg-s11-then            1      0     0 ms     0 ms      1       2 B
+2     Action  bus     /s11-then                   1      0     0 ms     0 ms      1       2 B
+20 buckets
+== s5    pass    0.7s    20 calls  S21 a When binding with a nested GivenStep, on Kestrel
+step  phase   method  path                    calls errors   median      max bodies     bytes
+0     Setup   GET     /s21-given                  1      0   153 ms   153 ms      1      21 B
+0     -       GET     /svc-s21-given              1      0    19 ms    19 ms      1       2 B
+0     -       bus     /svcmsg-s21-given           1      0     1 ms     1 ms      1       2 B
+0     Setup   bus     /s21-given                  1      0     0 ms     0 ms      1       2 B
+1     Action  GET     /s21-before-sub             1      0    35 ms    35 ms      1      26 B
+1     -       GET     /svc-s21-before-sub         1      0    16 ms    16 ms      1       2 B
+1     -       bus     /svcmsg-s21-before-sub      1      0     0 ms     0 ms      1       2 B
+1     Action  bus     /s21-before-sub             1      0     0 ms     0 ms      1       2 B
+1     Setup   GET     /s21-in-sub                 1      0    39 ms    39 ms      1      22 B
+1     -       GET     /svc-s21-in-sub             1      0    13 ms    13 ms      1       2 B
+1     -       bus     /svcmsg-s21-in-sub          1      0     0 ms     0 ms      1       2 B
+1     Setup   bus     /s21-in-sub                 1      0     0 ms     0 ms      1       2 B
+1     Setup   GET     /s21-after-sub              1      0    44 ms    44 ms      1      25 B
+1     -       GET     /svc-s21-after-sub          1      0    16 ms    16 ms      1       2 B
+1     -       bus     /svcmsg-s21-after-sub       1      0     0 ms     0 ms      1       2 B
+1     Setup   bus     /s21-after-sub              1      0     0 ms     0 ms      1       2 B
+2     Action  GET     /s21-then                   1      0    44 ms    44 ms      1      20 B
+2     -       GET     /svc-s21-then               1      0    15 ms    15 ms      1       2 B
+2     -       bus     /svcmsg-s21-then            1      0     0 ms     0 ms      1       2 B
+2     Action  bus     /s21-then                   1      0     0 ms     0 ms      1       2 B
+20 buckets

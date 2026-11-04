@@ -1,0 +1,103 @@
+@startuml
+!pragma teoz true
+skinparam defaultFontName system-ui
+skinparam shadowing false
+skinparam SequenceMessagePadding 4
+skinparam sequenceMessageAlignment center
+<style>
+sequenceDiagram { participant { RoundCorner 12; Padding 8 14; Margin 0 10; LineThickness 1 } }
+sequenceDiagram { actor, database, queue, collections, boundary, control, entity { Margin 0 10; LineThickness 1 } }
+sequenceDiagram { lifeLine { LineStyle 0; LineThickness 1 } }
+sequenceDiagram { note { LineThickness 1 } }
+sequenceDiagram { group { RoundCorner 16; LineThickness 1; LineColor #CDD5E0; BackgroundColor #F4F7FB; FontStyle plain } }
+sequenceDiagram { groupHeader { LineThickness 1; LineColor #CDD5E0; BackgroundColor #E9EEF6 } }
+sequenceDiagram { partition { RoundCorner 16; LineThickness 1; LineColor #D5DBE4 } }
+</style>
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+participant "Dessert Provider" as dessertProvider
+participant "Cow Service" as cowService
+
+partition #F6F6F6 Setup
+
+hnote across <<stepDelimiter>> #black:<color:white>Given a valid post request for the Cake endpoint
+
+caller -[#438DD5]> dessertProvider: [[#iflow-19fb201a-9195-40f3-b11e-44d70c495a12 GET: /milk]]
+note left
+<color:#686868>[traceparent=00-4f3e19971b357db45a4b0028ee3a41f8-e079788cc7c9e56c-00]
+end note
+dessertProvider -[#438DD5]> cowService: [[#iflow-d0a3c14e-bf3e-4943-8487-5bff4569ccf4 GET: /milk]]
+cowService -[#438DD5]-> dessertProvider: OK
+note right
+<color:#686868>[Date=Tue, 03 Nov 2026 20:33:53 GMT]
+<color:#686868>[Server=Kestrel]
+<color:#686868>[Transfer-Encoding=chunked]
+
+{
+  "milk": "Some_Fresh_Milk"
+}
+end note
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "milk": "Some_Fresh_Milk"
+}
+end note
+caller -[#438DD5]> dessertProvider: [[#iflow-c6d01205-53a7-4c1f-84fa-eec7d91086ef GET: /eggs]]
+note left
+<color:#686868>[traceparent=00-8dec01d167082d69a7cfda1e3341394d-14f94d9d809415dc-00]
+end note
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "eggs": "Some_Eggs"
+}
+end note
+caller -[#438DD5]> dessertProvider: [[#iflow-5408a05f-16f6-446a-ba61-83e3adbd3296 GET: /flour]]
+note left
+<color:#686868>[traceparent=00-9ffed12c8f9ebfb880fcf44d3c599712-9c332d055637952b-00]
+end note
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "flour": "Some_Flour"
+}
+end note
+end
+
+hnote across <<stepDelimiter>> #black:<color:white>But the request body is missing eggs
+
+
+hnote across <<stepDelimiter>> #black:<color:white>When the request is sent to the cake post endpoint
+
+caller -[#438DD5]> dessertProvider: [[#iflow-a375e059-b403-44f8-8960-0382f3647b98 POST: /cake]]
+note left
+<color:#686868>[traceparent=00-9f31be04291f795798173be8601104cc-575d03ad7ed12375-00]
+
+{
+  "milk": "Some_Fresh_Milk",
+  "flour": "Some_Flour"
+}
+end note
+dessertProvider -[#438DD5]-> caller: Bad Request
+note right
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Eggs": [
+      "The Eggs field is required."
+    ]
+  },
+  "traceId": "00-9f31be04291f795798173be8601104cc-c19dda37c56c7385-00"
+}
+end note
+
+hnote across <<stepDelimiter>> #black:<color:white>Then the response http status should be bad request
+
+@enduml

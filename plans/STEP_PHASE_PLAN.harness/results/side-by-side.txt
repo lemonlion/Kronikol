@@ -1,0 +1,620 @@
+==== reqnroll-xunit2
+## R00 the issue's own scenario
+                                       5.28.2    issue       r1       r2       r3
+  r00-given                               S/S      S/S      S/S      S/S      S/S
+  r00-discounts-SAVE10                    A/S      A/A      A/A      A/A      A/A
+  r00-orders                              S/S      A/A      A/A      A/A      A/A
+  r00-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R01 async Given sub-step in a When step (the issue)
+                                       5.28.2    issue       r1       r2       r3
+  r01-given                               S/S      S/S      S/S      S/S      S/S
+  r01-before-sub                          A/A      A/A      A/A      A/A      A/A
+  r01-in-sub                              S/S      A/A      A/A      A/A      A/A
+  r01-after-sub                           S/S      A/A      A/A      A/A      A/A
+  r01-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R02 sync Given sub-step in a When step
+                                       5.28.2    issue       r1       r2       r3
+  r02-given                               S/S      S/S      S/S      S/S      S/S
+  r02-before-sub                          A/A      A/A      A/A      A/A      A/A
+  r02-in-sub                              S/S      A/A      A/A      A/A      A/A
+  r02-after-sub                           S/S      A/A      A/A      A/A      A/A
+  r02-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R03 async When sub-step in a Given step
+                                       5.28.2    issue       r1       r2       r3
+  r03-before-sub                          S/S      S/S      S/S      S/S      S/S
+  r03-in-sub                              A/A      S/S      S/S      S/S      S/S
+  r03-after-sub                           A/A      S/S      S/S      S/S      S/S
+  r03-and                                 S/S      S/S      S/S      S/S      S/S
+  r03-when                                A/A      A/A      A/A      A/A      A/A
+  r03-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R04 async Then sub-step in a Given step
+                                       5.28.2    issue       r1       r2       r3
+  r04-before-sub                          S/S      S/S      S/S      S/S      S/S
+  r04-in-sub                              A/A      S/S      S/S      S/S      S/S
+  r04-after-sub                           A/A      S/S      S/S      S/S      S/S
+  r04-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R05 keyword-free sub-step in a When step
+                                       5.28.2    issue       r1       r2       r3
+  r05-given                               S/S      S/S      S/S      S/S      S/S
+  r05-before-sub                          A/A      A/A      A/A      A/A      A/A
+  r05-in-sub                              A/A      A/A      A/A      A/A      A/A
+  r05-after-sub                           A/A      A/A      A/A      A/A      A/A
+  r05-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R06 And and But after each keyword (#195)
+                                       5.28.2    issue       r1       r2       r3
+  r06-given                               S/S      S/S      S/S      S/S      S/S
+  r06-given-and                           S/S      S/S      S/S      S/S      S/S
+  r06-given-but                           S/S      S/S      S/S      S/S      S/S
+  r06-when                                A/A      A/A      A/A      A/A      A/A
+  r06-when-and                            S/S      S/S      A/A      A/A      A/A
+  r06-when-but                            S/S      S/S      A/A      A/A      A/A
+  r06-then                                A/A      A/A      A/A      A/A      A/A
+  r06-then-and                            S/S      S/S      A/A      A/A      A/A
+  r06-then-but                            S/S      S/S      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R07 star keyword
+                                       5.28.2    issue       r1       r2       r3
+  r07-star1                               S/S      S/S      S/S      S/S      S/S
+  r07-given                               S/S      S/S      S/S      S/S      S/S
+  r07-star2                               S/S      S/S      S/S      S/S      S/S
+  r07-when                                A/A      A/A      A/A      A/A      A/A
+  r07-star3                               S/S      S/S      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R08 TrackDuringSetup false
+                                       5.28.2    issue       r1       r2       r3
+  r08-given                              S/Si     S/Si     S/Si     S/Si     S/Si
+  r08-before-sub                          A/A      A/A      A/A      A/A      A/A
+  r08-in-sub                             S/Si      A/A      A/A      A/A      A/A
+  r08-after-sub                          S/Si      A/A      A/A      A/A      A/A
+  r08-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R09 a When binding woven as a GivenStep
+                                       5.28.2    issue       r1       r2       r3
+  r09-given                               S/S      S/S      S/S      S/S      S/S
+  r09-in-binding                          A/S      A/A      A/A      A/A      A/A
+  r09-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R10 ButWhen sub-step in a Given step
+                                       5.28.2    issue       r1       r2       r3
+  r10-before-sub                          S/S      S/S      S/S      S/S      S/S
+  r10-in-sub                              A/A      S/S      S/S      S/S      S/S
+  r10-after-sub                           A/A      S/S      S/S      S/S      S/S
+  r10-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R11 first scenario on a shared handler
+                                       5.28.2    issue       r1       r2       r3
+  r11-given                               S/S      S/S      S/S      S/S      S/S
+  r11-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=r11-when, r3=r11-when
+## R12 second scenario on a shared handler
+                                       5.28.2    issue       r1       r2       r3
+  r12-given                               S/S      S/S      S/S      S/S      S/S
+  r12-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R13 When with no Given
+                                       5.28.2    issue       r1       r2       r3
+  r13-when                                A/A      A/A      A/A      A/A      A/A
+  r13-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        0        0
+## R14 caught failure of a Given sub-step in a When step
+                                       5.28.2    issue       r1       r2       r3
+  r14-given                               S/S      S/S      S/S      S/S      S/S
+  r14-in-sub                              A/S      A/A      A/A      A/A      A/A
+  r14-after-sub                           S/S      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R15 a woven Given step in a BeforeScenario hook
+                                       5.28.2    issue       r1       r2       r3
+  r15-in-hook                             S/S      S/S      S/S      S/S      S/S
+  r15-when                                A/A      A/A      A/A      A/A      A/A
+  r15-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=r15-when, r3=r15-when
+## R16 a When sub-step in a keyword-free sub-step in a Given step
+                                       5.28.2    issue       r1       r2       r3
+  r16-in-sub-inner-when                   A/A      S/S      S/S      S/S      S/S
+  r16-in-sub-after-inner-when             A/A      S/S      S/S      S/S      S/S
+  r16-after-sub                           S/S      S/S      S/S      S/S      S/S
+  r16-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R17 calls in BeforeScenario and AfterScenario hooks
+                                       5.28.2    issue       r1       r2       r3
+  r17-in-before-scenario                  U/U      U/U      U/U      U/U      U/U
+  r17-given                               S/S      S/S      S/S      S/S      S/S
+  r17-when                                A/A      A/A      A/A      A/A      A/A
+  r17-in-after-scenario                   A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## R18 a Given with no HTTP call
+                                       5.28.2    issue       r1       r2       r3
+  r18-given-message                       -/S      -/S      -/S      -/S      -/S
+  r18-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=r18-when, r3=r18-when
+## R19 a When with no HTTP call
+                                       5.28.2    issue       r1       r2       r3
+  r19-given                               S/S      S/S      S/S      S/S      S/S
+  r19-when-message                        -/A      -/A      -/A      -/A      -/A
+  r19-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+  marker before: 5.28.2=r19-then, issue=r19-then, r1=r19-then, r2=r19-when-message, r3=r19-when-message
+## R20 a When with no HTTP call, then an And
+                                       5.28.2    issue       r1       r2       r3
+  r20-given                               S/S      S/S      S/S      S/S      S/S
+  r20-when-message                        -/A      -/A      -/A      -/A      -/A
+  r20-when-and                            S/S      S/S      A/A      A/A      A/A
+  r20-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+  marker before: 5.28.2=r20-then, issue=r20-then, r1=r20-then, r2=r20-when-message, r3=r20-when-message
+## R21 WhenTriggersAction false
+                                       5.28.2    issue       r1       r2       r3
+  r21-before-sub                          S/S      S/S      S/S      S/S      S/S
+  r21-in-sub                              S/S      S/S      S/S      S/S      S/S
+  r21-after-sub                           S/S      S/S      S/S      S/S      S/S
+  r21b-before-sub                         A/A      A/A      A/A      A/A      A/A
+  r21b-in-sub                             A/A      A/A      A/A      A/A      A/A
+  r21b-after-sub                          A/A      A/A      A/A      A/A      A/A
+  r21-and                                 S/S      S/S      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+==== xunit3-plain
+## PhaseProbe.Plain.Shapes.X01_When_with_nested_Given_async
+                                       5.28.2    issue       r1       r2       r3
+  x01-given                               S/S      S/S      S/S      S/S      S/S
+  x01-before-sub                          A/A      A/A      A/A      A/A      A/A
+  x01-in-sub                              S/S      A/A      A/A      A/A      A/A
+  x01-after-sub                           S/S      A/A      A/A      A/A      A/A
+  x01-after-when-step                     A/A      A/A      A/A      A/A      A/A
+  x01-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x01-before-sub, r3=x01-before-sub
+## PhaseProbe.Plain.Shapes.X02_Given_with_nested_When_async
+                                       5.28.2    issue       r1       r2       r3
+  x02-before-sub                          S/S      S/S      S/S      S/S      S/S
+  x02-in-sub                              A/A      S/S      S/S      S/S      S/S
+  x02-after-sub                           A/A      S/S      S/S      S/S      S/S
+  x02-after-given-step                    S/S      S/S      S/S      S/S      S/S
+  x02-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x02-when, r3=x02-when
+## PhaseProbe.Plain.Shapes.X03_When_with_nested_Given_sync
+                                       5.28.2    issue       r1       r2       r3
+  x03-given                               S/S      S/S      S/S      S/S      S/S
+  x03-before-sub                          A/A      A/A      A/A      A/A      A/A
+  x03-in-sub                              S/S      A/A      A/A      A/A      A/A
+  x03-after-sub                           S/S      A/A      A/A      A/A      A/A
+  x03-after-when-step                     S/S      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x03-before-sub, r3=x03-before-sub
+## PhaseProbe.Plain.Shapes.X04_keyword_free_wrapper_async
+                                       5.28.2    issue       r1       r2       r3
+  x04-wrapper-first                       U/U      U/U      U/U      U/U      U/U
+  x04-wrapped-given                       S/S      U/U      S/S      S/S      S/S
+  x04-wrapper-after-given                 S/S      U/U      S/S      S/S      S/S
+  x04-wrapped-when                        A/A      U/U      A/A      A/A      A/A
+  x04-wrapper-after-when                  A/A      U/U      A/A      A/A      A/A
+  x04-after-wrapper                       U/U      U/U      U/U      U/U      U/U
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x04-wrapped-when, r3=x04-wrapped-when
+## PhaseProbe.Plain.Shapes.X05_keyword_free_wrapper_sync
+                                       5.28.2    issue       r1       r2       r3
+  x05-wrapper-first                       U/U      U/U      U/U      U/U      U/U
+  x05-wrapped-given                       S/S      U/U      S/S      S/S      S/S
+  x05-wrapper-after-given                 S/S      U/U      S/S      S/S      S/S
+  x05-wrapped-when                        A/A      U/U      A/A      A/A      A/A
+  x05-wrapper-after-when                  A/A      U/U      A/A      A/A      A/A
+  x05-after-wrapper                       A/A      U/U      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x05-wrapped-when, r3=x05-wrapped-when
+## PhaseProbe.Plain.Shapes.X06_every_top_level_keyword_in_turn
+                                       5.28.2    issue       r1       r2       r3
+  x06-before-any-step                     U/U      U/U      U/U      U/U      U/U
+  x06-given                               S/S      S/S      S/S      S/S      S/S
+  x06-after-given                         S/S      S/S      S/S      S/S      S/S
+  x06-but                                 S/S      S/S      S/S      S/S      S/S
+  x06-after-but                           S/S      S/S      S/S      S/S      S/S
+  x06-when                                A/A      A/A      A/A      A/A      A/A
+  x06-after-when                          A/A      A/A      A/A      A/A      A/A
+  x06-but-after-when                      S/S      S/S      S/S      S/S      S/S
+  x06-after-but-after-when                S/S      S/S      S/S      S/S      S/S
+  x06-butwhen                             A/A      A/A      A/A      A/A      A/A
+  x06-after-butwhen                       A/A      A/A      A/A      A/A      A/A
+  x06-then                                A/A      A/A      A/A      A/A      A/A
+  x06-after-then                          A/A      A/A      A/A      A/A      A/A
+  x06-plain                               A/A      A/A      A/A      A/A      A/A
+  x06-after-plain                         A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x06-when, r3=x06-when
+## PhaseProbe.Plain.Shapes.X07_explicit_StartAction_inside_a_Given_step
+                                       5.28.2    issue       r1       r2       r3
+  x07-before-explicit                     S/S      S/S      S/S      S/S      S/S
+  x07-after-explicit                      A/A      A/A      A/A      A/A      A/A
+  x07-after-step                          S/S      S/S      S/S      S/S      S/S
+  boundary                                  1        1        1        1        1
+## PhaseProbe.Plain.Shapes.X08_explicit_StartAction_and_StartSetup_in_the_test
+                                       5.28.2    issue       r1       r2       r3
+  x08-first                               U/U      U/U      U/U      U/U      U/U
+  x08-after-startsetup                    S/S      S/S      S/S      S/S      S/S
+  x08-after-startaction                   A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+                                       5.28.2    issue       r1       r2       r3
+  x09-open-given                          S/S      S/S      S/S      S/S      S/S
+  x09-while-open                          S/S      S/S      S/S      S/S      S/S
+  x09-when-while-open                     A/A      S/S      A/A      A/A      A/A
+  x09-after-when-while-open               A/A      S/S      A/A      A/A      A/A
+  x09-after-closed                        A/A      S/S      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x09-when-while-open, r3=x09-when-while-open
+## PhaseProbe.Plain.Shapes.X10_WhenAll_of_a_Given_and_a_When
+                                       5.28.2    issue       r1       r2       r3
+  x10-given                               S/S      S/S      S/S      S/S      S/S
+  x10-when                                A/A      S/S      A/A      A/A      A/A
+  x10-after                               A/A      S/S      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x10-when, r3=x10-when
+## PhaseProbe.Plain.Shapes.X11_a_When_step_in_Task_Run
+                                       5.28.2    issue       r1       r2       r3
+  x11-given                               S/S      S/S      S/S      S/S      S/S
+  x11-when-in-run                         A/A      A/A      A/A      A/A      A/A
+  x11-after-run                           S/S      S/S      S/S      S/S      S/S
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x11-when-in-run, r3=x11-when-in-run
+## PhaseProbe.Plain.Shapes.X12_steps_in_an_ordinary_async_helper
+                                       5.28.2    issue       r1       r2       r3
+  x12-in-helper                           S/S      S/S      S/S      S/S      S/S
+  x12-helper-after-given                  S/S      S/S      S/S      S/S      S/S
+  x12-after-helper                        U/U      U/U      U/U      U/U      U/U
+  x12-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x12-when, r3=x12-when
+## PhaseProbe.Plain.Shapes.X13_caught_failure_of_a_nested_Given
+                                       5.28.2    issue       r1       r2       r3
+  x13-in-sub                              S/S      A/A      A/A      A/A      A/A
+  x13-after-sub                           S/S      A/A      A/A      A/A      A/A
+  x13-after-when-step                     A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        0        0
+## PhaseProbe.Plain.Shapes.X15_a_skipped_When_step
+                                       5.28.2    issue       r1       r2       r3
+  x15-given                               S/S      S/S      S/S      S/S      S/S
+  x15-after-skipped                       A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x15-after-skipped, r3=x15-after-skipped
+## PhaseProbe.Plain.Shapes.X16_a_Task_of_T_step_and_a_non_async_Task_step
+                                       5.28.2    issue       r1       r2       r3
+  x16-given                               S/S      S/S      S/S      S/S      S/S
+  x16-after-given                         S/S      S/S      S/S      S/S      S/S
+  x16-when                                A/A      A/A      A/A      A/A      A/A
+  x16-after-when                          A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x16-when, r3=x16-when
+## PhaseProbe.Plain.Shapes.X17_explicit_StartSetup_after_a_nested_When
+                                       5.28.2    issue       r1       r2       r3
+  x17-in-sub                              A/A      S/S      S/S      S/S      S/S
+  x17-after-explicit-startsetup           S/S      S/S      S/S      S/S      S/S
+  x17-after-step                          S/S      S/S      S/S      S/S      S/S
+  boundary                                  0        0        0        0        0
+## PhaseProbe.Plain.Shapes.X18_a_failed_top_level_Given_then_a_call
+                                       5.28.2    issue       r1       r2       r3
+  x18-given                               S/S      S/S      S/S      S/S      S/S
+  x18-after-failed-given                  S/S      S/S      S/S      S/S      S/S
+  x18-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x18-when, r3=x18-when
+## PhaseProbe.Plain.Shapes.X19_explicit_StartSetup_then_a_When_step
+                                       5.28.2    issue       r1       r2       r3
+  x19-after-startsetup                    S/S      S/S      S/S      S/S      S/S
+  x19-when                                A/A      A/A      A/A      A/A      A/A
+  x19-after-when                          A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x19-when, r3=x19-when
+## PhaseProbe.Plain.Shapes.X20_WhenTriggersAction_false
+                                       5.28.2    issue       r1       r2       r3
+  x20-given                               U/U      U/U      U/U      U/U      U/U
+  x20-after-given                         U/U      U/U      U/U      U/U      U/U
+  x20-when                                U/U      U/U      U/U      U/U      U/U
+  x20-after-when                          U/U      U/U      U/U      U/U      U/U
+  boundary                                  0        0        0        0        0
+## PhaseProbe.Plain.Shapes.X21_a_Given_left_running_then_a_When
+                                       5.28.2    issue       r1       r2       r3
+  x21-background                          S/S      S/S      S/S      S/S      S/S
+  x21-when                                A/A      S/S      A/A      A/A      A/A
+  x21-after                               A/A      S/S      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x21-when, r3=x21-when
+## PhaseProbe.Plain.Shapes.X22_a_When_step_with_a_call_before_an_explicit_StartAction
+                                       5.28.2    issue       r1       r2       r3
+  x22-given                               S/S      S/S      S/S      S/S      S/S
+  x22-before-explicit                     A/A      A/A      A/A      A/A      A/A
+  x22-after-explicit                      A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        2        2
+  marker before: 5.28.2=x22-after-explicit, issue=x22-after-explicit, r1=x22-after-explicit, r2=x22-before-explicit, r3=x22-before-explicit
+## PhaseProbe.Plain.Shapes.X23_a_step_and_a_call_after_an_async_wrapper_holding_a_When
+                                       5.28.2    issue       r1       r2       r3
+  x23-given                               S/S      S/S      S/S      S/S      S/S
+  x23-wrapped-when                        A/A      S/S      A/A      A/A      A/A
+  x23-after-wrapper                       S/S      S/S      S/S      S/S      S/S
+  x23-next-step                           S/S      S/S      S/S      S/S      S/S
+  x23-after-next-step                     S/S      S/S      S/S      S/S      S/S
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x23-wrapped-when, r3=x23-wrapped-when
+## PhaseProbe.Plain.Shapes.X24_a_skipped_When_then_a_real_Given_and_When
+                                       5.28.2    issue       r1       r2       r3
+  x24-first-given                         S/S      S/S      S/S      S/S      S/S
+  x24-second-given                        S/S      S/S      S/S      S/S      S/S
+  x24-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x24-second-given, r3=x24-second-given
+## PhaseProbe.Plain.Shapes.X25_a_Task_step_that_throws_before_returning_then_a_When
+                                       5.28.2    issue       r1       r2       r3
+  x25-first                               U/U      U/U      U/U      U/U      U/U
+  x25-when                                A/A      S/S      A/A      A/A      A/A
+  x25-then                                A/A      S/S      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x25-when, r3=x25-when
+## PhaseProbe.Plain.Shapes.X26_a_When_running_with_a_sub_step_after_a_Given_starts
+                                       5.28.2    issue       r1       r2       r3
+  x26-given                               S/S      A/A      S/S      S/S      S/S
+  x26-sub-step                            A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        0        0
+## PhaseProbe.Plain.Shapes.X27_a_Given_running_with_a_sub_step_after_a_When_starts
+                                       5.28.2    issue       r1       r2       r3
+  x27-when                                A/A      S/S      A/A      A/A      A/A
+  x27-sub-step                            S/S      S/S      S/S      S/S      S/S
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x27-when, r3=x27-when
+## PhaseProbe.Plain.Shapes.X28_a_StartSetup_scoped_to_a_helper_in_a_When_then_a_step
+                                       5.28.2    issue       r1       r2       r3
+  x28-given                               S/S      S/S      S/S      S/S      S/S
+  x28-in-helper                           S/S      S/S      S/S      S/S      S/S
+  x28-step-after                          A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x28-in-helper, r3=x28-in-helper
+## PhaseProbe.Plain.Shapes.X29_a_StartSetup_in_a_first_keyword_free_step_then_another
+                                       5.28.2    issue       r1       r2       r3
+  x29-first                               S/S      S/S      S/S      S/S      S/S
+  x29-next                                U/U      U/U      U/U      U/U      U/U
+  boundary                                  0        0        0        0        0
+## PhaseProbe.Plain.Shapes.X30_a_skipped_sub_step_then_a_real_one_in_a_When
+                                       5.28.2    issue       r1       r2       r3
+  x30-given                               S/S      S/S      S/S      S/S      S/S
+  x30-real-sub                            S/S      S/S      A/A      A/A      A/A
+  x30-after                               S/S      S/S      A/A      A/A      A/A
+  x30-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x30-real-sub, r3=x30-real-sub
+## PhaseProbe.Plain.Shapes.X31_a_skipped_step_in_a_wrapper_in_a_Given_then_a_When
+                                       5.28.2    issue       r1       r2       r3
+  x31-after-wrapper                       S/S      S/S      S/S      S/S      S/S
+  x31-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x31-when, r3=x31-when
+## PhaseProbe.Plain.Shapes.X32_a_Task_step_whose_body_ends_in_a_handler
+                                       5.28.2    issue       r1       r2       r3
+  x32-first                               U/U      U/U      U/U      U/U      U/U
+  x32-caught-InvalidOperationException      S/S      S/S      S/S      S/S      S/S
+  x32-when                                A/A      S/S      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x32-when, r3=x32-when
+## PhaseProbe.Plain.Shapes.X33_a_guard_clause_under_ThrowsAsync_then_a_When
+                                       5.28.2    issue       r1       r2       r3
+  x33-given                               S/S      S/S      S/S      S/S      S/S
+  x33-after-guard                         S/S      S/S      S/S      S/S      S/S
+  x33-when                                A/A      S/S      A/A      A/A      A/A
+  x33-after-when                          A/A      S/S      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x33-when, r3=x33-when
+## PhaseProbe.Plain.Shapes.X34_a_Task_step_that_returns_inside_a_try
+                                       5.28.2    issue       r1       r2       r3
+  x34-given                               S/S      S/S      S/S      S/S      S/S
+  x34-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x34-when, r3=x34-when
+## PhaseProbe.Plain.Shapes.X35_a_generic_Task_of_T_step_that_is_not_async
+                                       5.28.2    issue       r1       r2       r3
+  x35-first                               U/U      U/U      U/U      U/U      U/U
+  x35-when-1                              A/A      S/S      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x35-when-1, r3=x35-when-1
+## PhaseProbe.Plain.Shapes.X36_a_sync_parent_whose_last_act_is_a_skipped_sub_step
+                                       5.28.2    issue       r1       r2       r3
+  x36-after-parent                        A/A      S/S      S/S      S/S      S/S
+  x36-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x36-when, r3=x36-when
+## PhaseProbe.Plain.Shapes.X37_a_Task_parent_not_async_whose_last_act_is_a_skipped_sub_step
+                                       5.28.2    issue       r1       r2       r3
+  x37-after-parent                        A/A      S/S      S/S      S/S      S/S
+  x37-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=x37-when, r3=x37-when
+==== lightbdd-xunit2
+## L01 plain Given When Then
+                                       5.28.2    issue       r1       r2       r3
+  l01-given                               S/U      S/U      S/S      S/S      S/S
+  l01-and                                 S/U      S/U      S/S      S/S      S/S
+  l01-when                                A/U      A/U      A/A      A/A      A/A
+  l01-when-and                            U/U      U/U      A/A      A/A      A/A
+  l01-then                                U/U      U/U      A/A      A/A      A/A
+  l01-then-but                            U/U      U/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## L02 When composite with a Given sub step
+                                       5.28.2    issue       r1       r2       r3
+  l02-given                               S/U      S/U      S/S      S/S      S/S
+  l02-composite-body                      A/U      A/U      A/A      A/A      A/A
+  l02-first-untyped-sub                   U/U      U/U      A/A      A/A      A/A
+  l02-given-sub                           U/U      U/U      A/A      A/A      A/A
+  l02-untyped-sub-after-given             U/U      U/U      A/A      A/A      A/A
+  l02-then                                U/U      U/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## L03 Given composite with a When sub step
+                                       5.28.2    issue       r1       r2       r3
+  l03-composite-body                      S/U      S/U      S/S      S/S      S/S
+  l03-when-sub                            S/U      S/U      S/S      S/S      S/S
+  l03-untyped-sub-after-when              S/U      S/U      S/S      S/S      S/S
+  l03-when                                A/U      A/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## L04 a LightBDD When calls a woven Given
+                                       5.28.2    issue       r1       r2       r3
+  l04-given                               S/U      S/U      S/S      S/S      S/S
+  l04-before-sub                          A/U      A/U      A/A      A/A      A/A
+  l04-in-sub                              S/S      U/U      A/A      A/A      A/A
+  l04-after-sub                           S/S      U/U      A/A      A/A      A/A
+  l04-then                                U/U      U/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## L05 a LightBDD Given calls a woven When
+                                       5.28.2    issue       r1       r2       r3
+  l05-before-sub                          S/U      S/U      S/S      S/S      S/S
+  l05-in-sub                              S/A      S/U      S/S      S/S      S/S
+  l05-after-sub                           S/A      S/U      S/S      S/S      S/S
+  l05-when                                A/U      A/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## L06 first scenario on a shared handler
+                                       5.28.2    issue       r1       r2       r3
+  l06-given                               S/U      S/U      S/S      S/S      S/S
+  l06-when                                A/U      A/U      A/A      A/A      A/A
+  l06-then                                U/U      U/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## L07 second scenario on a shared handler
+                                       5.28.2    issue       r1       r2       r3
+  l07-given                               U/U      U/U      S/S      S/S      S/S
+  l07-when                                U/U      U/U      A/A      A/A      A/A
+  l07-then                                U/U      U/U      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=l07-when, r3=l07-when
+## L08 untyped steps only
+                                       5.28.2    issue       r1       r2       r3
+  l08-first                               U/U      U/U      U/U      U/U      U/U
+  l08-second                              U/U      U/U      U/U      U/U      U/U
+  boundary                                  0        0        0        0        0
+## L09 a When with no HTTP call then an And
+                                       5.28.2    issue       r1       r2       r3
+  l09-given                               S/U      S/U      S/S      S/S      S/S
+  l09-when-message                        -/U      -/U      -/A      -/A      -/A
+  l09-when-and                            S/U      S/U      A/A      A/A      A/A
+  l09-then                                A/U      A/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+  marker before: 5.28.2=l09-then, issue=l09-then, r1=l09-then, r2=l09-when-message, r3=l09-when-message
+## L10 a Given with no HTTP call
+                                       5.28.2    issue       r1       r2       r3
+  l10-given-message                       -/U      -/U      -/S      -/S      -/S
+  l10-when                                A/U      A/U      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=l10-when, r3=l10-when
+## L11 a message tracker that does not track setup
+                                       5.28.2    issue       r1       r2       r3
+  l11-given                               S/U      S/U      S/-      S/-      S/-
+  l11-when                                A/U      A/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## L12 an untyped step after a typed one
+                                       5.28.2    issue       r1       r2       r3
+  l12-given                               S/U      S/U      S/S      S/S      S/S
+  l12-untyped-after-given                 U/U      U/U      U/U      U/U      U/U
+  l12-when                                A/U      A/U      A/A      A/A      A/A
+  l12-untyped-after-when                  U/U      U/U      U/U      U/U      U/U
+  boundary                                  1        1        1        1        1
+## L13 LightBDDs own setup step type
+                                       5.28.2    issue       r1       r2       r3
+  l13-setup                               U/U      U/U      S/S      S/S      S/S
+  l13-when                                A/U      A/U      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=l13-when, r3=l13-when
+## L14 a bypassed sub step in a Given composite
+                                       5.28.2    issue       r1       r2       r3
+  l14-body                                S/U      S/U      S/S      S/S      S/S
+  l14-when-sub                            S/U      S/U      S/S      S/S      S/S
+  l14-untyped-sub                         S/U      S/U      S/S      S/S      S/S
+  l14-and                                 S/U      S/U      S/S      S/S      S/S
+  l14-when                                A/U      A/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## L15 an And first over a Given sub step
+                                       5.28.2    issue       r1       r2       r3
+  l15-body                                S/U      S/U      S/U      S/U      S/U
+  l15-given-sub                           S/U      S/U      S/S      S/S      S/S
+  l15-when                                A/U      A/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## L16 an And first then a When
+                                       5.28.2    issue       r1       r2       r3
+  l16-and                                 S/U      S/U      S/U      S/U      S/U
+  l16-when                                A/U      A/U      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+==== bddfy-xunit3
+## PhaseProbe.Bddfy.Scenarios.B01_plain_Given_And_When_And_Then_But
+                                       5.28.2    issue       r1       r2       r3
+  b01-given                               S/S      S/S      S/S      S/S      S/S
+  b01-and                                 S/S      S/S      S/S      S/S      S/S
+  b01-when                                A/A      A/A      A/A      A/A      A/A
+  b01-when-and                            A/A      A/A      A/A      A/A      A/A
+  b01-then                                A/A      A/A      A/A      A/A      A/A
+  b01-then-but                            A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## PhaseProbe.Bddfy.Scenarios.B02_a_When_step_calls_a_woven_Given
+                                       5.28.2    issue       r1       r2       r3
+  b02-given                               S/S      S/S      S/S      S/S      S/S
+  b02-before-sub                          A/A      A/A      A/A      A/A      A/A
+  b02-in-sub                              S/S      A/A      A/A      A/A      A/A
+  b02-after-sub                           S/S      A/A      A/A      A/A      A/A
+  b02-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## PhaseProbe.Bddfy.Scenarios.B03_a_Given_step_calls_a_woven_When
+                                       5.28.2    issue       r1       r2       r3
+  b03-before-sub                          S/S      S/S      S/S      S/S      S/S
+  b03-in-sub                              A/A      S/S      S/S      S/S      S/S
+  b03-after-sub                           A/A      S/S      S/S      S/S      S/S
+  b03-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## PhaseProbe.Bddfy.Scenarios.B04_an_async_When_step_calls_a_woven_Given
+                                       5.28.2    issue       r1       r2       r3
+  b04-given                               S/S      S/S      S/S      S/S      S/S
+  b04-before-sub                          A/A      A/A      A/A      A/A      A/A
+  b04-in-sub                              S/S      S/S      S/S      S/S      A/A
+  b04-after-sub                           S/S      S/S      S/S      S/S      A/A
+  b04-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## PhaseProbe.Bddfy.Scenarios.B05_async_steps_that_yield
+                                       5.28.2    issue       r1       r2       r3
+  b05-given                               S/S      S/S      S/S      S/S      S/S
+  b05-when                                A/A      A/A      A/A      A/A      A/A
+  b05-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## PhaseProbe.Bddfy.Scenarios.B06_first_scenario_on_a_shared_handler
+                                       5.28.2    issue       r1       r2       r3
+  b06-given                               S/S      S/S      S/S      S/S      S/S
+  b06-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+## PhaseProbe.Bddfy.Scenarios.B07_second_scenario_on_a_shared_handler
+                                       5.28.2    issue       r1       r2       r3
+  b07-given                               S/S      S/S      S/S      S/S      S/S
+  b07-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=b07-when, r3=b07-when
+## PhaseProbe.Bddfy.Scenarios.B08_a_When_with_no_HTTP_call
+                                       5.28.2    issue       r1       r2       r3
+  b08-given                               S/S      S/S      S/S      S/S      S/S
+  b08-when-message                        -/A      -/A      -/A      -/A      -/A
+  b08-then                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+  marker before: 5.28.2=b08-then, issue=b08-then, r1=b08-then, r2=b08-when-message, r3=b08-when-message
+## PhaseProbe.Bddfy.Scenarios.B09_a_Given_with_no_HTTP_call
+                                       5.28.2    issue       r1       r2       r3
+  b09-given-message                       -/S      -/S      -/S      -/S      -/S
+  b09-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  0        0        0        1        1
+  marker before: 5.28.2=none, issue=none, r1=none, r2=b09-when, r3=b09-when
+## PhaseProbe.Bddfy.Scenarios.B10_a_teardown_after_the_boundary
+                                       5.28.2    issue       r1       r2       r3
+  b10-given                               S/S      S/S      S/S      S/S      S/S
+  b10-when                                A/A      A/A      A/A      A/A      A/A
+  b10-teardown                            U/U      U/U      U/U      U/U      U/U
+  boundary                                  1        1        1        1        1
+## PhaseProbe.Bddfy.Scenarios.B11_async_steps_with_AsyncVoidSupport_off
+                                       5.28.2    issue       r1       r2       r3
+  b11-given                               S/S      S/S      S/S      S/S      S/S
+  b11-then                                A/A      A/A      A/A      A/A      A/A
+  b11-when                                A/A      A/A      A/A      A/A      A/A
+  boundary                                  1        1        1        1        1
+  marker before: 5.28.2=b11-then, issue=b11-then, r1=b11-then, r2=b11-when, r3=b11-when

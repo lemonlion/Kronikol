@@ -1,0 +1,81 @@
+## PhaseProbe.Rev3.Readers.Suite.R01_passes
+  [Step] <color:white>Given A customer exists
+  r01-given                                    http Setup    
+  r01-given                                    msg  Setup    
+  [Step] <color:white>When The customer orders
+  --- ACTION START MARKER ---
+  r01-when                                     http Action   
+  r01-when                                     msg  Action   
+  [Step] <color:white>Then The order is shipped
+  r01-then                                     http Action   
+  r01-then                                     msg  Action   
+  steps:
+    Given A customer exists  [Passed]
+    When The customer orders  [Passed]
+    Then The order is shipped  [Passed]
+
+## PhaseProbe.Rev3.Readers.Suite.R02_fails_in_the_Then
+  [Step] <color:white>Given A customer exists
+  r02-given                                    http Setup    
+  r02-given                                    msg  Setup    
+  [Step] <color:white>When The customer orders
+  --- ACTION START MARKER ---
+  r02-when                                     http Action   
+  r02-when                                     msg  Action   
+  [Step] <color:white>Then The order fails
+  r02-then                                     http Action   
+  r02-then                                     msg  Action   
+  steps:
+    Given A customer exists  [Passed]
+    When The customer orders  [Passed]
+    Then The order fails  [Failed]
+
+## PhaseProbe.Rev3.Readers.Suite.R03_fails_with_a_Given_with_no_calls
+  [Step] <color:white>Given No calls in this given
+  [Step] <color:white>When The customer orders
+  --- ACTION START MARKER ---
+  r03-when                                     http Action   
+  r03-when                                     msg  Action   
+  [Step] <color:white>Then The order fails
+  r03-then                                     http Action   
+  r03-then                                     msg  Action   
+  steps:
+    Given No calls in this given  [Passed]
+    When The customer orders  [Passed]
+    Then The order fails  [Failed]
+
+## PhaseProbe.Rev3.Readers.Suite.R04_steps_but_no_calls_at_all
+  [Step] <color:white>Given No calls in this given
+  [Step] <color:white>When Nothing
+  --- ACTION START MARKER ---
+  steps:
+    Given No calls in this given  [Passed]
+    When Nothing  [Passed]
+
+## PhaseProbe.Rev3.Readers.Suite.R05_keyword_free
+  [Step] <color:white>A keyword free step
+  r05-plain                                    http Unknown  
+  r05-plain                                    msg  Unknown  
+  steps:
+    (none) A keyword free step  [Passed]
+
+## PhaseProbe.Rev3.Readers.Suite.R06_fails_with_no_steps
+  r06-raw                                      http Unknown  
+  r06-raw                                      msg  Unknown  
+  steps:
+
+## PhaseProbe.Rev3.Readers.Suite.R07_fails_after_a_manual_bypass_under_a_Given
+  [Step] <color:white>Given Arrange with a manual skipped sub
+  [Step] <color:white>When The customer orders
+  --- ACTION START MARKER ---
+  r07-when                                     http Action   
+  r07-when                                     msg  Action   
+  [Step] <color:white>Then The order fails
+  r07-then                                     http Action   
+  r07-then                                     msg  Action   
+  steps:
+    Given Arrange with a manual skipped sub  [Passed]
+      (none) r07-manual-sub  [Bypassed]
+    When The customer orders  [Passed]
+    Then The order fails  [Failed]
+

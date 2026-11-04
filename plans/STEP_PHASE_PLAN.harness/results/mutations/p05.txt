@@ -1,0 +1,24 @@
+KILLED solid=5 order=0 racing-new=0 racing-seen=0
+first: rev6/rev6-bddfy: B24_A_woven_Given_and_a_woven_When_before_the_story: gone: --- MARKER ---; end:  > 
+
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B24_A_woven_Given_and_a_woven_When_before_the_story
+    gone: --- MARKER ---; end:  > 
+      - --- MARKER ---
+      + end
+      - end
+[rev6/rev6-reqnroll] rev6-reqnroll.txt: SOLID R41 a before-scenario hook runs a woven Given then a woven When
+    gone: --- MARKER ---; end:  > 
+      - --- MARKER ---
+      + end
+      - end
+[rev6/rev6-reqnroll] rev6-reqnroll.txt: SOLID R42 the same hook, and the When binding marks after a call
+    gone: --- MARKER ---
+      - --- MARKER ---
+[rev6/rev6-reqnroll-x3] rev6-reqnroll.txt: SOLID R41 a before-scenario hook runs a woven Given then a woven When
+    gone: --- MARKER ---; end:  > 
+      - --- MARKER ---
+      + end
+      - end
+[rev6/rev6-reqnroll-x3] rev6-reqnroll.txt: SOLID R42 the same hook, and the When binding marks after a call
+    gone: --- MARKER ---
+      - --- MARKER ---

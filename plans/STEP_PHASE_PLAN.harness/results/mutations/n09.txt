@@ -1,0 +1,8 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=0
+first: rev5/rev5-reqnroll: R09b a hand step closed on another flow in a sync Given bind: gone: --- MARKER ---; gone: partition Setup; gone: end
+
+[rev5/rev5-reqnroll] rev5-reqnroll.txt: SOLID R09b a hand step closed on another flow in a sync Given binding
+    gone: --- MARKER ---; gone: partition Setup; gone: end
+      - --- MARKER ---
+      - partition Setup
+      - end

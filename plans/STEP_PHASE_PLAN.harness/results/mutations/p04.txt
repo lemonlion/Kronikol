@@ -1,0 +1,56 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=1
+first: rev6/rev6-a: I02_A_step_for_another_id_started_before_a_Given_closes_insi: Request: i02-label phase=Setup src=TestContext > i02-label phase=Action src=TestContext; Response: i02-label phase=Setup src=TestContext > i02-label phase=Action src=TestContext; Request: i0
+
+[rev6/rev6-a] rev6-a.txt: racing, shape seen B06_A_Parallel_For_of_skipped_and_real_inside_a_When
+[rev6/rev6-a] rev6-a.txt: SOLID I02_A_step_for_another_id_started_before_a_Given_closes_inside_it
+    Request: i02-label phase=Setup src=TestContext > i02-label phase=Action src=TestContext; Response: i02-label phase=Setup src=TestContext > i02-label phase=Action src=TestContext; Request: i02-after-label phase=Setup src=TestContext > i02-after-label phase=Action src=TestContext; Response: i02-after-label phase=Setup src=TestContext > i02-after-label phase=Action src=TestContext; Request: i02-a
+      - Request i02-label phase=Setup src=TestContext
+      - Response i02-label phase=Setup src=TestContext
+      - Request i02-after-label phase=Setup src=TestContext
+      - Response i02-after-label phase=Setup src=TestContext
+      - Request i02-after-label-nosetup phase=Setup src=TestContext IGNORED
+      - Response i02-after-label-nosetup phase=Setup src=TestContext IGNORED
+      - Request i02-after-label-noaction phase=Setup src=TestContext
+      - Response i02-after-label-noaction phase=Setup src=TestContext
+      - Request i02-label2 phase=Setup src=TestContext
+      - Response i02-label2 phase=Setup src=TestContext
+      - Request i02-after-label2 phase=Setup src=TestContext
+      - Response i02-after-label2 phase=Setup src=TestContext
+      - Request i02-after-label2-nosetup phase=Setup src=TestContext IGNORED
+      - Response i02-after-label2-nosetup phase=Setup src=TestContext IGNORED
+      - Request i02-after-label2-noaction phase=Setup src=TestContext
+      - Response i02-after-label2-noaction phase=Setup src=TestContext
+      + --- MARKER ---
+      + Request i02-label phase=Action src=TestContext
+      + Response i02-label phase=Action src=TestContext
+      + Request i02-after-label phase=Action src=TestContext
+      + Response i02-after-label phase=Action src=TestContext
+      + Request i02-after-label-nosetup phase=Action src=TestContext
+      + Response i02-after-label-nosetup phase=Action src=TestContext
+      + Request i02-after-label-noaction phase=Action src=TestContext IGNORED
+[rev6/rev6-a] rev6-a.txt: SOLID I03_Sync_hand_steps_of_two_ids_interleaved_on_one_flow
+    Request: i03-label phase=Setup src=TestContext > i03-label phase=Action src=TestContext; Response: i03-label phase=Setup src=TestContext > i03-label phase=Action src=TestContext; Request: i03-after-label phase=Setup src=TestContext > i03-after-label phase=Action src=TestContext; Response: i03-after-label phase=Setup src=TestContext > i03-after-label phase=Action src=TestContext; Request: i03-a
+      - Request i03-label phase=Setup src=TestContext
+      - Response i03-label phase=Setup src=TestContext
+      - Request i03-after-label phase=Setup src=TestContext
+      - Response i03-after-label phase=Setup src=TestContext
+      - Request i03-after-label-nosetup phase=Setup src=TestContext IGNORED
+      - Response i03-after-label-nosetup phase=Setup src=TestContext IGNORED
+      - Request i03-after-label-noaction phase=Setup src=TestContext
+      - Response i03-after-label-noaction phase=Setup src=TestContext
+      - Request i03-after-mine phase=Setup src=TestContext
+      - Response i03-after-mine phase=Setup src=TestContext
+      - Request i03-after-mine-nosetup phase=Setup src=TestContext IGNORED
+      - Response i03-after-mine-nosetup phase=Setup src=TestContext IGNORED
+      - Request i03-after-mine-noaction phase=Setup src=TestContext
+      - Response i03-after-mine-noaction phase=Setup src=TestContext
+      + --- MARKER ---
+      + Request i03-label phase=Action src=TestContext
+      + Response i03-label phase=Action src=TestContext
+      + Request i03-after-label phase=Action src=TestContext
+      + Response i03-after-label phase=Action src=TestContext
+      + Request i03-after-label-nosetup phase=Action src=TestContext
+      + Response i03-after-label-nosetup phase=Action src=TestContext
+      + Request i03-after-label-noaction phase=Action src=TestContext IGNORED
+      + Response i03-after-label-noaction phase=Action src=TestContext IGNORED
+      + Request i03-after-mine phase=Action src=TestContext

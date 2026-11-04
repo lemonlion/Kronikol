@@ -1,0 +1,1153 @@
+## M01_SkipIf_getter_throws_async_then_When_Then
+  [Step] <color:white>Given Skip throws
+  
+  Request  m01-after                      phase=Setup   src=TestContext
+  Response m01-after                      phase=Setup   src=TestContext
+  Request  m01-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m01-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m01-after-noaction             phase=Setup   src=TestContext
+  Response m01-after-noaction             phase=Setup   src=TestContext
+  Request  m01-act                        phase=Action  src=TestContext
+  Response m01-act                        phase=Action  src=TestContext
+  Request  m01-after-act                  phase=Action  src=TestContext
+  Response m01-after-act                  phase=Action  src=TestContext
+  Request  m01-after-act-nosetup          phase=Action  src=TestContext
+  Response m01-after-act-nosetup          phase=Action  src=TestContext
+  Request  m01-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m01-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Request  m01-then                       phase=Action  src=TestContext
+  Response m01-then                       phase=Action  src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Skip throws
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M02_SkipIf_getter_throws_sync_then_When_Then
+  [Step] <color:white>Given Skip throws sync
+  
+  Request  m02-after                      phase=Setup   src=TestContext
+  Response m02-after                      phase=Setup   src=TestContext
+  Request  m02-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m02-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m02-after-noaction             phase=Setup   src=TestContext
+  Response m02-after-noaction             phase=Setup   src=TestContext
+  Request  m02-act                        phase=Action  src=TestContext
+  Response m02-act                        phase=Action  src=TestContext
+  Request  m02-after-act                  phase=Action  src=TestContext
+  Response m02-after-act                  phase=Action  src=TestContext
+  Request  m02-after-act-nosetup          phase=Action  src=TestContext
+  Response m02-after-act-nosetup          phase=Action  src=TestContext
+  Request  m02-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m02-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Request  m02-then                       phase=Action  src=TestContext
+  Response m02-then                       phase=Action  src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Skip throws sync
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M03_A_Task_Given_throws_before_its_task_then_When_Then
+  [Step] <color:white>Given Throws before task
+  
+  Request  m03-after                      phase=Unknown src=TestContext
+  Response m03-after                      phase=Unknown src=TestContext
+  Request  m03-after-nosetup              phase=Unknown src=TestContext
+  Response m03-after-nosetup              phase=Unknown src=TestContext
+  Request  m03-after-noaction             phase=Unknown src=TestContext
+  Response m03-after-noaction             phase=Unknown src=TestContext
+  Request  m03-act                        phase=Action  src=TestContext
+  Response m03-act                        phase=Action  src=TestContext
+  Request  m03-after-act                  phase=Action  src=TestContext
+  Response m03-after-act                  phase=Action  src=TestContext
+  Request  m03-after-act-nosetup          phase=Action  src=TestContext
+  Response m03-after-act-nosetup          phase=Action  src=TestContext
+  Request  m03-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m03-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Request  m03-then                       phase=Action  src=TestContext
+  Response m03-then                       phase=Action  src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Throws before task
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M04_A_sync_skip_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m04-seed                       phase=Setup   src=TestContext
+  Response m04-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Skip sync
+  
+  Request  m04-before                     phase=Action  src=TestContext
+  Response m04-before                     phase=Action  src=TestContext
+  Request  m04-after                      phase=Setup   src=TestContext
+  Response m04-after                      phase=Setup   src=TestContext
+  Request  m04-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m04-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m04-after-noaction             phase=Setup   src=TestContext
+  Response m04-after-noaction             phase=Setup   src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  m04-sub                        phase=Setup   src=TestContext
+  Response m04-sub                        phase=Setup   src=TestContext
+  Request  m04-after-sub                  phase=Setup   src=TestContext
+  Response m04-after-sub                  phase=Setup   src=TestContext
+  Request  m04-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m04-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m04-after-sub-noaction         phase=Setup   src=TestContext
+  Response m04-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m04-after-when                 phase=Action  src=TestContext
+  Response m04-after-when                 phase=Action  src=TestContext
+  Request  m04-after-when-nosetup         phase=Action  src=TestContext
+  Response m04-after-when-nosetup         phase=Action  src=TestContext
+  Request  m04-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m04-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m04-then                       phase=Action  src=TestContext
+  Response m04-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Skip sync [Passed]
+      Given Skip sync [Bypassed]
+    Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Skip sync
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M05_An_async_skip_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m05-seed                       phase=Setup   src=TestContext
+  Response m05-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Skip async
+  
+  Request  m05-before                     phase=Action  src=TestContext
+  Response m05-before                     phase=Action  src=TestContext
+  Request  m05-after                      phase=Setup   src=TestContext
+  Response m05-after                      phase=Setup   src=TestContext
+  Request  m05-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m05-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m05-after-noaction             phase=Setup   src=TestContext
+  Response m05-after-noaction             phase=Setup   src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  m05-sub                        phase=Setup   src=TestContext
+  Response m05-sub                        phase=Setup   src=TestContext
+  Request  m05-after-sub                  phase=Setup   src=TestContext
+  Response m05-after-sub                  phase=Setup   src=TestContext
+  Request  m05-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m05-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m05-after-sub-noaction         phase=Setup   src=TestContext
+  Response m05-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m05-after-when                 phase=Action  src=TestContext
+  Response m05-after-when                 phase=Action  src=TestContext
+  Request  m05-after-when-nosetup         phase=Action  src=TestContext
+  Response m05-after-when-nosetup         phase=Action  src=TestContext
+  Request  m05-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m05-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m05-then                       phase=Action  src=TestContext
+  Response m05-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Skip async [Passed]
+      Given Skip async [Bypassed]
+    Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Skip async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M06_A_Task_skip_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m06-seed                       phase=Setup   src=TestContext
+  Response m06-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Skip task
+  
+  Request  m06-before                     phase=Action  src=TestContext
+  Response m06-before                     phase=Action  src=TestContext
+  Request  m06-after                      phase=Setup   src=TestContext
+  Response m06-after                      phase=Setup   src=TestContext
+  Request  m06-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m06-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m06-after-noaction             phase=Setup   src=TestContext
+  Response m06-after-noaction             phase=Setup   src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  m06-sub                        phase=Setup   src=TestContext
+  Response m06-sub                        phase=Setup   src=TestContext
+  Request  m06-after-sub                  phase=Setup   src=TestContext
+  Response m06-after-sub                  phase=Setup   src=TestContext
+  Request  m06-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m06-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m06-after-sub-noaction         phase=Setup   src=TestContext
+  Response m06-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m06-after-when                 phase=Action  src=TestContext
+  Response m06-after-when                 phase=Action  src=TestContext
+  Request  m06-after-when-nosetup         phase=Action  src=TestContext
+  Response m06-after-when-nosetup         phase=Action  src=TestContext
+  Request  m06-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m06-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m06-then                       phase=Action  src=TestContext
+  Response m06-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Skip task [Passed]
+      Given Skip task [Bypassed]
+    Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Skip task
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M07_A_skip_last_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m07-seed                       phase=Setup   src=TestContext
+  Response m07-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Last skip
+  
+  Request  m07-before                     phase=Action  src=TestContext
+  Response m07-before                     phase=Action  src=TestContext
+  Request  m07-after-when                 phase=Action  src=TestContext
+  Response m07-after-when                 phase=Action  src=TestContext
+  Request  m07-after-when-nosetup         phase=Action  src=TestContext
+  Response m07-after-when-nosetup         phase=Action  src=TestContext
+  Request  m07-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m07-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m07-then                       phase=Action  src=TestContext
+  Response m07-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Last skip [Passed]
+      Given Skip async [Bypassed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Last skip
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M08_The_issue_shape
+  [Step] <color:white>Given Async
+  
+  Request  m08-seed                       phase=Setup   src=TestContext
+  Response m08-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Sub
+  
+  Request  m08-before                     phase=Action  src=TestContext
+  Response m08-before                     phase=Action  src=TestContext
+  Request  m08-sub                        phase=Setup   src=TestContext
+  Response m08-sub                        phase=Setup   src=TestContext
+  Request  m08-after-sub                  phase=Setup   src=TestContext
+  Response m08-after-sub                  phase=Setup   src=TestContext
+  Request  m08-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m08-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m08-after-sub-noaction         phase=Setup   src=TestContext
+  Response m08-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m08-after-when                 phase=Action  src=TestContext
+  Response m08-after-when                 phase=Action  src=TestContext
+  Request  m08-after-when-nosetup         phase=Action  src=TestContext
+  Response m08-after-when-nosetup         phase=Action  src=TestContext
+  Request  m08-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m08-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m08-then                       phase=Action  src=TestContext
+  Response m08-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Sub [Passed]
+      Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Sub
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M09_A_top_level_skip_then_a_real_When
+  [Step] <color:white>Given Skip async
+  
+  Request  m09-after-skip                 phase=Setup   src=TestContext
+  Response m09-after-skip                 phase=Setup   src=TestContext
+  Request  m09-after-skip-nosetup         phase=Setup   src=TestContext IGNORED
+  Response m09-after-skip-nosetup         phase=Setup   src=TestContext IGNORED
+  Request  m09-after-skip-noaction        phase=Setup   src=TestContext
+  Response m09-after-skip-noaction        phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  m09-act                        phase=Action  src=TestContext
+  Response m09-act                        phase=Action  src=TestContext
+  Request  m09-after-act                  phase=Action  src=TestContext
+  Response m09-after-act                  phase=Action  src=TestContext
+  Request  m09-after-act-nosetup          phase=Action  src=TestContext
+  Response m09-after-act-nosetup          phase=Action  src=TestContext
+  Request  m09-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m09-after-act-noaction         phase=Action  src=TestContext IGNORED
+  steps:
+    Given Skip async [Bypassed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Skip async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M10_A_Task_Given_throws_before_its_task_caught_in_the_test_then_When_Then
+  [Step] <color:white>Given Throws before task
+  
+  Request  m10-after                      phase=Setup   src=TestContext
+  Response m10-after                      phase=Setup   src=TestContext
+  Request  m10-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m10-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m10-after-noaction             phase=Setup   src=TestContext
+  Response m10-after-noaction             phase=Setup   src=TestContext
+  Request  m10-act                        phase=Action  src=TestContext
+  Response m10-act                        phase=Action  src=TestContext
+  Request  m10-after-act                  phase=Action  src=TestContext
+  Response m10-after-act                  phase=Action  src=TestContext
+  Request  m10-after-act-nosetup          phase=Action  src=TestContext
+  Response m10-after-act-nosetup          phase=Action  src=TestContext
+  Request  m10-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m10-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Request  m10-then                       phase=Action  src=TestContext
+  Response m10-then                       phase=Action  src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Throws before task
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M11_An_async_void_skip_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m11-seed                       phase=Setup   src=TestContext
+  Response m11-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Skip void
+  
+  Request  m11-before                     phase=Action  src=TestContext
+  Response m11-before                     phase=Action  src=TestContext
+  Request  m11-after                      phase=Setup   src=TestContext
+  Response m11-after                      phase=Setup   src=TestContext
+  Request  m11-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m11-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m11-after-noaction             phase=Setup   src=TestContext
+  Response m11-after-noaction             phase=Setup   src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  m11-sub                        phase=Setup   src=TestContext
+  Response m11-sub                        phase=Setup   src=TestContext
+  Request  m11-after-sub                  phase=Setup   src=TestContext
+  Response m11-after-sub                  phase=Setup   src=TestContext
+  Request  m11-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m11-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m11-after-sub-noaction         phase=Setup   src=TestContext
+  Response m11-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m11-after-when                 phase=Action  src=TestContext
+  Response m11-after-when                 phase=Action  src=TestContext
+  Request  m11-after-when-nosetup         phase=Action  src=TestContext
+  Response m11-after-when-nosetup         phase=Action  src=TestContext
+  Request  m11-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m11-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m11-then                       phase=Action  src=TestContext
+  Response m11-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Skip void [Passed]
+      Given Skip void [Bypassed]
+    Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Skip void
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M12_A_getter_false_Task_stub_throws_caught_then_When
+  [Step] <color:white>Given No skip throws
+  
+  Request  m12-after                      phase=Setup   src=TestContext
+  Response m12-after                      phase=Setup   src=TestContext
+  Request  m12-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m12-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m12-after-noaction             phase=Setup   src=TestContext
+  Response m12-after-noaction             phase=Setup   src=TestContext
+  Request  m12-act                        phase=Action  src=TestContext
+  Response m12-act                        phase=Action  src=TestContext
+  Request  m12-after-act                  phase=Action  src=TestContext
+  Response m12-after-act                  phase=Action  src=TestContext
+  Request  m12-after-act-nosetup          phase=Action  src=TestContext
+  Response m12-after-act-nosetup          phase=Action  src=TestContext
+  Request  m12-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m12-after-act-noaction         phase=Action  src=TestContext IGNORED
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given No skip throws
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M13_Hand_words_that_say_nothing_through_both_overloads
+  [Step] <color:white>Given Async
+  
+  Request  m13-seed                       phase=Setup   src=TestContext
+  Response m13-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>GIVEN m13-GIVEN-byid
+  
+  Request  m13-GIVEN-byid-in              phase=Setup   src=TestContext
+  Response m13-GIVEN-byid-in              phase=Setup   src=TestContext
+  Request  m13-GIVEN-byid-in-nosetup      phase=Setup   src=TestContext IGNORED
+  Response m13-GIVEN-byid-in-nosetup      phase=Setup   src=TestContext IGNORED
+  Request  m13-GIVEN-byid-in-noaction     phase=Setup   src=TestContext
+  Response m13-GIVEN-byid-in-noaction     phase=Setup   src=TestContext
+  [Step] <color:white>And m13-GIVEN-ambient
+  
+  Request  m13-GIVEN-ambient-in           phase=Setup   src=TestContext
+  Response m13-GIVEN-ambient-in           phase=Setup   src=TestContext
+  Request  m13-GIVEN-ambient-in-nosetup   phase=Setup   src=TestContext IGNORED
+  Response m13-GIVEN-ambient-in-nosetup   phase=Setup   src=TestContext IGNORED
+  Request  m13-GIVEN-ambient-in-noaction  phase=Setup   src=TestContext
+  Response m13-GIVEN-ambient-in-noaction  phase=Setup   src=TestContext
+  Request  m13-GIVEN-after                phase=Setup   src=TestContext
+  Response m13-GIVEN-after                phase=Setup   src=TestContext
+  Request  m13-GIVEN-after-nosetup        phase=Setup   src=TestContext IGNORED
+  Response m13-GIVEN-after-nosetup        phase=Setup   src=TestContext IGNORED
+  Request  m13-GIVEN-after-noaction       phase=Setup   src=TestContext
+  Response m13-GIVEN-after-noaction       phase=Setup   src=TestContext
+  [Step] <color:white>given m13-given-byid
+  
+  Request  m13-given-byid-in              phase=Setup   src=TestContext
+  Response m13-given-byid-in              phase=Setup   src=TestContext
+  Request  m13-given-byid-in-nosetup      phase=Setup   src=TestContext IGNORED
+  Response m13-given-byid-in-nosetup      phase=Setup   src=TestContext IGNORED
+  Request  m13-given-byid-in-noaction     phase=Setup   src=TestContext
+  Response m13-given-byid-in-noaction     phase=Setup   src=TestContext
+  [Step] <color:white>And m13-given-ambient
+  
+  Request  m13-given-ambient-in           phase=Setup   src=TestContext
+  Response m13-given-ambient-in           phase=Setup   src=TestContext
+  Request  m13-given-ambient-in-nosetup   phase=Setup   src=TestContext IGNORED
+  Response m13-given-ambient-in-nosetup   phase=Setup   src=TestContext IGNORED
+  Request  m13-given-ambient-in-noaction  phase=Setup   src=TestContext
+  Response m13-given-ambient-in-noaction  phase=Setup   src=TestContext
+  Request  m13-given-after                phase=Setup   src=TestContext
+  Response m13-given-after                phase=Setup   src=TestContext
+  Request  m13-given-after-nosetup        phase=Setup   src=TestContext IGNORED
+  Response m13-given-after-nosetup        phase=Setup   src=TestContext IGNORED
+  Request  m13-given-after-noaction       phase=Setup   src=TestContext
+  Response m13-given-after-noaction       phase=Setup   src=TestContext
+  [Step] <color:white>SETUP m13-SETUP-byid
+  
+  Request  m13-SETUP-byid-in              phase=Setup   src=TestContext
+  Response m13-SETUP-byid-in              phase=Setup   src=TestContext
+  Request  m13-SETUP-byid-in-nosetup      phase=Setup   src=TestContext IGNORED
+  Response m13-SETUP-byid-in-nosetup      phase=Setup   src=TestContext IGNORED
+  Request  m13-SETUP-byid-in-noaction     phase=Setup   src=TestContext
+  Response m13-SETUP-byid-in-noaction     phase=Setup   src=TestContext
+  [Step] <color:white>And m13-SETUP-ambient
+  
+  Request  m13-SETUP-ambient-in           phase=Setup   src=TestContext
+  Response m13-SETUP-ambient-in           phase=Setup   src=TestContext
+  Request  m13-SETUP-ambient-in-nosetup   phase=Setup   src=TestContext IGNORED
+  Response m13-SETUP-ambient-in-nosetup   phase=Setup   src=TestContext IGNORED
+  Request  m13-SETUP-ambient-in-noaction  phase=Setup   src=TestContext
+  Response m13-SETUP-ambient-in-noaction  phase=Setup   src=TestContext
+  Request  m13-SETUP-after                phase=Setup   src=TestContext
+  Response m13-SETUP-after                phase=Setup   src=TestContext
+  Request  m13-SETUP-after-nosetup        phase=Setup   src=TestContext IGNORED
+  Response m13-SETUP-after-nosetup        phase=Setup   src=TestContext IGNORED
+  Request  m13-SETUP-after-noaction       phase=Setup   src=TestContext
+  Response m13-SETUP-after-noaction       phase=Setup   src=TestContext
+  [Step] <color:white>Setup m13-Setup-byid
+  
+  Request  m13-Setup-byid-in              phase=Setup   src=TestContext
+  Response m13-Setup-byid-in              phase=Setup   src=TestContext
+  Request  m13-Setup-byid-in-nosetup      phase=Setup   src=TestContext IGNORED
+  Response m13-Setup-byid-in-nosetup      phase=Setup   src=TestContext IGNORED
+  Request  m13-Setup-byid-in-noaction     phase=Setup   src=TestContext
+  Response m13-Setup-byid-in-noaction     phase=Setup   src=TestContext
+  [Step] <color:white>And m13-Setup-ambient
+  
+  Request  m13-Setup-ambient-in           phase=Setup   src=TestContext
+  Response m13-Setup-ambient-in           phase=Setup   src=TestContext
+  Request  m13-Setup-ambient-in-nosetup   phase=Setup   src=TestContext IGNORED
+  Response m13-Setup-ambient-in-nosetup   phase=Setup   src=TestContext IGNORED
+  Request  m13-Setup-ambient-in-noaction  phase=Setup   src=TestContext
+  Response m13-Setup-ambient-in-noaction  phase=Setup   src=TestContext
+  Request  m13-Setup-after                phase=Setup   src=TestContext
+  Response m13-Setup-after                phase=Setup   src=TestContext
+  Request  m13-Setup-after-nosetup        phase=Setup   src=TestContext IGNORED
+  Response m13-Setup-after-nosetup        phase=Setup   src=TestContext IGNORED
+  Request  m13-Setup-after-noaction       phase=Setup   src=TestContext
+  Response m13-Setup-after-noaction       phase=Setup   src=TestContext
+  [Step] <color:white>And m13-And-byid
+  
+  Request  m13-And-byid-in                phase=Setup   src=TestContext
+  Response m13-And-byid-in                phase=Setup   src=TestContext
+  Request  m13-And-byid-in-nosetup        phase=Setup   src=TestContext IGNORED
+  Response m13-And-byid-in-nosetup        phase=Setup   src=TestContext IGNORED
+  Request  m13-And-byid-in-noaction       phase=Setup   src=TestContext
+  Response m13-And-byid-in-noaction       phase=Setup   src=TestContext
+  [Step] <color:white>And m13-And-ambient
+  
+  Request  m13-And-ambient-in             phase=Setup   src=TestContext
+  Response m13-And-ambient-in             phase=Setup   src=TestContext
+  Request  m13-And-ambient-in-nosetup     phase=Setup   src=TestContext IGNORED
+  Response m13-And-ambient-in-nosetup     phase=Setup   src=TestContext IGNORED
+  Request  m13-And-ambient-in-noaction    phase=Setup   src=TestContext
+  Response m13-And-ambient-in-noaction    phase=Setup   src=TestContext
+  Request  m13-And-after                  phase=Setup   src=TestContext
+  Response m13-And-after                  phase=Setup   src=TestContext
+  Request  m13-And-after-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m13-And-after-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m13-And-after-noaction         phase=Setup   src=TestContext
+  Response m13-And-after-noaction         phase=Setup   src=TestContext
+  [Step] <color:white>AND m13-AND-byid
+  
+  Request  m13-AND-byid-in                phase=Setup   src=TestContext
+  Response m13-AND-byid-in                phase=Setup   src=TestContext
+  Request  m13-AND-byid-in-nosetup        phase=Setup   src=TestContext IGNORED
+  Response m13-AND-byid-in-nosetup        phase=Setup   src=TestContext IGNORED
+  Request  m13-AND-byid-in-noaction       phase=Setup   src=TestContext
+  Response m13-AND-byid-in-noaction       phase=Setup   src=TestContext
+  [Step] <color:white>And m13-AND-ambient
+  
+  Request  m13-AND-ambient-in             phase=Setup   src=TestContext
+  Response m13-AND-ambient-in             phase=Setup   src=TestContext
+  Request  m13-AND-ambient-in-nosetup     phase=Setup   src=TestContext IGNORED
+  Response m13-AND-ambient-in-nosetup     phase=Setup   src=TestContext IGNORED
+  Request  m13-AND-ambient-in-noaction    phase=Setup   src=TestContext
+  Response m13-AND-ambient-in-noaction    phase=Setup   src=TestContext
+  Request  m13-AND-after                  phase=Setup   src=TestContext
+  Response m13-AND-after                  phase=Setup   src=TestContext
+  Request  m13-AND-after-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m13-AND-after-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m13-AND-after-noaction         phase=Setup   src=TestContext
+  Response m13-AND-after-noaction         phase=Setup   src=TestContext
+  [Step] <color:white>WHEN m13-WHEN-byid
+  
+  Request  m13-WHEN-byid-in               phase=Setup   src=TestContext
+  Response m13-WHEN-byid-in               phase=Setup   src=TestContext
+  Request  m13-WHEN-byid-in-nosetup       phase=Setup   src=TestContext IGNORED
+  Response m13-WHEN-byid-in-nosetup       phase=Setup   src=TestContext IGNORED
+  Request  m13-WHEN-byid-in-noaction      phase=Setup   src=TestContext
+  Response m13-WHEN-byid-in-noaction      phase=Setup   src=TestContext
+  [Step] <color:white>And m13-WHEN-ambient
+  
+  Request  m13-WHEN-ambient-in            phase=Setup   src=TestContext
+  Response m13-WHEN-ambient-in            phase=Setup   src=TestContext
+  Request  m13-WHEN-ambient-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Response m13-WHEN-ambient-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Request  m13-WHEN-ambient-in-noaction   phase=Setup   src=TestContext
+  Response m13-WHEN-ambient-in-noaction   phase=Setup   src=TestContext
+  Request  m13-WHEN-after                 phase=Setup   src=TestContext
+  Response m13-WHEN-after                 phase=Setup   src=TestContext
+  Request  m13-WHEN-after-nosetup         phase=Setup   src=TestContext IGNORED
+  Response m13-WHEN-after-nosetup         phase=Setup   src=TestContext IGNORED
+  Request  m13-WHEN-after-noaction        phase=Setup   src=TestContext
+  Response m13-WHEN-after-noaction        phase=Setup   src=TestContext
+  [Step] <color:white>when m13-when-byid
+  
+  Request  m13-when-byid-in               phase=Setup   src=TestContext
+  Response m13-when-byid-in               phase=Setup   src=TestContext
+  Request  m13-when-byid-in-nosetup       phase=Setup   src=TestContext IGNORED
+  Response m13-when-byid-in-nosetup       phase=Setup   src=TestContext IGNORED
+  Request  m13-when-byid-in-noaction      phase=Setup   src=TestContext
+  Response m13-when-byid-in-noaction      phase=Setup   src=TestContext
+  [Step] <color:white>And m13-when-ambient
+  
+  Request  m13-when-ambient-in            phase=Setup   src=TestContext
+  Response m13-when-ambient-in            phase=Setup   src=TestContext
+  Request  m13-when-ambient-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Response m13-when-ambient-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Request  m13-when-ambient-in-noaction   phase=Setup   src=TestContext
+  Response m13-when-ambient-in-noaction   phase=Setup   src=TestContext
+  Request  m13-when-after                 phase=Setup   src=TestContext
+  Response m13-when-after                 phase=Setup   src=TestContext
+  Request  m13-when-after-nosetup         phase=Setup   src=TestContext IGNORED
+  Response m13-when-after-nosetup         phase=Setup   src=TestContext IGNORED
+  Request  m13-when-after-noaction        phase=Setup   src=TestContext
+  Response m13-when-after-noaction        phase=Setup   src=TestContext
+  [Step] <color:white>THEN m13-THEN-byid
+  
+  Request  m13-THEN-byid-in               phase=Setup   src=TestContext
+  Response m13-THEN-byid-in               phase=Setup   src=TestContext
+  Request  m13-THEN-byid-in-nosetup       phase=Setup   src=TestContext IGNORED
+  Response m13-THEN-byid-in-nosetup       phase=Setup   src=TestContext IGNORED
+  Request  m13-THEN-byid-in-noaction      phase=Setup   src=TestContext
+  Response m13-THEN-byid-in-noaction      phase=Setup   src=TestContext
+  [Step] <color:white>And m13-THEN-ambient
+  
+  Request  m13-THEN-ambient-in            phase=Setup   src=TestContext
+  Response m13-THEN-ambient-in            phase=Setup   src=TestContext
+  Request  m13-THEN-ambient-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Response m13-THEN-ambient-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Request  m13-THEN-ambient-in-noaction   phase=Setup   src=TestContext
+  Response m13-THEN-ambient-in-noaction   phase=Setup   src=TestContext
+  Request  m13-THEN-after                 phase=Setup   src=TestContext
+  Response m13-THEN-after                 phase=Setup   src=TestContext
+  Request  m13-THEN-after-nosetup         phase=Setup   src=TestContext IGNORED
+  Response m13-THEN-after-nosetup         phase=Setup   src=TestContext IGNORED
+  Request  m13-THEN-after-noaction        phase=Setup   src=TestContext
+  Response m13-THEN-after-noaction        phase=Setup   src=TestContext
+  [Step] <color:white>BUTWHEN m13-BUTWHEN-byid
+  
+  Request  m13-BUTWHEN-byid-in            phase=Setup   src=TestContext
+  Response m13-BUTWHEN-byid-in            phase=Setup   src=TestContext
+  Request  m13-BUTWHEN-byid-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Response m13-BUTWHEN-byid-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Request  m13-BUTWHEN-byid-in-noaction   phase=Setup   src=TestContext
+  Response m13-BUTWHEN-byid-in-noaction   phase=Setup   src=TestContext
+  [Step] <color:white>And m13-BUTWHEN-ambient
+  
+  Request  m13-BUTWHEN-ambient-in         phase=Setup   src=TestContext
+  Response m13-BUTWHEN-ambient-in         phase=Setup   src=TestContext
+  Request  m13-BUTWHEN-ambient-in-nosetup phase=Setup   src=TestContext IGNORED
+  Response m13-BUTWHEN-ambient-in-nosetup phase=Setup   src=TestContext IGNORED
+  Request  m13-BUTWHEN-ambient-in-noaction phase=Setup   src=TestContext
+  Response m13-BUTWHEN-ambient-in-noaction phase=Setup   src=TestContext
+  Request  m13-BUTWHEN-after              phase=Setup   src=TestContext
+  Response m13-BUTWHEN-after              phase=Setup   src=TestContext
+  Request  m13-BUTWHEN-after-nosetup      phase=Setup   src=TestContext IGNORED
+  Response m13-BUTWHEN-after-nosetup      phase=Setup   src=TestContext IGNORED
+  Request  m13-BUTWHEN-after-noaction     phase=Setup   src=TestContext
+  Response m13-BUTWHEN-after-noaction     phase=Setup   src=TestContext
+  [Step] <color:white>Arrange m13-Arrange-byid
+  
+  Request  m13-Arrange-byid-in            phase=Setup   src=TestContext
+  Response m13-Arrange-byid-in            phase=Setup   src=TestContext
+  Request  m13-Arrange-byid-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Response m13-Arrange-byid-in-nosetup    phase=Setup   src=TestContext IGNORED
+  Request  m13-Arrange-byid-in-noaction   phase=Setup   src=TestContext
+  Response m13-Arrange-byid-in-noaction   phase=Setup   src=TestContext
+  [Step] <color:white>And m13-Arrange-ambient
+  
+  Request  m13-Arrange-ambient-in         phase=Setup   src=TestContext
+  Response m13-Arrange-ambient-in         phase=Setup   src=TestContext
+  Request  m13-Arrange-ambient-in-nosetup phase=Setup   src=TestContext IGNORED
+  Response m13-Arrange-ambient-in-nosetup phase=Setup   src=TestContext IGNORED
+  Request  m13-Arrange-ambient-in-noaction phase=Setup   src=TestContext
+  Response m13-Arrange-ambient-in-noaction phase=Setup   src=TestContext
+  Request  m13-Arrange-after              phase=Setup   src=TestContext
+  Response m13-Arrange-after              phase=Setup   src=TestContext
+  Request  m13-Arrange-after-nosetup      phase=Setup   src=TestContext IGNORED
+  Response m13-Arrange-after-nosetup      phase=Setup   src=TestContext IGNORED
+  Request  m13-Arrange-after-noaction     phase=Setup   src=TestContext
+  Response m13-Arrange-after-noaction     phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  m13-act                        phase=Action  src=TestContext
+  Response m13-act                        phase=Action  src=TestContext
+  [Step] <color:white>GIVEN m13b-GIVEN-byid
+  
+  Request  m13b-GIVEN-byid-in             phase=Action  src=TestContext
+  Response m13b-GIVEN-byid-in             phase=Action  src=TestContext
+  Request  m13b-GIVEN-byid-in-nosetup     phase=Action  src=TestContext
+  Response m13b-GIVEN-byid-in-nosetup     phase=Action  src=TestContext
+  Request  m13b-GIVEN-byid-in-noaction    phase=Action  src=TestContext IGNORED
+  Response m13b-GIVEN-byid-in-noaction    phase=Action  src=TestContext IGNORED
+  Request  m13b-GIVEN-after               phase=Action  src=TestContext
+  Response m13b-GIVEN-after               phase=Action  src=TestContext
+  Request  m13b-GIVEN-after-nosetup       phase=Action  src=TestContext
+  Response m13b-GIVEN-after-nosetup       phase=Action  src=TestContext
+  Request  m13b-GIVEN-after-noaction      phase=Action  src=TestContext IGNORED
+  Response m13b-GIVEN-after-noaction      phase=Action  src=TestContext IGNORED
+  [Step] <color:white>given m13b-given-byid
+  
+  Request  m13b-given-byid-in             phase=Action  src=TestContext
+  Response m13b-given-byid-in             phase=Action  src=TestContext
+  Request  m13b-given-byid-in-nosetup     phase=Action  src=TestContext
+  Response m13b-given-byid-in-nosetup     phase=Action  src=TestContext
+  Request  m13b-given-byid-in-noaction    phase=Action  src=TestContext IGNORED
+  Response m13b-given-byid-in-noaction    phase=Action  src=TestContext IGNORED
+  Request  m13b-given-after               phase=Action  src=TestContext
+  Response m13b-given-after               phase=Action  src=TestContext
+  Request  m13b-given-after-nosetup       phase=Action  src=TestContext
+  Response m13b-given-after-nosetup       phase=Action  src=TestContext
+  Request  m13b-given-after-noaction      phase=Action  src=TestContext IGNORED
+  Response m13b-given-after-noaction      phase=Action  src=TestContext IGNORED
+  [Step] <color:white>SETUP m13b-SETUP-byid
+  
+  Request  m13b-SETUP-byid-in             phase=Action  src=TestContext
+  Response m13b-SETUP-byid-in             phase=Action  src=TestContext
+  Request  m13b-SETUP-byid-in-nosetup     phase=Action  src=TestContext
+  Response m13b-SETUP-byid-in-nosetup     phase=Action  src=TestContext
+  Request  m13b-SETUP-byid-in-noaction    phase=Action  src=TestContext IGNORED
+  Response m13b-SETUP-byid-in-noaction    phase=Action  src=TestContext IGNORED
+  Request  m13b-SETUP-after               phase=Action  src=TestContext
+  Response m13b-SETUP-after               phase=Action  src=TestContext
+  Request  m13b-SETUP-after-nosetup       phase=Action  src=TestContext
+  Response m13b-SETUP-after-nosetup       phase=Action  src=TestContext
+  Request  m13b-SETUP-after-noaction      phase=Action  src=TestContext IGNORED
+  Response m13b-SETUP-after-noaction      phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Setup m13b-Setup-byid
+  
+  Request  m13b-Setup-byid-in             phase=Action  src=TestContext
+  Response m13b-Setup-byid-in             phase=Action  src=TestContext
+  Request  m13b-Setup-byid-in-nosetup     phase=Action  src=TestContext
+  Response m13b-Setup-byid-in-nosetup     phase=Action  src=TestContext
+  Request  m13b-Setup-byid-in-noaction    phase=Action  src=TestContext IGNORED
+  Response m13b-Setup-byid-in-noaction    phase=Action  src=TestContext IGNORED
+  Request  m13b-Setup-after               phase=Action  src=TestContext
+  Response m13b-Setup-after               phase=Action  src=TestContext
+  Request  m13b-Setup-after-nosetup       phase=Action  src=TestContext
+  Response m13b-Setup-after-nosetup       phase=Action  src=TestContext
+  Request  m13b-Setup-after-noaction      phase=Action  src=TestContext IGNORED
+  Response m13b-Setup-after-noaction      phase=Action  src=TestContext IGNORED
+  [Step] <color:white>And m13b-And-byid
+  
+  Request  m13b-And-byid-in               phase=Action  src=TestContext
+  Response m13b-And-byid-in               phase=Action  src=TestContext
+  Request  m13b-And-byid-in-nosetup       phase=Action  src=TestContext
+  Response m13b-And-byid-in-nosetup       phase=Action  src=TestContext
+  Request  m13b-And-byid-in-noaction      phase=Action  src=TestContext IGNORED
+  Response m13b-And-byid-in-noaction      phase=Action  src=TestContext IGNORED
+  Request  m13b-And-after                 phase=Action  src=TestContext
+  Response m13b-And-after                 phase=Action  src=TestContext
+  Request  m13b-And-after-nosetup         phase=Action  src=TestContext
+  Response m13b-And-after-nosetup         phase=Action  src=TestContext
+  Request  m13b-And-after-noaction        phase=Action  src=TestContext IGNORED
+  Response m13b-And-after-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>AND m13b-AND-byid
+  
+  Request  m13b-AND-byid-in               phase=Action  src=TestContext
+  Response m13b-AND-byid-in               phase=Action  src=TestContext
+  Request  m13b-AND-byid-in-nosetup       phase=Action  src=TestContext
+  Response m13b-AND-byid-in-nosetup       phase=Action  src=TestContext
+  Request  m13b-AND-byid-in-noaction      phase=Action  src=TestContext IGNORED
+  Response m13b-AND-byid-in-noaction      phase=Action  src=TestContext IGNORED
+  Request  m13b-AND-after                 phase=Action  src=TestContext
+  Response m13b-AND-after                 phase=Action  src=TestContext
+  Request  m13b-AND-after-nosetup         phase=Action  src=TestContext
+  Response m13b-AND-after-nosetup         phase=Action  src=TestContext
+  Request  m13b-AND-after-noaction        phase=Action  src=TestContext IGNORED
+  Response m13b-AND-after-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>WHEN m13b-WHEN-byid
+  
+  Request  m13b-WHEN-byid-in              phase=Action  src=TestContext
+  Response m13b-WHEN-byid-in              phase=Action  src=TestContext
+  Request  m13b-WHEN-byid-in-nosetup      phase=Action  src=TestContext
+  Response m13b-WHEN-byid-in-nosetup      phase=Action  src=TestContext
+  Request  m13b-WHEN-byid-in-noaction     phase=Action  src=TestContext IGNORED
+  Response m13b-WHEN-byid-in-noaction     phase=Action  src=TestContext IGNORED
+  Request  m13b-WHEN-after                phase=Action  src=TestContext
+  Response m13b-WHEN-after                phase=Action  src=TestContext
+  Request  m13b-WHEN-after-nosetup        phase=Action  src=TestContext
+  Response m13b-WHEN-after-nosetup        phase=Action  src=TestContext
+  Request  m13b-WHEN-after-noaction       phase=Action  src=TestContext IGNORED
+  Response m13b-WHEN-after-noaction       phase=Action  src=TestContext IGNORED
+  [Step] <color:white>when m13b-when-byid
+  
+  Request  m13b-when-byid-in              phase=Action  src=TestContext
+  Response m13b-when-byid-in              phase=Action  src=TestContext
+  Request  m13b-when-byid-in-nosetup      phase=Action  src=TestContext
+  Response m13b-when-byid-in-nosetup      phase=Action  src=TestContext
+  Request  m13b-when-byid-in-noaction     phase=Action  src=TestContext IGNORED
+  Response m13b-when-byid-in-noaction     phase=Action  src=TestContext IGNORED
+  Request  m13b-when-after                phase=Action  src=TestContext
+  Response m13b-when-after                phase=Action  src=TestContext
+  Request  m13b-when-after-nosetup        phase=Action  src=TestContext
+  Response m13b-when-after-nosetup        phase=Action  src=TestContext
+  Request  m13b-when-after-noaction       phase=Action  src=TestContext IGNORED
+  Response m13b-when-after-noaction       phase=Action  src=TestContext IGNORED
+  [Step] <color:white>THEN m13b-THEN-byid
+  
+  Request  m13b-THEN-byid-in              phase=Action  src=TestContext
+  Response m13b-THEN-byid-in              phase=Action  src=TestContext
+  Request  m13b-THEN-byid-in-nosetup      phase=Action  src=TestContext
+  Response m13b-THEN-byid-in-nosetup      phase=Action  src=TestContext
+  Request  m13b-THEN-byid-in-noaction     phase=Action  src=TestContext IGNORED
+  Response m13b-THEN-byid-in-noaction     phase=Action  src=TestContext IGNORED
+  Request  m13b-THEN-after                phase=Action  src=TestContext
+  Response m13b-THEN-after                phase=Action  src=TestContext
+  Request  m13b-THEN-after-nosetup        phase=Action  src=TestContext
+  Response m13b-THEN-after-nosetup        phase=Action  src=TestContext
+  Request  m13b-THEN-after-noaction       phase=Action  src=TestContext IGNORED
+  Response m13b-THEN-after-noaction       phase=Action  src=TestContext IGNORED
+  [Step] <color:white>BUTWHEN m13b-BUTWHEN-byid
+  
+  Request  m13b-BUTWHEN-byid-in           phase=Action  src=TestContext
+  Response m13b-BUTWHEN-byid-in           phase=Action  src=TestContext
+  Request  m13b-BUTWHEN-byid-in-nosetup   phase=Action  src=TestContext
+  Response m13b-BUTWHEN-byid-in-nosetup   phase=Action  src=TestContext
+  Request  m13b-BUTWHEN-byid-in-noaction  phase=Action  src=TestContext IGNORED
+  Response m13b-BUTWHEN-byid-in-noaction  phase=Action  src=TestContext IGNORED
+  Request  m13b-BUTWHEN-after             phase=Action  src=TestContext
+  Response m13b-BUTWHEN-after             phase=Action  src=TestContext
+  Request  m13b-BUTWHEN-after-nosetup     phase=Action  src=TestContext
+  Response m13b-BUTWHEN-after-nosetup     phase=Action  src=TestContext
+  Request  m13b-BUTWHEN-after-noaction    phase=Action  src=TestContext IGNORED
+  Response m13b-BUTWHEN-after-noaction    phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Arrange m13b-Arrange-byid
+  
+  Request  m13b-Arrange-byid-in           phase=Action  src=TestContext
+  Response m13b-Arrange-byid-in           phase=Action  src=TestContext
+  Request  m13b-Arrange-byid-in-nosetup   phase=Action  src=TestContext
+  Response m13b-Arrange-byid-in-nosetup   phase=Action  src=TestContext
+  Request  m13b-Arrange-byid-in-noaction  phase=Action  src=TestContext IGNORED
+  Response m13b-Arrange-byid-in-noaction  phase=Action  src=TestContext IGNORED
+  Request  m13b-Arrange-after             phase=Action  src=TestContext
+  Response m13b-Arrange-after             phase=Action  src=TestContext
+  Request  m13b-Arrange-after-nosetup     phase=Action  src=TestContext
+  Response m13b-Arrange-after-nosetup     phase=Action  src=TestContext
+  Request  m13b-Arrange-after-noaction    phase=Action  src=TestContext IGNORED
+  Response m13b-Arrange-after-noaction    phase=Action  src=TestContext IGNORED
+  steps:
+    Given Async [Passed]
+    GIVEN m13-GIVEN-byid [Passed]
+    And m13-GIVEN-ambient [Passed]
+    given m13-given-byid [Passed]
+    And m13-given-ambient [Passed]
+    SETUP m13-SETUP-byid [Passed]
+    And m13-SETUP-ambient [Passed]
+    Setup m13-Setup-byid [Passed]
+    And m13-Setup-ambient [Passed]
+    And m13-And-byid [Passed]
+    And m13-And-ambient [Passed]
+    AND m13-AND-byid [Passed]
+    And m13-AND-ambient [Passed]
+    WHEN m13-WHEN-byid [Passed]
+    And m13-WHEN-ambient [Passed]
+    when m13-when-byid [Passed]
+    And m13-when-ambient [Passed]
+    THEN m13-THEN-byid [Passed]
+    And m13-THEN-ambient [Passed]
+    BUTWHEN m13-BUTWHEN-byid [Passed]
+    And m13-BUTWHEN-ambient [Passed]
+    Arrange m13-Arrange-byid [Passed]
+    And m13-Arrange-ambient [Passed]
+    When Async [Passed]
+    GIVEN m13b-GIVEN-byid [Passed]
+    given m13b-given-byid [Passed]
+    SETUP m13b-SETUP-byid [Passed]
+    Setup m13b-Setup-byid [Passed]
+    And m13b-And-byid [Passed]
+    AND m13b-AND-byid [Passed]
+    WHEN m13b-WHEN-byid [Passed]
+    when m13b-when-byid [Passed]
+    THEN m13b-THEN-byid [Passed]
+    BUTWHEN m13b-BUTWHEN-byid [Passed]
+    Arrange m13b-Arrange-byid [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>GIVEN m13-GIVEN-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-GIVEN-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>given m13-given-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-given-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>SETUP m13-SETUP-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-SETUP-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Setup m13-Setup-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-Setup-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-And-byid
+    diagram 2:
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-And-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>AND m13-AND-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-AND-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>WHEN m13-WHEN-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-WHEN-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>when m13-when-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-when-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>THEN m13-THEN-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-THEN-ambient
+    diagram 3:
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>BUTWHEN m13-BUTWHEN-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-BUTWHEN-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Arrange m13-Arrange-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13-Arrange-ambient
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>GIVEN m13b-GIVEN-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>given m13b-given-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>SETUP m13b-SETUP-byid
+      shop -[#438DD5]-> probe: OK
+    diagram 4:
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Setup m13b-Setup-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m13b-And-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>AND m13b-AND-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>WHEN m13b-WHEN-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>when m13b-when-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>THEN m13b-THEN-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>BUTWHEN m13b-BUTWHEN-byid
+    diagram 5:
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Arrange m13b-Arrange-byid
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M14_Hand_words_that_do_say_through_both_overloads
+  [Step] <color:white>Given m14-given
+  
+  Request  m14-given-in                   phase=Setup   src=TestContext
+  Response m14-given-in                   phase=Setup   src=TestContext
+  Request  m14-given-in-nosetup           phase=Setup   src=TestContext IGNORED
+  Response m14-given-in-nosetup           phase=Setup   src=TestContext IGNORED
+  Request  m14-given-in-noaction          phase=Setup   src=TestContext
+  Response m14-given-in-noaction          phase=Setup   src=TestContext
+  [Step] <color:white>But m14-but
+  
+  Request  m14-but-in                     phase=Setup   src=TestContext
+  Response m14-but-in                     phase=Setup   src=TestContext
+  Request  m14-but-in-nosetup             phase=Setup   src=TestContext IGNORED
+  Response m14-but-in-nosetup             phase=Setup   src=TestContext IGNORED
+  Request  m14-but-in-noaction            phase=Setup   src=TestContext
+  Response m14-but-in-noaction            phase=Setup   src=TestContext
+  [Step] <color:white>And m14-butwhen
+  
+  Request  m14-butwhen-in                 phase=Action  src=TestContext
+  Response m14-butwhen-in                 phase=Action  src=TestContext
+  Request  m14-butwhen-in-nosetup         phase=Action  src=TestContext
+  Response m14-butwhen-in-nosetup         phase=Action  src=TestContext
+  Request  m14-butwhen-in-noaction        phase=Action  src=TestContext IGNORED
+  Response m14-butwhen-in-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then m14-then
+  
+  Request  m14-then-in                    phase=Action  src=TestContext
+  Response m14-then-in                    phase=Action  src=TestContext
+  Request  m14-then-in-nosetup            phase=Action  src=TestContext
+  Response m14-then-in-nosetup            phase=Action  src=TestContext
+  Request  m14-then-in-noaction           phase=Action  src=TestContext IGNORED
+  Response m14-then-in-noaction           phase=Action  src=TestContext IGNORED
+  [Step] <color:white>When m14-when
+  
+  Request  m14-when-in                    phase=Action  src=TestContext
+  Response m14-when-in                    phase=Action  src=TestContext
+  Request  m14-when-in-nosetup            phase=Action  src=TestContext
+  Response m14-when-in-nosetup            phase=Action  src=TestContext
+  Request  m14-when-in-noaction           phase=Action  src=TestContext IGNORED
+  Response m14-when-in-noaction           phase=Action  src=TestContext IGNORED
+  steps:
+    Given m14-given [Passed]
+    But m14-but [Passed]
+    And m14-butwhen [Passed]
+    Then m14-then [Passed]
+    When m14-when [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given m14-given
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>But m14-but
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And m14-butwhen
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then m14-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When m14-when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+

@@ -1,0 +1,189 @@
+## R30 a retried scenario, the first attempt fails in its Then
+  [Step] <color:white>Given a call named r30-given
+  
+  Request  r30-given                      phase=Setup   src=TestContext
+  Response r30-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r30-when
+  
+  --- MARKER ---
+  Request  r30-when                       phase=Action  src=TestContext
+  Response r30-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then the first attempt of r30 fails
+  
+  Request  r30-then-0                     phase=Action  src=TestContext
+  Response r30-then-0                     phase=Action  src=TestContext
+  Request  r30-after-scenario             phase=Action  src=TestContext
+  Response r30-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r30-given [Passed]
+    When a call named r30-when [Passed]
+    Then the first attempt of r30 fails [Failed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r30-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r30-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then the first attempt of r30 fails
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R30 a retried scenario, the first attempt fails in its Then
+  [Step] <color:white>Given a call named r30-given
+  
+  Request  r30-given                      phase=Setup   src=TestContext
+  Response r30-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r30-when
+  
+  --- MARKER ---
+  Request  r30-when                       phase=Action  src=TestContext
+  Response r30-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then the first attempt of r30 fails
+  
+  Request  r30-then-1                     phase=Action  src=TestContext
+  Response r30-then-1                     phase=Action  src=TestContext
+  [Step] <color:white>And a call named r30-then
+  
+  Request  r30-then                       phase=Action  src=TestContext
+  Response r30-then                       phase=Action  src=TestContext
+  Request  r30-after-scenario             phase=Action  src=TestContext
+  Response r30-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r30-given [Passed]
+    When a call named r30-when [Passed]
+    Then the first attempt of r30 fails [Passed]
+    And a call named r30-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r30-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r30-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then the first attempt of r30 fails
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named r30-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R31 a retried scenario, the first attempt fails in a nested Given under a When
+  [Step] <color:white>Given a call named r31-given
+  
+  Request  r31-given                      phase=Setup   src=TestContext
+  Response r31-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When the first attempt of r31 fails under a nested Given
+  
+  --- MARKER ---
+  Request  r31-before-1                   phase=Action  src=TestContext
+  Response r31-before-1                   phase=Action  src=TestContext
+  Request  r31-sub-1                      phase=Action  src=TestContext
+  Response r31-sub-1                      phase=Action  src=TestContext
+  Request  r31-after-1                    phase=Action  src=TestContext
+  Response r31-after-1                    phase=Action  src=TestContext
+  Request  r31-after-scenario             phase=Action  src=TestContext
+  Response r31-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r31-given [Passed]
+    When the first attempt of r31 fails under a nested Given [Failed]
+      Given Sub [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r31-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When the first attempt of r31 fails under a nested Given
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R31 a retried scenario, the first attempt fails in a nested Given under a When
+  [Step] <color:white>Given a call named r31-given
+  
+  Request  r31-given                      phase=Setup   src=TestContext
+  Response r31-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When the first attempt of r31 fails under a nested Given
+  
+  --- MARKER ---
+  Request  r31-before-2                   phase=Action  src=TestContext
+  Response r31-before-2                   phase=Action  src=TestContext
+  Request  r31-sub-2                      phase=Action  src=TestContext
+  Response r31-sub-2                      phase=Action  src=TestContext
+  Request  r31-after-2                    phase=Action  src=TestContext
+  Response r31-after-2                    phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r31-then
+  
+  Request  r31-then                       phase=Action  src=TestContext
+  Response r31-then                       phase=Action  src=TestContext
+  Request  r31-after-scenario             phase=Action  src=TestContext
+  Response r31-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r31-given [Passed]
+    When the first attempt of r31 fails under a nested Given [Passed]
+      Given Sub [Passed]
+    Then a call named r31-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r31-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When the first attempt of r31 fails under a nested Given
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r31-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R32 a retried scenario, the first attempt fails in its Given
+  [Step] <color:white>Given the first attempt of r32 fails in a Given
+  
+  Request  r32-seed-1                     phase=Setup   src=TestContext
+  Response r32-seed-1                     phase=Setup   src=TestContext
+  Request  r32-after-scenario             phase=Setup   src=TestContext
+  Response r32-after-scenario             phase=Setup   src=TestContext
+  steps:
+    Given the first attempt of r32 fails in a Given [Failed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given the first attempt of r32 fails in a Given
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R32 a retried scenario, the first attempt fails in its Given
+  [Step] <color:white>Given the first attempt of r32 fails in a Given
+  
+  Request  r32-seed-2                     phase=Setup   src=TestContext
+  Response r32-seed-2                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r32-when
+  
+  --- MARKER ---
+  Request  r32-when                       phase=Action  src=TestContext
+  Response r32-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r32-then
+  
+  Request  r32-then                       phase=Action  src=TestContext
+  Response r32-then                       phase=Action  src=TestContext
+  Request  r32-after-scenario             phase=Action  src=TestContext
+  Response r32-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given the first attempt of r32 fails in a Given [Passed]
+    When a call named r32-when [Passed]
+    Then a call named r32-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given the first attempt of r32 fails in a Given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r32-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r32-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+

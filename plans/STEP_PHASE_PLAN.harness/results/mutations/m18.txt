@@ -1,0 +1,33 @@
+KILLED solid=4 order=0 racing-new=0 racing-seen=0
+first: main/lightbdd-xunit2: L01 plain Given When Then: l01-then-but: Action Action > Setup Setup
+
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L01 plain Given When Then
+    l01-then-but: Action Action > Setup Setup
+      -l01-then-but Action Action
+      +l01-then-but Setup Setup
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R06 And and But after each keyword (#195)
+    r06-when-but: Action Action > Setup Setup; r06-then-but: Action Action > Setup Setup
+      -r06-when-but Action Action
+      +r06-when-but Setup Setup
+      -r06-then-but Action Action
+      +r06-then-but Setup Setup
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R07 star keyword
+    r07-star1: Setup Setup > Unknown Unknown
+      -r07-star1 Setup Setup
+      +r07-star1 Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R21 WhenTriggersAction false
+    r21-before-sub: Setup Setup > Unknown Unknown; r21-in-sub: Setup Setup > Unknown Unknown; r21-after-sub: Setup Setup > Unknown Unknown; r21b-before-sub: Action Action > Action Unknown; r21b-in-sub: Action Action > Unknown Unknown; r21b-after-sub: Action Action > Unknown Unknown; r21-and: Action Action > Unknown Unknown
+      -r21-before-sub Setup Setup
+      -r21-in-sub Setup Setup
+      -r21-after-sub Setup Setup
+      +r21-before-sub Unknown Unknown
+      +r21-in-sub Unknown Unknown
+      +r21-after-sub Unknown Unknown
+      -r21b-before-sub Action Action
+      -r21b-in-sub Action Action
+      -r21b-after-sub Action Action
+      +r21b-before-sub Action Unknown
+      +r21b-in-sub Unknown Unknown
+      +r21b-after-sub Unknown Unknown
+      -r21-and Action Action
+      +r21-and Unknown Unknown

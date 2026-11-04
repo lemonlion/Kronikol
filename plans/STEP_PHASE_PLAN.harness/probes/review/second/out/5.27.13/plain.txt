@@ -1,0 +1,194 @@
+## PhaseProbe.Plain.Shapes.A1_a_When_with_a_skipped_async_sub_step_then_a_real_Given_sub_step
+call                               http     message  ignored
+[bar] <color:white>Given Async
+a1-given                           Setup    Setup    
+[bar] <color:white>When With skipped async sub
+a1-before                          Action   Action   
+[bar] <color:white>Given Async
+a1-real-sub                        Setup    Setup    
+a1-after                           Setup    Setup    
+[bar] <color:white>Then Async
+a1-then                            Action   Action   
+steps:
+  Given Async  [Passed]
+  When With skipped async sub  [Passed]
+    Given Skipped async  [Bypassed]
+  Given Async  [Passed]
+  Then Async  [Passed]
+
+## PhaseProbe.Plain.Shapes.A2_the_same_sync
+call                               http     message  ignored
+[bar] <color:white>Given Async
+a2-given                           Setup    Setup    
+[bar] <color:white>When With skipped sync sub
+a2-before                          Action   Action   
+[bar] <color:white>Given Sync
+a2-real-sub                        Setup    Setup    
+a2-after                           Setup    Setup    
+[bar] <color:white>Then Async
+a2-then                            Action   Action   
+steps:
+  Given Async  [Passed]
+  When With skipped sync sub  [Passed]
+    Given Skipped sync  [Bypassed]
+  Given Sync  [Passed]
+  Then Async  [Passed]
+
+## PhaseProbe.Plain.Shapes.A3_a_Given_over_a_wrapper_that_skips_then_a_When_sub_step
+call                               http     message  ignored
+[bar] <color:white>Given Over a wrapper that skips
+a3-wrapper-body                    Setup    Setup    
+a3-after-wrapper                   Setup    Setup    
+[bar] <color:white>When Async
+a3-when-sub                        Action   Action   
+a3-after-when-sub                  Action   Action   
+[bar] <color:white>And Async
+a3-real-when                       Action   Action   
+steps:
+  Given Over a wrapper that skips  [Passed]
+    (none) Wrapper skips first  [Passed]
+      Given Skipped async  [Bypassed]
+  When Async  [Passed]
+  And Async  [Passed]
+
+## PhaseProbe.Plain.Shapes.B1_a_caught_throw_from_a_non_async_Given_stub
+call                               http     message  ignored
+[bar] <color:white>Given That throws before its task
+b1-after-caught                    Setup    Setup    
+b1-when                            Action   Action   
+b1-after-when                      Action   Action   
+b1-then                            Action   Action   
+steps:
+
+## PhaseProbe.Plain.Shapes.C1_a_Given_with_a_keyword_free_sub_step_overlapped_by_a_When
+call                               http     message  ignored
+[bar] <color:white>Given With keyword free sub
+c1-first                           Setup    Setup    
+c1-when                            Action   Action   
+c1-sub-step                        Setup    Setup    
+c1-after-sub                       Setup    Setup    
+steps:
+  Given With keyword free sub  [Passed]
+    When Async  [Passed]
+    (none) Plain async  [Passed]
+
+## PhaseProbe.Plain.Shapes.C1b_a_Given_with_a_Given_sub_step_overlapped_by_a_When
+call                               http     message  ignored
+[bar] <color:white>Given With given sub
+c1b-first                          Setup    Setup    
+c1b-when                           Action   Action   
+c1b-sub-step                       Setup    Setup    
+c1b-after-sub                      Setup    Setup    
+steps:
+  Given With given sub  [Passed]
+    When Async  [Passed]
+    Given Async  [Passed]
+
+## PhaseProbe.Plain.Shapes.C2_a_When_with_a_keyword_free_sub_step_overlapped_by_a_Given
+call                               http     message  ignored
+[bar] <color:white>When With keyword free sub
+c2-first                           Action   Action   
+c2-given                           Setup    Setup    
+c2-sub-step                        Action   Action   
+c2-after-sub                       Action   Action   
+steps:
+  When With keyword free sub  [Passed]
+    Given Async  [Passed]
+    (none) Plain async  [Passed]
+
+## PhaseProbe.Plain.Shapes.C3_StartSetup_in_an_async_helper_then_a_keyword_free_sub_step
+call                               http     message  ignored
+[bar] <color:white>Given Async
+c3-given                           Setup    Setup    
+[bar] <color:white>When With a hidden helper
+c3-before                          Action   Action   
+c3-hidden                          Setup    Setup    IGNORED
+c3-after-helper                    Action   Action   
+c3-step-after                      Action   Action   
+c3-after-step                      Action   Action   
+[bar] <color:white>Then Async
+c3-then                            Action   Action   
+steps:
+  Given Async  [Passed]
+  When With a hidden helper  [Passed]
+    (none) Plain hiding  [Passed]
+  Then Async  [Passed]
+
+## PhaseProbe.Plain.Shapes.C4_keyword_free_steps_with_StartSetup_in_the_first
+call                               http     message  ignored
+[bar] <color:white>Arrange with start setup
+c4-arrange                         Setup    Setup    IGNORED
+[bar] <color:white>Plain hiding
+c4-act                             Unknown  Unknown  
+c4-after-act                       Unknown  Unknown  
+steps:
+  (none) Arrange with start setup  [Passed]
+  (none) Plain hiding  [Passed]
+
+## PhaseProbe.Plain.Shapes.E1_a_Given_left_running_ends_during_a_When_that_then_nests_a_Given
+call                               http     message  ignored
+[bar] <color:white>Given Open
+e1-open                            Setup    Setup    
+e1-before                          Action   Action   
+e1-sub                             Setup    Setup    
+e1-after                           Setup    Setup    
+e1-end                             Action   Action   
+steps:
+  Given Open  [Passed]
+    When Releases then nests  [Passed]
+    Given Async  [Passed]
+
+## PhaseProbe.Plain.Shapes.G1_nested_non_async_Task_and_Task_of_T
+call                               http     message  ignored
+[bar] <color:white>Given Async
+g1-given                           Setup    Setup    
+[bar] <color:white>When Non async
+g1-first                           Action   Action   
+g1-sub                             Setup    Setup    
+g1-after-1                         Setup    Setup    
+[bar] <color:white>Then Async
+g1-then                            Action   Action   
+steps:
+  Given Async  [Passed]
+  When Non async  [Passed]
+    Given Non async of T  [Passed]
+  Then Async  [Passed]
+
+## PhaseProbe.Plain.Shapes.H1_sub_steps_in_Task_Run_a_thread_and_resumed_elsewhere
+call                               http     message  ignored
+[bar] <color:white>Given Async
+h1-given                           Setup    Setup    
+[bar] <color:white>When Runs sub in task run and thread
+h1-in-run                          Setup    Setup    
+h1-after-run                       Action   Action   
+h1-in-thread                       Setup    Setup    
+h1-after-thread                    Action   Action   
+h1-resumed-elsewhere               Setup    Setup    
+h1-end                             Setup    Setup    
+[bar] <color:white>Then Async
+h1-then                            Action   Action   
+steps:
+  Given Async  [Passed]
+  When Runs sub in task run and thread  [Passed]
+    Given Async  [Passed]
+    Given Sync  [Passed]
+    Given Async  [Passed]
+  Then Async  [Passed]
+
+## PhaseProbe.Plain.Shapes.I1_a_nested_step_with_no_test_id
+call                               http     message  ignored
+[bar] <color:white>Given Async
+i1-given                           Setup    Setup    
+[bar] <color:white>When With a no id sub
+i1-before                          Action   Action   
+i1-no-id                           Action   Action   
+i1-real-sub                        Setup    Setup    
+i1-after                           Setup    Setup    
+[bar] <color:white>Then Async
+i1-then                            Action   Action   
+steps:
+  Given Async  [Passed]
+  When With a no id sub  [Passed]
+    Given Async  [Passed]
+  Then Async  [Passed]
+

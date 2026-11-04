@@ -1,0 +1,31 @@
+KILLED solid=4 order=0 racing-new=0 racing-seen=2
+first: rev4/rev4-a: M01_Given_then_a_helper_that_marks_called_three_times: shop: -[#438DD5]-> probe: OK > -[#438DD5]-> probe: OK; gone: shop -[#438DD5]-> probe: OK; new: --- MARKER ---; new: --- MARKER ---
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-a] rev4-a.txt: racing, shape seen F02_Poller_silenced_with_the_public_setter
+[rev4/rev4-a] rev4-a.txt: SOLID M01_Given_then_a_helper_that_marks_called_three_times
+    shop: -[#438DD5]-> probe: OK > -[#438DD5]-> probe: OK; gone: shop -[#438DD5]-> probe: OK; new: --- MARKER ---; new: --- MARKER ---
+      + --- MARKER ---
+      + --- MARKER ---
+      + shop -[#438DD5]-> probe: OK
+      + shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+[rev4/rev4-a] rev4-a.txt: SOLID M02_No_steps_a_loop_of_marked_acts
+    shop: -[#438DD5]-> probe: OK > -[#438DD5]-> probe: OK; gone: shop -[#438DD5]-> probe: OK; new: --- MARKER ---; new: --- MARKER ---
+      + --- MARKER ---
+      + --- MARKER ---
+      + shop -[#438DD5]-> probe: OK
+      + shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+[rev4/rev4-a] rev4-a.txt: SOLID M03_Two_When_steps_each_marking
+    end:  > ; new: --- MARKER ---
+      + --- MARKER ---
+      - end
+      + end
+[rev4/rev4-a] rev4-a.txt: SOLID M06_Two_marked_acts_and_no_setup
+    new: --- MARKER ---; new: partition Setup; new: end
+      + --- MARKER ---
+      + partition Setup
+      + end

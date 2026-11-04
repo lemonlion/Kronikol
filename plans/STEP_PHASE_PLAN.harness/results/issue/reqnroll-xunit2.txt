@@ -1,0 +1,346 @@
+## R00 the issue's own scenario
+call                               http     message  ignored
+[bar] <color:white>Given a call named r00-given
+r00-given                          Setup    Setup    
+[bar] <color:white>When the customer applies a discount through a Given sub-step
+--- ACTION START MARKER ---
+r00-discounts-SAVE10               Action   Action   
+r00-orders                         Action   Action   
+[bar] <color:white>Then a call named r00-then
+r00-then                           Action   Action   
+steps:
+  Given a call named r00-given  [Passed]
+  When the customer applies a discount through a Given sub-step  [Passed]
+    Given Async  [Passed]
+    (none) Plain async  [Passed]
+  Then a call named r00-then  [Passed]
+
+## R01 async Given sub-step in a When step (the issue)
+call                               http     message  ignored
+[bar] <color:white>Given a call named r01-given
+r01-given                          Setup    Setup    
+[bar] <color:white>When a When step calls an async Given sub-step, then calls r01
+--- ACTION START MARKER ---
+r01-before-sub                     Action   Action   
+r01-in-sub                         Action   Action   
+r01-after-sub                      Action   Action   
+[bar] <color:white>Then a call named r01-then
+r01-then                           Action   Action   
+steps:
+  Given a call named r01-given  [Passed]
+  When a When step calls an async Given sub-step, then calls r01  [Passed]
+    Given Async  [Passed]
+  Then a call named r01-then  [Passed]
+
+## R02 sync Given sub-step in a When step
+call                               http     message  ignored
+[bar] <color:white>Given a call named r02-given
+r02-given                          Setup    Setup    
+[bar] <color:white>When a When step calls a sync Given sub-step, then calls r02
+--- ACTION START MARKER ---
+r02-before-sub                     Action   Action   
+r02-in-sub                         Action   Action   
+r02-after-sub                      Action   Action   
+[bar] <color:white>Then a call named r02-then
+r02-then                           Action   Action   
+steps:
+  Given a call named r02-given  [Passed]
+  When a When step calls a sync Given sub-step, then calls r02  [Passed]
+    Given Sync  [Passed]
+  Then a call named r02-then  [Passed]
+
+## R03 async When sub-step in a Given step
+call                               http     message  ignored
+[bar] <color:white>Given a Given step calls an async When sub-step, then calls r03
+r03-before-sub                     Setup    Setup    
+r03-in-sub                         Setup    Setup    
+r03-after-sub                      Setup    Setup    
+[bar] <color:white>And a call named r03-and
+r03-and                            Setup    Setup    
+[bar] <color:white>When a call named r03-when
+--- ACTION START MARKER ---
+r03-when                           Action   Action   
+[bar] <color:white>Then a call named r03-then
+r03-then                           Action   Action   
+steps:
+  Given a Given step calls an async When sub-step, then calls r03  [Passed]
+    When Async  [Passed]
+  And a call named r03-and  [Passed]
+  When a call named r03-when  [Passed]
+  Then a call named r03-then  [Passed]
+
+## R04 async Then sub-step in a Given step
+call                               http     message  ignored
+[bar] <color:white>Given a Given step calls an async Then sub-step, then calls r04
+r04-before-sub                     Setup    Setup    
+r04-in-sub                         Setup    Setup    
+r04-after-sub                      Setup    Setup    
+[bar] <color:white>When a call named r04-when
+--- ACTION START MARKER ---
+r04-when                           Action   Action   
+steps:
+  Given a Given step calls an async Then sub-step, then calls r04  [Passed]
+    Then Async  [Passed]
+  When a call named r04-when  [Passed]
+
+## R05 keyword-free sub-step in a When step
+call                               http     message  ignored
+[bar] <color:white>Given a call named r05-given
+r05-given                          Setup    Setup    
+[bar] <color:white>When a When step calls a keyword-free sub-step, then calls r05
+--- ACTION START MARKER ---
+r05-before-sub                     Action   Action   
+r05-in-sub                         Action   Action   
+r05-after-sub                      Action   Action   
+[bar] <color:white>Then a call named r05-then
+r05-then                           Action   Action   
+steps:
+  Given a call named r05-given  [Passed]
+  When a When step calls a keyword-free sub-step, then calls r05  [Passed]
+    (none) Plain async  [Passed]
+  Then a call named r05-then  [Passed]
+
+## R06 And and But after each keyword (#195)
+call                               http     message  ignored
+[bar] <color:white>Given a call named r06-given
+r06-given                          Setup    Setup    
+[bar] <color:white>And a call named r06-given-and
+r06-given-and                      Setup    Setup    
+[bar] <color:white>But a call named r06-given-but
+r06-given-but                      Setup    Setup    
+[bar] <color:white>When a call named r06-when
+--- ACTION START MARKER ---
+r06-when                           Action   Action   
+[bar] <color:white>And a call named r06-when-and
+r06-when-and                       Setup    Setup    
+[bar] <color:white>But a call named r06-when-but
+r06-when-but                       Setup    Setup    
+[bar] <color:white>Then a call named r06-then
+r06-then                           Action   Action   
+[bar] <color:white>And a call named r06-then-and
+r06-then-and                       Setup    Setup    
+[bar] <color:white>But a call named r06-then-but
+r06-then-but                       Setup    Setup    
+steps:
+  Given a call named r06-given  [Passed]
+  And a call named r06-given-and  [Passed]
+  But a call named r06-given-but  [Passed]
+  When a call named r06-when  [Passed]
+  And a call named r06-when-and  [Passed]
+  But a call named r06-when-but  [Passed]
+  Then a call named r06-then  [Passed]
+  And a call named r06-then-and  [Passed]
+  But a call named r06-then-but  [Passed]
+
+## R07 star keyword
+call                               http     message  ignored
+[bar] <color:white>And a call named r07-star1
+r07-star1                          Setup    Setup    
+[bar] <color:white>Given a call named r07-given
+r07-given                          Setup    Setup    
+[bar] <color:white>And a call named r07-star2
+r07-star2                          Setup    Setup    
+[bar] <color:white>When a call named r07-when
+--- ACTION START MARKER ---
+r07-when                           Action   Action   
+[bar] <color:white>And a call named r07-star3
+r07-star3                          Setup    Setup    
+steps:
+  And a call named r07-star1  [Passed]
+  Given a call named r07-given  [Passed]
+  And a call named r07-star2  [Passed]
+  When a call named r07-when  [Passed]
+  And a call named r07-star3  [Passed]
+
+## R08 TrackDuringSetup false
+call                               http     message  ignored
+[bar] <color:white>Given a call named r08-given
+r08-given                          Setup    Setup    IGNORED
+[bar] <color:white>When a When step calls an async Given sub-step, then calls r08
+--- ACTION START MARKER ---
+r08-before-sub                     Action   Action   
+r08-in-sub                         Action   Action   
+r08-after-sub                      Action   Action   
+[bar] <color:white>Then a call named r08-then
+r08-then                           Action   Action   
+steps:
+  Given a call named r08-given  [Passed]
+  When a When step calls an async Given sub-step, then calls r08  [Passed]
+    Given Async  [Passed]
+  Then a call named r08-then  [Passed]
+
+## R09 a When binding woven as a GivenStep
+call                               http     message  ignored
+[bar] <color:white>Given a call named r09-given
+r09-given                          Setup    Setup    
+[bar] <color:white>When a When binding woven as a GivenStep calls r09
+--- ACTION START MARKER ---
+r09-in-binding                     Action   Action   
+[bar] <color:white>Then a call named r09-then
+r09-then                           Action   Action   
+steps:
+  Given a call named r09-given  [Passed]
+  When a When binding woven as a GivenStep calls r09  [Passed]
+    Given When woven as given  [Passed]
+  Then a call named r09-then  [Passed]
+
+## R10 ButWhen sub-step in a Given step
+call                               http     message  ignored
+[bar] <color:white>Given a Given step calls a ButWhen sub-step, then calls r10
+r10-before-sub                     Setup    Setup    
+r10-in-sub                         Setup    Setup    
+r10-after-sub                      Setup    Setup    
+[bar] <color:white>When a call named r10-when
+--- ACTION START MARKER ---
+r10-when                           Action   Action   
+steps:
+  Given a Given step calls a ButWhen sub-step, then calls r10  [Passed]
+    But When async  [Passed]
+  When a call named r10-when  [Passed]
+
+## R11 first scenario on a shared handler
+call                               http     message  ignored
+[bar] <color:white>Given a call named r11-given
+r11-given                          Setup    Setup    
+[bar] <color:white>When a call named r11-when
+r11-when                           Action   Action   
+steps:
+  Given a call named r11-given  [Passed]
+  When a call named r11-when  [Passed]
+
+## R12 second scenario on a shared handler
+call                               http     message  ignored
+[bar] <color:white>Given a call named r12-given
+r12-given                          Setup    Setup    
+[bar] <color:white>When a call named r12-when
+--- ACTION START MARKER ---
+r12-when                           Action   Action   
+steps:
+  Given a call named r12-given  [Passed]
+  When a call named r12-when  [Passed]
+
+## R13 When with no Given
+call                               http     message  ignored
+[bar] <color:white>When a call named r13-when
+r13-when                           Action   Action   
+[bar] <color:white>Then a call named r13-then
+r13-then                           Action   Action   
+steps:
+  When a call named r13-when  [Passed]
+  Then a call named r13-then  [Passed]
+
+## R14 caught failure of a Given sub-step in a When step
+call                               http     message  ignored
+[bar] <color:white>Given a call named r14-given
+r14-given                          Setup    Setup    
+[bar] <color:white>When a When step catches a failing Given sub-step, then calls r14
+--- ACTION START MARKER ---
+r14-in-sub                         Action   Action   
+r14-after-sub                      Action   Action   
+steps:
+  Given a call named r14-given  [Passed]
+  When a When step catches a failing Given sub-step, then calls r14  [Passed]
+    Given Throws  [Failed]
+
+## R15 a woven Given step in a BeforeScenario hook
+call                               http     message  ignored
+[bar] <color:white>Given Async
+r15-in-hook                        Setup    Setup    
+[bar] <color:white>When a call named r15-when
+r15-when                           Action   Action   
+[bar] <color:white>Then a call named r15-then
+r15-then                           Action   Action   
+steps:
+  Given Async  [Passed]
+  When a call named r15-when  [Passed]
+  Then a call named r15-then  [Passed]
+
+## R16 a When sub-step in a keyword-free sub-step in a Given step
+call                               http     message  ignored
+[bar] <color:white>Given a Given step nests When under a keyword-free sub-step, then calls r16
+r16-in-sub-inner-when              Setup    Setup    
+r16-in-sub-after-inner-when        Setup    Setup    
+r16-after-sub                      Setup    Setup    
+[bar] <color:white>When a call named r16-when
+--- ACTION START MARKER ---
+r16-when                           Action   Action   
+steps:
+  Given a Given step nests When under a keyword-free sub-step, then calls r16  [Passed]
+    (none) Plain then when  [Passed]
+      When Async  [Passed]
+  When a call named r16-when  [Passed]
+
+## R17 calls in BeforeScenario and AfterScenario hooks
+call                               http     message  ignored
+r17-in-before-scenario             Unknown  Unknown  
+[bar] <color:white>Given a call named r17-given
+r17-given                          Setup    Setup    
+[bar] <color:white>When a call named r17-when
+--- ACTION START MARKER ---
+r17-when                           Action   Action   
+r17-in-after-scenario              Action   Action   
+steps:
+  Given a call named r17-given  [Passed]
+  When a call named r17-when  [Passed]
+
+## R18 a Given with no HTTP call
+call                               http     message  ignored
+[bar] <color:white>Given a message named r18-given-message
+r18-given-message                  -        Setup    
+[bar] <color:white>When a call named r18-when
+r18-when                           Action   Action   
+steps:
+  Given a message named r18-given-message  [Passed]
+  When a call named r18-when  [Passed]
+
+## R19 a When with no HTTP call
+call                               http     message  ignored
+[bar] <color:white>Given a call named r19-given
+r19-given                          Setup    Setup    
+[bar] <color:white>When a message named r19-when-message
+r19-when-message                   -        Action   
+[bar] <color:white>Then a call named r19-then
+--- ACTION START MARKER ---
+r19-then                           Action   Action   
+steps:
+  Given a call named r19-given  [Passed]
+  When a message named r19-when-message  [Passed]
+  Then a call named r19-then  [Passed]
+
+## R20 a When with no HTTP call, then an And
+call                               http     message  ignored
+[bar] <color:white>Given a call named r20-given
+r20-given                          Setup    Setup    
+[bar] <color:white>When a message named r20-when-message
+r20-when-message                   -        Action   
+[bar] <color:white>And a call named r20-when-and
+r20-when-and                       Setup    Setup    
+[bar] <color:white>Then a call named r20-then
+--- ACTION START MARKER ---
+r20-then                           Action   Action   
+steps:
+  Given a call named r20-given  [Passed]
+  When a message named r20-when-message  [Passed]
+  And a call named r20-when-and  [Passed]
+  Then a call named r20-then  [Passed]
+
+## R21 WhenTriggersAction false
+call                               http     message  ignored
+[bar] <color:white>Given a Given step calls an async When sub-step, then calls r21
+r21-before-sub                     Setup    Setup    
+r21-in-sub                         Setup    Setup    
+r21-after-sub                      Setup    Setup    
+[bar] <color:white>When a When step calls an async Given sub-step, then calls r21b
+--- ACTION START MARKER ---
+r21b-before-sub                    Action   Action   
+r21b-in-sub                        Action   Action   
+r21b-after-sub                     Action   Action   
+[bar] <color:white>And a call named r21-and
+r21-and                            Setup    Setup    
+steps:
+  Given a Given step calls an async When sub-step, then calls r21  [Passed]
+    When Async  [Passed]
+  When a When step calls an async Given sub-step, then calls r21b  [Passed]
+    Given Async  [Passed]
+  And a call named r21-and  [Passed]
+

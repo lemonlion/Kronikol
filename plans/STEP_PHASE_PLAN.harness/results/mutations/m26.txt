@@ -1,0 +1,16 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=1
+first: review/rev3-collapse: K01_two_same_in_a_Given_two_same_in_a_When_delimiters_off: loop: ×4 > ×2; new: shop -[#438DD5]-> probe: OK; new: end
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[review/rev3-collapse] rev3-collapse.separate-off.txt: SOLID PhaseProbe.Rev3.Collapse.Suite.K01_two_same_in_a_Given_two_same_in_a_When_delimiters_off
+    loop: ×4 > ×2; new: shop -[#438DD5]-> probe: OK; new: end
+      - loop ×4
+      + loop ×2
+      + loop ×2
+      + shop -[#438DD5]-> probe: OK
+      + end
+[review/rev3-collapse] rev3-collapse.separate-off.txt: SOLID PhaseProbe.Rev3.Collapse.Suite.K02_one_same_in_a_Given_one_same_in_a_When_delimiters_off
+    gone: loop ×2; gone: end; new: shop -[#438DD5]-> probe: OK
+      - loop ×2
+      - end
+      + shop -[#438DD5]-> probe: OK

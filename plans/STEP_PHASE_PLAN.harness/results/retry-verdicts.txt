@@ -1,0 +1,158 @@
+#### 5.28.2 mstest
+s30   FAIL   0.11s    10 calls  R01 handler built per attempt
+s31   FAIL   0.08s    10 calls  R02 shared handler
+s32   FAIL   0.07s    10 calls  R03 sync test and steps handler built per attempt
+s33   FAIL   0.03s     4 calls  R04 the first attempt fails inside its when
+s34   FAIL   0.02s     4 calls  R05 the first attempt fails with a given left running
+s35   FAIL   0.08s    10 calls  R06 handler per attempt with a step type fetcher
+s36   FAIL   0.08s    10 calls  R07 shared handler with a step type fetcher
+s37   FAIL   0.08s    10 calls  R08 a keyword free step first in each attempt
+s38   FAIL   0.05s     0 calls  R09 a keyword free action with setup tracking off after a first attempt
+s39   pass   0.18s    24 calls  R20 hand rolled retry handler per attempt
+s40   pass   0.19s    24 calls  R21 hand rolled retry shared handler
+s41   pass   0.19s    24 calls  R22 hand rolled retry sync steps
+s42   pass   0.18s    24 calls  R23 hand rolled retry with a step type fetcher handler per attempt
+86 scenarios
+#### 5.28.2 xunit3
+s33   FAIL   0.07s    24 calls  R01 handler built per attempt
+s34   FAIL   0.07s    24 calls  R02 shared handler
+s35   FAIL    0.1s    24 calls  R03 sync test and steps handler built per attempt
+s36   FAIL   0.03s    12 calls  R04 the first attempt fails inside its when
+s37   FAIL   0.02s    14 calls  R05 the first attempt fails with a given left running
+s38   FAIL   0.06s    24 calls  R06 handler per attempt with a step type fetcher
+s39   FAIL   0.08s    24 calls  R07 shared handler with a step type fetcher
+s40   FAIL   0.06s    20 calls  R08 a keyword free step first in each attempt
+s41   FAIL   0.05s     0 calls  R09 a keyword free action with setup tracking off after a first attempt
+s42   pass   0.21s    24 calls  R20 hand rolled retry handler per attempt
+s43   pass   0.18s    24 calls  R21 hand rolled retry shared handler
+s44   pass   0.17s    24 calls  R22 hand rolled retry sync steps
+s45   pass    0.2s    24 calls  R23 hand rolled retry with a step type fetcher handler per attempt
+89 scenarios
+#### 5.28.2 nunit4
+s35   pass   0.11s    24 calls  R01 handler built per attempt
+s36   pass   0.12s    24 calls  R02 shared handler
+s37   pass   0.11s    24 calls  R03 sync test and steps handler built per attempt
+s38   pass   0.07s    12 calls  R04 the first attempt fails inside its when
+s39   pass   0.09s    14 calls  R05 the first attempt fails with a given left running
+s40   pass    0.1s    24 calls  R06 handler per attempt with a step type fetcher
+s41   pass   0.14s    24 calls  R07 shared handler with a step type fetcher
+s42   pass   0.08s    20 calls  R08 a keyword free step first in each attempt
+s43   pass   0.04s     0 calls  R09 a keyword free action with setup tracking off after a first attempt
+s44   pass   0.19s    24 calls  R20 hand rolled retry handler per attempt
+s45   pass   0.21s    24 calls  R21 hand rolled retry shared handler
+s46   pass   0.21s    24 calls  R22 hand rolled retry sync steps
+s47   pass   0.18s    24 calls  R23 hand rolled retry with a step type fetcher handler per attempt
+91 scenarios
+#### 5.28.2 tunit
+s40   pass   0.11s    24 calls  R01 handler built per attempt
+s41   pass   0.11s    24 calls  R02 shared handler
+s42   pass   0.11s    24 calls  R03 sync test and steps handler built per attempt
+s43   pass   0.06s    12 calls  R04 the first attempt fails inside its when
+s44   pass   0.09s    14 calls  R05 the first attempt fails with a given left running
+s45   pass   0.12s    24 calls  R06 handler per attempt with a step type fetcher
+s46   pass    0.1s    24 calls  R07 shared handler with a step type fetcher
+s47   pass   0.07s    20 calls  R08 a keyword free step first in each attempt
+s48   pass   0.04s     0 calls  R09 a keyword free action with setup tracking off after a first attempt
+s49   pass   0.19s    24 calls  R20 hand rolled retry handler per attempt
+s50   pass   0.19s    24 calls  R21 hand rolled retry shared handler
+s51   pass   0.19s    24 calls  R22 hand rolled retry sync steps
+s52   pass    0.2s    24 calls  R23 hand rolled retry with a step type fetcher handler per attempt
+96 scenarios
+#### 5.28.2 bddfy-xunit3
+s11   FAIL   0.05s     6 calls  B90 retried with a handler per attempt
+s12   FAIL   0.05s     6 calls  B91 retried with a shared handler
+13 scenarios
+#### 5.28.2 reqnroll-xunit2
+s12   pass   0.06s    10 calls  R01 async Given sub-step in a When step (the issue)
+s13   pass   0.11s    10 calls  R02 sync Given sub-step in a When step
+s14   pass   0.25s    12 calls  R03 async When sub-step in a Given step
+s15   pass   0.07s     8 calls  R04 async Then sub-step in a Given step
+s16   pass   0.18s    10 calls  R05 keyword-free sub-step in a When step
+s17   pass   0.14s    18 calls  R06 And and But after each keyword (#195)
+s18   pass   0.11s    10 calls  R07 star keyword
+s19   pass   0.09s     7 calls  R08 TrackDuringSetup false
+s20   pass   0.38s     6 calls  R09 a When binding woven as a GivenStep
+s33   FAIL   0.03s     4 calls  Q01 a retried scenario with a handler per attempt  ×2
+s34   pass   0.09s     6 calls  Q01 a retried scenario with a handler per attempt  ×2
+s35   FAIL   0.03s     4 calls  Q02 a retried scenario with a shared handler  ×2
+s36   pass   0.05s     6 calls  Q02 a retried scenario with a shared handler  ×2
+37 scenarios
+#### 5.28.3-shapes11 mstest
+s30   FAIL    0.1s    10 calls  R01 handler built per attempt
+s31   FAIL   0.07s    10 calls  R02 shared handler
+s32   FAIL   0.08s    10 calls  R03 sync test and steps handler built per attempt
+s33   FAIL   0.03s     4 calls  R04 the first attempt fails inside its when
+s34   FAIL   0.02s     4 calls  R05 the first attempt fails with a given left running
+s35   FAIL   0.08s    10 calls  R06 handler per attempt with a step type fetcher
+s36   FAIL   0.08s    10 calls  R07 shared handler with a step type fetcher
+s37   FAIL   0.08s    10 calls  R08 a keyword free step first in each attempt
+s38   FAIL   0.05s     0 calls  R09 a keyword free action with setup tracking off after a first attempt
+s39   pass   0.19s    24 calls  R20 hand rolled retry handler per attempt
+s40   pass   0.19s    24 calls  R21 hand rolled retry shared handler
+s41   pass   0.18s    24 calls  R22 hand rolled retry sync steps
+s42   pass   0.19s    24 calls  R23 hand rolled retry with a step type fetcher handler per attempt
+86 scenarios
+#### 5.28.3-shapes11 xunit3
+s33   FAIL   0.08s    24 calls  R01 handler built per attempt
+s34   FAIL   0.08s    24 calls  R02 shared handler
+s35   FAIL   0.08s    24 calls  R03 sync test and steps handler built per attempt
+s36   FAIL   0.03s    12 calls  R04 the first attempt fails inside its when
+s37   FAIL   0.02s    14 calls  R05 the first attempt fails with a given left running
+s38   FAIL   0.08s    24 calls  R06 handler per attempt with a step type fetcher
+s39   FAIL   0.07s    24 calls  R07 shared handler with a step type fetcher
+s40   FAIL   0.08s    20 calls  R08 a keyword free step first in each attempt
+s41   FAIL   0.05s     0 calls  R09 a keyword free action with setup tracking off after a first attempt
+s42   pass   0.17s    24 calls  R20 hand rolled retry handler per attempt
+s43   pass   0.17s    24 calls  R21 hand rolled retry shared handler
+s44   pass   0.17s    24 calls  R22 hand rolled retry sync steps
+s45   pass    0.2s    24 calls  R23 hand rolled retry with a step type fetcher handler per attempt
+89 scenarios
+#### 5.28.3-shapes11 nunit4
+s35   pass   0.09s    24 calls  R01 handler built per attempt
+s36   pass   0.11s    24 calls  R02 shared handler
+s37   pass   0.11s    24 calls  R03 sync test and steps handler built per attempt
+s38   pass   0.06s    12 calls  R04 the first attempt fails inside its when
+s39   pass   0.08s    14 calls  R05 the first attempt fails with a given left running
+s40   pass   0.12s    24 calls  R06 handler per attempt with a step type fetcher
+s41   pass   0.11s    24 calls  R07 shared handler with a step type fetcher
+s42   pass   0.08s    20 calls  R08 a keyword free step first in each attempt
+s43   pass   0.04s     0 calls  R09 a keyword free action with setup tracking off after a first attempt
+s44   pass   0.18s    24 calls  R20 hand rolled retry handler per attempt
+s45   pass   0.21s    24 calls  R21 hand rolled retry shared handler
+s46   pass   0.21s    24 calls  R22 hand rolled retry sync steps
+s47   pass   0.19s    24 calls  R23 hand rolled retry with a step type fetcher handler per attempt
+91 scenarios
+#### 5.28.3-shapes11 tunit
+s40   pass   0.09s    24 calls  R01 handler built per attempt
+s41   pass   0.11s    24 calls  R02 shared handler
+s42   pass    0.1s    24 calls  R03 sync test and steps handler built per attempt
+s43   pass   0.06s    12 calls  R04 the first attempt fails inside its when
+s44   pass   0.08s    14 calls  R05 the first attempt fails with a given left running
+s45   pass   0.11s    24 calls  R06 handler per attempt with a step type fetcher
+s46   pass   0.09s    24 calls  R07 shared handler with a step type fetcher
+s47   pass   0.08s    20 calls  R08 a keyword free step first in each attempt
+s48   pass   0.05s     0 calls  R09 a keyword free action with setup tracking off after a first attempt
+s49   pass   0.19s    24 calls  R20 hand rolled retry handler per attempt
+s50   pass   0.19s    24 calls  R21 hand rolled retry shared handler
+s51   pass   0.19s    24 calls  R22 hand rolled retry sync steps
+s52   pass   0.19s    24 calls  R23 hand rolled retry with a step type fetcher handler per attempt
+96 scenarios
+#### 5.28.3-shapes11 bddfy-xunit3
+s11   FAIL   0.04s     6 calls  B90 retried with a handler per attempt
+s12   FAIL   0.04s     6 calls  B91 retried with a shared handler
+13 scenarios
+#### 5.28.3-shapes11 reqnroll-xunit2
+s12   pass   0.09s    10 calls  R01 async Given sub-step in a When step (the issue)
+s13   pass    0.1s    10 calls  R02 sync Given sub-step in a When step
+s14   pass   0.09s    12 calls  R03 async When sub-step in a Given step
+s15   pass   0.09s     8 calls  R04 async Then sub-step in a Given step
+s16   pass   0.25s    10 calls  R05 keyword-free sub-step in a When step
+s17   pass   0.14s    18 calls  R06 And and But after each keyword (#195)
+s18   pass   0.17s    10 calls  R07 star keyword
+s19   pass   0.11s     9 calls  R08 TrackDuringSetup false
+s20   pass   0.05s     6 calls  R09 a When binding woven as a GivenStep
+s33   FAIL   0.17s     4 calls  Q01 a retried scenario with a handler per attempt  ×2
+s34   pass   0.14s     6 calls  Q01 a retried scenario with a handler per attempt  ×2
+s35   FAIL   0.15s     4 calls  Q02 a retried scenario with a shared handler  ×2
+s36   pass   0.07s     6 calls  Q02 a retried scenario with a shared handler  ×2
+37 scenarios

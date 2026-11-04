@@ -1,0 +1,79 @@
+KILLED solid=5 order=0 racing-new=0 racing-seen=1
+first: rev6/rev6-bddfy: B18_By_name_story_after_a_phase_written_by_hand: Request: b18-setup phase=Unknown src=TestContext > b18-setup phase=Setup src=TestContext; Response: b18-setup phase=Unknown src=TestContext > b18-setup phase=Setup src=TestContext; Request: 
+
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B18_By_name_story_after_a_phase_written_by_hand
+    Request: b18-setup phase=Unknown src=TestContext > b18-setup phase=Setup src=TestContext; Response: b18-setup phase=Unknown src=TestContext > b18-setup phase=Setup src=TestContext; Request: b18-setup-nosetup phase=Unknown src=TestContext > b18-setup-nosetup phase=Setup src=TestContext IGNORED; Response: b18-setup-nosetup phase=Unknown src=TestContext > b18-setup-nosetup phase=Setup src=TestCon
+      - Request b18-setup phase=Unknown src=TestContext
+      - Response b18-setup phase=Unknown src=TestContext
+      - Request b18-setup-nosetup phase=Unknown src=TestContext
+      - Response b18-setup-nosetup phase=Unknown src=TestContext
+      - Request b18-setup-noaction phase=Unknown src=TestContext
+      - Response b18-setup-noaction phase=Unknown src=TestContext
+      + Request b18-setup phase=Setup src=TestContext
+      + Response b18-setup phase=Setup src=TestContext
+      + Request b18-setup-nosetup phase=Setup src=TestContext IGNORED
+      + Response b18-setup-nosetup phase=Setup src=TestContext IGNORED
+      + Request b18-setup-noaction phase=Setup src=TestContext
+      + Response b18-setup-noaction phase=Setup src=TestContext
+      - shop -[#438DD5]-> probe: OK
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B20_By_name_story_Setup_after_a_woven_Given
+    Request: b20-setup phase=Unknown src=TestContext > b20-setup phase=Setup src=TestContext; Response: b20-setup phase=Unknown src=TestContext > b20-setup phase=Setup src=TestContext; Request: b20-setup-nosetup phase=Unknown src=TestContext > b20-setup-nosetup phase=Setup src=TestContext IGNORED; Response: b20-setup-nosetup phase=Unknown src=TestContext > b20-setup-nosetup phase=Setup src=TestCon
+      - Request b20-setup phase=Unknown src=TestContext
+      - Response b20-setup phase=Unknown src=TestContext
+      - Request b20-setup-nosetup phase=Unknown src=TestContext
+      - Response b20-setup-nosetup phase=Unknown src=TestContext
+      - Request b20-setup-noaction phase=Unknown src=TestContext
+      - Response b20-setup-noaction phase=Unknown src=TestContext
+      + Request b20-setup phase=Setup src=TestContext
+      + Response b20-setup phase=Setup src=TestContext
+      + Request b20-setup-nosetup phase=Setup src=TestContext IGNORED
+      + Response b20-setup-nosetup phase=Setup src=TestContext IGNORED
+      + Request b20-setup-noaction phase=Setup src=TestContext
+      + Response b20-setup-noaction phase=Setup src=TestContext
+      - shop -[#438DD5]-> probe: OK
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B21_By_name_story_Setup_after_StartSetup
+    Request: b21-setup phase=Unknown src=TestContext > b21-setup phase=Setup src=TestContext; Response: b21-setup phase=Unknown src=TestContext > b21-setup phase=Setup src=TestContext; Request: b21-setup-nosetup phase=Unknown src=TestContext > b21-setup-nosetup phase=Setup src=TestContext IGNORED; Response: b21-setup-nosetup phase=Unknown src=TestContext > b21-setup-nosetup phase=Setup src=TestCon
+      - Request b21-setup phase=Unknown src=TestContext
+      - Response b21-setup phase=Unknown src=TestContext
+      - Request b21-setup-nosetup phase=Unknown src=TestContext
+      - Response b21-setup-nosetup phase=Unknown src=TestContext
+      - Request b21-setup-noaction phase=Unknown src=TestContext
+      - Response b21-setup-noaction phase=Unknown src=TestContext
+      + Request b21-setup phase=Setup src=TestContext
+      + Response b21-setup phase=Setup src=TestContext
+      + Request b21-setup-nosetup phase=Setup src=TestContext IGNORED
+      + Response b21-setup-nosetup phase=Setup src=TestContext IGNORED
+      + Request b21-setup-noaction phase=Setup src=TestContext
+      + Response b21-setup-noaction phase=Setup src=TestContext
+      - shop -[#438DD5]-> probe: OK
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B22_By_name_story_Setup_after_StartAction
+    Request: b22-setup phase=Unknown src=TestContext > b22-setup phase=Action src=TestContext; Response: b22-setup phase=Unknown src=TestContext > b22-setup phase=Action src=TestContext; Request: b22-setup-nosetup phase=Unknown src=TestContext > b22-setup-nosetup phase=Action src=TestContext; Response: b22-setup-nosetup phase=Unknown src=TestContext > b22-setup-nosetup phase=Action src=TestContext
+      - Request b22-setup phase=Unknown src=TestContext
+      - Response b22-setup phase=Unknown src=TestContext
+      - Request b22-setup-nosetup phase=Unknown src=TestContext
+      - Response b22-setup-nosetup phase=Unknown src=TestContext
+      - Request b22-setup-noaction phase=Unknown src=TestContext
+      - Response b22-setup-noaction phase=Unknown src=TestContext
+      + Request b22-setup phase=Action src=TestContext
+      + Response b22-setup phase=Action src=TestContext
+      + Request b22-setup-nosetup phase=Action src=TestContext
+      + Response b22-setup-nosetup phase=Action src=TestContext
+      + Request b22-setup-noaction phase=Action src=TestContext IGNORED
+      + Response b22-setup-noaction phase=Action src=TestContext IGNORED
+      - shop -[#438DD5]-> probe: OK
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B23_By_name_story_Setup_after_a_woven_When
+    Request: b23-setup phase=Unknown src=TestContext > b23-setup phase=Action src=TestContext; Response: b23-setup phase=Unknown src=TestContext > b23-setup phase=Action src=TestContext; Request: b23-setup-nosetup phase=Unknown src=TestContext > b23-setup-nosetup phase=Action src=TestContext; Response: b23-setup-nosetup phase=Unknown src=TestContext > b23-setup-nosetup phase=Action src=TestContext
+      - Request b23-setup phase=Unknown src=TestContext
+      - Response b23-setup phase=Unknown src=TestContext
+      - Request b23-setup-nosetup phase=Unknown src=TestContext
+      - Response b23-setup-nosetup phase=Unknown src=TestContext
+      - Request b23-setup-noaction phase=Unknown src=TestContext
+      - Response b23-setup-noaction phase=Unknown src=TestContext
+      + Request b23-setup phase=Action src=TestContext
+      + Response b23-setup phase=Action src=TestContext
+      + Request b23-setup-nosetup phase=Action src=TestContext
+      + Response b23-setup-nosetup phase=Action src=TestContext
+      + Request b23-setup-noaction phase=Action src=TestContext IGNORED
+      + Response b23-setup-noaction phase=Action src=TestContext IGNORED
+      - shop -[#438DD5]-> probe: OK

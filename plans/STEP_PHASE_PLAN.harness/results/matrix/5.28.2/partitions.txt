@@ -1,0 +1,53 @@
+#### nunit4
+== s35   pass   0.11s    24 calls  R01 handler built per attempt
+a1-first a1-given a1-after-given a1-when a1-after-when a2-first a2-given a2-after-given a2-when a2-after-when a2-then a2-after-then 
+== s36   pass   0.11s    24 calls  R02 shared handler
+a1-first a1-given a1-after-given a1-when a1-after-when a2-first a2-given a2-after-given a2-when a2-after-when a2-then a2-after-then 
+== s40   pass   0.11s    24 calls  R06 handler per attempt with a step type fetcher
+S( a1-first a1-given a1-after-given )S a1-when a1-after-when a2-first a2-given a2-after-given a2-when a2-after-when a2-then a2-after-then 
+== s41   pass   0.11s    24 calls  R07 shared handler with a step type fetcher
+S( a1-first a1-given a1-after-given )S a1-when a1-after-when a2-first a2-given a2-after-given a2-when a2-after-when a2-then a2-after-then 
+== s4    pass   0.19s    12 calls  L01 set up async then a when
+lifecycle-given lifecycle-after-given body-first body-when body-after-when body-then 
+== s26   pass   0.06s     8 calls  L11 tear down async given then calls in the body
+body-given body-the-real-work teardown-when teardown-after-when 
+== s25   pass   0.09s    12 calls  L11 tear down async given and when in the body
+body-given body-after-given body-when body-after-when teardown-when teardown-after-when 
+== s49   pass    0.4s    14 calls  T01 a when on an unflowed thread inside a given
+t01-before-thread t01-when-on-thread t01-after-when-on-thread t01-after-thread t01-after-given t01-when t01-after-when 
+== s54   pass   0.35s    14 calls  T06 a given on an unflowed thread inside a first when then a then
+t06-before-thread t06-given-on-thread t06-after-given-on-thread t06-after-thread t06-after-when t06-then t06-after-then 
+#### tunit
+== s40   pass   0.11s    24 calls  R01 handler built per attempt
+a1-first a1-given a1-after-given a1-when a1-after-when a2-first a2-given a2-after-given a2-when a2-after-when a2-then a2-after-then 
+== s4    pass   0.06s    12 calls  L01 before test async then a when
+lifecycle-given lifecycle-after-given body-first body-when body-after-when body-then 
+#### bddfy-xunit3
+== s11   FAIL   0.04s     6 calls  B90 retried with a handler per attempt
+S( b90-a1-given )S b90-a1-when b90-a1-then 
+== s12   FAIL   0.04s     6 calls  B91 retried with a shared handler
+S( b91-a1-given )S b91-a1-when b91-a1-then 
+#### reqnroll-xunit2
+== s0    pass   0.14s    10 calls  N01 a When binding runs a Gherkin Given through ITestRunner
+S( n01-given )S n01-before-nested n01-nested-given n01-after-nested n01-then 
+== s1    pass   0.47s    12 calls  N02 a Given binding runs a Gherkin When through ITestRunner
+S( n02-before-nested )S n02-nested-when n02-after-nested n02-and n02-when n02-then 
+== s8    pass   0.19s     6 calls  N20 a Given then calls, and a woven When in an AfterScenario hook
+n20-given n20-given-and n20-teardown-when 
+== s10   pass   0.23s    12 calls  N30 a Given binding runs a woven When on an unflowed thread under a scope set by…
+S( n30-before-thread n30-when-on-thread n30-after-thread n30-and )S n30-when n30-then 
+== s33   FAIL    0.2s     4 calls  Q01 a retried scenario with a handler per attempt  ×2
+S( q01-given )S q01-when 
+== s35   FAIL    0.1s     4 calls  Q02 a retried scenario with a shared handler  ×2
+q02-given q02-when 
+#### reqnroll-server
+== s0    pass    0.3s    20 calls  S01 a When binding with a nested GivenStep, on the default TestServer
+S( s01-given svc-s01-given )S s01-before-sub svc-s01-before-sub s01-in-sub svc-s01-in-sub s01-after-sub svc-s01-after-sub s01-then svc-s01-then 
+== s1    pass   0.24s    20 calls  S02 a When binding with a nested Gherkin Given, on the default TestServer
+S( s02-given svc-s02-given )S s02-before-nested svc-s02-before-nested s02-nested-given svc-s02-nested-given s02-after-nested svc-s02-after-nested s02-then svc-s02-then 
+== s4    pass   0.26s    20 calls  S11 a When binding with a nested GivenStep, with the test's execution context pr…
+S( s11-given svc-s11-given )S s11-before-sub svc-s11-before-sub s11-in-sub svc-s11-in-sub s11-after-sub svc-s11-after-sub s11-then svc-s11-then 
+== s5    pass    0.7s    20 calls  S21 a When binding with a nested GivenStep, on Kestrel
+S( s21-given svc-s21-given )S s21-before-sub svc-s21-before-sub s21-in-sub svc-s21-in-sub s21-after-sub svc-s21-after-sub s21-then svc-s21-then 
+== s6    pass   0.41s    16 calls  S31 a woven When on the server's flow, during a Given
+S( s31-woven-given svc-s31-woven-given s31-given-and svc-s31-given-and )S s31-when svc-s31-when s31-then svc-s31-then 

@@ -1,0 +1,400 @@
+KILLED solid=64 order=0 racing-new=2 racing-seen=0
+first: main/bddfy-xunit3: B01_plain_Given_And_When_And_Then_But: b01-given: Setup Setup > Unknown Unknown; b01-and: Setup Setup > Unknown Unknown; b01-when: Action Action > Action Unknown; b01-when-and: Action Action > Unknown Unknown; b01-then: Action Ac
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B01_plain_Given_And_When_And_Then_But
+    b01-given: Setup Setup > Unknown Unknown; b01-and: Setup Setup > Unknown Unknown; b01-when: Action Action > Action Unknown; b01-when-and: Action Action > Unknown Unknown; b01-then: Action Action > Unknown Unknown; b01-then-but: Action Action > Unknown Unknown
+      -b01-given Setup Setup
+      +b01-given Unknown Unknown
+      -b01-and Setup Setup
+      +b01-and Unknown Unknown
+      -b01-when Action Action
+      +b01-when Action Unknown
+      -b01-when-and Action Action
+      +b01-when-and Unknown Unknown
+      -b01-then Action Action
+      +b01-then Unknown Unknown
+      -b01-then-but Action Action
+      +b01-then-but Unknown Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B02_a_When_step_calls_a_woven_Given
+    b02-given: Setup Setup > Unknown Unknown; b02-before-sub: Action Action > Action Unknown; b02-in-sub: Action Action > Unknown Unknown; b02-after-sub: Action Action > Unknown Unknown; b02-then: Action Action > Unknown Unknown
+      -b02-given Setup Setup
+      +b02-given Unknown Unknown
+      -b02-before-sub Action Action
+      -b02-in-sub Action Action
+      -b02-after-sub Action Action
+      +b02-before-sub Action Unknown
+      +b02-in-sub Unknown Unknown
+      +b02-after-sub Unknown Unknown
+      -b02-then Action Action
+      +b02-then Unknown Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B03_a_Given_step_calls_a_woven_When
+    b03-before-sub: Setup Setup > Unknown Unknown; b03-in-sub: Setup Setup > Unknown Unknown; b03-after-sub: Setup Setup > Unknown Unknown; b03-when: Action Action > Action Unknown
+      -b03-before-sub Setup Setup
+      -b03-in-sub Setup Setup
+      -b03-after-sub Setup Setup
+      +b03-before-sub Unknown Unknown
+      +b03-in-sub Unknown Unknown
+      +b03-after-sub Unknown Unknown
+      -b03-when Action Action
+      +b03-when Action Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B04_an_async_When_step_calls_a_woven_Given
+    b04-given: Setup Setup > Unknown Unknown; b04-before-sub: Action Action > Action Unknown; b04-in-sub: Action Action > Unknown Unknown; b04-after-sub: Action Action > Unknown Unknown; b04-then: Action Action > Unknown Unknown
+      -b04-given Setup Setup
+      +b04-given Unknown Unknown
+      -b04-before-sub Action Action
+      -b04-in-sub Action Action
+      -b04-after-sub Action Action
+      +b04-before-sub Action Unknown
+      +b04-in-sub Unknown Unknown
+      +b04-after-sub Unknown Unknown
+      -b04-then Action Action
+      +b04-then Unknown Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B05_async_steps_that_yield
+    b05-given: Setup Setup > Unknown Unknown; b05-when: Action Action > Action Unknown; b05-then: Action Action > Unknown Unknown
+      -b05-given Setup Setup
+      +b05-given Unknown Unknown
+      -b05-when Action Action
+      +b05-when Action Unknown
+      -b05-then Action Action
+      +b05-then Unknown Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B06_first_scenario_on_a_shared_handler
+    b06-given: Setup Setup > Unknown Unknown; b06-when: Action Action > Action Unknown
+      -b06-given Setup Setup
+      +b06-given Unknown Unknown
+      -b06-when Action Action
+      +b06-when Action Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B07_second_scenario_on_a_shared_handler
+    b07-given: Setup Setup > Unknown Unknown; b07-when: Action Action > Action Unknown
+      -b07-given Setup Setup
+      +b07-given Unknown Unknown
+      -b07-when Action Action
+      +b07-when Action Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B08_a_When_with_no_HTTP_call
+    b08-given: Setup Setup > Unknown Unknown; b08-when-message: - Action > - Unknown; [bar]: <color:white>Then a call b08-then > <color:white>Then a call b08-then; b08-then: Action Action > Action Unknown
+      -b08-given Setup Setup
+      +b08-given Unknown Unknown
+      +b08-when-message - Unknown
+      +[bar] <color:white>Then a call b08-then
+      -b08-when-message - Action
+      -[bar] <color:white>Then a call b08-then
+      -b08-then Action Action
+      +b08-then Action Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B09_a_Given_with_no_HTTP_call
+    b09-given-message: - Setup > - Unknown; gone: --- ACTION START MARKER ---; b09-when: Action Action > Unknown Unknown
+      -b09-given-message - Setup
+      +b09-given-message - Unknown
+      ---- ACTION START MARKER ---
+      -b09-when Action Action
+      +b09-when Unknown Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B10_a_teardown_after_the_boundary
+    b10-given: Setup Setup > Unknown Unknown; b10-when: Action Action > Action Unknown
+      -b10-given Setup Setup
+      +b10-given Unknown Unknown
+      -b10-when Action Action
+      +b10-when Action Unknown
+[main/bddfy-xunit3] bddfy-xunit3.txt: RACING-NEW PhaseProbe.Bddfy.Scenarios.B11_async_steps_with_AsyncVoidSupport_off (baseline variants 2, 2 shapes)
+    b11-given: Setup Setup > Unknown Unknown; [bar]: <color:white>Then a call b11-then > <color:white>Then a call b11-then; b11-then: Action Action > Action Unknown; b11-when: Action Action > Unknown Unknown
+      -b11-given Setup Setup
+      +b11-given Unknown Unknown
+      +[bar] <color:white>Then a call b11-then
+      -[bar] <color:white>Then a call b11-then
+      -b11-then Action Action
+      -b11-when Action Action
+      +b11-then Action Unknown
+      +b11-when Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R00 the issue's own scenario
+    r00-given: Setup Setup > Unknown Unknown; r00-discounts-SAVE10: Action Action > Action Unknown; r00-orders: Action Action > Unknown Unknown; r00-then: Action Action > Unknown Unknown
+      -r00-given Setup Setup
+      +r00-given Unknown Unknown
+      -r00-discounts-SAVE10 Action Action
+      -r00-orders Action Action
+      +r00-discounts-SAVE10 Action Unknown
+      +r00-orders Unknown Unknown
+      -r00-then Action Action
+      +r00-then Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R01 async Given sub-step in a When step (the issue)
+    r01-given: Setup Setup > Unknown Unknown; r01-before-sub: Action Action > Action Unknown; r01-in-sub: Action Action > Unknown Unknown; r01-after-sub: Action Action > Unknown Unknown; r01-then: Action Action > Unknown Unknown
+      -r01-given Setup Setup
+      +r01-given Unknown Unknown
+      -r01-before-sub Action Action
+      -r01-in-sub Action Action
+      -r01-after-sub Action Action
+      +r01-before-sub Action Unknown
+      +r01-in-sub Unknown Unknown
+      +r01-after-sub Unknown Unknown
+      -r01-then Action Action
+      +r01-then Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R02 sync Given sub-step in a When step
+    r02-given: Setup Setup > Unknown Unknown; r02-before-sub: Action Action > Action Unknown; r02-in-sub: Action Action > Unknown Unknown; r02-after-sub: Action Action > Unknown Unknown; r02-then: Action Action > Unknown Unknown
+      -r02-given Setup Setup
+      +r02-given Unknown Unknown
+      -r02-before-sub Action Action
+      -r02-in-sub Action Action
+      -r02-after-sub Action Action
+      +r02-before-sub Action Unknown
+      +r02-in-sub Unknown Unknown
+      +r02-after-sub Unknown Unknown
+      -r02-then Action Action
+      +r02-then Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R03 async When sub-step in a Given step
+    r03-before-sub: Setup Setup > Unknown Unknown; r03-in-sub: Setup Setup > Unknown Unknown; r03-after-sub: Setup Setup > Unknown Unknown; r03-and: Setup Setup > Unknown Unknown; r03-when: Action Action > Action Unknown; r03-then: Action Action > Unknown Unknown
+      -r03-before-sub Setup Setup
+      -r03-in-sub Setup Setup
+      -r03-after-sub Setup Setup
+      +r03-before-sub Unknown Unknown
+      +r03-in-sub Unknown Unknown
+      +r03-after-sub Unknown Unknown
+      -r03-and Setup Setup
+      +r03-and Unknown Unknown
+      -r03-when Action Action
+      +r03-when Action Unknown
+      -r03-then Action Action
+      +r03-then Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R04 async Then sub-step in a Given step
+    r04-before-sub: Setup Setup > Unknown Unknown; r04-in-sub: Setup Setup > Unknown Unknown; r04-after-sub: Setup Setup > Unknown Unknown; r04-when: Action Action > Action Unknown
+      -r04-before-sub Setup Setup
+      -r04-in-sub Setup Setup
+      -r04-after-sub Setup Setup
+      +r04-before-sub Unknown Unknown
+      +r04-in-sub Unknown Unknown
+      +r04-after-sub Unknown Unknown
+      -r04-when Action Action
+      +r04-when Action Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R05 keyword-free sub-step in a When step
+    r05-given: Setup Setup > Unknown Unknown; r05-before-sub: Action Action > Action Unknown; r05-in-sub: Action Action > Unknown Unknown; r05-after-sub: Action Action > Unknown Unknown; r05-then: Action Action > Unknown Unknown
+      -r05-given Setup Setup
+      +r05-given Unknown Unknown
+      -r05-before-sub Action Action
+      -r05-in-sub Action Action
+      -r05-after-sub Action Action
+      +r05-before-sub Action Unknown
+      +r05-in-sub Unknown Unknown
+      +r05-after-sub Unknown Unknown
+      -r05-then Action Action
+      +r05-then Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R06 And and But after each keyword (#195)
+    r06-given: Setup Setup > Unknown Unknown; r06-given-and: Setup Setup > Unknown Unknown; r06-given-but: Setup Setup > Unknown Unknown; r06-when: Action Action > Action Unknown; r06-when-and: Action Action > Unknown Unknown; r06-when-but: Action Action > Unknown Unknown; r06-then: Action Action > Unknown Unknown; r06-then-and: Action Action > Unknown Unknown; r06-then-but: Action Action > Unknow
+      -r06-given Setup Setup
+      +r06-given Unknown Unknown
+      -r06-given-and Setup Setup
+      +r06-given-and Unknown Unknown
+      -r06-given-but Setup Setup
+      +r06-given-but Unknown Unknown
+      -r06-when Action Action
+      +r06-when Action Unknown
+      -r06-when-and Action Action
+      +r06-when-and Unknown Unknown
+      -r06-when-but Action Action
+      +r06-when-but Unknown Unknown
+      -r06-then Action Action
+      +r06-then Unknown Unknown
+      -r06-then-and Action Action
+      +r06-then-and Unknown Unknown
+      -r06-then-but Action Action
+      +r06-then-but Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R07 star keyword
+    r07-star1: Setup Setup > Unknown Unknown; r07-given: Setup Setup > Unknown Unknown; r07-star2: Setup Setup > Unknown Unknown; r07-when: Action Action > Action Unknown; r07-star3: Action Action > Unknown Unknown
+      -r07-star1 Setup Setup
+      +r07-star1 Unknown Unknown
+      -r07-given Setup Setup
+      +r07-given Unknown Unknown
+      -r07-star2 Setup Setup
+      +r07-star2 Unknown Unknown
+      -r07-when Action Action
+      +r07-when Action Unknown
+      -r07-star3 Action Action
+      +r07-star3 Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R08 TrackDuringSetup false
+    r08-given: Setup Setup IGNORED > Unknown Unknown; r08-before-sub: Action Action > Action Unknown; r08-in-sub: Action Action > Unknown Unknown; r08-after-sub: Action Action > Unknown Unknown; r08-then: Action Action > Unknown Unknown
+      -r08-given Setup Setup IGNORED
+      +r08-given Unknown Unknown
+      -r08-before-sub Action Action
+      -r08-in-sub Action Action
+      -r08-after-sub Action Action
+      +r08-before-sub Action Unknown
+      +r08-in-sub Unknown Unknown
+      +r08-after-sub Unknown Unknown
+      -r08-then Action Action
+      +r08-then Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R09 a When binding woven as a GivenStep
+    r09-given: Setup Setup > Unknown Unknown; r09-in-binding: Action Action > Action Unknown; r09-then: Action Action > Unknown Unknown
+      -r09-given Setup Setup
+      +r09-given Unknown Unknown
+      -r09-in-binding Action Action
+      +r09-in-binding Action Unknown
+      -r09-then Action Action
+      +r09-then Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R10 ButWhen sub-step in a Given step
+    r10-before-sub: Setup Setup > Unknown Unknown; r10-in-sub: Setup Setup > Unknown Unknown; r10-after-sub: Setup Setup > Unknown Unknown; r10-when: Action Action > Action Unknown
+      -r10-before-sub Setup Setup
+      -r10-in-sub Setup Setup
+      -r10-after-sub Setup Setup
+      +r10-before-sub Unknown Unknown
+      +r10-in-sub Unknown Unknown
+      +r10-after-sub Unknown Unknown
+      -r10-when Action Action
+      +r10-when Action Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R11 first scenario on a shared handler
+    r11-given: Setup Setup > Unknown Unknown; r11-when: Action Action > Action Unknown
+      -r11-given Setup Setup
+      +r11-given Unknown Unknown
+      -r11-when Action Action
+      +r11-when Action Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R12 second scenario on a shared handler
+    r12-given: Setup Setup > Unknown Unknown; r12-when: Action Action > Action Unknown
+      -r12-given Setup Setup
+      +r12-given Unknown Unknown
+      -r12-when Action Action
+      +r12-when Action Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R13 When with no Given
+    r13-when: Action Action > Unknown Unknown; r13-then: Action Action > Unknown Unknown
+      -r13-when Action Action
+      +r13-when Unknown Unknown
+      -r13-then Action Action
+      +r13-then Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R14 caught failure of a Given sub-step in a When step
+    r14-given: Setup Setup > Unknown Unknown; r14-in-sub: Action Action > Action Unknown; r14-after-sub: Action Action > Unknown Unknown
+      -r14-given Setup Setup
+      +r14-given Unknown Unknown
+      -r14-in-sub Action Action
+      -r14-after-sub Action Action
+      +r14-in-sub Action Unknown
+      +r14-after-sub Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R15 a woven Given step in a BeforeScenario hook
+    r15-in-hook: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---; r15-when: Action Action > Unknown Unknown; r15-then: Action Action > Unknown Unknown
+      -r15-in-hook Setup Setup
+      +r15-in-hook Unknown Unknown
+      ---- ACTION START MARKER ---
+      -r15-when Action Action
+      +r15-when Unknown Unknown
+      -r15-then Action Action
+      +r15-then Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R16 a When sub-step in a keyword-free sub-step in a Given step
+    r16-in-sub-inner-when: Setup Setup > Unknown Unknown; r16-in-sub-after-inner-when: Setup Setup > Unknown Unknown; r16-after-sub: Setup Setup > Unknown Unknown; r16-when: Action Action > Action Unknown
+      -r16-in-sub-inner-when Setup Setup
+      -r16-in-sub-after-inner-when Setup Setup
+      -r16-after-sub Setup Setup
+      +r16-in-sub-inner-when Unknown Unknown
+      +r16-in-sub-after-inner-when Unknown Unknown
+      +r16-after-sub Unknown Unknown
+      -r16-when Action Action
+      +r16-when Action Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R17 calls in BeforeScenario and AfterScenario hooks
+    r17-given: Setup Setup > Unknown Unknown; r17-when: Action Action > Action Unknown; r17-in-after-scenario: Action Action > Unknown Unknown
+      -r17-given Setup Setup
+      +r17-given Unknown Unknown
+      -r17-when Action Action
+      -r17-in-after-scenario Action Action
+      +r17-when Action Unknown
+      +r17-in-after-scenario Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R18 a Given with no HTTP call
+    r18-given-message: - Setup > - Unknown; gone: --- ACTION START MARKER ---; r18-when: Action Action > Unknown Unknown
+      -r18-given-message - Setup
+      +r18-given-message - Unknown
+      ---- ACTION START MARKER ---
+      -r18-when Action Action
+      +r18-when Unknown Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R19 a When with no HTTP call
+    r19-given: Setup Setup > Unknown Unknown; r19-when-message: - Action > - Unknown; [bar]: <color:white>Then a call named r19-then > <color:white>Then a call named r19-then; r19-then: Action Action > Action Unknown
+      -r19-given Setup Setup
+      +r19-given Unknown Unknown
+      +r19-when-message - Unknown
+      +[bar] <color:white>Then a call named r19-then
+      -r19-when-message - Action
+      -[bar] <color:white>Then a call named r19-then
+      -r19-then Action Action
+      +r19-then Action Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R20 a When with no HTTP call, then an And
+    r20-given: Setup Setup > Unknown Unknown; r20-when-message: - Action > - Unknown; [bar]: <color:white>And a call named r20-when-and > <color:white>And a call named r20-when-and; r20-when-and: Action Action > Unknown Unknown; [bar]: <color:white>Then a call named r20-then > <color:white>Then a call named r20-then; r20-then: Action Action > Action Unknown
+      -r20-given Setup Setup
+      +r20-given Unknown Unknown
+      +r20-when-message - Unknown
+      +[bar] <color:white>And a call named r20-when-and
+      +r20-when-and Unknown Unknown
+      +[bar] <color:white>Then a call named r20-then
+      -r20-when-message - Action
+      -[bar] <color:white>And a call named r20-when-and
+      -r20-when-and Action Action
+      -[bar] <color:white>Then a call named r20-then
+      -r20-then Action Action
+      +r20-then Action Unknown
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R21 WhenTriggersAction false
+    r21-before-sub: Setup Setup > Unknown Unknown; r21-in-sub: Setup Setup > Unknown Unknown; r21-after-sub: Setup Setup > Unknown Unknown; r21b-before-sub: Action Action > Action Unknown; r21b-in-sub: Action Action > Unknown Unknown; r21b-after-sub: Action Action > Unknown Unknown; r21-and: Action Action > Unknown Unknown
+      -r21-before-sub Setup Setup
+      -r21-in-sub Setup Setup
+      -r21-after-sub Setup Setup
+      +r21-before-sub Unknown Unknown
+      +r21-in-sub Unknown Unknown
+      +r21-after-sub Unknown Unknown
+      -r21b-before-sub Action Action
+      -r21b-in-sub Action Action
+      -r21b-after-sub Action Action
+      +r21b-before-sub Action Unknown
+      +r21b-in-sub Unknown Unknown
+      +r21b-after-sub Unknown Unknown
+      -r21-and Action Action
+      +r21-and Unknown Unknown
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X01_When_with_nested_Given_async
+    x01-given: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---; x01-before-sub: Action Action > Unknown Unknown; x01-in-sub: Action Action > Unknown Unknown; x01-after-sub: Action Action > Unknown Unknown; x01-after-when-step: Action Action > Unknown Unknown; x01-then: Action Action > Unknown Unknown
+      -x01-given Setup Setup
+      +x01-given Unknown Unknown
+      ---- ACTION START MARKER ---
+      -x01-before-sub Action Action
+      -x01-in-sub Action Action
+      -x01-after-sub Action Action
+      -x01-after-when-step Action Action
+      +x01-before-sub Unknown Unknown
+      +x01-in-sub Unknown Unknown
+      +x01-after-sub Unknown Unknown
+      +x01-after-when-step Unknown Unknown
+      -x01-then Action Action
+      +x01-then Unknown Unknown
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X02_Given_with_nested_When_async
+    x02-before-sub: Setup Setup > Unknown Unknown; x02-in-sub: Setup Setup > Unknown Unknown; x02-after-sub: Setup Setup > Unknown Unknown; x02-after-given-step: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---; x02-when: Action Action > Unknown Unknown
+      -x02-before-sub Setup Setup
+      -x02-in-sub Setup Setup
+      -x02-after-sub Setup Setup
+      -x02-after-given-step Setup Setup
+      +x02-before-sub Unknown Unknown
+      +x02-in-sub Unknown Unknown
+      +x02-after-sub Unknown Unknown
+      +x02-after-given-step Unknown Unknown
+      ---- ACTION START MARKER ---
+      -x02-when Action Action
+      +x02-when Unknown Unknown
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X03_When_with_nested_Given_sync
+    x03-given: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---; x03-before-sub: Action Action > Unknown Unknown; x03-in-sub: Action Action > Unknown Unknown; x03-after-sub: Action Action > Unknown Unknown; x03-after-when-step: Action Action > Unknown Unknown
+      -x03-given Setup Setup
+      +x03-given Unknown Unknown
+      ---- ACTION START MARKER ---
+      -x03-before-sub Action Action
+      -x03-in-sub Action Action
+      -x03-after-sub Action Action
+      -x03-after-when-step Action Action
+      +x03-before-sub Unknown Unknown
+      +x03-in-sub Unknown Unknown
+      +x03-after-sub Unknown Unknown
+      +x03-after-when-step Unknown Unknown
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X04_keyword_free_wrapper_async
+    x04-wrapped-given: Setup Setup > Unknown Unknown; x04-wrapper-after-given: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---; x04-wrapped-when: Action Action > Unknown Unknown; x04-wrapper-after-when: Action Action > Unknown Unknown
+      -x04-wrapped-given Setup Setup
+      -x04-wrapper-after-given Setup Setup
+      ---- ACTION START MARKER ---
+      -x04-wrapped-when Action Action
+      -x04-wrapper-after-when Action Action
+      +x04-wrapped-given Unknown Unknown
+      +x04-wrapper-after-given Unknown Unknown
+      +x04-wrapped-when Unknown Unknown
+      +x04-wrapper-after-when Unknown Unknown
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X05_keyword_free_wrapper_sync
+    x05-wrapped-given: Setup Setup > Unknown Unknown; x05-wrapper-after-given: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---; x05-wrapped-when: Action Action > Unknown Unknown; x05-wrapper-after-when: Action Action > Unknown Unknown; x05-after-wrapper: Action Action > Unknown Unknown
+      -x05-wrapped-given Setup Setup
+      -x05-wrapper-after-given Setup Setup
+      ---- ACTION START MARKER ---
+      -x05-wrapped-when Action Action
+      -x05-wrapper-after-when Action Action
+      -x05-after-wrapper Action Action
+      +x05-wrapped-given Unknown Unknown
+      +x05-wrapper-after-given Unknown Unknown
+      +x05-wrapped-when Unknown Unknown
+      +x05-wrapper-after-when Unknown Unknown

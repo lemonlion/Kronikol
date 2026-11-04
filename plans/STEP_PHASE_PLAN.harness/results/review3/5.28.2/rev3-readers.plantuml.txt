@@ -1,0 +1,67 @@
+## PhaseProbe.Rev3.Readers.Suite.R01_passes (TestName field: 80243a75a768fcbdd10799c951a44690d77d54d6b92b76402cb777fbd5419937)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given A customer exists
+  shop -[#438DD5]-> probe: OK
+  r01Given -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>When The customer orders
+  shop -[#438DD5]-> probe: OK
+  r01When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then The order is shipped
+  shop -[#438DD5]-> probe: OK
+  r01Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Readers.Suite.R02_fails_in_the_Then (TestName field: 92c5d07870c38060392bb10187fe45c103cac801a9dfcac7024351cf9ce75d2a)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given A customer exists
+  shop -[#438DD5]-> probe: OK
+  r02Given -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>When The customer orders
+  shop -[#438DD5]-> probe: OK
+  r02When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then The order fails
+  shop -[#438DD5]-> probe: OK
+  r02Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Readers.Suite.R03_fails_with_a_Given_with_no_calls (TestName field: fea16772ebff4fa2f438ad475052c00cd4fbf113d9c7503f2f261715fdb3919f)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given No calls in this given
+  hnote across <<stepDelimiter>> #black:<color:white>When The customer orders
+  shop -[#438DD5]-> probe: OK
+  r03When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then The order fails
+  shop -[#438DD5]-> probe: OK
+  r03Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Readers.Suite.R04_steps_but_no_calls_at_all (TestName field: 4ac6d03873197cd4b19d1d08377bb47968f0d1ad7a0f56a39f55b2d53fb5c429)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given No calls in this given
+  hnote across <<stepDelimiter>> #black:<color:white>When Nothing
+  @enduml
+
+## PhaseProbe.Rev3.Readers.Suite.R05_keyword_free (TestName field: 3e680c19250258f4b071c6ec5f1849670f83e95dcac9f09cdd82af9ebe659862)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>A keyword free step
+  shop -[#438DD5]-> probe: OK
+  r05Plain -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Readers.Suite.R06_fails_with_no_steps (TestName field: PhaseProbe.Rev3.Readers.Suite.R06_fails_with_no_steps)
+  @startuml
+  shop -[#438DD5]-> probe: OK
+  r06Raw -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Readers.Suite.R07_fails_after_a_manual_bypass_under_a_Given (TestName field: da189e1d4c27e96a022d85ec4568374da325246e0213d9b164d7e9d3de48d23b)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given Arrange with a manual skipped sub
+  hnote across <<stepDelimiter>> #black:<color:white>When The customer orders
+  shop -[#438DD5]-> probe: OK
+  r07When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then The order fails
+  shop -[#438DD5]-> probe: OK
+  r07Then -[#9B59B6]-> probe: Responded
+  @enduml
+

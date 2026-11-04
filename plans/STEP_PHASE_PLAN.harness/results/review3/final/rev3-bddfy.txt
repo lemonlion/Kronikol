@@ -1,0 +1,247 @@
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z01_sync_Given_leaves_a_worker_running
+  [Step] <color:white>Given a sync step leaves a worker running z01
+  z01-worker-start                             http Setup    
+  --- ACTION START MARKER ---
+  z01-when                                     http Action   
+  z01-when                                     msg  Action   
+  z01-worker-start                             msg  Setup    
+  z01-then                                     http Action   
+  z01-then                                     msg  Action   
+  z01-worker-end                               http Setup    
+  z01-worker-end                               msg  Setup    
+  steps:
+    Given a sync step leaves a worker running z01  [Passed]
+      (none) Worker step  [Passed]
+      When a call z01-when  [Passed]
+      Then a call z01-then  [Passed]
+      Then And then the worker is released  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running
+  [Step] <color:white>Given an async step leaves a worker running z02
+  z02-worker-start                             http Setup    
+  z02-given-call                               http Setup    
+  z02-given-call                               msg  Setup    
+  z02-worker-start                             msg  Setup    
+  --- ACTION START MARKER ---
+  z02-when                                     http Action   
+  z02-when                                     msg  Action   
+  z02-then                                     http Action   
+  z02-then                                     msg  Action   
+  z02-worker-end                               http Setup    
+  z02-worker-end                               msg  Setup    
+  steps:
+    Given an async step leaves a worker running z02  [Passed]
+      (none) Worker step  [Passed]
+      When a call z02-when  [Passed]
+      Then a call z02-then  [Passed]
+      Then And then the worker is released  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z03_async_Given_with_woven_sub_steps
+  [Step] <color:white>Given async with substeps z03
+  z03-plain-sub                                http Setup    
+  z03-plain-sub                                msg  Setup    
+  z03-when-sub                                 http Setup    
+  z03-when-sub                                 msg  Setup    
+  z03-after                                    http Setup    
+  z03-after                                    msg  Setup    
+  [Step] <color:white>When a call z03-when
+  --- ACTION START MARKER ---
+  z03-when                                     http Action   
+  z03-when                                     msg  Action   
+  steps:
+    Given async with substeps z03  [Passed]
+      (none) Plain woven  [Passed]
+      When Woven when  [Passed]
+    When a call z03-when  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z04_async_step_fails_scenario_reports_it
+  [Step] <color:white>Given a call z04-given
+  z04-given                                    http Setup    
+  z04-given                                    msg  Setup    
+  [Step] <color:white>When async fails z04-when
+  --- ACTION START MARKER ---
+  z04-when                                     http Action   
+  z04-when                                     msg  Action   
+  steps:
+    Given a call z04-given  [Passed]
+    When async fails z04-when  [Failed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z05_sync_step_fails_scenario_reports_it
+  [Step] <color:white>Given a call z05-given
+  z05-given                                    http Setup    
+  z05-given                                    msg  Setup    
+  [Step] <color:white>When sync fails z05-when
+  --- ACTION START MARKER ---
+  z05-when                                     http Action   
+  z05-when                                     msg  Action   
+  steps:
+    Given a call z05-given  [Passed]
+    When sync fails z05-when  [Failed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z06_a_Task_of_T_step
+  [Step] <color:white>Given a call z06-given
+  z06-given                                    http Setup    
+  z06-given                                    msg  Setup    
+  [Step] <color:white>When async of T z06-when
+  --- ACTION START MARKER ---
+  z06-when                                     http Action   
+  z06-when                                     msg  Action   
+  [Step] <color:white>Then a call z06-then
+  z06-then                                     http Action   
+  z06-then                                     msg  Action   
+  steps:
+    Given a call z06-given  [Passed]
+    When async of T z06-when  [Passed]
+    Then a call z06-then  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z07_an_async_void_step
+  [Step] <color:white>Given a call z07-given
+  z07-given                                    http Setup    
+  z07-given                                    msg  Setup    
+  [Step] <color:white>When async void z07-when
+  --- ACTION START MARKER ---
+  z07-when                                     http Action   
+  z07-when                                     msg  Action   
+  [Step] <color:white>Then a call z07-then
+  z07-then                                     http Action   
+  z07-then                                     msg  Action   
+  steps:
+    Given a call z07-given  [Passed]
+    When async void z07-when  [Passed]
+    Then a call z07-then  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z08_a_skipped_sub_step_in_an_async_Given
+  [Step] <color:white>Given async with a skipped sub step z08-given
+  z08-given                                    http Setup    
+  z08-given                                    msg  Setup    
+  [Step] <color:white>When a call z08-when
+  --- ACTION START MARKER ---
+  z08-when                                     http Action   
+  z08-when                                     msg  Action   
+  steps:
+    Given async with a skipped sub step z08-given  [Passed]
+      (none) Skipped woven  [Bypassed]
+    When a call z08-when  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z09_two_examples_in_one_test
+  [Step] <color:white>Given a call z09-given
+  z09-given                                    http Setup    
+  z09-given                                    msg  Setup    
+  [Step] <color:white>When a call z09-when
+  --- ACTION START MARKER ---
+  z09-when                                     http Action   
+  z09-when                                     msg  Action   
+  [Step] <color:white>Given a call z09-given
+  z09-given                                    http Setup    
+  z09-given                                    msg  Setup    
+  [Step] <color:white>When a call z09-when
+  z09-when                                     http Action   
+  z09-when                                     msg  Action   
+  steps:
+    Given a call z09-given  [Passed]
+    When a call z09-when  [Passed]
+    Given a call z09-given  [Passed]
+    When a call z09-when  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z10_Given_with_no_calls_then_When
+  [Step] <color:white>Given nothing
+  [Step] <color:white>When a call z10-when
+  --- ACTION START MARKER ---
+  z10-when                                     http Action   
+  z10-when                                     msg  Action   
+  steps:
+    Given nothing  [Passed]
+    When a call z10-when  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z11_nonasync_task_steps
+  [Step] <color:white>Given a call z11-given
+  z11-given                                    http Setup    
+  z11-given                                    msg  Setup    
+  [Step] <color:white>When nonasync task returns completed z11-when
+  --- ACTION START MARKER ---
+  [Step] <color:white>And And when nonasync task throws z11-when2
+  steps:
+    Given a call z11-given  [Passed]
+    When nonasync task returns completed z11-when  [Passed]
+    And And when nonasync task throws z11-when2  [Failed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z12_a_failing_sync_scenario_in_a_woven_parent
+  [Step] <color:white>Scenario inside a step
+  z12-given                                    http Setup    
+  z12-given                                    msg  Setup    
+  --- ACTION START MARKER ---
+  z12-when                                     http Action   
+  z12-when                                     msg  Action   
+  [Step] <color:white>Plain woven
+  z12-after                                    http Unknown  
+  z12-after                                    msg  Unknown  
+  steps:
+    (none) Scenario inside a step  [Passed]
+      Given a call z12-given  [Passed]
+      When sync fails z12-when  [Failed]
+    (none) Plain woven  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z13_a_failing_async_scenario_in_a_woven_parent
+  [Step] <color:white>Async scenario inside a step
+  z13-given                                    http Setup    
+  z13-given                                    msg  Setup    
+  --- ACTION START MARKER ---
+  z13-when                                     http Action   
+  z13-when                                     msg  Action   
+  [Step] <color:white>Plain woven
+  z13-after                                    http Unknown  
+  z13-after                                    msg  Unknown  
+  steps:
+    (none) Async scenario inside a step  [Passed]
+      Given a call z13-given  [Passed]
+      When async fails z13-when  [Failed]
+    (none) Plain woven  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z14_woven_step_and_call_after_the_scenario_in_the_test
+  [Step] <color:white>Given a call z14-given
+  z14-given                                    http Setup    
+  z14-given                                    msg  Setup    
+  [Step] <color:white>When async z14-when
+  --- ACTION START MARKER ---
+  z14-when                                     http Action   
+  z14-when                                     msg  Action   
+  [Step] <color:white>A teardown z14-teardown
+  z14-teardown                                 http Unknown  
+  z14-teardown                                 msg  Unknown  
+  z14-raw-after-bddfy                          http Unknown  
+  z14-raw-after-bddfy                          msg  Unknown  
+  [Step] <color:white>Plain woven
+  z14-woven-after-bddfy                        http Unknown  
+  z14-woven-after-bddfy                        msg  Unknown  
+  z14-raw-after-woven                          http Unknown  
+  z14-raw-after-woven                          msg  Unknown  
+  steps:
+    Given a call z14-given  [Passed]
+    When async z14-when  [Passed]
+    (none) A teardown z14-teardown  [Passed]
+    (none) Plain woven  [Passed]
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z15_a_failing_sync_scenario_with_a_teardown_in_a_woven_Given_then_a_When
+  [Step] <color:white>Given Arrange with a failing scenario
+  z15-inner-given                              http Setup    
+  z15-inner-given                              msg  Setup    
+  --- ACTION START MARKER ---
+  z15-inner-when                               http Action   
+  z15-inner-when                               msg  Setup    
+  z15-inner-teardown                           http Setup    
+  z15-inner-teardown                           msg  Setup    
+  z15-after-inner                              http Setup    
+  z15-after-inner                              msg  Setup    
+  z15-sub-after-inner                          http Setup    
+  z15-sub-after-inner                          msg  Setup    
+  [Step] <color:white>When Woven when
+  z15-when                                     http Action   
+  z15-when                                     msg  Action   
+  steps:
+    Given Arrange with a failing scenario  [Passed]
+      Given a call z15-inner-given  [Passed]
+      When sync fails z15-inner-when  [Failed]
+      (none) A teardown z15-inner-teardown  [Passed]
+      (none) Plain woven  [Passed]
+    When Woven when  [Passed]
+

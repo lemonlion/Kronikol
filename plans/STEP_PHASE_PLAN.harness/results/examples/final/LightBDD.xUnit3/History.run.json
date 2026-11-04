@@ -1,0 +1,166 @@
+{
+  "historyFormatVersion": 1,
+  "generator": "5.28.2\u002B9d994a4b014afb4ff0f304e4c5d6d2e3925c9341",
+  "roster": {
+    "t": "roster",
+    "hash": "984114bc0114fa82",
+    "suite": "Example.Api.Tests.Component.LightBDD.xUnit3",
+    "ids": [
+      "1c0306043dbf02ae",
+      "5487bbfefd43a5d1",
+      "c7887fccdd682baa",
+      "2a32ed44cc3906d1",
+      "388729a952873fe4",
+      "2ab31d166aea36be"
+    ],
+    "slots": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "names": [
+      "Calling Create Cake Endpoint Successfully",
+      "Calling Create Cake Endpoint Without Eggs",
+      "Calling Create Cake Endpoint Without Ingredient",
+      "Different muffin recipes should produce the expected \u0022Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation\u0022 batch [recipeName: \u0022Classic\u0022] [recipe: \u0022Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData\u0022]",
+      "Different muffin recipes should produce the expected \u0022Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation\u0022 batch [recipeName: \u0022Rustic Wholesome\u0022] [recipe: \u0022Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData\u0022]",
+      "Different muffin recipes should produce the expected \u0022Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation\u0022 batch [recipeName: \u0022Spiced Deluxe\u0022] [recipe: \u0022Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData\u0022]"
+    ],
+    "features": [
+      "Cake Feature",
+      "Cake Feature",
+      "Cake Feature",
+      "Parameterized Diagnostic Feature",
+      "Parameterized Diagnostic Feature",
+      "Parameterized Diagnostic Feature"
+    ],
+    "sources": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "run": {
+    "t": "run",
+    "id": "local:20261103T203506Z:538ce211",
+    "suite": "Example.Api.Tests.Component.LightBDD.xUnit3",
+    "partial": null,
+    "at": "2026-11-03T20:35:06Z",
+    "branch": null,
+    "commit": null,
+    "provider": null,
+    "url": null,
+    "generator": "5.28.2\u002B9d994a4b014afb4ff0f304e4c5d6d2e3925c9341",
+    "shards": 1,
+    "roster": "984114bc0114fa82",
+    "results": "PPPPPP",
+    "attempts": "------",
+    "durations": [
+      41,
+      596,
+      90,
+      256,
+      7,
+      8
+    ],
+    "calls": [
+      6,
+      5,
+      7,
+      0,
+      0,
+      0
+    ],
+    "shapeSet": [
+      "4dbbcb8d",
+      "d6635711",
+      "d6635711",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442"
+    ],
+    "shapeOrdered": [
+      "ed8bef4b",
+      "5262c477",
+      "94256d3c",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442"
+    ],
+    "shapeVersion": 11,
+    "shapes": "1879489dfc4c9c2f",
+    "callSets": [
+      [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6
+      ],
+      [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      [],
+      [],
+      []
+    ],
+    "errors": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "errorText": {},
+    "deps": [
+      "Caller\u003EDessert Provider",
+      "Dessert Provider\u003ECow Service",
+      "Dessert Provider\u003EEvent broker"
+    ],
+    "bridge": {
+      "10": {},
+      "6": {},
+      "7": {},
+      "8": {},
+      "9": {}
+    }
+  },
+  "shapes": {
+    "t": "shapes",
+    "hash": "1879489dfc4c9c2f",
+    "calls": [
+      "Caller\u003EDessert Provider GET /eggs 200",
+      "Caller\u003EDessert Provider GET /flour 200",
+      "Caller\u003EDessert Provider GET /milk 200",
+      "Caller\u003EDessert Provider POST /cake 200",
+      "Caller\u003EDessert Provider POST /cake 400",
+      "Dessert Provider\u003ECow Service GET /milk 200",
+      "Dessert Provider\u003EEvent broker Send (Event Protocol) /cake_events Responded"
+    ]
+  },
+  "rawCalls": {
+    "calls": [{"caller":"Caller","service":"Dessert Provider","method":"GET","path":"/milk","status":"200"},{"caller":"Dessert Provider","service":"Cow Service","method":"GET","path":"/milk","status":"200"},{"caller":"Caller","service":"Dessert Provider","method":"GET","path":"/eggs","status":"200"},{"caller":"Caller","service":"Dessert Provider","method":"GET","path":"/flour","status":"200"},{"caller":"Caller","service":"Dessert Provider","method":"POST","path":"/cake","status":"200"},{"caller":"Dessert Provider","service":"Event broker","method":"Send (Event Protocol)","path":"/cake_events","status":"Responded"},{"caller":"Caller","service":"Dessert Provider","method":"POST","path":"/cake","status":"400"}
+    ],
+    "order": [[0,1,2,3,4,5],[0,1,2,3,6],[0,1,2,3,6,6,6],[],[],[]
+    ]
+  }
+}

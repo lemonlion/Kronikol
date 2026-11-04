@@ -1,0 +1,14 @@
+== bddfy-xunit3: 2 calls moved in 1 of 13 tests
+  B04_an_async_When_step_calls_a_woven_Given: b04-after-sub: Setup/Setup > Action/Action; b04-in-sub: Setup/Setup > Action/Action
+== lightbdd-xunit2: 0 calls moved in 0 of 16 tests
+== mstest: 0 calls moved in 0 of 86 tests
+== nunit4: 0 calls moved in 0 of 91 tests
+== reqnroll-nunit: 0 calls moved in 0 of 35 tests
+== reqnroll-server: 0 calls moved in 0 of 7 tests
+== reqnroll-tunit: 0 calls moved in 0 of 33 tests
+== reqnroll-xunit2: 0 calls moved in 0 of 35 tests
+== reqnroll-xunit3: 0 calls moved in 0 of 33 tests
+== tunit: 0 calls moved in 0 of 96 tests
+== xunit2: 0 calls moved in 0 of 63 tests
+== xunit3: 0 calls moved in 0 of 89 tests
+== xunit3-plain: 0 calls moved in 0 of 30 tests

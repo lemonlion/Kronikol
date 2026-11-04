@@ -1,0 +1,51 @@
+## PhaseProbe.Bddfy.ReflectiveStory.B3_a_reflective_story_with_Setup_and_TearDown
+call                               http     message  ignored
+[bar] <color:white>Setup
+b3-setup-method                    Unknown  Unknown  
+[bar] <color:white>Given a call
+b3-given                           Setup    Setup    
+[bar] <color:white>When a call
+--- ACTION START MARKER ---
+b3-when                            Action   Action   
+[bar] <color:white>Then a call
+b3-then                            Action   Action   
+[bar] <color:white>Tear down
+b3-teardown-method                 Unknown  Unknown  
+steps:
+  (none) Setup  [Passed]
+  Given a call  [Passed]
+  When a call  [Passed]
+  Then a call  [Passed]
+  (none) Tear down  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B1_a_TearDownWith_step
+call                               http     message  ignored
+[bar] <color:white>Given a call b1-given
+b1-given                           Setup    Setup    
+[bar] <color:white>When a call b1-when
+--- ACTION START MARKER ---
+b1-when                            Action   Action   
+[bar] <color:white>Then a call b1-then
+b1-then                            Action   Action   
+[bar] <color:white>A tear down call b1-teardown
+b1-teardown                        Unknown  Unknown  
+steps:
+  Given a call b1-given  [Passed]
+  When a call b1-when  [Passed]
+  Then a call b1-then  [Passed]
+  (none) A tear down call b1-teardown  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B2_three_async_steps_that_yield
+call                               http     message  ignored
+[bar] <color:white>Given an async call b2-given
+b2-given                           Setup    Setup    
+[bar] <color:white>When an async call b2-when
+--- ACTION START MARKER ---
+b2-when                            Action   Action   
+[bar] <color:white>Then an async call b2-then
+b2-then                            Action   Action   
+steps:
+  Given an async call b2-given  [Passed]
+  When an async call b2-when  [Passed]
+  Then an async call b2-then  [Passed]
+

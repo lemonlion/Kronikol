@@ -1,0 +1,29 @@
+== 5.28.3-r1
+  SET   reqnroll-xunit2  R08 TrackDuringSetup false                                   calls 7 -> 9
+  reqnroll-xunit2: 21 of 22 keep; version 11 -> 11; generator 5.28.3-r1+9d994a4b014afb4ff0f304e4c5d6d2
+  order xunit3-plain     X09 a step left open then a when                             calls 10 -> 10
+  order xunit3-plain     X21 a given left running then a when                         calls 6 -> 6
+  xunit3-plain: 34 of 36 keep; version 11 -> 11; generator 5.28.3-r1+9d994a4b014afb4ff0f304e4c5d6d2
+  SET   lightbdd-xunit2  L11 a message tracker that does not track setup              calls 4 -> 3
+  lightbdd-xunit2: 15 of 16 keep; version 11 -> 11; generator 5.28.3-r1+9d994a4b014afb4ff0f304e4c5d6d2
+  SET   bddfy-xunit3     B11 async steps with AsyncVoidSupport off                    calls 5 -> 6
+  bddfy-xunit3: 10 of 11 keep; version 11 -> 11; generator 5.28.3-r1+9d994a4b014afb4ff0f304e4c5d6d2
+== 5.28.3-r2
+  SET   reqnroll-xunit2  R08 TrackDuringSetup false                                   calls 7 -> 9
+  reqnroll-xunit2: 21 of 22 keep; version 11 -> 11; generator 5.28.3-r2+9d994a4b014afb4ff0f304e4c5d6d2
+  order xunit3-plain     X10 when all of a given and a when                           calls 6 -> 6
+  order xunit3-plain     X21 a given left running then a when                         calls 6 -> 6
+  order xunit3-plain     X27 a given running with a sub step after a when starts      calls 4 -> 4
+  xunit3-plain: 33 of 36 keep; version 11 -> 11; generator 5.28.3-r2+9d994a4b014afb4ff0f304e4c5d6d2
+  SET   lightbdd-xunit2  L11 a message tracker that does not track setup              calls 4 -> 3
+  lightbdd-xunit2: 15 of 16 keep; version 11 -> 11; generator 5.28.3-r2+9d994a4b014afb4ff0f304e4c5d6d2
+  SET   bddfy-xunit3     B11 async steps with AsyncVoidSupport off                    calls 5 -> 6
+  bddfy-xunit3: 10 of 11 keep; version 11 -> 11; generator 5.28.3-r2+9d994a4b014afb4ff0f304e4c5d6d2
+== 5.28.3-r3
+  SET   reqnroll-xunit2  R08 TrackDuringSetup false                                   calls 7 -> 9
+  reqnroll-xunit2: 21 of 22 keep; version 11 -> 11; generator 5.28.3-r3+9d994a4b014afb4ff0f304e4c5d6d2
+  xunit3-plain: 36 of 36 keep; version 11 -> 11; generator 5.28.3-r3+9d994a4b014afb4ff0f304e4c5d6d2
+  SET   lightbdd-xunit2  L11 a message tracker that does not track setup              calls 4 -> 3
+  lightbdd-xunit2: 15 of 16 keep; version 11 -> 11; generator 5.28.3-r3+9d994a4b014afb4ff0f304e4c5d6d2
+  SET   bddfy-xunit3     B11 async steps with AsyncVoidSupport off                    calls 5 -> 6
+  bddfy-xunit3: 10 of 11 keep; version 11 -> 11; generator 5.28.3-r3+9d994a4b014afb4ff0f304e4c5d6d2

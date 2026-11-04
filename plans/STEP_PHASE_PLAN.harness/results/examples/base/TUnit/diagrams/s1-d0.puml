@@ -1,0 +1,89 @@
+@startuml
+!pragma teoz true
+skinparam defaultFontName system-ui
+skinparam shadowing false
+skinparam SequenceMessagePadding 4
+skinparam sequenceMessageAlignment center
+<style>
+sequenceDiagram { participant { RoundCorner 12; Padding 8 14; Margin 0 10; LineThickness 1 } }
+sequenceDiagram { actor, database, queue, collections, boundary, control, entity { Margin 0 10; LineThickness 1 } }
+sequenceDiagram { lifeLine { LineStyle 0; LineThickness 1 } }
+sequenceDiagram { note { LineThickness 1 } }
+sequenceDiagram { group { RoundCorner 16; LineThickness 1; LineColor #CDD5E0; BackgroundColor #F4F7FB; FontStyle plain } }
+sequenceDiagram { groupHeader { LineThickness 1; LineColor #CDD5E0; BackgroundColor #E9EEF6 } }
+sequenceDiagram { partition { RoundCorner 16; LineThickness 1; LineColor #D5DBE4 } }
+</style>
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Caller" as caller
+participant "Dessert Provider" as dessertProvider
+participant "Cow Service" as cowService
+
+caller -[#438DD5]> dessertProvider: [[#iflow-8af79a67-4ca0-455d-9d3e-b8a83a36ddba GET: /milk]]
+note left
+<color:#686868>[traceparent=00-db0cb3baecc1879262c5804ef9cb4d97-76ae228d4c511b24-01]
+end note
+dessertProvider -[#438DD5]> cowService: [[#iflow-617f55ee-b939-4579-8f36-b53bb2c022ec GET: /milk]]
+cowService -[#438DD5]-> dessertProvider: OK
+note right
+<color:#686868>[Date=Tue, 03 Nov 2026 13:16:07 GMT]
+<color:#686868>[Server=Kestrel]
+<color:#686868>[Transfer-Encoding=chunked]
+
+{
+  "milk": "Some_Fresh_Milk"
+}
+end note
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "milk": "Some_Fresh_Milk"
+}
+end note
+caller -[#438DD5]> dessertProvider: [[#iflow-5491f94d-af74-4cd1-bdfa-4ad79c80f5e7 GET: /eggs]]
+note left
+<color:#686868>[traceparent=00-db0cb3baecc1879262c5804ef9cb4d97-76ae228d4c511b24-01]
+end note
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "eggs": "Some_Eggs"
+}
+end note
+caller -[#438DD5]> dessertProvider: [[#iflow-81ca2231-1435-4999-9478-291f24fc0445 GET: /flour]]
+note left
+<color:#686868>[traceparent=00-db0cb3baecc1879262c5804ef9cb4d97-76ae228d4c511b24-01]
+end note
+dessertProvider -[#438DD5]-> caller: OK
+note right
+{
+  "flour": "Some_Flour"
+}
+end note
+caller -[#438DD5]> dessertProvider: [[#iflow-b5b64ebe-547c-45f1-b808-6068a4dd68b0 POST: /cake]]
+note left
+<color:#686868>[traceparent=00-db0cb3baecc1879262c5804ef9cb4d97-76ae228d4c511b24-01]
+
+{
+  "milk": "Some_Fresh_Milk",
+  "flour": "Some_Flour"
+}
+end note
+dessertProvider -[#438DD5]-> caller: Bad Request
+note right
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Eggs": [
+      "The Eggs field is required."
+    ]
+  },
+  "traceId": "00-db0cb3baecc1879262c5804ef9cb4d97-aa69a30930c9ab0d-01"
+}
+end note
+@enduml

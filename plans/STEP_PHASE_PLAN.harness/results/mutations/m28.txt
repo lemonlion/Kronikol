@@ -1,0 +1,14 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=1
+first: main/lightbdd-xunit2: L14 a bypassed sub step in a Given composite: l14-when-sub: Setup Setup > Action Action; WHEN: a call named [label: "l14-when-sub"] [Passed] > a call named [label: "l14-when-sub"] [Passed]; (none): A call named [label: "l14-untyped-sub"
+
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L14 a bypassed sub step in a Given composite
+    l14-when-sub: Setup Setup > Action Action; WHEN: a call named [label: "l14-when-sub"] [Passed] > a call named [label: "l14-when-sub"] [Passed]; (none): A call named [label: "l14-untyped-sub"] [Passed] > A call named [label: "l14-untyped-sub"] [Passed]; new: [bar] <color:white>WHEN a call named [label: "l14-when-sub"]; new: [bar] <color:white>A call named [label: "l14-untyped-sub"]
+      -l14-when-sub Setup Setup
+      +[bar] <color:white>WHEN a call named [label: "l14-when-sub"]
+      +l14-when-sub Action Action
+      +[bar] <color:white>A call named [label: "l14-untyped-sub"]
+      - WHEN a call named [label: "l14-when-sub"] [Passed]
+      - (none) A call named [label: "l14-untyped-sub"] [Passed]
+      + WHEN a call named [label: "l14-when-sub"] [Passed]
+      + (none) A call named [label: "l14-untyped-sub"] [Passed]
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When

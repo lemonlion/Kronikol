@@ -1,0 +1,467 @@
+using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
+using Kronikol.Constants;
+
+namespace Kronikol.Tracking;
+
+/// <summary>
+/// A <see cref="DelegatingHandler"/> that intercepts HTTP requests and responses,
+/// logging them as <see cref="RequestResponseLog"/> entries for inclusion in test sequence diagrams.
+/// This is the primary mechanism for tracking HTTP dependencies in tests.
+/// <para>
+/// Each request it tracks carries the test identity in the four <see cref="TestTrackingHttpHeaders"/> (name, id, trace
+/// id and caller name), so a host that calls <c>AddTestTrackingContextPropagation()</c> attributes its own calls to
+/// the scenario. That holds on every hop: a handler in a host serving a request passes on the identity that request
+/// carries (read through the handler's <see cref="IHttpContextAccessor"/>, or else from the scope the host's middleware
+/// opened for it), and with an accessor its Kronikol trace id too. A header the request already carries is left as it
+/// is, and the call is logged with the trace id the request carries. A request the handler does not track carries
+/// nothing of this: one sent synchronously, one to an excluded host, and one for which no identity resolves.
+/// </para>
+/// </summary>
+public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
+{
+    private readonly string? _fixedServiceName;
+    private readonly Dictionary<int, string> _portsToServiceNames;
+    private readonly Dictionary<string, string> _clientNamesToServiceNames;
+    private readonly string? _clientName;
+    private readonly string? _callerName;
+    private readonly Func<(string Name, string Id)>? _currentTestInfoFetcher;
+    private readonly Func<string?>? _currentStepTypeFetcher;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly IEnumerable<string> _headersToForward;
+    private readonly string[]? _internalFlowActivitySources;
+    private readonly bool _trackDuringSetup;
+    private readonly bool _trackDuringAction;
+    private readonly IReadOnlyCollection<string> _excludedHosts;
+    private int _invocationCount;
+    private bool _listenerStarted;
+
+    /// <summary>The test client <c>CreateTestTrackingClient</c> built this handler for, which records whom it called (#190, O1).</summary>
+    internal Kronikol.Parties.TestClientRecord? TestClient { get; init; }
+
+    public TestTrackingMessageHandler(TestTrackingMessageHandlerOptions options, IHttpContextAccessor? httpContextAccessor = null, string? clientName = null)
+    {
+        _fixedServiceName = options.FixedNameForReceivingService;
+        _portsToServiceNames = options.PortsToServiceNames;
+        _clientNamesToServiceNames = options.ClientNamesToServiceNames;
+        _clientName = clientName;
+        _currentTestInfoFetcher = options.CurrentTestInfoFetcher;
+        _currentStepTypeFetcher = options.CurrentStepTypeFetcher;
+        _callerName = options.CallerName;
+        _httpContextAccessor = httpContextAccessor ?? options.HttpContextAccessor;
+        _headersToForward = options.HeadersToForward;
+        _internalFlowActivitySources = options.InternalFlowActivitySources;
+        _trackDuringSetup = options.TrackDuringSetup;
+        _trackDuringAction = options.TrackDuringAction;
+        _excludedHosts = options.ExcludedHosts;
+
+        TrackingComponentRegistry.Register(this);
+    }
+
+    public string ComponentName => $"TestTrackingMessageHandler ({_callerName})";
+    public bool WasInvoked => _invocationCount > 0;
+    public int InvocationCount => _invocationCount;
+    public bool HasHttpContextAccessor => _httpContextAccessor is not null;
+
+    /// <summary>
+    /// The name of a party nothing maps. A loopback address is this machine, so it keeps <c>localhost:{port}</c> and one
+    /// stub reached two ways stays one party; any other host keeps its name as <see cref="Uri.Host"/> gives it, with the
+    /// port, so two remote APIs on one port are two parties and neither is called localhost (#190). A request with no
+    /// host keeps the localhost name. <c>RemoteHost</c> says the host's name was kept, which history's earlier rule read
+    /// as <c>localhost:{port}</c> (<see cref="RequestResponseLog.NamedByRemoteHostFallback"/>).
+    /// </summary>
+    internal static (string Name, bool RemoteHost) FallbackName(Uri uri)
+    {
+        var port = uri.Port.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return uri.IsLoopback || string.IsNullOrEmpty(uri.Host) ? ("localhost:" + port, false) : (uri.Host + ":" + port, true);
+    }
+
+    private (string Name, bool RemoteHost) ResolveServiceName(Uri uri)
+    {
+        // 1. FixedNameForReceivingService (highest priority)
+        if (_fixedServiceName is not null)
+            return (_fixedServiceName, false);
+
+        // 2. Client name mapping — exact match (set via constructor clientName parameter)
+        if (_clientName is not null && _clientNamesToServiceNames.TryGetValue(_clientName, out var mapped))
+            return (mapped, false);
+
+        // 3. Client name mapping — suffix/contains match (for Refit/generated client names)
+        //    Steps: strip assembly qualification, try EndsWith with boundary, then Contains fallback
+        //    (Contains only when assembly-qualified, to avoid false positives on simple names).
+        if (_clientName is not null && _clientNamesToServiceNames.Count > 0)
+        {
+            // Strip assembly qualification (e.g. ", Data.Insights.Api, Version=...")
+            var commaIndex = _clientName.IndexOf(", ", StringComparison.Ordinal);
+            var isAssemblyQualified = commaIndex >= 0;
+            var effectiveName = isAssemblyQualified ? _clientName.AsSpan(0, commaIndex) : _clientName.AsSpan();
+
+            foreach (var kvp in _clientNamesToServiceNames)
+            {
+                // 3a. EndsWith with non-alphanumeric boundary (e.g. Namespace+IClient)
+                if (effectiveName.Length > kvp.Key.Length
+                    && effectiveName.EndsWith(kvp.Key.AsSpan(), StringComparison.Ordinal)
+                    && !char.IsLetterOrDigit(effectiveName[effectiveName.Length - kvp.Key.Length - 1]))
+                    return (kvp.Value, false);
+
+                // 3b. Contains fallback — only for assembly-qualified names (Refit v9)
+                //     to avoid false positives on simple names like "Client" matching "MyBetterClient"
+                if (isAssemblyQualified
+                    && effectiveName.Length > kvp.Key.Length
+                    && effectiveName.Contains(kvp.Key.AsSpan(), StringComparison.Ordinal))
+                    return (kvp.Value, false);
+            }
+
+            // Record unmatched client name for diagnostic reporting
+            UnmatchedClientNameRegistry.Record(_clientName);
+        }
+
+        // 4. Port-based mapping, by the port alone whatever the host, or the fallback
+        return _portsToServiceNames.TryGetValue(uri.Port, out var byPort) ? (byPort, false) : FallbackName(uri);
+    }
+
+    protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        // Forward without tracking. Synchronous callers are typically infrastructure
+        // (TestContainers, Docker, config fetches) — not test-initiated requests.
+        // The previous .GetAwaiter().GetResult() pattern caused deadlocks (issue #69).
+        InnerHandler ??= new HttpClientHandler();
+        return base.Send(request, cancellationToken);
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        // Lazy-initialize InnerHandler for standalone usage (new HttpClient(handler)).
+        // When used with HttpClientFactory / IHttpMessageHandlerBuilderFilter, the pipeline
+        // builder sets InnerHandler before first use — so this only fires for direct construction.
+        InnerHandler ??= new HttpClientHandler();
+
+        Interlocked.Increment(ref _invocationCount);
+
+        // Deferred start — registering an ActivityListener during DI resolution
+        // can alter ActivitySource.HasListeners() state before the host and
+        // Application Insights' DependencyTrackingTelemetryModule have fully
+        // initialised, breaking HTTP dependency telemetry. Starting on first
+        // use guarantees all other services are ready.
+        if (!Volatile.Read(ref _listenerStarted))
+        {
+            InternalFlow.InternalFlowActivityListener.EnsureStarted(_internalFlowActivitySources);
+            Volatile.Write(ref _listenerStarted, true);
+        }
+
+        // Skip tracking entirely for excluded hosts (e.g. ASP.NET Core TestServer's internal "override.com")
+        if (request.RequestUri is not null && _excludedHosts.Count > 0 &&
+            _excludedHosts.Contains(request.RequestUri.Host, StringComparer.OrdinalIgnoreCase))
+        {
+            return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+
+        ForwardHeaders(request);
+
+        var requestResponseId = Guid.NewGuid();
+
+        // Ensure trace context propagation for in-process (TestServer) scenarios
+        // where no framework DiagnosticsHandler exists in the pipeline.
+        // When Activity.Current IS present and the transport is SocketsHttpHandler
+        // or HttpClientHandler, the framework's DiagnosticsHandler inside it will
+        // create a proper child Activity and inject traceparent itself — pre-empting
+        // it here would inject the PARENT's span ID, breaking AI SDK dependency
+        // correlation. Any other transport (TestServer's in-memory handler) has no
+        // such handler, and without a traceparent the called host's spans would
+        // leave the caller's trace, so the current span's goes on the request then.
+        string? activityTraceId;
+        string? activitySpanId;
+        if (Activity.Current is { } current)
+        {
+            activityTraceId = current.TraceId.ToString();
+            activitySpanId = current.SpanId.ToString();
+            if (!request.Headers.Contains("traceparent") && !TransportPropagatesTraceContext())
+            {
+                request.Headers.TryAddWithoutValidation("traceparent",
+                    $"00-{activityTraceId}-{activitySpanId}-{(current.Recorded ? "01" : "00")}");
+            }
+        }
+        else
+        {
+            activityTraceId = ActivityTraceId.CreateRandom().ToString();
+            activitySpanId = ActivitySpanId.CreateRandom().ToString();
+            if (!request.Headers.Contains("traceparent"))
+            {
+                request.Headers.TryAddWithoutValidation("traceparent",
+                    $"00-{activityTraceId}-{activitySpanId}-00");
+            }
+        }
+
+        var requestContentString = request.Content is null ? null : await HttpContentReader.ReadContentAsStringAsync(request.Content!, cancellationToken);
+        var requestHeaders = request.Headers.SelectMany(x => x.Value.Select(value => (x.Key, (string?)value))).ToArray();
+
+        StringValues currentTestNameHeaders = new();
+        var hasCurrentTestNameHeader = false;
+
+        StringValues currentTestIdHeaders = new();
+        var hasCurrentTestIdHeader = false;
+
+        StringValues traceIdHeaders = new();
+        var hasTraceIdHeader = false;
+
+        if (_httpContextAccessor?.HttpContext is not null)
+        {
+            hasTraceIdHeader = _httpContextAccessor.HttpContext.Request.Headers.TryGetValue(TestTrackingHttpHeaders.TraceIdHeader, out traceIdHeaders);
+            hasCurrentTestNameHeader = _httpContextAccessor.HttpContext.Request.Headers.TryGetValue(TestTrackingHttpHeaders.CurrentTestNameHeader, out currentTestNameHeaders);
+            hasCurrentTestIdHeader = _httpContextAccessor.HttpContext.Request.Headers.TryGetValue(TestTrackingHttpHeaders.CurrentTestIdHeader, out currentTestIdHeaders);
+        }
+
+        // Resolve test info once. A request that carries the scenario's own headers is that scenario's
+        // (RequestHeader); anything else goes through the shared chain, which honours a detached flow
+        // and says which level answered. Nothing resolved: skip all tracking and just forward.
+        TestIdentity currentTestInfo;
+        if (hasCurrentTestNameHeader && hasCurrentTestIdHeader)
+        {
+            currentTestInfo = new TestIdentity(TrackingHeaderValue.Decode(currentTestNameHeaders.First()!), TrackingHeaderValue.Decode(currentTestIdHeaders.First()!), AttributionSource.RequestHeader);
+        }
+        else
+        {
+            var resolved = TestInfoResolver.ResolveWithSource(null, _currentTestInfoFetcher);
+            if (resolved is null)
+                return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            currentTestInfo = resolved.Value;
+        }
+
+        // The call's trace id: the one the request already carries (the caller's own, or the first attempt's when a retry
+        // sends the message again), since the header is left as it is and the called host reads that one; else the
+        // request being served's; else a new one. A trace id another tool wrote in some other form must not fail the
+        // application's call.
+        var traceId = TraceIdOf(request.Headers)
+                      ?? (hasTraceIdHeader && Guid.TryParse(traceIdHeaders.First(), out var inboundTraceId) ? inboundTraceId : Guid.NewGuid());
+
+        // The identity goes on every outgoing request, whether this handler resolved it or took it from the request the
+        // host is serving, so a host passes its scenario on to the next host as the gRPC interceptor does. Each header
+        // is added only when the request lacks it: one the caller set, or that HeadersToForward copied, is left as it
+        // is, and a request sent again (a retry) is not stamped twice.
+        AddIfAbsent(request, TestTrackingHttpHeaders.TraceIdHeader, traceId.ToString());
+        AddIfAbsent(request, TestTrackingHttpHeaders.CurrentTestNameHeader, TrackingHeaderValue.Encode(currentTestInfo.Name));
+        AddIfAbsent(request, TestTrackingHttpHeaders.CurrentTestIdHeader, TrackingHeaderValue.Encode(currentTestInfo.Id));
+        AddIfAbsent(request, TestTrackingHttpHeaders.CallerNameHeader, TrackingHeaderValue.Encode(_callerName));
+
+        var (serviceName, namedByRemoteHostFallback) = ResolveServiceName(request.RequestUri!);
+        TestClient?.Saw(serviceName);
+
+        if (!hasCurrentTestNameHeader)
+            InjectImplicitActionStartIfNeeded(currentTestInfo);
+
+        var requestFocusFields = !hasCurrentTestNameHeader ? DiagramFocus.ConsumePendingRequestFocus() : null;
+        var responseFocusFields = !hasCurrentTestNameHeader ? DiagramFocus.ConsumePendingResponseFocus() : null;
+
+        var trackingIgnore = requestHeaders.Any(x => string.Equals(x.Key, TestTrackingHttpHeaders.Ignore, StringComparison.OrdinalIgnoreCase))
+                             || !PhaseConfiguration.ShouldTrack(_trackDuringSetup, _trackDuringAction);
+        var currentPhase = TestPhaseContext.Current;
+        var testDouble = AnsweringTestDouble();
+
+        RequestResponseLogger.Log(new RequestResponseLog(
+            currentTestInfo.Name,
+            currentTestInfo.Id,
+            request.Method,
+            requestContentString,
+            request.RequestUri!,
+            requestHeaders,
+            serviceName,
+            _callerName!,
+            RequestResponseType.Request,
+            traceId,
+            requestResponseId,
+            trackingIgnore
+        )
+        {
+            FocusFields = requestFocusFields,
+            Timestamp = DateTimeOffset.UtcNow,
+            ActivitySpanId = activitySpanId,
+            ActivityTraceId = activityTraceId,
+            Phase = currentPhase,
+            AttributionSource = currentTestInfo.Source,
+            NamedByRemoteHostFallback = namedByRemoteHostFallback,
+            TestDouble = testDouble
+        });
+
+        // The span the transport starts for the call begins after the request is logged, under the span current here; the
+        // response names it (TransportSpan), so the calls a host makes under one request each keep a span of their own.
+        var carriedTraceParent = request.Headers.Contains("traceparent");
+        HttpResponseMessage response;
+        string? responseContentString;
+        try
+        {
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            responseContentString = await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // A send that throws is still an answer: the exception's type where the status would be, its
+            // message chain in Error, and the exception on its way. See FailedSend.
+            RequestResponseLogger.Log(new RequestResponseLog(
+                currentTestInfo.Name,
+                currentTestInfo.Id,
+                request.Method,
+                null,
+                request.RequestUri!,
+                [],
+                serviceName,
+                _callerName!,
+                RequestResponseType.Response,
+                traceId,
+                requestResponseId,
+                trackingIgnore,
+                FailedSend.Status(ex))
+            {
+                Error = FailedSend.Describe(ex),
+                FocusFields = responseFocusFields,
+                Timestamp = DateTimeOffset.UtcNow,
+                ActivitySpanId = TransportSpan(request, carriedTraceParent, activityTraceId) ?? activitySpanId,
+                ActivityTraceId = activityTraceId,
+                Phase = currentPhase,
+                AttributionSource = currentTestInfo.Source,
+                NamedByRemoteHostFallback = namedByRemoteHostFallback,
+                TestDouble = testDouble
+            });
+            throw;
+        }
+        var responseHeaders = response.Headers.SelectMany(x => x.Value.Select(value => (x.Key, (string?)value))).ToArray();
+
+        RequestResponseLogger.Log(new RequestResponseLog(
+            currentTestInfo.Name,
+            currentTestInfo.Id,
+            request.Method,
+            responseContentString,
+            request.RequestUri!,
+            responseHeaders,
+            serviceName,
+            _callerName!,
+            RequestResponseType.Response,
+            traceId,
+            requestResponseId,
+            trackingIgnore,
+            response.StatusCode
+            )
+        {
+            FocusFields = responseFocusFields,
+            Timestamp = DateTimeOffset.UtcNow,
+            ActivitySpanId = TransportSpan(request, carriedTraceParent, activityTraceId) ?? activitySpanId,
+            ActivityTraceId = activityTraceId,
+            Phase = currentPhase,
+            AttributionSource = currentTestInfo.Source,
+            NamedByRemoteHostFallback = namedByRemoteHostFallback,
+            TestDouble = testDouble
+        });
+
+        return response;
+    }
+
+    /// <summary>
+    /// The span the transport started for the call: the one in the <c>traceparent</c> it put on the request while
+    /// sending it (SocketsHttpHandler's and HttpClientHandler's DiagnosticsHandler do), when the request carried none
+    /// before the send and the trace is the call's. Null otherwise: a caller's own header, or a transport that starts no
+    /// span and sends the one this handler wrote.
+    /// </summary>
+    private static string? TransportSpan(HttpRequestMessage request, bool carriedTraceParent, string? traceId)
+    {
+        if (carriedTraceParent || !request.Headers.TryGetValues("traceparent", out var values)
+            || values.FirstOrDefault() is not { } sent || !ActivityContext.TryParse(sent, null, out var context))
+            return null;
+        return string.Equals(context.TraceId.ToString(), traceId, StringComparison.Ordinal) ? context.SpanId.ToString() : null;
+    }
+
+    /// <summary>
+    /// Copies each header <see cref="TestTrackingMessageHandlerOptions.HeadersToForward"/> names from the request being
+    /// served, unless the request already carries it: one the caller set, or one a first attempt copied when a retry
+    /// sends the message again. A second value would reach the called host joined to the first.
+    /// </summary>
+    private void ForwardHeaders(HttpRequestMessage request)
+    {
+        if(!_headersToForward.Any())
+            return;
+
+        var contextHeaders = _httpContextAccessor?.HttpContext?.Request.Headers;
+        if (contextHeaders is null)
+            return;
+
+        foreach (var header in _headersToForward)
+        {
+            if (!request.Headers.Contains(header) && contextHeaders.TryGetValue(header, out var value))
+                request.Headers.Add(header, (IEnumerable<string?>)value);
+        }
+    }
+
+    /// <summary>The Kronikol trace id the request already carries, when it is a GUID.</summary>
+    private static Guid? TraceIdOf(System.Net.Http.Headers.HttpRequestHeaders headers) =>
+        headers.TryGetValues(TestTrackingHttpHeaders.TraceIdHeader, out var values) && Guid.TryParse(values.FirstOrDefault(), out var traceId)
+            ? traceId
+            : null;
+
+    /// <summary>
+    /// Whether the transport at the end of this handler's chain injects the trace context itself: SocketsHttpHandler,
+    /// and HttpClientHandler on top of it, run the framework's DiagnosticsHandler.
+    /// </summary>
+    private bool TransportPropagatesTraceContext() => EndOfChain() is SocketsHttpHandler or HttpClientHandler;
+
+    /// <summary>The handler at the end of this handler's chain, past every delegating handler: what answers the call.</summary>
+    private HttpMessageHandler? EndOfChain()
+    {
+        HttpMessageHandler? handler = InnerHandler;
+        while (handler is DelegatingHandler delegating)
+            handler = delegating.InnerHandler;
+        return handler;
+    }
+
+    /// <summary>
+    /// What answered in the service's place (#190): the type name of the handler at the end of the chain when it is no
+    /// transport, so a stub, a fake or a mock library's handler. A transport carries the call to the service: the socket
+    /// handler, the client handler and any handler built on it, a platform's handler, and TestServer's, which is the
+    /// service under test answering in process. An interceptor in the middle of the chain and a stub on a socket
+    /// (WireMock) are not seen, and nothing is read from a port.
+    /// </summary>
+    private string? AnsweringTestDouble() => EndOfChain() switch
+    {
+        null or SocketsHttpHandler or HttpClientHandler => null,
+        var handler when Transports.Contains(handler.GetType().FullName ?? "") => null,
+        var handler => handler.GetType().Name,
+    };
+
+    // Named rather than referenced: TestServer's handler is internal to Microsoft.AspNetCore.TestHost, and the platform
+    // handlers live in assemblies a test project seldom loads.
+    private static readonly HashSet<string> Transports = new(StringComparer.Ordinal)
+    {
+        "Microsoft.AspNetCore.TestHost.ClientHandler",
+        "System.Net.Http.WinHttpHandler",
+        "System.Net.Http.BrowserHttpHandler",
+        "System.Net.Http.NSUrlSessionHandler",
+        "System.Net.Http.CFNetworkHandler",
+        "Foundation.NSUrlSessionHandler",
+        "Xamarin.Android.Net.AndroidMessageHandler",
+    };
+
+    private static void AddIfAbsent(HttpRequestMessage request, string name, string? value)
+    {
+        if (value is not null && !request.Headers.Contains(name))
+            request.Headers.Add(name, value);
+    }
+
+    private void InjectImplicitActionStartIfNeeded(TestIdentity currentTestInfo)
+    {
+        if (_currentStepTypeFetcher is null || !StepCollector.NeedsStepTypeFromHandler(currentTestInfo.Id, this))
+            return;
+
+        // A fetcher can throw for a call outside a scenario, as LightBDD's does, or on a test it does not know, as a shared handler now asks for each. A call
+        // must not fail for want of a step type.
+        string? currentStepType;
+        try
+        {
+            currentStepType = _currentStepTypeFetcher();
+        }
+        catch (Exception)
+        {
+            return;
+        }
+
+        if (currentStepType is not null)
+            StepCollector.NoteCallInStepType(currentTestInfo.Id, currentStepType, this);
+    }
+}

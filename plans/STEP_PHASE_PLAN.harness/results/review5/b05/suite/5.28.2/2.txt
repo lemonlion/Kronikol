@@ -1,0 +1,664 @@
+## B02_A_woven_Then_runs_before_the_story
+  [Step] <color:white>Then Woven health check
+  
+  Request  b02-health                     phase=Action  src=TestContext
+  Response b02-health                     phase=Action  src=TestContext
+  [Step] <color:white>Given sync b02-given
+  
+  Request  b02-given                      phase=Setup   src=TestContext
+  Response b02-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When sync b02-when
+  
+  --- MARKER ---
+  Request  b02-when                       phase=Action  src=TestContext
+  Response b02-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then sync b02-then
+  
+  Request  b02-then                       phase=Action  src=TestContext
+  Response b02-then                       phase=Action  src=TestContext
+  steps:
+    Then Woven health check [Passed]
+    Given sync b02-given [Passed]
+    When sync b02-when [Passed]
+    Then sync b02-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Then Woven health check
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given sync b02-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When sync b02-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then sync b02-then
+      shop -[#438DD5]-> probe: OK
+
+## B03_A_woven_When_runs_before_the_story
+  [Step] <color:white>When Woven login
+  
+  Request  b03-login                      phase=Action  src=TestContext
+  Response b03-login                      phase=Action  src=TestContext
+  [Step] <color:white>Given async b03-given
+  
+  Request  b03-given                      phase=Setup   src=TestContext
+  Response b03-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When async b03-when
+  
+  --- MARKER ---
+  Request  b03-when                       phase=Action  src=TestContext
+  Response b03-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then async b03-then
+  
+  Request  b03-then                       phase=Action  src=TestContext
+  Response b03-then                       phase=Action  src=TestContext
+  steps:
+    When Woven login [Passed]
+    Given async b03-given [Passed]
+    When async b03-when [Passed]
+    Then async b03-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>When Woven login
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given async b03-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When async b03-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then async b03-then
+      shop -[#438DD5]-> probe: OK
+
+## B04_Two_stories_in_one_test
+  [Step] <color:white>Given sync b04-given1
+  
+  Request  b04-given1                     phase=Setup   src=TestContext
+  Response b04-given1                     phase=Setup   src=TestContext
+  [Step] <color:white>When sync b04-when1
+  
+  --- MARKER ---
+  Request  b04-when1                      phase=Action  src=TestContext
+  Response b04-when1                      phase=Action  src=TestContext
+  [Step] <color:white>Then sync b04-then1
+  
+  Request  b04-then1                      phase=Action  src=TestContext
+  Response b04-then1                      phase=Action  src=TestContext
+  [Step] <color:white>Given sync b04-given2
+  
+  Request  b04-given2                     phase=Setup   src=TestContext
+  Response b04-given2                     phase=Setup   src=TestContext
+  [Step] <color:white>When sync b04-when2
+  
+  Request  b04-when2                      phase=Action  src=TestContext
+  Response b04-when2                      phase=Action  src=TestContext
+  [Step] <color:white>Then sync b04-then2
+  
+  Request  b04-then2                      phase=Action  src=TestContext
+  Response b04-then2                      phase=Action  src=TestContext
+  steps:
+    Given sync b04-given1 [Passed]
+    When sync b04-when1 [Passed]
+    Then sync b04-then1 [Passed]
+    Given sync b04-given2 [Passed]
+    When sync b04-when2 [Passed]
+    Then sync b04-then2 [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given sync b04-given1
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When sync b04-when1
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then sync b04-then1
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given sync b04-given2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When sync b04-when2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then sync b04-then2
+      shop -[#438DD5]-> probe: OK
+
+## B05_Parallel_stories_in_one_test
+  [Step] <color:white>Given seed
+  
+  Request  b05b-given1                    phase=Setup   src=TestContext
+  Request  b05a-given1                    phase=Setup   src=TestContext
+  Response b05a-given1                    phase=Setup   src=TestContext
+  Response b05b-given1                    phase=Setup   src=TestContext
+  Request  b05a-given2                    phase=Setup   src=TestContext
+  Request  b05b-given2                    phase=Setup   src=TestContext
+  Response b05a-given2                    phase=Setup   src=TestContext
+  Response b05b-given2                    phase=Setup   src=TestContext
+  [Step] <color:white>When act
+  
+  --- MARKER ---
+  Request  b05a-when1                     phase=Action  src=TestContext
+  Request  b05b-when1                     phase=Action  src=TestContext
+  Response b05b-when1                     phase=Action  src=TestContext
+  Response b05a-when1                     phase=Action  src=TestContext
+  Request  b05a-when2                     phase=Action  src=TestContext
+  Request  b05b-when2                     phase=Action  src=TestContext
+  Response b05b-when2                     phase=Action  src=TestContext
+  Response b05a-when2                     phase=Action  src=TestContext
+  [Step] <color:white>Then check
+  
+  Request  b05a-then1                     phase=Action  src=TestContext
+  Request  b05b-then1                     phase=Action  src=TestContext
+  Response b05b-then1                     phase=Action  src=TestContext
+  Response b05a-then1                     phase=Action  src=TestContext
+  Request  b05a-then2                     phase=Action  src=TestContext
+  Request  b05b-then2                     phase=Action  src=TestContext
+  Response b05b-then2                     phase=Action  src=TestContext
+  Response b05a-then2                     phase=Action  src=TestContext
+  Request  b05-after                      phase=Unknown src=TestContext
+  Response b05-after                      phase=Unknown src=TestContext
+  steps:
+    Given seed [Passed]
+      Given seed [Passed]
+    When act [Passed]
+      When act [Passed]
+    Then check [Passed]
+      Then check [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then check
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B06_Async_void_support_off_with_a_nested_Given_and_a_failing_step
+  [Step] <color:white>Given async b06-given
+  
+  Request  b06-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When with given sub b06-when
+  
+  --- MARKER ---
+  Request  b06-when-before                phase=Action  src=TestContext
+  [Step] <color:white>Then when throws b06-then
+  
+  Request  b06-then                       phase=Action  src=TestContext
+  Response b06-then                       phase=Action  src=TestContext
+  Response b06-when-before                phase=Action  src=TestContext
+  [Step] <color:white>Given Woven given
+  
+  Request  b06-when-sub                   phase=Setup   src=TestContext
+  Response b06-given                      phase=Setup   src=TestContext
+  Response b06-when-sub                   phase=Setup   src=TestContext
+  Request  b06-when-after                 phase=Setup   src=TestContext
+  Response b06-when-after                 phase=Setup   src=TestContext
+  Request  b06-after                      phase=Unknown src=TestContext
+  Response b06-after                      phase=Unknown src=TestContext
+  steps:
+    Given async b06-given [Passed]
+    When with given sub b06-when [Passed]
+    Then when throws b06-then [Passed]
+    Given Woven given [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given async b06-given
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When with given sub b06-when
+      hnote across <<stepDelimiter>> #black:<color:white>Then when throws b06-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Woven given
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B07_Failing_async_When_after_a_nested_Given_then_tear_down
+  [Step] <color:white>Given async b07-given
+  
+  Request  b07-given                      phase=Setup   src=TestContext
+  Response b07-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When throws after sub b07-when
+  
+  --- MARKER ---
+  Request  b07-when-before                phase=Action  src=TestContext
+  Response b07-when-before                phase=Action  src=TestContext
+  [Step] <color:white>Given Woven given
+  
+  Request  b07-when-sub                   phase=Setup   src=TestContext
+  Response b07-when-sub                   phase=Setup   src=TestContext
+  [Step] <color:white>Tear down quiet b07-teardown
+  
+  Request  b07-teardown-nosetup           phase=Unknown src=TestContext
+  Response b07-teardown-nosetup           phase=Unknown src=TestContext
+  Request  b07-teardown-noaction          phase=Unknown src=TestContext
+  Response b07-teardown-noaction          phase=Unknown src=TestContext
+  Request  b07-after                      phase=Unknown src=TestContext
+  Response b07-after                      phase=Unknown src=TestContext
+  steps:
+    Given async b07-given [Passed]
+    When throws after sub b07-when [Passed]
+    Given Woven given [Passed]
+    (none) Tear down quiet b07-teardown [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given async b07-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When throws after sub b07-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Woven given
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Tear down quiet b07-teardown
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B08_StartSetup_before_the_story_and_a_tear_down
+  Request  b08-arrange                    phase=Setup   src=TestContext
+  Response b08-arrange                    phase=Setup   src=TestContext
+  [Step] <color:white>Given sync b08-given
+  
+  Request  b08-given                      phase=Setup   src=TestContext
+  Response b08-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When sync b08-when
+  
+  --- MARKER ---
+  Request  b08-when                       phase=Action  src=TestContext
+  Response b08-when                       phase=Action  src=TestContext
+  [Step] <color:white>Tear down quiet b08-teardown
+  
+  Request  b08-teardown-nosetup           phase=Unknown src=TestContext
+  Response b08-teardown-nosetup           phase=Unknown src=TestContext
+  Request  b08-teardown-noaction          phase=Unknown src=TestContext
+  Response b08-teardown-noaction          phase=Unknown src=TestContext
+  Request  b08-after-story-nosetup        phase=Unknown src=TestContext
+  Response b08-after-story-nosetup        phase=Unknown src=TestContext
+  Request  b08-after-story                phase=Unknown src=TestContext
+  Response b08-after-story                phase=Unknown src=TestContext
+  steps:
+    Given sync b08-given [Passed]
+    When sync b08-when [Passed]
+    (none) Tear down quiet b08-teardown [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given sync b08-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When sync b08-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Tear down quiet b08-teardown
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B09_A_scenario_in_a_woven_Given_then_a_tear_down_and_a_When
+  [Step] <color:white>Given Story in given
+  
+  Request  b09-story-given                phase=Setup   src=TestContext
+  Response b09-story-given                phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  b09-story-when                 phase=Action  src=TestContext
+  Response b09-story-when                 phase=Action  src=TestContext
+  Request  b09-story-then                 phase=Action  src=TestContext
+  Response b09-story-then                 phase=Action  src=TestContext
+  Request  b09-story-teardown-nosetup     phase=Unknown src=TestContext
+  Response b09-story-teardown-nosetup     phase=Unknown src=TestContext
+  Request  b09-story-teardown-noaction    phase=Unknown src=TestContext
+  Response b09-story-teardown-noaction    phase=Unknown src=TestContext
+  Request  b09-after-story                phase=Unknown src=TestContext
+  Response b09-after-story                phase=Unknown src=TestContext
+  Request  b09-after-woven                phase=Unknown src=TestContext
+  Response b09-after-woven                phase=Unknown src=TestContext
+  [Step] <color:white>When Woven when
+  
+  Request  b09-woven-when                 phase=Action  src=TestContext
+  Response b09-woven-when                 phase=Action  src=TestContext
+  Request  b09-after-when                 phase=Action  src=TestContext
+  Response b09-after-when                 phase=Action  src=TestContext
+  steps:
+    Given Story in given [Passed]
+      Given async b09-story-given [Passed]
+      When async b09-story-when [Passed]
+      Then async b09-story-then [Passed]
+      (none) Tear down quiet b09-story-teardown [Passed]
+    When Woven when [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given Story in given
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Woven when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B10_A_scenario_in_a_woven_When_failing_in_its_Given
+  [Step] <color:white>When Story in when
+  
+  Request  b10-before-story               phase=Action  src=TestContext
+  Response b10-before-story               phase=Action  src=TestContext
+  Request  b10-story-given                phase=Setup   src=TestContext
+  Response b10-story-given                phase=Setup   src=TestContext
+  Request  b10-after-woven                phase=Unknown src=TestContext
+  Response b10-after-woven                phase=Unknown src=TestContext
+  steps:
+    When Story in when [Passed]
+      Given throws sync b10-story-given [Failed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>When Story in when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B11_A_step_that_marks_the_boundary_later_in_the_story
+  [Step] <color:white>Given sync b11-given
+  
+  Request  b11-given                      phase=Setup   src=TestContext
+  Response b11-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When sync b11-when
+  
+  --- MARKER ---
+  Request  b11-when                       phase=Action  src=TestContext
+  Response b11-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then marking then b11-then
+  
+  --- MARKER ---
+  Request  b11-then                       phase=Action  src=TestContext
+  Response b11-then                       phase=Action  src=TestContext
+  steps:
+    Given sync b11-given [Passed]
+    When sync b11-when [Passed]
+    Then marking then b11-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given sync b11-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When sync b11-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then marking then b11-then
+      shop -[#438DD5]-> probe: OK
+
+## B12_A_ValueTask_step
+  [Step] <color:white>Given sync b12-given
+  
+  Request  b12-given                      phase=Setup   src=TestContext
+  Response b12-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When value task b12-when
+  
+  --- MARKER ---
+  Request  b12-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then async b12-then
+  
+  Request  b12-then                       phase=Action  src=TestContext
+  Response b12-when                       phase=Action  src=TestContext
+  Response b12-then                       phase=Action  src=TestContext
+  steps:
+    Given sync b12-given [Passed]
+    When value task b12-when [Passed]
+    Then async b12-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given sync b12-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When value task b12-when
+      hnote across <<stepDelimiter>> #black:<color:white>Then async b12-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B13_A_story_on_a_flow_forked_inside_a_woven_Given
+  [Step] <color:white>Given That forks a story
+  
+  Request  b13-seed                       phase=Setup   src=TestContext
+  Response b13-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>And sync b13-story-given
+  
+  Request  b13-story-given                phase=Setup   src=TestContext
+  Response b13-story-given                phase=Setup   src=TestContext
+  [Step] <color:white>When sync b13-story-when
+  
+  --- MARKER ---
+  Request  b13-story-when                 phase=Action  src=TestContext
+  Response b13-story-when                 phase=Action  src=TestContext
+  [Step] <color:white>Then sync b13-story-then
+  
+  Request  b13-story-then                 phase=Action  src=TestContext
+  Response b13-story-then                 phase=Action  src=TestContext
+  Request  b13-after                      phase=Setup   src=TestContext
+  Response b13-after                      phase=Setup   src=TestContext
+  steps:
+    Given That forks a story [Passed]
+    And sync b13-story-given [Passed]
+    When sync b13-story-when [Passed]
+    Then sync b13-story-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given That forks a story
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And sync b13-story-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When sync b13-story-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then sync b13-story-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B14_Fixture_story_with_no_test_id
+  [Step] <color:white>Given seed
+  
+  Request  f01-seed-nosetup               phase=Setup   src=TestContext IGNORED
+  Response f01-seed-nosetup               phase=Setup   src=TestContext IGNORED
+  [Step] <color:white>When warm
+  
+  Request  f01-warm-noaction              phase=Action  src=TestContext IGNORED
+  Response f01-warm-noaction              phase=Action  src=TestContext IGNORED
+  Request  b14-after                      phase=Unknown src=TestContext
+  Response b14-after                      phase=Unknown src=TestContext
+  steps:
+    Given seed [Passed]
+    When warm [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given seed
+      hnote across <<stepDelimiter>> #black:<color:white>When warm
+      shop -[#438DD5]-> probe: OK
+
+## B15_A_woven_Given_before_a_story_with_a_tear_down
+  [Step] <color:white>Given Woven given
+  
+  Request  b15-woven-given                phase=Setup   src=TestContext
+  Response b15-woven-given                phase=Setup   src=TestContext
+  [Step] <color:white>When sync b15-when
+  
+  Request  b15-when                       phase=Action  src=TestContext
+  Response b15-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then sync b15-then
+  
+  Request  b15-then                       phase=Action  src=TestContext
+  Response b15-then                       phase=Action  src=TestContext
+  [Step] <color:white>Tear down quiet b15-teardown
+  
+  Request  b15-teardown-nosetup           phase=Unknown src=TestContext
+  Response b15-teardown-nosetup           phase=Unknown src=TestContext
+  Request  b15-teardown-noaction          phase=Unknown src=TestContext
+  Response b15-teardown-noaction          phase=Unknown src=TestContext
+  Request  b15-after-story-nosetup        phase=Unknown src=TestContext
+  Response b15-after-story-nosetup        phase=Unknown src=TestContext
+  Request  b15-after-story                phase=Unknown src=TestContext
+  Response b15-after-story                phase=Unknown src=TestContext
+  steps:
+    Given Woven given [Passed]
+    When sync b15-when [Passed]
+    Then sync b15-then [Passed]
+    (none) Tear down quiet b15-teardown [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Woven given
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When sync b15-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then sync b15-then
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Tear down quiet b15-teardown
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B16_A_woven_When_before_a_story_with_a_tear_down
+  [Step] <color:white>When Woven when
+  
+  Request  b16-woven-when                 phase=Action  src=TestContext
+  Response b16-woven-when                 phase=Action  src=TestContext
+  [Step] <color:white>Given sync b16-given
+  
+  Request  b16-given                      phase=Setup   src=TestContext
+  Response b16-given                      phase=Setup   src=TestContext
+  [Step] <color:white>Then sync b16-then
+  
+  --- MARKER ---
+  Request  b16-then                       phase=Action  src=TestContext
+  Response b16-then                       phase=Action  src=TestContext
+  [Step] <color:white>Tear down quiet b16-teardown
+  
+  Request  b16-teardown-nosetup           phase=Unknown src=TestContext
+  Response b16-teardown-nosetup           phase=Unknown src=TestContext
+  Request  b16-teardown-noaction          phase=Unknown src=TestContext
+  Response b16-teardown-noaction          phase=Unknown src=TestContext
+  Request  b16-after-story-noaction       phase=Unknown src=TestContext
+  Response b16-after-story-noaction       phase=Unknown src=TestContext
+  Request  b16-after-story                phase=Unknown src=TestContext
+  Response b16-after-story                phase=Unknown src=TestContext
+  steps:
+    When Woven when [Passed]
+    Given sync b16-given [Passed]
+    Then sync b16-then [Passed]
+    (none) Tear down quiet b16-teardown [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>When Woven when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given sync b16-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>Then sync b16-then
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Tear down quiet b16-teardown
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B17_StartAction_before_a_story_with_a_tear_down
+  Request  b17-arrange                    phase=Unknown src=TestContext
+  Response b17-arrange                    phase=Unknown src=TestContext
+  --- MARKER ---
+  [Step] <color:white>Given sync b17-given
+  
+  Request  b17-given                      phase=Setup   src=TestContext
+  Response b17-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When sync b17-when
+  
+  --- MARKER ---
+  Request  b17-when                       phase=Action  src=TestContext
+  Response b17-when                       phase=Action  src=TestContext
+  [Step] <color:white>Tear down quiet b17-teardown
+  
+  Request  b17-teardown-nosetup           phase=Unknown src=TestContext
+  Response b17-teardown-nosetup           phase=Unknown src=TestContext
+  Request  b17-teardown-noaction          phase=Unknown src=TestContext
+  Response b17-teardown-noaction          phase=Unknown src=TestContext
+  Request  b17-after-story                phase=Unknown src=TestContext
+  Response b17-after-story                phase=Unknown src=TestContext
+  steps:
+    Given sync b17-given [Passed]
+    When sync b17-when [Passed]
+    (none) Tear down quiet b17-teardown [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>Given sync b17-given
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When sync b17-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Tear down quiet b17-teardown
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B18_A_story_with_an_initial_setup_method
+  [Step] <color:white>Given sync b18-given
+  
+  Request  b18-given                      phase=Setup   src=TestContext
+  Response b18-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When sync b18-when
+  
+  --- MARKER ---
+  Request  b18-when                       phase=Action  src=TestContext
+  Response b18-when                       phase=Action  src=TestContext
+  [Step] <color:white>Given when sync b18-second-given
+  
+  Request  b18-second-given               phase=Setup   src=TestContext
+  Response b18-second-given               phase=Setup   src=TestContext
+  [Step] <color:white>Then sync b18-second-then
+  
+  Request  b18-second-then                phase=Action  src=TestContext
+  Response b18-second-then                phase=Action  src=TestContext
+  steps:
+    Given sync b18-given [Passed]
+    When sync b18-when [Passed]
+    Given when sync b18-second-given [Passed]
+    Then sync b18-second-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given sync b18-given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When sync b18-when
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given when sync b18-second-given
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then sync b18-second-then
+      shop -[#438DD5]-> probe: OK
+
+## F01 fixture story
+  Request  f01-seed-nosetup               phase=Setup   src=Scope IGNORED
+  Response f01-seed-nosetup               phase=Setup   src=Scope IGNORED
+  Request  f01-warm-noaction              phase=Action  src=Scope IGNORED
+  Response f01-warm-noaction              phase=Action  src=Scope IGNORED
+  steps:
+  diagram separateSetup:
+    (no result)
+

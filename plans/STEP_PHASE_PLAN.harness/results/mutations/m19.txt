@@ -1,0 +1,15 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=1
+first: main/xunit3-plain: X20_WhenTriggersAction_false: x20-given: Unknown Unknown > Setup Setup; x20-after-given: Unknown Unknown > Setup Setup; x20-when: Unknown Unknown > Action Action; x20-after-when: Unknown Unknown > Action Action; new: ---
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X20_WhenTriggersAction_false
+    x20-given: Unknown Unknown > Setup Setup; x20-after-given: Unknown Unknown > Setup Setup; x20-when: Unknown Unknown > Action Action; x20-after-when: Unknown Unknown > Action Action; new: --- ACTION START MARKER ---
+      -x20-given Unknown Unknown
+      -x20-after-given Unknown Unknown
+      +x20-given Setup Setup
+      +x20-after-given Setup Setup
+      -x20-when Unknown Unknown
+      -x20-after-when Unknown Unknown
+      +--- ACTION START MARKER ---
+      +x20-when Action Action
+      +x20-after-when Action Action

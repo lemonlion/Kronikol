@@ -1,0 +1,6 @@
+phase   caller            service           calls errors   median      max bodies     bytes
+Setup   Caller            Dessert Provider      9      0     3 ms   261 ms      3     204 B
+Action  Caller            Dessert Provider      5      4     1 ms    52 ms      5    1.3 KB
+-       Dessert Provider  Cow Service           3      0     4 ms   115 ms      1      78 B
+-       Dessert Provider  Event broker          1      0     1 ms     1 ms      1     109 B
+4 buckets

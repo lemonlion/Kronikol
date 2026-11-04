@@ -1,0 +1,364 @@
+## Q01 two When bindings that each mark the boundary
+  [Step] <color:white>Given a call named q01-seed
+  
+  Request  q01-seed                       phase=Setup   src=TestContext
+  Response q01-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a marking act named q01-act1
+  
+  --- MARKER ---
+  --- MARKER ---
+  Request  q01-act1                       phase=Action  src=TestContext
+  Response q01-act1                       phase=Action  src=TestContext
+  [Step] <color:white>And a marking act named q01-act2
+  
+  --- MARKER ---
+  Request  q01-act2                       phase=Action  src=TestContext
+  Response q01-act2                       phase=Action  src=TestContext
+  [Step] <color:white>Then a call named q01-then
+  
+  Request  q01-then                       phase=Action  src=TestContext
+  Response q01-then                       phase=Action  src=TestContext
+  Request  q01-after-scenario             phase=Action  src=TestContext
+  Response q01-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named q01-seed [Passed]
+    When a marking act named q01-act1 [Passed]
+    And a marking act named q01-act2 [Passed]
+    Then a call named q01-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named q01-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a marking act named q01-act1
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a marking act named q01-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named q01-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## Q02 two When bindings, second under its own When
+  [Step] <color:white>Given a call named q02-seed
+  
+  Request  q02-seed                       phase=Setup   src=TestContext
+  Response q02-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a marking act named q02-act1
+  
+  --- MARKER ---
+  --- MARKER ---
+  Request  q02-act1                       phase=Action  src=TestContext
+  Response q02-act1                       phase=Action  src=TestContext
+  [Step] <color:white>Then a call named q02-check
+  
+  Request  q02-check                      phase=Action  src=TestContext
+  Response q02-check                      phase=Action  src=TestContext
+  [Step] <color:white>When a marking act named q02-act2
+  
+  --- MARKER ---
+  Request  q02-act2                       phase=Action  src=TestContext
+  Response q02-act2                       phase=Action  src=TestContext
+  [Step] <color:white>Then a call named q02-then
+  
+  Request  q02-then                       phase=Action  src=TestContext
+  Response q02-then                       phase=Action  src=TestContext
+  Request  q02-after-scenario             phase=Action  src=TestContext
+  Response q02-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named q02-seed [Passed]
+    When a marking act named q02-act1 [Passed]
+    Then a call named q02-check [Passed]
+    When a marking act named q02-act2 [Passed]
+    Then a call named q02-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named q02-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a marking act named q02-act1
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named q02-check
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a marking act named q02-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named q02-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## Q03 a consumer hook makes a call before and after each step
+  [Step] <color:white>Given a hooked call named q03-given
+  
+  Request  hook-before-q03-given          phase=Setup   src=TestContext
+  Response hook-before-q03-given          phase=Setup   src=TestContext
+  Request  q03-given                      phase=Setup   src=TestContext
+  Response q03-given                      phase=Setup   src=TestContext
+  Request  hook-after-q03-given           phase=Setup   src=TestContext
+  Response hook-after-q03-given           phase=Setup   src=TestContext
+  [Step] <color:white>When a hooked call named q03-when
+  
+  --- MARKER ---
+  Request  hook-before-q03-when           phase=Action  src=TestContext
+  Response hook-before-q03-when           phase=Action  src=TestContext
+  Request  q03-when                       phase=Action  src=TestContext
+  Response q03-when                       phase=Action  src=TestContext
+  Request  hook-after-q03-when            phase=Action  src=TestContext
+  Response hook-after-q03-when            phase=Action  src=TestContext
+  [Step] <color:white>Then a hooked call named q03-then
+  
+  Request  hook-before-q03-then           phase=Action  src=TestContext
+  Response hook-before-q03-then           phase=Action  src=TestContext
+  Request  q03-then                       phase=Action  src=TestContext
+  Response q03-then                       phase=Action  src=TestContext
+  Request  hook-after-q03-then            phase=Action  src=TestContext
+  Response hook-after-q03-then            phase=Action  src=TestContext
+  Request  q03-after-scenario             phase=Action  src=TestContext
+  Response q03-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a hooked call named q03-given [Passed]
+    When a hooked call named q03-when [Passed]
+    Then a hooked call named q03-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a hooked call named q03-given
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a hooked call named q03-when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a hooked call named q03-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## Q04 step argument transformation makes a call
+  Request  q04-arg-in-transformation      phase=Unknown src=TestContext
+  Response q04-arg-in-transformation      phase=Unknown src=TestContext
+  [Step] <color:white>Given a transformed call <q04-arg>
+  
+  Request  q04-arg                        phase=Setup   src=TestContext
+  Response q04-arg                        phase=Setup   src=TestContext
+  [Step] <color:white>When a call named q04-when
+  
+  --- MARKER ---
+  Request  q04-when                       phase=Action  src=TestContext
+  Response q04-when                       phase=Action  src=TestContext
+  Request  q04-after-scenario             phase=Action  src=TestContext
+  Response q04-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a transformed call <q04-arg> [Passed]
+    When a call named q04-when [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given a transformed call <q04-arg>
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named q04-when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## Q05 an undefined step
+  [Step] <color:white>Given a call named q05-seed
+  
+  Request  q05-seed                       phase=Setup   src=TestContext
+  Response q05-seed                       phase=Setup   src=TestContext
+  Request  q05-after-scenario             phase=Setup   src=TestContext
+  Response q05-after-scenario             phase=Setup   src=TestContext
+  steps:
+    Given a call named q05-seed [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named q05-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## Q06 a pending step
+  [Step] <color:white>Given a call named q06-seed
+  
+  Request  q06-seed                       phase=Setup   src=TestContext
+  Response q06-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a pending step
+  
+  --- MARKER ---
+  Request  q06-after-scenario             phase=Action  src=TestContext
+  Response q06-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named q06-seed [Passed]
+    When a pending step [Failed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named q06-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a pending step
+      shop -[#438DD5]-> probe: OK
+
+## Q07 a failing step then the after-scenario hook
+  [Step] <color:white>Given a call named q07-seed
+  
+  Request  q07-seed                       phase=Setup   src=TestContext
+  Response q07-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a failing step named q07-act
+  
+  --- MARKER ---
+  Request  q07-act                        phase=Action  src=TestContext
+  Response q07-act                        phase=Action  src=TestContext
+  Request  q07-after-scenario             phase=Action  src=TestContext
+  Response q07-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named q07-seed [Passed]
+    When a failing step named q07-act [Failed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named q07-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a failing step named q07-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## Q08 a worker of a host started by a hook, first
+  [Step] <color:white>Given a call named q08-seed
+  
+  Request  q08-seed                       phase=Setup   src=TestContext
+  Response q08-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>And the worker handles q08-worker-in-setup
+  
+  Request  q08-worker-in-setup            phase=Unknown src=Scope
+  Response q08-worker-in-setup            phase=Unknown src=Scope
+  Request  q08-worker-in-setup-quiet      phase=Unknown src=Scope
+  Response q08-worker-in-setup-quiet      phase=Unknown src=Scope
+  [Step] <color:white>When a call named q08-act
+  
+  --- MARKER ---
+  Request  q08-act                        phase=Action  src=TestContext
+  Response q08-act                        phase=Action  src=TestContext
+  [Step] <color:white>And the worker handles q08-worker-in-action
+  
+  Request  q08-worker-in-action           phase=Unknown src=Scope
+  Response q08-worker-in-action           phase=Unknown src=Scope
+  Request  q08-worker-in-action-quiet     phase=Unknown src=Scope
+  Response q08-worker-in-action-quiet     phase=Unknown src=Scope
+  Request  q08-after-scenario             phase=Action  src=TestContext
+  Response q08-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named q08-seed [Passed]
+    And the worker handles q08-worker-in-setup [Passed]
+    When a call named q08-act [Passed]
+    And the worker handles q08-worker-in-action [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named q08-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And the worker handles q08-worker-in-setup
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named q08-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And the worker handles q08-worker-in-action
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## Q09 a worker of a host started by a hook, second
+  [Step] <color:white>Given a call named q09-seed
+  
+  Request  q09-seed                       phase=Setup   src=TestContext
+  Response q09-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>And the worker handles q09-worker-in-setup
+  
+  Request  q09-worker-in-setup            phase=Unknown src=Scope
+  Response q09-worker-in-setup            phase=Unknown src=Scope
+  Request  q09-worker-in-setup-quiet      phase=Unknown src=Scope
+  Response q09-worker-in-setup-quiet      phase=Unknown src=Scope
+  [Step] <color:white>When a call named q09-act
+  
+  --- MARKER ---
+  Request  q09-act                        phase=Action  src=TestContext
+  Response q09-act                        phase=Action  src=TestContext
+  [Step] <color:white>And the worker handles q09-worker-in-action
+  
+  Request  q09-worker-in-action           phase=Unknown src=Scope
+  Response q09-worker-in-action           phase=Unknown src=Scope
+  Request  q09-worker-in-action-quiet     phase=Unknown src=Scope
+  Response q09-worker-in-action-quiet     phase=Unknown src=Scope
+  Request  q09-after-scenario             phase=Action  src=TestContext
+  Response q09-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named q09-seed [Passed]
+    And the worker handles q09-worker-in-setup [Passed]
+    When a call named q09-act [Passed]
+    And the worker handles q09-worker-in-action [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named q09-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And the worker handles q09-worker-in-setup
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named q09-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And the worker handles q09-worker-in-action
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## Q10 a worker of a host started by a hook, third
+  [Step] <color:white>Given a call named q10-seed
+  
+  Request  q10-seed                       phase=Setup   src=TestContext
+  Response q10-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>And the worker handles q10-worker-in-setup
+  
+  Request  q10-worker-in-setup            phase=Unknown src=Scope
+  Response q10-worker-in-setup            phase=Unknown src=Scope
+  Request  q10-worker-in-setup-quiet      phase=Unknown src=Scope
+  Response q10-worker-in-setup-quiet      phase=Unknown src=Scope
+  [Step] <color:white>When a call named q10-act
+  
+  --- MARKER ---
+  Request  q10-act                        phase=Action  src=TestContext
+  Response q10-act                        phase=Action  src=TestContext
+  [Step] <color:white>And the worker handles q10-worker-in-action
+  
+  Request  q10-worker-in-action           phase=Unknown src=Scope
+  Response q10-worker-in-action           phase=Unknown src=Scope
+  Request  q10-worker-in-action-quiet     phase=Unknown src=Scope
+  Response q10-worker-in-action-quiet     phase=Unknown src=Scope
+  Request  q10-after-scenario             phase=Action  src=TestContext
+  Response q10-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named q10-seed [Passed]
+    And the worker handles q10-worker-in-setup [Passed]
+    When a call named q10-act [Passed]
+    And the worker handles q10-worker-in-action [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named q10-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And the worker handles q10-worker-in-setup
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named q10-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And the worker handles q10-worker-in-action
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+

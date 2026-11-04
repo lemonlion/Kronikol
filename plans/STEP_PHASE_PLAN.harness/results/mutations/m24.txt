@@ -1,0 +1,209 @@
+ORDER-ONLY solid=0 order=68 racing-new=0 racing-seen=2
+first: (order) main/bddfy-xunit3: B01_plain_Given_And_When_And_Then_But: +--- ACTION START MARKER --- ---- ACTION START MARKER ---
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B01_plain_Given_And_When_And_Then_But
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B02_a_When_step_calls_a_woven_Given
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B03_a_Given_step_calls_a_woven_When
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B04_an_async_When_step_calls_a_woven_Given
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B05_async_steps_that_yield
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B06_first_scenario_on_a_shared_handler
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B07_second_scenario_on_a_shared_handler
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B08_a_When_with_no_HTTP_call
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B09_a_Given_with_no_HTTP_call
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: ORDER PhaseProbe.Bddfy.Scenarios.B10_a_teardown_after_the_boundary
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: racing, shape seen PhaseProbe.Bddfy.Scenarios.B11_async_steps_with_AsyncVoidSupport_off
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L01 plain Given When Then
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L02 When composite with a Given sub step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L03 Given composite with a When sub step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L04 a LightBDD When calls a woven Given
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L05 a LightBDD Given calls a woven When
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L06 first scenario on a shared handler
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L07 second scenario on a shared handler
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L09 a When with no HTTP call then an And
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L10 a Given with no HTTP call
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L11 a message tracker that does not track setup
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L12 an untyped step after a typed one
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L13 LightBDDs own setup step type
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L14 a bypassed sub step in a Given composite
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L15 an And first over a Given sub step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: ORDER L16 an And first then a When
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R00 the issue's own scenario
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R01 async Given sub-step in a When step (the issue)
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R02 sync Given sub-step in a When step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R03 async When sub-step in a Given step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R04 async Then sub-step in a Given step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R05 keyword-free sub-step in a When step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R06 And and But after each keyword (#195)
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R07 star keyword
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R08 TrackDuringSetup false
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R09 a When binding woven as a GivenStep
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R10 ButWhen sub-step in a Given step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R11 first scenario on a shared handler
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R12 second scenario on a shared handler
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R14 caught failure of a Given sub-step in a When step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R15 a woven Given step in a BeforeScenario hook
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R16 a When sub-step in a keyword-free sub-step in a Given step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R17 calls in BeforeScenario and AfterScenario hooks
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R18 a Given with no HTTP call
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R19 a When with no HTTP call
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R20 a When with no HTTP call, then an And
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: ORDER R21 WhenTriggersAction false
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X01_When_with_nested_Given_async
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X02_Given_with_nested_When_async
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X03_When_with_nested_Given_sync
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X06_every_top_level_keyword_in_turn
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X11_a_When_step_in_Task_Run
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X12_steps_in_an_ordinary_async_helper
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X15_a_skipped_When_step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X16_a_Task_of_T_step_and_a_non_async_Task_step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X18_a_failed_top_level_Given_then_a_call
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X19_explicit_StartSetup_then_a_When_step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X22_a_When_step_with_a_call_before_an_explicit_StartAction
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X24_a_skipped_When_then_a_real_Given_and_When
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X25_a_Task_step_that_throws_before_returning_then_a_When
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X28_a_StartSetup_scoped_to_a_helper_in_a_When_then_a_step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X30_a_skipped_sub_step_then_a_real_one_in_a_When
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X31_a_skipped_step_in_a_wrapper_in_a_Given_then_a_When
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X32_a_Task_step_whose_body_ends_in_a_handler
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X33_a_guard_clause_under_ThrowsAsync_then_a_When
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X34_a_Task_step_that_returns_inside_a_try
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X35_a_generic_Task_of_T_step_that_is_not_async
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X36_a_sync_parent_whose_last_act_is_a_skipped_sub_step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X37_a_Task_parent_not_async_whose_last_act_is_a_skipped_sub_step
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---

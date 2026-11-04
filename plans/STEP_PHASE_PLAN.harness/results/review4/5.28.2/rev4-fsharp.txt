@@ -1,0 +1,14 @@
+unit-tail steps= open=False :: resolver=True same=True | unit-tail: InvalidProgramException: Common Language Runtime detected an invalid program.
+async-to-task steps= open=False :: resolver=True same=True | async-to-task: InvalidProgramException: Common Language Runtime detected an invalid program.
+task-fn-throws steps= open=False :: resolver=True same=True | task-fn-throws: InvalidProgramException: Common Language Runtime detected an invalid program.
+unit-throwing-tail steps=Unit throwing tail[Failed] open=False :: resolver=True same=True | unit-throwing-tail: InvalidOperationException: boom
+task-fn steps= open=False :: resolver=True same=True | task-fn: InvalidProgramException: Common Language Runtime detected an invalid program.
+task-ce-int steps=Task ce int[Passed] open=False :: resolver=True same=True | task-ce-int: no exception
+unit-fn steps=Unit fn[Passed] open=False :: resolver=True same=True | unit-fn: no exception
+task-ce-throws steps=Task ce throws[Failed] open=False :: resolver=True same=True | task-ce-throws: Exception: boom
+task-of-int-tail steps=Task of int tail[Passed] open=False :: resolver=True same=True | task-of-int-tail: no exception
+task-generic steps= open=False :: resolver=True same=True | task-generic: InvalidProgramException: Common Language Runtime detected an invalid program.
+task-ce-try steps=Task ce try[Passed] open=False :: resolver=True same=True | caught | task-ce-try: no exception
+task-tail steps=Task tail[Passed] open=False :: resolver=True same=True | task-tail: no exception
+task-throwing-tail steps= open=True :: resolver=True same=True | task-throwing-tail: InvalidOperationException: boom
+task-ce steps=Task ce[Passed] open=False :: resolver=True same=True | a | task-ce: no exception

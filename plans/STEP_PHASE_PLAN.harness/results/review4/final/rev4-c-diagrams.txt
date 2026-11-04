@@ -1,0 +1,77 @@
+## C01_Identical_service_calls_after_the_When
+ collapse, no partition:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      loop ×2 · 0 ms
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+      end
+ no collapse, split at 1500:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+## C02_Identical_service_calls_across_the_When
+ collapse, no partition:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      loop ×2 · 0–1 ms
+      bus -[#9B59B6]-> service: Responded
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When No call
+      loop ×2 · 0 ms
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+      end
+ no collapse, split at 1500:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      bus -[#9B59B6]-> service: Responded
+      bus -[#9B59B6]-> service: Responded
+      hnote across <<stepDelimiter>> #black:<color:white>When No call
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+## C03_One_service_call_each_side_of_the_When
+ collapse, no partition:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      bus -[#9B59B6]-> service: Responded
+      hnote across <<stepDelimiter>> #black:<color:white>When No call
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+ no collapse, split at 1500:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      bus -[#9B59B6]-> service: Responded
+      hnote across <<stepDelimiter>> #black:<color:white>When No call
+        note: "body": "ACTION-PAYLOAD"
+      bus -[#9B59B6]-> service: Responded
+        note: "ack": "ACTION-PAYLOAD"
+## C04_Big_given_then_a_When_with_no_call_delimiters_off
+ collapse, no partition:
+    diagram 1:
+      shop -[#438DD5]-> probe: OK
+ no collapse, split at 1500:
+    diagram 1:
+      shop -[#438DD5]-> probe: OK

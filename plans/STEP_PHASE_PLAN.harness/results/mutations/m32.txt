@@ -1,0 +1,9 @@
+ORDER-ONLY solid=0 order=1 racing-new=0 racing-seen=1
+first: (order) rev4/rev4-b: G03_When_on_a_detached_flow_inside_a_test: + --- MARKER --- - --- MARKER --- + end - end
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-b] rev4-b.txt: ORDER G03_When_on_a_detached_flow_inside_a_test
+      + --- MARKER ---
+      - --- MARKER ---
+      + end
+      - end

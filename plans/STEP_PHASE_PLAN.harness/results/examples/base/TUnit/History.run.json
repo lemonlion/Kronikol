@@ -1,0 +1,226 @@
+{
+  "historyFormatVersion": 1,
+  "generator": "5.28.2\u002B9d994a4b014afb4ff0f304e4c5d6d2e3925c9341",
+  "roster": {
+    "t": "roster",
+    "hash": "ee6002f0f837171e",
+    "suite": "Example.Api.Tests.Component.TUnit",
+    "ids": [
+      "77131950e2394bab",
+      "03566c8aba5b0e90",
+      "ada97e6e8e90d68f",
+      "4c880217a2d26c4f",
+      "2da26a7713e99bc7",
+      "7449b22a3ee7b1c2",
+      "d8768f0c6e4cc736",
+      "a5f620596052de2d",
+      "2b2688689c246b5c",
+      "bfc0becd33b2f683",
+      "41adabf4d3485eb3",
+      "c498091c229a8d1c"
+    ],
+    "slots": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "names": [
+      "Calling create cake endpoint returns cake",
+      "Calling create cake endpoint without eggs returns bad request",
+      "Enroll customer [Gold, CustomerOrder { Name = Alice, Age = 30, Email = alice@test.com, Address = ShippingAddress { Street = 1 Main St, City = London, PostCode = SW1A } }]",
+      "Enroll customer [Silver, CustomerOrder { Name = Bob, Age = 25, Email = bob@test.com, Address = ShippingAddress { Street = 2 Oak Ave, City = Paris, PostCode = 75001 } }]",
+      "Process order in region [DE, 300, True]",
+      "Process order in region [UK, 100, True]",
+      "Process order in region [US, 200, False]",
+      "Ship to address [101, ShippingAddress { Street = 10 High St, City = Manchester, PostCode = M1 1AA }]",
+      "Ship to address [102, ShippingAddress { Street = 20 Broad St, City = Bristol, PostCode = BS1 2AB }]",
+      "Validate order scenario [OrderScenario { Region = JP, Amount = 400, Currency = JPY }]",
+      "Validate order scenario [OrderScenario { Region = UK, Amount = 100, Currency = GBP }]",
+      "Validate order scenario [OrderScenario { Region = US, Amount = 200, Currency = USD }]"
+    ],
+    "features": [
+      "Cake Feature",
+      "Cake Feature",
+      "Parameterized Feature",
+      "Parameterized Feature",
+      "Parameterized Feature",
+      "Parameterized Feature",
+      "Parameterized Feature",
+      "Parameterized Feature",
+      "Parameterized Feature",
+      "Parameterized Feature",
+      "Parameterized Feature",
+      "Parameterized Feature"
+    ],
+    "sources": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "run": {
+    "t": "run",
+    "id": "local:20261103T131607Z:914c97d1",
+    "suite": "Example.Api.Tests.Component.TUnit",
+    "partial": null,
+    "at": "2026-11-03T13:16:07Z",
+    "branch": null,
+    "commit": null,
+    "provider": null,
+    "url": null,
+    "generator": "5.28.2\u002B9d994a4b014afb4ff0f304e4c5d6d2e3925c9341",
+    "shards": 1,
+    "roster": "ee6002f0f837171e",
+    "results": "PPPPPPPPPPPP",
+    "attempts": "------------",
+    "durations": [
+      312,
+      291,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "calls": [
+      6,
+      5,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "shapeSet": [
+      "4dbbcb8d",
+      "d6635711",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442"
+    ],
+    "shapeOrdered": [
+      "ed8bef4b",
+      "5262c477",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442",
+      "e3b0c442"
+    ],
+    "shapeVersion": 11,
+    "shapes": "1879489dfc4c9c2f",
+    "callSets": [
+      [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6
+      ],
+      [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      []
+    ],
+    "errors": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    "errorText": {},
+    "deps": [
+      "Caller\u003EDessert Provider",
+      "Dessert Provider\u003ECow Service",
+      "Dessert Provider\u003EEvent broker"
+    ],
+    "bridge": {
+      "10": {},
+      "6": {},
+      "7": {},
+      "8": {},
+      "9": {}
+    }
+  },
+  "shapes": {
+    "t": "shapes",
+    "hash": "1879489dfc4c9c2f",
+    "calls": [
+      "Caller\u003EDessert Provider GET /eggs 200",
+      "Caller\u003EDessert Provider GET /flour 200",
+      "Caller\u003EDessert Provider GET /milk 200",
+      "Caller\u003EDessert Provider POST /cake 200",
+      "Caller\u003EDessert Provider POST /cake 400",
+      "Dessert Provider\u003ECow Service GET /milk 200",
+      "Dessert Provider\u003EEvent broker Send (Event Protocol) /cake_events Responded"
+    ]
+  },
+  "rawCalls": {
+    "calls": [{"caller":"Caller","service":"Dessert Provider","method":"GET","path":"/milk","status":"200"},{"caller":"Dessert Provider","service":"Cow Service","method":"GET","path":"/milk","status":"200"},{"caller":"Caller","service":"Dessert Provider","method":"GET","path":"/eggs","status":"200"},{"caller":"Caller","service":"Dessert Provider","method":"GET","path":"/flour","status":"200"},{"caller":"Caller","service":"Dessert Provider","method":"POST","path":"/cake","status":"200"},{"caller":"Dessert Provider","service":"Event broker","method":"Send (Event Protocol)","path":"/cake_events","status":"Responded"},{"caller":"Caller","service":"Dessert Provider","method":"POST","path":"/cake","status":"400"}
+    ],
+    "order": [[0,1,2,3,4,5],[0,1,2,3,6],[],[],[],[],[],[],[],[],[],[]
+    ]
+  }
+}

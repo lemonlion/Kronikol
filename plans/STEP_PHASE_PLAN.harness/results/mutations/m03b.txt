@@ -1,0 +1,35 @@
+KILLED solid=5 order=0 racing-new=1 racing-seen=2
+first: main/bddfy-xunit3: B05_async_steps_that_yield: gone: --- ACTION START MARKER ---
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B05_async_steps_that_yield
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[review/rev3-bddfy] rev3-bddfy.plantuml.txt: racing, shape seen PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running
+[review/rev3-bddfy] rev3-bddfy.plantuml.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z03_async_Given_with_woven_sub_steps
+    gone: partition #F6F6F6 Setup; gone: end
+      - partition #F6F6F6 Setup
+      - end
+[review/rev3-bddfy] rev3-bddfy.plantuml.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z08_a_skipped_sub_step_in_an_async_Given
+    gone: partition #F6F6F6 Setup; gone: end
+      - partition #F6F6F6 Setup
+      - end
+[review/rev3-bddfy] rev3-bddfy.txt: RACING-NEW PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running (known to race)
+    z02-worker-start: msg Setup > msg Setup; gone: --- ACTION START MARKER ---; z02-when: http Action > http Unknown; z02-when: msg Action > msg Unknown; z02-then: http Action > http Unknown; z02-then: msg Action > msg Unknown
+      + z02-worker-start msg Setup
+      - z02-worker-start msg Setup
+      - --- ACTION START MARKER ---
+      - z02-when http Action
+      - z02-when msg Action
+      - z02-then http Action
+      - z02-then msg Action
+      + z02-when http Unknown
+      + z02-when msg Unknown
+      + z02-then http Unknown
+      + z02-then msg Unknown
+[review/rev3-bddfy] rev3-bddfy.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z03_async_Given_with_woven_sub_steps
+    gone: --- ACTION START MARKER ---
+      - --- ACTION START MARKER ---
+[review/rev3-bddfy] rev3-bddfy.txt: SOLID PhaseProbe.Rev3.Bddfy.Scenarios.Z08_a_skipped_sub_step_in_an_async_Given
+    gone: --- ACTION START MARKER ---
+      - --- ACTION START MARKER ---

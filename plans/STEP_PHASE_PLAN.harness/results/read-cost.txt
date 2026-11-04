@@ -1,0 +1,18 @@
+Build succeeded.
+Kronikol 5.28.2.0 on 10.0.11
+no resolver:                         2 ns a read
+resolver answers null:               1 ns a read
+a test, no step yet:                 2 ns a read
+a test, in a Given:                  6 ns a read
+a test, after a When:                6 ns a read
+resolver throws, as LightBDD's does on a server's flow:        18 ns a read
+a whole tracked HTTP call:        20.4 us a call
+Build succeeded.
+Kronikol 5.28.3.0 on 10.0.11
+no resolver:                         3 ns a read
+resolver answers null:               2 ns a read
+a test, no step yet:                 3 ns a read
+a test, in a Given:                  4 ns a read
+a test, after a When:                6 ns a read
+resolver throws, as LightBDD's does on a server's flow:        16 ns a read
+a whole tracked HTTP call:        23.6 us a call

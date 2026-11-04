@@ -1,0 +1,108 @@
+## N01 plain Given When Then
+  n01-given                                    http Setup    
+  n01-given                                    msg  Unknown  
+  --- ACTION START MARKER ---
+  n01-when                                     http Action   
+  n01-when                                     msg  Unknown  
+  n01-when2                                    http Unknown  
+  n01-when2                                    msg  Unknown  
+  n01-then                                     http Unknown  
+  n01-then                                     msg  Unknown  
+  steps:
+
+## N02 a When calls a woven Given
+  n02-given                                    http Setup    
+  n02-given                                    msg  Unknown  
+  n02-before                                   http Action   
+  n02-before                                   msg  Unknown  
+  [Step] <color:white>Given Woven given
+  --- ACTION START MARKER ---
+  n02-sub                                      http Action   
+  n02-sub                                      msg  Setup    
+  n02-after                                    http Action   
+  n02-after                                    msg  Setup    
+  n02-after2                                   http Action   
+  n02-after2                                   msg  Setup    
+  n02-then                                     http Action   
+  n02-then                                     msg  Unknown  
+  n02-then2                                    http Setup    IGNORED
+  n02-then2                                    msg  Unknown  
+  steps:
+    Given Woven given  [Passed]
+
+## N03 a Given calls a woven Given then When Then
+  n03-before                                   http Setup    
+  n03-before                                   msg  Unknown  
+  [Step] <color:white>Given Woven given
+  n03-sub                                      http Setup    
+  n03-sub                                      msg  Setup    
+  n03-after                                    http Setup    
+  n03-after                                    msg  Setup    
+  n03-when                                     http Action   
+  n03-when                                     msg  Unknown  
+  n03-then                                     http Action   
+  n03-then                                     msg  Unknown  
+  steps:
+    Given Woven given  [Passed]
+
+## N04 a Given calls a woven When
+  n04-before                                   http Setup    
+  n04-before                                   msg  Unknown  
+  [Step] <color:white>When Woven when
+  n04-sub                                      http Setup    
+  n04-sub                                      msg  Action   
+  n04-after                                    http Setup    
+  n04-after                                    msg  Action   
+  n04-when                                     http Action   
+  n04-when                                     msg  Unknown  
+  n04-then                                     http Action   
+  n04-then                                     msg  Unknown  
+  steps:
+    When Woven when  [Passed]
+
+## N05 a woven plain sub step
+  n05-given                                    http Setup    
+  n05-given                                    msg  Unknown  
+  --- ACTION START MARKER ---
+  n05-before                                   http Action   
+  n05-before                                   msg  Unknown  
+  [Step] <color:white>Woven plain
+  n05-sub                                      http Unknown  
+  n05-sub                                      msg  Unknown  
+  n05-after                                    http Unknown  
+  n05-after                                    msg  Unknown  
+  n05-then                                     http Unknown  
+  n05-then                                     msg  Unknown  
+  steps:
+    (none) Woven plain  [Passed]
+
+## N06 one client a Given calls a woven Given then When Then
+  n06-before                                   http Setup    
+  n06-before                                   msg  Unknown  
+  [Step] <color:white>Given Woven given
+  n06-sub                                      http Setup    
+  n06-sub                                      msg  Setup    
+  --- ACTION START MARKER ---
+  n06-when                                     http Action   
+  n06-when                                     msg  Unknown  
+  n06-then                                     http Unknown  
+  n06-then                                     msg  Unknown  
+  steps:
+    Given Woven given  [Passed]
+
+## N07 one client a When calls a woven Given
+  n07-given                                    http Setup    
+  n07-given                                    msg  Unknown  
+  --- ACTION START MARKER ---
+  n07-before                                   http Action   
+  n07-before                                   msg  Unknown  
+  [Step] <color:white>Given Woven given
+  n07-sub                                      http Setup    
+  n07-sub                                      msg  Setup    
+  n07-after                                    http Setup    
+  n07-after                                    msg  Setup    
+  n07-then                                     http Unknown  
+  n07-then                                     msg  Unknown  
+  steps:
+    Given Woven given  [Passed]
+

@@ -1,0 +1,10 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=0
+first: old/lightbdd: outside: gone from lightbdd.txt
+
+[old/lightbdd] lightbdd.txt: TEST GONE outside
+[old/lightbdd] outside-a-scenario.txt: SOLID (whole file)
+    handler: that drew a boundary for an earlier scenario: tracked, no exception > that drew a boundary for an earlier scenario: InvalidOperationException: Current task is not executing any scenarios. Ensure that operation a; handler: that has drawn none: tracked, no exception > that has drawn none: InvalidOperationException: Current task is not executing any scenarios. Ensure that operation acces
+      -handler that drew a boundary for an earlier scenario: tracked, no exception
+      -handler that has drawn none: tracked, no exception
+      +handler that drew a boundary for an earlier scenario: InvalidOperationException: Current task is not executing any scenarios. Ensure that operation a
+      +handler that has drawn none: InvalidOperationException: Current task is not executing any scenarios. Ensure that operation accessing ScenarioExecutio

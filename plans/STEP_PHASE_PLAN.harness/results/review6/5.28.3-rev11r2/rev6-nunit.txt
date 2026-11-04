@@ -1,0 +1,194 @@
+## N01_Retry_plain_Given_When_Then
+  [Step] <color:white>Given Async
+  
+  Request  n01-seed1                      phase=Setup   src=TestContext
+  Response n01-seed1                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  --- MARKER ---
+  Request  n01-act1                       phase=Action  src=TestContext
+  Response n01-act1                       phase=Action  src=TestContext
+  [Step] <color:white>Then Async
+  
+  Request  n01-then1                      phase=Action  src=TestContext
+  Response n01-then1                      phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  n01-seed2                      phase=Setup   src=TestContext
+  Response n01-seed2                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  n01-act2                       phase=Action  src=TestContext
+  Response n01-act2                       phase=Action  src=TestContext
+  [Step] <color:white>Then Async
+  
+  Request  n01-then2                      phase=Action  src=TestContext
+  Response n01-then2                      phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Then Async [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## N02_Retry_a_When_that_marks_after_a_call
+  [Step] <color:white>Given Async
+  
+  Request  n02-seed1                      phase=Setup   src=TestContext
+  Response n02-seed1                      phase=Setup   src=TestContext
+  [Step] <color:white>When Marks
+  
+  --- MARKER ---
+  Request  n02-act1-arrange               phase=Action  src=TestContext
+  Response n02-act1-arrange               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  n02-act1                       phase=Action  src=TestContext
+  Response n02-act1                       phase=Action  src=TestContext
+  [Step] <color:white>Then Async
+  
+  Request  n02-then1                      phase=Action  src=TestContext
+  Response n02-then1                      phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  n02-seed2                      phase=Setup   src=TestContext
+  Response n02-seed2                      phase=Setup   src=TestContext
+  [Step] <color:white>When Marks
+  
+  Request  n02-act2-arrange               phase=Action  src=TestContext
+  Response n02-act2-arrange               phase=Action  src=TestContext
+  Request  n02-act2                       phase=Action  src=TestContext
+  Response n02-act2                       phase=Action  src=TestContext
+  [Step] <color:white>Then Async
+  
+  Request  n02-then2                      phase=Action  src=TestContext
+  Response n02-then2                      phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Marks [Passed]
+    Then Async [Passed]
+    Given Async [Passed]
+    When Marks [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Marks
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Marks
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## N03_Retry_a_Then_that_marks
+  [Step] <color:white>Given Async
+  
+  Request  n03-seed1                      phase=Setup   src=TestContext
+  Response n03-seed1                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  --- MARKER ---
+  Request  n03-act1                       phase=Action  src=TestContext
+  Response n03-act1                       phase=Action  src=TestContext
+  [Step] <color:white>Then Marks
+  
+  --- MARKER ---
+  Request  n03-then1                      phase=Action  src=TestContext
+  Response n03-then1                      phase=Action  src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  n03-seed2                      phase=Setup   src=TestContext
+  Response n03-seed2                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  n03-act2                       phase=Action  src=TestContext
+  Response n03-act2                       phase=Action  src=TestContext
+  [Step] <color:white>Then Marks
+  
+  Request  n03-then2                      phase=Action  src=TestContext
+  Response n03-then2                      phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+    Then Marks [Passed]
+    Given Async [Passed]
+    When Async [Passed]
+    Then Marks [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>Then Marks
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Marks
+      shop -[#438DD5]-> probe: OK
+
+## N04_Retry_the_first_attempt_fails_before_any_When
+  [Step] <color:white>Given Async
+  
+  Request  n04-seed1                      phase=Setup   src=TestContext
+  Response n04-seed1                      phase=Setup   src=TestContext
+  [Step] <color:white>And Async
+  
+  Request  n04-seed2                      phase=Setup   src=TestContext
+  Response n04-seed2                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  --- MARKER ---
+  Request  n04-act2                       phase=Action  src=TestContext
+  Response n04-act2                       phase=Action  src=TestContext
+  [Step] <color:white>Then Async
+  
+  Request  n04-then2                      phase=Action  src=TestContext
+  Response n04-then2                      phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    And Async [Passed]
+    When Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And Async
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+

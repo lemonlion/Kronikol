@@ -1,0 +1,5 @@
+SURVIVED solid=0 order=0 racing-new=0 racing-seen=2
+first: -
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: racing, shape seen PhaseProbe.Bddfy.Scenarios.B11_async_steps_with_AsyncVoidSupport_off
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When

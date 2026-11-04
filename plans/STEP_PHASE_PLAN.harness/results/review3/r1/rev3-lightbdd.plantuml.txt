@@ -1,0 +1,112 @@
+## M01 a Given leaves a worker running (TestName field: 39412fee-39ac-4f7c-a53d-0d2880991952)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>GIVEN a worker left running [label: "m01"]
+  shop -[#438DD5]-> probe: OK
+  end
+  m01WorkerStart -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m01When -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m01WhenAnd -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m01Then -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m01WorkerEnd -[#9B59B6]-> probe: Responded
+  @enduml
+
+## M02 a background Then loop then an And in setup (TestName field: d78465ae-3e6f-431c-9798-a9f2822efe5a)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>GIVEN a Then loop starts [label: "m02"]
+  shop -[#438DD5]-> probe: OK
+  m02Poll0 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m02Poll1 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m02Poll2 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m02Poll3 -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then Poll then
+  shop -[#438DD5]-> probe: OK
+  m02GivenAnd -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>WHEN a call named [label: "m02-when"]
+  shop -[#438DD5]-> probe: OK
+  m02When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>THEN a call named [label: "m02-then"]
+  shop -[#438DD5]-> probe: OK
+  m02Then -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>And AND the loop is stopped
+  @enduml
+
+## M03 a background Given loop then an And in action (TestName field: 1d99ee65-6ec9-4bdc-b6af-48f79085f6fa)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>GIVEN a call named [label: "m03-given"]
+  shop -[#438DD5]-> probe: OK
+  m03Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>WHEN a call named [label: "m03-when"]
+  shop -[#438DD5]-> probe: OK
+  m03When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>GIVEN a Given loop starts [label: "m03"]
+  shop -[#438DD5]-> probe: OK
+  m03Poll0 -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>WHEN a call named [label: "m03-second-when"]
+  shop -[#438DD5]-> probe: OK
+  m03SecondWhen -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m03Poll1 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m03Then -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>AND a nosetup call named [label: "m03-then-and-nosetup"]
+  shop -[#438DD5]-> probe: OK
+  m03ThenAndNosetup -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m03Poll2 -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  m03UntypedNosetup -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>THEN the loop is stopped
+  @enduml
+
+## M04 phase set directly in a Given then an And (TestName field: df8d9eb9-19e4-4184-9e13-c1f96361c8e1)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>GIVEN a step sets the phase directly [label: "m04-given"]
+  shop -[#438DD5]-> probe: OK
+  m04Given -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>AND a call named [label: "m04-and"]
+  shop -[#438DD5]-> probe: OK
+  m04And -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>THEN a call named [label: "m04-then"]
+  shop -[#438DD5]-> probe: OK
+  m04Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## M05 StartAction in a Given then an And and a When (TestName field: 6a029d77-cb6d-473b-9c7e-16a981668c28)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>GIVEN a step calls StartAction [label: "m05-given"]
+  shop -[#438DD5]-> probe: OK
+  m05Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>AND a call named [label: "m05-and"]
+  shop -[#438DD5]-> probe: OK
+  m05And -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>WHEN a call named [label: "m05-when"]
+  shop -[#438DD5]-> probe: OK
+  m05When -[#9B59B6]-> probe: Responded
+  @enduml
+
+## M06 untyped steps only (TestName field: adddbe1b-2fd7-4a05-8a29-f93206b5fcb2)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>A call named [label: "m06-a"]
+  shop -[#438DD5]-> probe: OK
+  m06A -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>A nosetup call named [label: "m06-b"]
+  shop -[#438DD5]-> probe: OK
+  m06B -[#9B59B6]-> probe: Responded
+  @enduml
+

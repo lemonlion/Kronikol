@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);MSTEST0001;MSTEST0037;MSTEST0049;MSTEST0058;CS0618</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Kronikol.MSTest" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(KronikolVersion)" PrivateAssets="all" />
+    <PackageReference Include="MSTest" Version="4.*" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\adapters-shared\*.cs" />
+  </ItemGroup>
+</Project>

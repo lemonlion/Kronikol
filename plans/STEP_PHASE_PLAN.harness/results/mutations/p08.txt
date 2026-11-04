@@ -1,0 +1,9 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=0
+first: rev6/rev6-fetch: F1_a_first_test_that_reaches_the_boundary: Request: f1-when-plain phase=Action src=TestContext > f1-when-plain phase=Unknown src=TestContext; Response: f1-when-plain phase=Action src=TestContext > f1-when-plain phase=Unknown src=Test
+
+[rev6/rev6-fetch] rev6-fetch.txt: SOLID F1_a_first_test_that_reaches_the_boundary
+    Request: f1-when-plain phase=Action src=TestContext > f1-when-plain phase=Unknown src=TestContext; Response: f1-when-plain phase=Action src=TestContext > f1-when-plain phase=Unknown src=TestContext
+      - Request f1-when-plain phase=Action src=TestContext
+      - Response f1-when-plain phase=Action src=TestContext
+      + Request f1-when-plain phase=Unknown src=TestContext
+      + Response f1-when-plain phase=Unknown src=TestContext

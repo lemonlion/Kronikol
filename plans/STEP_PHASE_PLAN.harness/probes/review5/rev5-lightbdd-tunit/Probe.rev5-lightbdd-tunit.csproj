@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Kronikol.LightBDD.TUnit" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(KronikolVersion)" PrivateAssets="all" />
+    <PackageReference Include="LightBDD.TUnit" Version="3.12.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\shared\*.cs" />
+  </ItemGroup>
+</Project>

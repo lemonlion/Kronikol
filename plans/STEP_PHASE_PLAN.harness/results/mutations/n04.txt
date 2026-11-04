@@ -1,0 +1,80 @@
+KILLED solid=4 order=0 racing-new=0 racing-seen=2
+first: rev5/rev5-bddfy: B08_StartSetup_before_the_story_and_a_tear_down: Request: b08-teardown-nosetup phase=Unknown src=TestContext > b08-teardown-nosetup phase=Setup src=TestContext IGNORED; Response: b08-teardown-nosetup phase=Unknown src=TestContext > b08-tea
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B08_StartSetup_before_the_story_and_a_tear_down
+    Request: b08-teardown-nosetup phase=Unknown src=TestContext > b08-teardown-nosetup phase=Setup src=TestContext IGNORED; Response: b08-teardown-nosetup phase=Unknown src=TestContext > b08-teardown-nosetup phase=Setup src=TestContext IGNORED; Request: b08-teardown-noaction phase=Unknown src=TestContext > b08-teardown-noaction phase=Setup src=TestContext; Response: b08-teardown-noaction phase=Unk
+      - Request b08-teardown-nosetup phase=Unknown src=TestContext
+      - Response b08-teardown-nosetup phase=Unknown src=TestContext
+      - Request b08-teardown-noaction phase=Unknown src=TestContext
+      - Response b08-teardown-noaction phase=Unknown src=TestContext
+      - Request b08-after-story-nosetup phase=Unknown src=TestContext
+      - Response b08-after-story-nosetup phase=Unknown src=TestContext
+      - Request b08-after-story phase=Unknown src=TestContext
+      - Response b08-after-story phase=Unknown src=TestContext
+      + Request b08-teardown-nosetup phase=Setup src=TestContext IGNORED
+      + Response b08-teardown-nosetup phase=Setup src=TestContext IGNORED
+      + Request b08-teardown-noaction phase=Setup src=TestContext
+      + Response b08-teardown-noaction phase=Setup src=TestContext
+      + Request b08-after-story-nosetup phase=Setup src=TestContext IGNORED
+      + Response b08-after-story-nosetup phase=Setup src=TestContext IGNORED
+      + Request b08-after-story phase=Setup src=TestContext
+      + Response b08-after-story phase=Setup src=TestContext
+      - shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B15_A_woven_Given_before_a_story_with_a_tear_down
+    Request: b15-teardown-nosetup phase=Unknown src=TestContext > b15-teardown-nosetup phase=Setup src=TestContext IGNORED; Response: b15-teardown-nosetup phase=Unknown src=TestContext > b15-teardown-nosetup phase=Setup src=TestContext IGNORED; Request: b15-teardown-noaction phase=Unknown src=TestContext > b15-teardown-noaction phase=Setup src=TestContext; Response: b15-teardown-noaction phase=Unk
+      - Request b15-teardown-nosetup phase=Unknown src=TestContext
+      - Response b15-teardown-nosetup phase=Unknown src=TestContext
+      - Request b15-teardown-noaction phase=Unknown src=TestContext
+      - Response b15-teardown-noaction phase=Unknown src=TestContext
+      - Request b15-after-story-nosetup phase=Unknown src=TestContext
+      - Response b15-after-story-nosetup phase=Unknown src=TestContext
+      - Request b15-after-story phase=Unknown src=TestContext
+      - Response b15-after-story phase=Unknown src=TestContext
+      + Request b15-teardown-nosetup phase=Setup src=TestContext IGNORED
+      + Response b15-teardown-nosetup phase=Setup src=TestContext IGNORED
+      + Request b15-teardown-noaction phase=Setup src=TestContext
+      + Response b15-teardown-noaction phase=Setup src=TestContext
+      + Request b15-after-story-nosetup phase=Setup src=TestContext IGNORED
+      + Response b15-after-story-nosetup phase=Setup src=TestContext IGNORED
+      + Request b15-after-story phase=Setup src=TestContext
+      + Response b15-after-story phase=Setup src=TestContext
+      - shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B16_A_woven_When_before_a_story_with_a_tear_down
+    Request: b16-teardown-nosetup phase=Unknown src=TestContext > b16-teardown-nosetup phase=Action src=TestContext; Response: b16-teardown-nosetup phase=Unknown src=TestContext > b16-teardown-nosetup phase=Action src=TestContext; Request: b16-teardown-noaction phase=Unknown src=TestContext > b16-teardown-noaction phase=Action src=TestContext IGNORED; Response: b16-teardown-noaction phase=Unknown 
+      - Request b16-teardown-nosetup phase=Unknown src=TestContext
+      - Response b16-teardown-nosetup phase=Unknown src=TestContext
+      - Request b16-teardown-noaction phase=Unknown src=TestContext
+      - Response b16-teardown-noaction phase=Unknown src=TestContext
+      - Request b16-after-story-noaction phase=Unknown src=TestContext
+      - Response b16-after-story-noaction phase=Unknown src=TestContext
+      - Request b16-after-story phase=Unknown src=TestContext
+      - Response b16-after-story phase=Unknown src=TestContext
+      + Request b16-teardown-nosetup phase=Action src=TestContext
+      + Response b16-teardown-nosetup phase=Action src=TestContext
+      + Request b16-teardown-noaction phase=Action src=TestContext IGNORED
+      + Response b16-teardown-noaction phase=Action src=TestContext IGNORED
+      + Request b16-after-story-noaction phase=Action src=TestContext IGNORED
+      + Response b16-after-story-noaction phase=Action src=TestContext IGNORED
+      + Request b16-after-story phase=Action src=TestContext
+      + Response b16-after-story phase=Action src=TestContext
+      - shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B17_StartAction_before_a_story_with_a_tear_down
+    Request: b17-teardown-nosetup phase=Unknown src=TestContext > b17-teardown-nosetup phase=Action src=TestContext; Response: b17-teardown-nosetup phase=Unknown src=TestContext > b17-teardown-nosetup phase=Action src=TestContext; Request: b17-teardown-noaction phase=Unknown src=TestContext > b17-teardown-noaction phase=Action src=TestContext IGNORED; Response: b17-teardown-noaction phase=Unknown 
+      - Request b17-teardown-nosetup phase=Unknown src=TestContext
+      - Response b17-teardown-nosetup phase=Unknown src=TestContext
+      - Request b17-teardown-noaction phase=Unknown src=TestContext
+      - Response b17-teardown-noaction phase=Unknown src=TestContext
+      - Request b17-after-story phase=Unknown src=TestContext
+      - Response b17-after-story phase=Unknown src=TestContext
+      + Request b17-teardown-nosetup phase=Action src=TestContext
+      + Response b17-teardown-nosetup phase=Action src=TestContext
+      + Request b17-teardown-noaction phase=Action src=TestContext IGNORED
+      + Response b17-teardown-noaction phase=Action src=TestContext IGNORED
+      + Request b17-after-story phase=Action src=TestContext
+      + Response b17-after-story phase=Action src=TestContext
+      - shop -[#438DD5]-> probe: OK

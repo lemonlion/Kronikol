@@ -1,0 +1,5 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=0
+first: rev6/rev6-fetch: run outcome: exit=1 | Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 259 ms - Probe.Rev6.Fetch.dll (net10.0)
+
+[rev6/rev6-fetch] RUN OUTCOME CHANGED: exit=1 | Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 259 ms - Probe.Rev6.Fetch.dll (net10.0)
+[rev6/rev6-fetch] rev6-fetch.txt: TEST GONE F2_a_later_test_with_a_call_outside_any_step

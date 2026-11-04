@@ -1,0 +1,5 @@
+Action  before any step
+Action  after a sync step that restores in a finally (works)
+Setup   after an async step that restores when it completes, as CompleteStep would (does NOT reach the caller)
+Setup   after an async step that restores nothing, today's shape
+Action  after an async step whose stub restores before it returns (reaches the caller; CompleteStepAsync's first line runs there, so no weaver change)

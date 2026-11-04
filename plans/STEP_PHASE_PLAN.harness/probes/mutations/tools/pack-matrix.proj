@@ -1,0 +1,11 @@
+<Project DefaultTargets="Build">
+  <ItemGroup>
+    <P Include="..\wt\src\Kronikol.NUnit4\Kronikol.NUnit4.csproj" />
+    <P Include="..\wt\src\Kronikol.MSTest\Kronikol.MSTest.csproj" />
+    <P Include="..\wt\src\Kronikol.TUnit\Kronikol.TUnit.csproj" />
+    <P Include="..\wt\src\Kronikol.ReqNRoll.xUnit3\Kronikol.ReqNRoll.xUnit3.csproj" />
+    <P Include="..\wt\src\Kronikol.ReqNRoll.TUnit\Kronikol.ReqNRoll.TUnit.csproj" />
+  </ItemGroup>
+  <Target Name="Restore"><MSBuild Projects="@(P)" Targets="Restore" /></Target>
+  <Target Name="Build"><MSBuild Projects="@(P)" Targets="Build" /></Target>
+</Project>

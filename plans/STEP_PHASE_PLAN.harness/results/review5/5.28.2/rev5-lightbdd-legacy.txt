@@ -1,0 +1,728 @@
+## L01 plain given when then
+  Request  l01-given                      phase=Setup   src=TestContext
+  Response l01-given                      phase=Setup   src=TestContext
+  Request  l01-given                      phase=Unknown src=TestContext
+  Response l01-given                      phase=Unknown src=TestContext
+  Request  l01-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l01-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l01-given-noaction             phase=Setup   src=TestContext
+  Response l01-given-noaction             phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l01-when                       phase=Action  src=TestContext
+  Response l01-when                       phase=Action  src=TestContext
+  Request  l01-when                       phase=Unknown src=TestContext
+  Response l01-when                       phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l01-when-nosetup               phase=Action  src=TestContext
+  Response l01-when-nosetup               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l01-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l01-when-noaction              phase=Action  src=TestContext IGNORED
+  Request  l01-then                       phase=Unknown src=TestContext
+  Response l01-then                       phase=Unknown src=TestContext
+  Request  l01-then                       phase=Unknown src=TestContext
+  Response l01-then                       phase=Unknown src=TestContext
+  Request  l01-then-nosetup               phase=Unknown src=TestContext
+  Response l01-then-nosetup               phase=Unknown src=TestContext
+  Request  l01-then-noaction              phase=Unknown src=TestContext
+  Response l01-then-noaction              phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l01Given -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l01When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l01Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L02 given but when then but
+  Request  l02-given                      phase=Setup   src=TestContext
+  Response l02-given                      phase=Setup   src=TestContext
+  Request  l02-given                      phase=Unknown src=TestContext
+  Response l02-given                      phase=Unknown src=TestContext
+  Request  l02-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l02-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l02-given-noaction             phase=Setup   src=TestContext
+  Response l02-given-noaction             phase=Setup   src=TestContext
+  Request  l02-given-but                  phase=Setup   src=TestContext
+  Response l02-given-but                  phase=Setup   src=TestContext
+  Request  l02-given-but                  phase=Unknown src=TestContext
+  Response l02-given-but                  phase=Unknown src=TestContext
+  Request  l02-given-but-nosetup          phase=Setup   src=TestContext IGNORED
+  Response l02-given-but-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  l02-given-but-noaction         phase=Setup   src=TestContext
+  Response l02-given-but-noaction         phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l02-when                       phase=Action  src=TestContext
+  Response l02-when                       phase=Action  src=TestContext
+  Request  l02-when                       phase=Unknown src=TestContext
+  Response l02-when                       phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l02-when-nosetup               phase=Action  src=TestContext
+  Response l02-when-nosetup               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l02-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l02-when-noaction              phase=Action  src=TestContext IGNORED
+  Request  l02-then                       phase=Unknown src=TestContext
+  Response l02-then                       phase=Unknown src=TestContext
+  Request  l02-then                       phase=Unknown src=TestContext
+  Response l02-then                       phase=Unknown src=TestContext
+  Request  l02-then-nosetup               phase=Unknown src=TestContext
+  Response l02-then-nosetup               phase=Unknown src=TestContext
+  Request  l02-then-noaction              phase=Unknown src=TestContext
+  Response l02-then-noaction              phase=Unknown src=TestContext
+  Request  l02-then-but                   phase=Unknown src=TestContext
+  Response l02-then-but                   phase=Unknown src=TestContext
+  Request  l02-then-but                   phase=Unknown src=TestContext
+  Response l02-then-but                   phase=Unknown src=TestContext
+  Request  l02-then-but-nosetup           phase=Unknown src=TestContext
+  Response l02-then-but-nosetup           phase=Unknown src=TestContext
+  Request  l02-then-but-noaction          phase=Unknown src=TestContext
+  Response l02-then-but-noaction          phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l02Given -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l02GivenBut -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l02When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l02Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l02ThenBut -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L03 and first then when
+  Request  l03-and-first                  phase=Setup   src=TestContext
+  Response l03-and-first                  phase=Setup   src=TestContext
+  Request  l03-and-first                  phase=Unknown src=TestContext
+  Response l03-and-first                  phase=Unknown src=TestContext
+  Request  l03-and-first-nosetup          phase=Setup   src=TestContext IGNORED
+  Response l03-and-first-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  l03-and-first-noaction         phase=Setup   src=TestContext
+  Response l03-and-first-noaction         phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l03-when                       phase=Action  src=TestContext
+  Response l03-when                       phase=Action  src=TestContext
+  Request  l03-when                       phase=Unknown src=TestContext
+  Response l03-when                       phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l03-when-nosetup               phase=Action  src=TestContext
+  Response l03-when-nosetup               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l03-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l03-when-noaction              phase=Action  src=TestContext IGNORED
+  Request  l03-then                       phase=Unknown src=TestContext
+  Response l03-then                       phase=Unknown src=TestContext
+  Request  l03-then                       phase=Unknown src=TestContext
+  Response l03-then                       phase=Unknown src=TestContext
+  Request  l03-then-nosetup               phase=Unknown src=TestContext
+  Response l03-then-nosetup               phase=Unknown src=TestContext
+  Request  l03-then-noaction              phase=Unknown src=TestContext
+  Response l03-then-noaction              phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l03AndFirst -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l03When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l03Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L04 a custom step type after a when
+  Request  l04-given                      phase=Setup   src=TestContext
+  Response l04-given                      phase=Setup   src=TestContext
+  Request  l04-given                      phase=Unknown src=TestContext
+  Response l04-given                      phase=Unknown src=TestContext
+  Request  l04-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l04-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l04-given-noaction             phase=Setup   src=TestContext
+  Response l04-given-noaction             phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l04-when                       phase=Action  src=TestContext
+  Response l04-when                       phase=Action  src=TestContext
+  Request  l04-when                       phase=Unknown src=TestContext
+  Response l04-when                       phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l04-when-nosetup               phase=Action  src=TestContext
+  Response l04-when-nosetup               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l04-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l04-when-noaction              phase=Action  src=TestContext IGNORED
+  Request  l04-arrange                    phase=Unknown src=TestContext
+  Response l04-arrange                    phase=Unknown src=TestContext
+  Request  l04-arrange                    phase=Unknown src=TestContext
+  Response l04-arrange                    phase=Unknown src=TestContext
+  Request  l04-arrange-nosetup            phase=Unknown src=TestContext
+  Response l04-arrange-nosetup            phase=Unknown src=TestContext
+  Request  l04-arrange-noaction           phase=Unknown src=TestContext
+  Response l04-arrange-noaction           phase=Unknown src=TestContext
+  Request  l04-then                       phase=Unknown src=TestContext
+  Response l04-then                       phase=Unknown src=TestContext
+  Request  l04-then                       phase=Unknown src=TestContext
+  Response l04-then                       phase=Unknown src=TestContext
+  Request  l04-then-nosetup               phase=Unknown src=TestContext
+  Response l04-then-nosetup               phase=Unknown src=TestContext
+  Request  l04-then-noaction              phase=Unknown src=TestContext
+  Response l04-then-noaction              phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l04Given -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l04When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l04Arrange -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l04Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L05 setup type then when
+  Request  l05-setup                      phase=Unknown src=TestContext
+  Response l05-setup                      phase=Unknown src=TestContext
+  Request  l05-setup                      phase=Unknown src=TestContext
+  Response l05-setup                      phase=Unknown src=TestContext
+  Request  l05-setup-nosetup              phase=Unknown src=TestContext
+  Response l05-setup-nosetup              phase=Unknown src=TestContext
+  Request  l05-setup-noaction             phase=Unknown src=TestContext
+  Response l05-setup-noaction             phase=Unknown src=TestContext
+  Request  l05-when                       phase=Action  src=TestContext
+  Response l05-when                       phase=Action  src=TestContext
+  Request  l05-when                       phase=Unknown src=TestContext
+  Response l05-when                       phase=Unknown src=TestContext
+  Request  l05-when-nosetup               phase=Action  src=TestContext
+  Response l05-when-nosetup               phase=Action  src=TestContext
+  Request  l05-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l05-when-noaction              phase=Action  src=TestContext IGNORED
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      shop -[#438DD5]-> probe: OK
+      l05Setup -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l05When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+
+## L06 a when runs a woven given
+  Request  l06-given                      phase=Setup   src=TestContext
+  Response l06-given                      phase=Setup   src=TestContext
+  Request  l06-given                      phase=Unknown src=TestContext
+  Response l06-given                      phase=Unknown src=TestContext
+  Request  l06-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l06-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l06-given-noaction             phase=Setup   src=TestContext
+  Response l06-given-noaction             phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l06-before                     phase=Action  src=TestContext
+  Response l06-before                     phase=Action  src=TestContext
+  Request  l06-before                     phase=Unknown src=TestContext
+  Response l06-before                     phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l06-before-nosetup             phase=Action  src=TestContext
+  Response l06-before-nosetup             phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l06-before-noaction            phase=Action  src=TestContext IGNORED
+  Response l06-before-noaction            phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Given Woven given
+  
+  Request  l06-sub                        phase=Setup   src=TestContext
+  Response l06-sub                        phase=Setup   src=TestContext
+  Request  l06-sub                        phase=Setup   src=TestContext
+  Response l06-sub                        phase=Setup   src=TestContext
+  Request  l06-sub-nosetup                phase=Setup   src=TestContext IGNORED
+  Response l06-sub-nosetup                phase=Setup   src=TestContext IGNORED
+  Request  l06-sub-noaction               phase=Setup   src=TestContext
+  Response l06-sub-noaction               phase=Setup   src=TestContext
+  Request  l06-after                      phase=Setup   src=TestContext
+  Response l06-after                      phase=Setup   src=TestContext
+  Request  l06-after                      phase=Setup   src=TestContext
+  Response l06-after                      phase=Setup   src=TestContext
+  Request  l06-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l06-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l06-after-noaction             phase=Setup   src=TestContext
+  Response l06-after-noaction             phase=Setup   src=TestContext
+  Request  l06-then                       phase=Unknown src=TestContext
+  Response l06-then                       phase=Unknown src=TestContext
+  Request  l06-then                       phase=Unknown src=TestContext
+  Response l06-then                       phase=Unknown src=TestContext
+  Request  l06-then-nosetup               phase=Unknown src=TestContext
+  Response l06-then-nosetup               phase=Unknown src=TestContext
+  Request  l06-then-noaction              phase=Unknown src=TestContext
+  Response l06-then-noaction              phase=Unknown src=TestContext
+  steps:
+    Given Woven given [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l06Given -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l06Before -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Woven given
+      shop -[#438DD5]-> probe: OK
+      l06Sub -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l06After -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l06Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L07 a given runs a woven when
+  Request  l07-before                     phase=Setup   src=TestContext
+  Response l07-before                     phase=Setup   src=TestContext
+  Request  l07-before                     phase=Unknown src=TestContext
+  Response l07-before                     phase=Unknown src=TestContext
+  Request  l07-before-nosetup             phase=Setup   src=TestContext IGNORED
+  Response l07-before-nosetup             phase=Setup   src=TestContext IGNORED
+  Request  l07-before-noaction            phase=Setup   src=TestContext
+  Response l07-before-noaction            phase=Setup   src=TestContext
+  [Step] <color:white>When Woven when
+  
+  Request  l07-sub                        phase=Setup   src=TestContext
+  Response l07-sub                        phase=Setup   src=TestContext
+  Request  l07-sub                        phase=Action  src=TestContext
+  Response l07-sub                        phase=Action  src=TestContext
+  Request  l07-sub-nosetup                phase=Setup   src=TestContext IGNORED
+  Response l07-sub-nosetup                phase=Setup   src=TestContext IGNORED
+  Request  l07-sub-noaction               phase=Setup   src=TestContext
+  Response l07-sub-noaction               phase=Setup   src=TestContext
+  Request  l07-after                      phase=Setup   src=TestContext
+  Response l07-after                      phase=Setup   src=TestContext
+  Request  l07-after                      phase=Action  src=TestContext
+  Response l07-after                      phase=Action  src=TestContext
+  Request  l07-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l07-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l07-after-noaction             phase=Setup   src=TestContext
+  Response l07-after-noaction             phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l07-when                       phase=Action  src=TestContext
+  Response l07-when                       phase=Action  src=TestContext
+  Request  l07-when                       phase=Unknown src=TestContext
+  Response l07-when                       phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l07-when-nosetup               phase=Action  src=TestContext
+  Response l07-when-nosetup               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l07-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l07-when-noaction              phase=Action  src=TestContext IGNORED
+  Request  l07-then                       phase=Unknown src=TestContext
+  Response l07-then                       phase=Unknown src=TestContext
+  Request  l07-then                       phase=Unknown src=TestContext
+  Response l07-then                       phase=Unknown src=TestContext
+  Request  l07-then-nosetup               phase=Unknown src=TestContext
+  Response l07-then-nosetup               phase=Unknown src=TestContext
+  Request  l07-then-noaction              phase=Unknown src=TestContext
+  Response l07-then-noaction              phase=Unknown src=TestContext
+  steps:
+    When Woven when [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l07Before -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Woven when
+      shop -[#438DD5]-> probe: OK
+      l07Sub -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l07After -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l07When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l07Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L08 a given composite with typed sub steps
+  Request  l08-sub-given                  phase=Setup   src=TestContext
+  Response l08-sub-given                  phase=Setup   src=TestContext
+  Request  l08-sub-given                  phase=Unknown src=TestContext
+  Response l08-sub-given                  phase=Unknown src=TestContext
+  Request  l08-sub-given-nosetup          phase=Setup   src=TestContext IGNORED
+  Response l08-sub-given-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  l08-sub-given-noaction         phase=Setup   src=TestContext
+  Response l08-sub-given-noaction         phase=Setup   src=TestContext
+  Request  l08-sub-when                   phase=Setup   src=TestContext
+  Response l08-sub-when                   phase=Setup   src=TestContext
+  Request  l08-sub-when                   phase=Unknown src=TestContext
+  Response l08-sub-when                   phase=Unknown src=TestContext
+  Request  l08-sub-when-nosetup           phase=Setup   src=TestContext IGNORED
+  Response l08-sub-when-nosetup           phase=Setup   src=TestContext IGNORED
+  Request  l08-sub-when-noaction          phase=Setup   src=TestContext
+  Response l08-sub-when-noaction          phase=Setup   src=TestContext
+  Request  l08-sub-then                   phase=Setup   src=TestContext
+  Response l08-sub-then                   phase=Setup   src=TestContext
+  Request  l08-sub-then                   phase=Unknown src=TestContext
+  Response l08-sub-then                   phase=Unknown src=TestContext
+  Request  l08-sub-then-nosetup           phase=Setup   src=TestContext IGNORED
+  Response l08-sub-then-nosetup           phase=Setup   src=TestContext IGNORED
+  Request  l08-sub-then-noaction          phase=Setup   src=TestContext
+  Response l08-sub-then-noaction          phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l08-when                       phase=Action  src=TestContext
+  Response l08-when                       phase=Action  src=TestContext
+  Request  l08-when                       phase=Unknown src=TestContext
+  Response l08-when                       phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l08-when-nosetup               phase=Action  src=TestContext
+  Response l08-when-nosetup               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l08-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l08-when-noaction              phase=Action  src=TestContext IGNORED
+  Request  l08-then                       phase=Unknown src=TestContext
+  Response l08-then                       phase=Unknown src=TestContext
+  Request  l08-then                       phase=Unknown src=TestContext
+  Response l08-then                       phase=Unknown src=TestContext
+  Request  l08-then-nosetup               phase=Unknown src=TestContext
+  Response l08-then-nosetup               phase=Unknown src=TestContext
+  Request  l08-then-noaction              phase=Unknown src=TestContext
+  Response l08-then-noaction              phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l08SubGiven -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l08SubWhen -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l08SubThen -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l08When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l08Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L09 a keyword free composite first
+  Request  l09-sub-given                  phase=Unknown src=TestContext
+  Response l09-sub-given                  phase=Unknown src=TestContext
+  Request  l09-sub-given                  phase=Unknown src=TestContext
+  Response l09-sub-given                  phase=Unknown src=TestContext
+  Request  l09-sub-given-nosetup          phase=Unknown src=TestContext
+  Response l09-sub-given-nosetup          phase=Unknown src=TestContext
+  Request  l09-sub-given-noaction         phase=Unknown src=TestContext
+  Response l09-sub-given-noaction         phase=Unknown src=TestContext
+  Request  l09-sub-when                   phase=Unknown src=TestContext
+  Response l09-sub-when                   phase=Unknown src=TestContext
+  Request  l09-sub-when                   phase=Unknown src=TestContext
+  Response l09-sub-when                   phase=Unknown src=TestContext
+  Request  l09-sub-when-nosetup           phase=Unknown src=TestContext
+  Response l09-sub-when-nosetup           phase=Unknown src=TestContext
+  Request  l09-sub-when-noaction          phase=Unknown src=TestContext
+  Response l09-sub-when-noaction          phase=Unknown src=TestContext
+  Request  l09-sub-and                    phase=Unknown src=TestContext
+  Response l09-sub-and                    phase=Unknown src=TestContext
+  Request  l09-sub-and                    phase=Unknown src=TestContext
+  Response l09-sub-and                    phase=Unknown src=TestContext
+  Request  l09-sub-and-nosetup            phase=Unknown src=TestContext
+  Response l09-sub-and-nosetup            phase=Unknown src=TestContext
+  Request  l09-sub-and-noaction           phase=Unknown src=TestContext
+  Response l09-sub-and-noaction           phase=Unknown src=TestContext
+  Request  l09-then                       phase=Action  src=TestContext
+  Response l09-then                       phase=Action  src=TestContext
+  Request  l09-then                       phase=Unknown src=TestContext
+  Response l09-then                       phase=Unknown src=TestContext
+  Request  l09-then-nosetup               phase=Action  src=TestContext
+  Response l09-then-nosetup               phase=Action  src=TestContext
+  Request  l09-then-noaction              phase=Action  src=TestContext IGNORED
+  Response l09-then-noaction              phase=Action  src=TestContext IGNORED
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      shop -[#438DD5]-> probe: OK
+      l09SubGiven -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l09SubWhen -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l09SubAnd -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l09Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+
+## L10 a step fails with a composite parent
+  Request  l10-given                      phase=Setup   src=TestContext
+  Response l10-given                      phase=Setup   src=TestContext
+  Request  l10-given                      phase=Unknown src=TestContext
+  Response l10-given                      phase=Unknown src=TestContext
+  Request  l10-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l10-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l10-given-noaction             phase=Setup   src=TestContext
+  Response l10-given-noaction             phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l10-sub-given                  phase=Action  src=TestContext
+  Response l10-sub-given                  phase=Action  src=TestContext
+  Request  l10-sub-given                  phase=Unknown src=TestContext
+  Response l10-sub-given                  phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l10-sub-given-nosetup          phase=Action  src=TestContext
+  Response l10-sub-given-nosetup          phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l10-sub-given-noaction         phase=Action  src=TestContext IGNORED
+  Response l10-sub-given-noaction         phase=Action  src=TestContext IGNORED
+  Request  l10-sub-fails                  phase=Unknown src=TestContext
+  Response l10-sub-fails                  phase=Unknown src=TestContext
+  Request  l10-sub-fails                  phase=Unknown src=TestContext
+  Response l10-sub-fails                  phase=Unknown src=TestContext
+  Request  l10-sub-fails-nosetup          phase=Unknown src=TestContext
+  Response l10-sub-fails-nosetup          phase=Unknown src=TestContext
+  Request  l10-sub-fails-noaction         phase=Unknown src=TestContext
+  Response l10-sub-fails-noaction         phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l10Given -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l10SubGiven -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l10SubFails -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L11 a bypassed given then when
+  Request  l11-bypassed                   phase=Setup   src=TestContext
+  Response l11-bypassed                   phase=Setup   src=TestContext
+  Request  l11-bypassed                   phase=Unknown src=TestContext
+  Response l11-bypassed                   phase=Unknown src=TestContext
+  Request  l11-bypassed-nosetup           phase=Setup   src=TestContext IGNORED
+  Response l11-bypassed-nosetup           phase=Setup   src=TestContext IGNORED
+  Request  l11-bypassed-noaction          phase=Setup   src=TestContext
+  Response l11-bypassed-noaction          phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l11-when                       phase=Action  src=TestContext
+  Response l11-when                       phase=Action  src=TestContext
+  Request  l11-when                       phase=Unknown src=TestContext
+  Response l11-when                       phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l11-when-nosetup               phase=Action  src=TestContext
+  Response l11-when-nosetup               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l11-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l11-when-noaction              phase=Action  src=TestContext IGNORED
+  Request  l11-then                       phase=Unknown src=TestContext
+  Response l11-then                       phase=Unknown src=TestContext
+  Request  l11-then                       phase=Unknown src=TestContext
+  Response l11-then                       phase=Unknown src=TestContext
+  Request  l11-then-nosetup               phase=Unknown src=TestContext
+  Response l11-then-nosetup               phase=Unknown src=TestContext
+  Request  l11-then-noaction              phase=Unknown src=TestContext
+  Response l11-then-noaction              phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l11Bypassed -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l11When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l11Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L12 a marking then
+  Request  l12-given                      phase=Setup   src=TestContext
+  Response l12-given                      phase=Setup   src=TestContext
+  Request  l12-given                      phase=Unknown src=TestContext
+  Response l12-given                      phase=Unknown src=TestContext
+  Request  l12-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l12-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l12-given-noaction             phase=Setup   src=TestContext
+  Response l12-given-noaction             phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l12-when                       phase=Action  src=TestContext
+  Response l12-when                       phase=Action  src=TestContext
+  Request  l12-when                       phase=Unknown src=TestContext
+  Response l12-when                       phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l12-when-nosetup               phase=Action  src=TestContext
+  Response l12-when-nosetup               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l12-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l12-when-noaction              phase=Action  src=TestContext IGNORED
+  --- MARKER ---
+  Request  l12-then                       phase=Action  src=TestContext
+  Response l12-then                       phase=Action  src=TestContext
+  Request  l12-then                       phase=Action  src=TestContext
+  Response l12-then                       phase=Action  src=TestContext
+  Request  l12-then-nosetup               phase=Action  src=TestContext
+  Response l12-then-nosetup               phase=Action  src=TestContext
+  Request  l12-then-noaction              phase=Action  src=TestContext IGNORED
+  Response l12-then-noaction              phase=Action  src=TestContext IGNORED
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l12Given -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l12When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l12Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+
+## L13 a marking when after an unmarked when
+  Request  l13-given                      phase=Setup   src=TestContext
+  Response l13-given                      phase=Setup   src=TestContext
+  Request  l13-given                      phase=Unknown src=TestContext
+  Response l13-given                      phase=Unknown src=TestContext
+  Request  l13-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l13-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l13-given-noaction             phase=Setup   src=TestContext
+  Response l13-given-noaction             phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l13-when1                      phase=Action  src=TestContext
+  Response l13-when1                      phase=Action  src=TestContext
+  Request  l13-when1                      phase=Unknown src=TestContext
+  Response l13-when1                      phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l13-when1-nosetup              phase=Action  src=TestContext
+  Response l13-when1-nosetup              phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l13-when1-noaction             phase=Action  src=TestContext IGNORED
+  Response l13-when1-noaction             phase=Action  src=TestContext IGNORED
+  --- MARKER ---
+  Request  l13-when2                      phase=Action  src=TestContext
+  Response l13-when2                      phase=Action  src=TestContext
+  Request  l13-when2                      phase=Action  src=TestContext
+  Response l13-when2                      phase=Action  src=TestContext
+  Request  l13-when2-nosetup              phase=Action  src=TestContext
+  Response l13-when2-nosetup              phase=Action  src=TestContext
+  Request  l13-when2-noaction             phase=Action  src=TestContext IGNORED
+  Response l13-when2-noaction             phase=Action  src=TestContext IGNORED
+  Request  l13-then                       phase=Unknown src=TestContext
+  Response l13-then                       phase=Unknown src=TestContext
+  Request  l13-then                       phase=Unknown src=TestContext
+  Response l13-then                       phase=Unknown src=TestContext
+  Request  l13-then-nosetup               phase=Unknown src=TestContext
+  Response l13-then-nosetup               phase=Unknown src=TestContext
+  Request  l13-then-noaction              phase=Unknown src=TestContext
+  Response l13-then-noaction              phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l13Given -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l13When1 -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l13When2 -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l13Then -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## L14 then first then given when
+  Request  l14-then-first                 phase=Action  src=TestContext
+  Response l14-then-first                 phase=Action  src=TestContext
+  Request  l14-then-first                 phase=Unknown src=TestContext
+  Response l14-then-first                 phase=Unknown src=TestContext
+  Request  l14-then-first-nosetup         phase=Action  src=TestContext
+  Response l14-then-first-nosetup         phase=Action  src=TestContext
+  Request  l14-then-first-noaction        phase=Action  src=TestContext IGNORED
+  Response l14-then-first-noaction        phase=Action  src=TestContext IGNORED
+  Request  l14-given                      phase=Setup   src=TestContext
+  Response l14-given                      phase=Setup   src=TestContext
+  Request  l14-given                      phase=Unknown src=TestContext
+  Response l14-given                      phase=Unknown src=TestContext
+  Request  l14-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Response l14-given-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  l14-given-noaction             phase=Setup   src=TestContext
+  Response l14-given-noaction             phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  l14-when                       phase=Action  src=TestContext
+  Response l14-when                       phase=Action  src=TestContext
+  Request  l14-when                       phase=Unknown src=TestContext
+  Response l14-when                       phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  l14-when-nosetup               phase=Action  src=TestContext
+  Response l14-when-nosetup               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  l14-when-noaction              phase=Action  src=TestContext IGNORED
+  Response l14-when-noaction              phase=Action  src=TestContext IGNORED
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      l14ThenFirst -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      l14Given -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      l14When -[#9B59B6]-> probe: Responded
+      shop -[#438DD5]-> probe: OK
+

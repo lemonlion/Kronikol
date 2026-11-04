@@ -1,0 +1,24 @@
+KILLED solid=4 order=0 racing-new=0 racing-seen=3
+first: review/rev3-more: H21_fetcher_and_one_woven_Given: gone: partition #F6F6F6 Setup; gone: end
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[review/rev3-more] rev3-more.plantuml.txt: SOLID PhaseProbe.Rev3.More.H_FetcherMix.H21_fetcher_and_one_woven_Given
+    gone: partition #F6F6F6 Setup; gone: end
+      - partition #F6F6F6 Setup
+      - end
+[review/rev3-more] rev3-more.plantuml.txt: SOLID PhaseProbe.Rev3.More.H_FetcherMix.H22_one_woven_Given_first_then_fetcher
+    gone: partition #F6F6F6 Setup; gone: end
+      - partition #F6F6F6 Setup
+      - end
+[review/rev3-more] rev3-more.plantuml.txt: racing, shape seen PhaseProbe.Rev3.More.H_LoopOnANoSetupClient.H41_a_loop_of_Then_steps_from_a_Given_on_a_Tra
+[review/rev3-more] rev3-more.txt: SOLID PhaseProbe.Rev3.More.H_FetcherMix.H21_fetcher_and_one_woven_Given
+    gone: --- ACTION START MARKER ---; h21-when: http Action > http Setup
+      - --- ACTION START MARKER ---
+      - h21-when http Action
+      + h21-when http Setup
+[review/rev3-more] rev3-more.txt: SOLID PhaseProbe.Rev3.More.H_FetcherMix.H22_one_woven_Given_first_then_fetcher
+    gone: --- ACTION START MARKER ---; h22-when: http Action > http Setup
+      - --- ACTION START MARKER ---
+      - h22-when http Action
+      + h22-when http Setup
+[review/rev3-more] rev3-more.txt: racing, shape seen PhaseProbe.Rev3.More.H_LoopOnANoSetupClient.H41_a_loop_of_Then_steps_from_a_Given_on_a_Tra

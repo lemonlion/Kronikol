@@ -1,0 +1,64 @@
+## PhaseProbe.Plain.Shapes.S1_explicit_StartAction_inside_a_When_step_after_a_Given
+call                               http     message  ignored
+[bar] <color:white>Given Async
+s1-given                           Setup    Setup    
+[bar] <color:white>When With explicit boundary
+s1-prepare-before-explicit         Action   Action   
+--- ACTION START MARKER ---
+s1-after-explicit                  Action   Action   
+s1-after                           Action   Action   
+steps:
+  Given Async  [Passed]
+  When With explicit boundary  [Passed]
+
+## PhaseProbe.Plain.Shapes.S2_WhenAll_of_a_Given_and_a_When_over_a_client_that_yields
+call                               http     message  ignored
+[bar] <color:white>Given Real
+s2-given                           Setup    Setup    
+s2-when                            Action   Action   
+s2-after                           Action   Action   
+steps:
+  Given Real  [Passed]
+    When Real  [Passed]
+
+## PhaseProbe.Plain.Shapes.S3_keyword_free_step_after_an_async_wrapper_with_a_When
+call                               http     message  ignored
+[bar] <color:white>Given Async
+s3-given                           Setup    Setup    
+[bar] <color:white>Wrapper with when
+s3-wrapped-when                    Action   Action   
+[bar] <color:white>Plain async
+s3-plain-after-wrapper             Setup    Setup    
+s3-call-after                      Setup    Setup    
+steps:
+  Given Async  [Passed]
+  (none) Wrapper with when  [Passed]
+    When Async  [Passed]
+  (none) Plain async  [Passed]
+
+## PhaseProbe.Plain.Shapes.S4_a_skipped_When_then_a_Given_then_a_When
+call                               http     message  ignored
+[bar] <color:white>Given Async
+s4-given                           Setup    Setup    
+[bar] <color:white>When Skipped
+[bar] <color:white>Given Async
+s4-given-2                         Setup    Setup    
+[bar] <color:white>When Async
+s4-when                            Action   Action   
+steps:
+  Given Async  [Passed]
+  When Skipped  [Bypassed]
+  Given Async  [Passed]
+  When Async  [Passed]
+
+## PhaseProbe.Plain.Shapes.S5_a_step_never_awaited
+call                               http     message  ignored
+[bar] <color:white>Given Background
+s5-while-open                      Setup    Setup    
+s5-when                            Action   Action   
+s5-then                            Action   Action   
+steps:
+  Given Background  [Passed]
+    When Async  [Passed]
+    Then Async  [Passed]
+

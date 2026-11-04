@@ -1,0 +1,18 @@
+== bddfy-xunit3: 2 calls moved in 1 of 13 tests
+  B04_an_async_When_step_calls_a_woven_Given: b04-after-sub: Setup/Setup > Action/Action; b04-in-sub: Setup/Setup > Action/Action
+== lightbdd-xunit2: 0 calls moved in 0 of 16 tests
+== mstest: 0 calls moved in 0 of 86 tests
+== nunit4: 0 calls moved in 0 of 91 tests
+== reqnroll-nunit: 1 calls moved in 1 of 35 tests
+  N02 a Given binding runs a Gherkin When through ITestRunner: n02-nested-when: Action/Setup > Setup/Setup
+== reqnroll-server: 0 calls moved in 0 of 7 tests
+== reqnroll-tunit: 1 calls moved in 1 of 33 tests
+  N02 a Given binding runs a Gherkin When through ITestRunner: n02-nested-when: Action/Setup > Setup/Setup
+== reqnroll-xunit2: 1 calls moved in 1 of 35 tests
+  N02 a Given binding runs a Gherkin When through ITestRunner: n02-nested-when: Action/Setup > Setup/Setup
+== reqnroll-xunit3: 1 calls moved in 1 of 33 tests
+  N02 a Given binding runs a Gherkin When through ITestRunner: n02-nested-when: Action/Setup > Setup/Setup
+== tunit: 0 calls moved in 0 of 96 tests
+== xunit2: 0 calls moved in 0 of 63 tests
+== xunit3: 0 calls moved in 0 of 89 tests
+== xunit3-plain: 0 calls moved in 0 of 30 tests

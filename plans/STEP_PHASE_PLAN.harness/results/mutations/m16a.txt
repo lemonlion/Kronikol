@@ -1,0 +1,34 @@
+KILLED solid=4 order=0 racing-new=0 racing-seen=1
+first: main/xunit3-plain: X25_a_Task_step_that_throws_before_returning_then_a_When: gone: [bar] <color:white>When Async; gone: --- ACTION START MARKER ---; x25-when: Action Action > Setup Setup; gone: [bar] <color:white>Then Async; x25-then: Action Action > Setup Setup; gon
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X25_a_Task_step_that_throws_before_returning_then_a_When
+    gone: [bar] <color:white>When Async; gone: --- ACTION START MARKER ---; x25-when: Action Action > Setup Setup; gone: [bar] <color:white>Then Async; x25-then: Action Action > Setup Setup; gone: Given Throws before returning [Failed]; gone: When Async [Passed]; gone: Then Async [Passed]
+      -[bar] <color:white>When Async
+      ---- ACTION START MARKER ---
+      -x25-when Action Action
+      -[bar] <color:white>Then Async
+      -x25-then Action Action
+      +x25-when Setup Setup
+      +x25-then Setup Setup
+      - Given Throws before returning [Failed]
+      - When Async [Passed]
+      - Then Async [Passed]
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X32_a_Task_step_whose_body_ends_in_a_handler
+    gone: [bar] <color:white>When Async; gone: --- ACTION START MARKER ---; x32-when: Action Action > Setup Setup; gone: Given Ending in handler [Failed]; gone: When Async [Passed]
+      -[bar] <color:white>When Async
+      ---- ACTION START MARKER ---
+      -x32-when Action Action
+      +x32-when Setup Setup
+      - Given Ending in handler [Failed]
+      - When Async [Passed]
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X33_a_guard_clause_under_ThrowsAsync_then_a_When
+    gone: [bar] <color:white>When Async; gone: And Guarded [Failed]; gone: When Async [Passed]
+      -[bar] <color:white>When Async
+      - And Guarded [Failed]
+      - When Async [Passed]
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X35_a_generic_Task_of_T_step_that_is_not_async
+    gone: [bar] <color:white>When Async; gone: And Generic [Failed]; gone: When Async [Passed]
+      -[bar] <color:white>When Async
+      - And Generic [Failed]
+      - When Async [Passed]

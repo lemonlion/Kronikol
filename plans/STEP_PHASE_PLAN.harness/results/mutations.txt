@@ -1,0 +1,269 @@
+# Mutation run for #224: stopped early by the disk rule
+
+C: fell to 1.5 GB during n12, so the run stopped there. The mutation folder itself held 40 MB.
+
+- **Cut 9:** all 48 mutants ran on the final regenerated patch, baseline m00.
+- **Cut 10:** 14 mutants finished and n12 is partial, baseline n00.
+- **Not run on cut 10:** nine mutants and the X90/X91 probe.
+- **Plain survivors:** m27 on cut 9 and n08a on cut 10.
+- **Open:** m15c, m15d, m15e, m16b, m20 and m31b ran only the main suites, n12 stopped partway, and m32 rests on one run.
+
+**How to read the tables.** "Killed" means a test that never varied changed. A real kill stops escalation once the named extras have run, so "unchanged" covers only the suites that ran. The test named is the plainest one. `results/summary.txt` counts X09 as solid, so its KILLED verdicts overstate, and these tables supersede it. "IGNORED" is the probe dump's flag on a call.
+
+## Measured on cut 9
+
+| Mutation | Result | First or named change |
+|---|---|---|
+| m01 OpenStepSaysPhase | Killed | X01 x01-in-sub, x01-after-sub Action to Setup; X02 Setup to Action, marker moves; 26 tests |
+| m02 LeaveFlow | Killed | X10, X21 boundary gone, x10-when, x21-when Action to Setup; X09 same (racing, new shape); 24 solid |
+| m03a LeaveCompletedStep in CompleteStep | Killed | B03 boundary gone, b03-when Action to Setup; B01 same (racing, new shape); 65 solid |
+| m03b LeaveCompletedStep in BDDfy's wrap | Killed | B05 marker before b05-when to no marker; Z03, Z08 boundary and partition gone; B04 unchanged |
+| m04 OutlivedStepSaysPhase | Killed | rev4-a F04, F04b no marker to marker before f04-act, phases unchanged. C01 and Q05 markers move (racing, new shape, one run) |
+| m05 FrameworkNamesThisFlow | Killed | rev4-d B06 no marker to marker + partition (solid); T01 boundary before t01-when to before t01-when-on-thread; T03, T04, G03, C05 order class |
+| 6, 7, 8, 9 | Dropped | Code gone |
+| m10a ToUpperInvariant, literal | Killed | Main suites, B01 b01-given Setup to Unknown; 64 solid |
+| m10b table re-cased | Killed | LightBDD only, L01 l01-given message Setup to Unknown; 15 solid |
+| m11 SETUP | Killed | L13 l13-setup Setup to Unknown, boundary gone |
+| m12 Unknown in SaysPhase | Killed | L15 l15-given-sub Setup to Unknown, boundary gone; L16 boundary gone |
+| m13 flowPhase | Killed | G04 boundary + partition gone, g04-in-and-nosetup Action to Setup, IGNORED; G05 same move |
+| m14 StartedByStub | Killed, code gone in cut 10 | A01 boundary and When/Then bars gone, a01-when Action to Setup; A02, A04, A05 |
+| m15a sync stub guard | Only K04 moved; mutant is better; code gone in cut 10 | k04-when, k04-then Setup to Action, "step still open" gone, matching 5.28.2. X30, X36 unchanged |
+| m15b LeaveFlow's answer | Killed, code gone in cut 10 | X30 x30-real-sub, x30-after Action to Setup; X37 unchanged |
+| m15c LeaveCompletedStep's walk skips bypass | Open, main only | X09 race only; X30, X36, X37 unchanged |
+| m15d OpenStepSaysPhase's !Bypassed | Open, main only | X09 race only; redundant by reading, since a bypass sets EndTime |
+| m15e OutlivedStepSaysPhase's !Bypassed | Open, main only | X09 race only; X30, X36, X37 unchanged |
+| m15f LeaveFlow's walk | Killed, code gone in cut 10 | A02 boundary + partition gone |
+| m16a weaver catch | Killed | X25 When bar and boundary gone, x25-when Action to Setup; X32, X33, X35 |
+| m16b every Task stub gets the catch | Open, main only | X09 race only; the weave suites did not run |
+| m16c Task path handler end | Killed | X32 bars, x32-caught row and boundary gone |
+| m16d Task tail loop | Killed | rev4-fsharp task-fn-throws steps lost |
+| m17 CallInSetupStep | Killed | L16 boundary gone |
+| m18 phaseKeyword ?? | Killed | R06 r06-when-but, r06-then-but Action to Setup; R07 r07-star1, R21 Setup to Unknown; L01 l01-then-but Action to Setup |
+| m19 WhenTriggersAction gate | Killed | X20 x20-given Unknown to Setup, x20-when Unknown to Action; R21 unchanged |
+| m20 ActionStartDrawn dropped from boundary | Open, main only | X09 race only; X19, X07, X08 unchanged |
+| m21 ActionStepSeen | Killed | E05 new boundary and Setup partition; G05 same |
+| m22 frameworkStep | Killed | H21, H22 boundary and partition gone, h21-when Action to Setup |
+| m23 handler state per instance | Killed by L16 only | L16 boundary gone; R11, L07, B07 unchanged (see Limits on the kills) |
+| m24 bar and boundary swapped | Killed, order class | 68 tests in the main suites, marker now before the bar |
+| m25 FindLastIndex | Killed | E04 partition gone |
+| m26 held boundary | Killed | K01 loop x4 to x2 plus an arrow; K02 loop gone (separate-off dump) |
+| m27 TrackingIgnore | **Survived** main and rev3-plain | E90 unchanged |
+| m28 finally back | Killed | L14 l14-when-sub Setup to Action, step moves |
+| m29 closed | Killed | B04 b04-in-sub, after-sub Action to Setup; Z15 |
+| m29a catch's write | Killed | Z15 teardown and steps move to top level, bars appear |
+| m29b wrap's write | Killed | B04; Z03; Z04 [Failed] to [Passed]; Z13 |
+| m30 fetcher guard | Killed | outside-a-scenario.txt "tracked, no exception" to InvalidOperationException |
+| m31a R3 wrap | Killed | B04 b04-in-sub, after-sub Action to Setup |
+| m31b async gate | Open, main only | X09 and B11 only, both racing; rev3-bddfy, rev4-bddfy B05, rev5-bddfy B06 did not run |
+| m32 IsDetached | One test, one run, order class | rev4-b G03 boundary before g03-act (4/4) to before g03-after-detached; H01a-c unchanged; no repeat |
+| m33 explicit marker | Killed | M01 extra markers; M02, M03, M06 |
+| m34 variant check | Killed | C02 "ACTION-PAYLOAD" note gone; D1 REQ-ACTION-VARIANT to REQ-SETUP-VARIANT; D1s, D2 loop x2 to x4; D3 |
+| m35 lastTrace | Killed | C04 extra empty "diagram 2:" |
+| m36 both sync loops | Killed | S02 and F# unit-tail |
+| m36a sync tail loop | Killed | rev4-fsharp unit-tail steps lost |
+| m36b sync HandlerEnd loop | Killed | rev4-weave S02, Debug and Release: ArgumentException s02-outer to InvalidProgramException |
+| m37 restore | Killed | B10 b10-teardown Unknown to Action; rev4-bddfy B01, B02 teardown calls Unknown to Action, IGNORED |
+
+## Measured on cut 10
+
+| Mutation | Result | First or named change |
+|---|---|---|
+| n01 N1 | Killed, order class, stable on 3 hosts | R06 boundary before r06-act to before r06-seed2 on rev5-reqnroll, -x3, -tunit. R04, R05, B02, B03, B16 unchanged. Every baselined suite ran (cut 10's matrix has no baseline) |
+| n02 N2 | Killed | R04, R05, B02, B03, B16 boundary and partition gone |
+| n03 N3 | Killed | R01, R02, R03, B11, L12, L13 new marker after the first, partition end moves |
+| n04 N4 | Killed | B08, B15 teardown-nosetup Unknown to Setup, IGNORED; B16, B17 Unknown to Action |
+| n05 N5 | Killed | B09 b09-story-then Setup to Unknown; B10 b10-after-woven Action to Unknown |
+| n06 N6 | Killed | rev5-lightbdd-legacy, 14 tests, L01 l01-then Unknown to Action |
+| n06b N6 in cut 9's form | Killed | L01 l01-when-nosetup Action to Unknown; 14 tests |
+| n07 N7 | Killed | rev3-lightbdd-legacy N04 no marker to marker before n04-sub + partition; L07 before l07-when to before l07-sub; H23 before h23-when to before h23-woven-when |
+| n08 N8, both paths | Killed | X30 x30-real-sub, x30-after Action to Setup. H01, H02, H13, K04, X36, X37 unchanged |
+| n08a sync path alone | **Survived** every baselined suite | Races and row order only |
+| n08b Task path alone | Killed | X30 |
+| n09 N9 | Killed | R09b boundary and partition gone |
+| n10 N10 | Killed | F05 f05-label-under-given Setup to Action; H12 same |
+| n11 N11 | Killed | A01 a01-and Unknown to Setup; A02 Unknown to Action; A03, A04, A05; G03 g03-after-lower-given Unknown to Setup; G04 new boundary and partition |
+| n12 BypassStep's own-node removal dropped | Open, partial | Races and L03 row order only; 29 suites did not run |
+
+## Only a racing test differed
+- **Cut 9:** m15c, m15d, m15e, m16b and m20 (X09), m27 (X09 plus 9 shapes already seen), m31b (X09, B11).
+- **Cut 10:** n08a (E06 and L02 new shapes, L01 and L03 row order) and n12 (L02 new shape, L03 row order). L01 and L03 count as races because they moved under unrelated mutants, though n00's rounds never varied them.
+
+## Survivors and open mutants
+- **m27, not needed on any report path.** `DefaultDiagramsFetcher.TrackedLogs` filters TrackingIgnore on every report path, and Dump2 and Skeleton filter too. The fetcher is the only caller in `src` of the public `GetPlantUmlImageTagsPerTestId`, so only an external direct call could reach this code. It was not escalated past rev3-plain.
+- **n08a, no probe reaches it, so whether it is needed is not known.** No probe has a skipped sync sub-step followed by more work in its parent, because X36 ends there. X90 and X91 are written to decide this but never ran.
+- **m15c, m15e, m20, no real change in the main suites.** Their expected tests did not move, but they did not escalate, so they are not proven survivors.
+- **m15d, same result in the main suites,** and redundant by reading.
+- **m16b, the weave suites never ran,** so no probe that could show it was reached.
+- **m31b, no proof yet:** B11 only showed a racing shape already seen, and the BDDfy suites did not run.
+- **n12, clean in what ran.** Ran: main, 8 of 10 review suites, and rev5-a, including X30, X36, K04 and H13, none of which moved. Not run: rev3-lightbdd-legacy, rev3-reqnroll2, all of rev4 and old, and 14 of the 15 rev5 suites.
+
+## Limits on the kills
+- **N1 did not move what was expected.** R04, R05, B02, B03 and B16 moved only under N2. N1's one stable effect is R06, where the mutant's marker stands before a Setup call, so the patch is right there.
+- **N8 moved X30 only.** H01, H02, H13, K04, X36 and X37 hold without the filter, so finding 7's listed tests prove only the Task path.
+- **m23 has no direct test on cut 9.** L16 dies only because that form also moves CallInSetupStep off the test's state. No probe tells per-instance from per-test state otherwise. On cut 10, n06 and n06b measure the per-client piece.
+- **Almost no mutant reached the matrix.** Of all mutants, only m05 ran it (`matrix-xunit3`), and cut 10 has no matrix baseline.
+
+## Faults and other findings
+- **K04 was a real regression in cut 9, caused by the guard (m15a).** It is fixed on cut 10: n00 has the marker before k04-when and both calls in Action.
+- **F04 and F04b draw no boundary** although their calls go Setup then Action. This is the same on 5.28.2, cut 9 and cut 10, so it is not a regression. m04 draws the boundary with phases unchanged, so that kill may be the mutant improving the output. The cause was not looked into.
+- **X09 is noise.** It moved under 35 of 48 cut 9 mutants, BDDfy-only ones included, and that ended their escalation early.
+- **H01a to H01c are in rev4-b.**
+
+**Racing lists.** Cut 9: main B11, X09; rev3-plain B01, B02, B04, B06, C01, C02, C03, F04; rev3-reqnroll Q01-Q05; rev3-lightbdd M01-M03; rev3-more H40, H41; rev3-bddfy Z01, Z02; rev4 a F02, b G05, c P, d E01b, bddfy B05. Cut 10 adds: rev5-a L02, L04, L12 (L01 and L03 row order only under mutants), rev5-bddfy B05, and the adapters' E06.
+
+**Baseline rounds.** m00: 8 for rev3-plain, reqnroll and lightbdd; 4 for main, other review, rev4 and old; 2 for matrix. n00: 3 for main and rev5; 4 for rev3-plain, reqnroll and lightbdd; 2 for other review, rev4 and old.
+
+## Not measured
+- **Disk stop:** n13 (BDDfy no-id write, T3 and finding 5), nm15c, nm15d, nm15e, nm16b, nm20, nm27, nm31b, nm32, and the X90/X91 probe.
+- **No mutation on the list:** T7 (SkipIf read before StartStep).
+- **Not counted:** the abandoned cut 8 partial run (m01 to m08a), kept in `mut/results-cut8`.
+
+## To resume
+1. Recreate the worktree at 9d994a4b and apply cut 10.
+2. Run with `mut/tools/mutrun.py`: `control-pack`; `control-fast 1 2 main/mut-extra`; `run n13 nm15c nm15d nm15e nm16b nm20 nm27 nm31b nm32`; `more n08a main/mut-extra`; `more n12 rev4 rev5 old`; `clean-control`.
+
+## Files
+Everything is in `scratchpad/mut`: `results/<id>/diff.txt` (each mutant's changes), `results/<id>/mutation.diff` (its edit), `results/summary.txt`, `tools/mutations.py` (cut 9's), `tools/mutations10.py` (cut 10's), `tools/compare.py`, `tools/show.py`, `tools/marker.py`, `logs/run.out`, `logs/run10.out`, `probes/main/mut-extra/Shapes.cs` (X90 and X91), `patched` (cut 10 snapshot), `patched-cut9`.
+
+## Second round (cut 10 list + cut 11 p01-p06), the agent's report
+# Mutation run for #224: cut 10 list finished, cut 11 stopped at p07
+
+## X90, X91 and n08a (measured on cut 10)
+- **Baseline, 3 of 3 rounds, and the same on cut 11:** `x90-then-sub` and `x90-after` read Setup, the boundary stands before `x90-when`, and the skipped step and `Then` stay nested under the `Given`. X91 reads the same.
+- **n08a (the sync filter removed) is killed by both X90 and X91:** those calls go Setup to Action, a `Then` bar appears, the boundary moves up before `x90-then-sub`, and the `Then` moves to the top of the tree.
+- **So the sync `ret` filter is needed.** T6 now has a test on each half: X90/X91 for sync, X30 for Task.
+- **The plan needs to carry this shape:** X90 and X91 exist only in my probe, and no suite has it.
+
+## Status
+- **Cut 10 list:** finished, except the two repeats under "Not measured".
+- **Cut 11:** p01 to p06 are measured. The run stopped itself at 2.8 GB under your 3 GB rule, just after packing p07.
+- **Disk:** C: is back at 11 GB, and my folder holds 61 MB. I did not resume, as the rule says stop.
+- **n14:** it ran before you dropped it and was killed (H05, G14, A31). p01 and p02 replace it.
+
+## Your two questions (both measured on cut 10)
+
+**Which `Bypassed` checks can go? All three, if they go together and `BypassStep` keeps its node removal.**
+- **nm15d (`OpenStepSaysPhase`):** dead code. `BypassStep` sets `EndTime` first in the same lock, and nothing moved anywhere, including my probes.
+- **nm15c (the walk) and nm15e (`OutlivedStepSaysPhase`) must go as a pair.** With nm15e alone, X92 and X93 lose their boundary, because the walk leaves the bypassed node on the chain and the next `When` reads as outlived.
+- **n15cde (all three together):** no suite moved. Only X94, X94b, X96 and X98 moved, each onto the real `When`, and X96 now matches X97.
+- **One of the two sides must stay:**
+  - n12 (removal gone, checks kept) moved no suite and none of my probes.
+  - n12cde (both gone) is killed by X37, H13, A02 and A13 to A15.
+  - I would drop the checks: that loses three conditions and improves four shapes.
+- **No fork is needed to reach this state:** X94b moved under nm15c because a write inside an `async` body doesn't flow back to its stub.
+
+**Is `TrackingIgnore` in `PlantUmlCreator` needed by anything but a direct call? No, it can go.**
+- **nm27:** no suite moved across main, review, rev4, rev5 and old. Only X89's direct-call section changed, gaining `partition Setup` and `end` around the dropped arrow.
+- **The direct call still draws that arrow either way:** nothing else in `CreatePlantUml` reads the flag.
+- **The report path is unaffected:** X89's section with ignored calls filtered out, as every report path passes them, did not change.
+- **Why by reading:**
+  - The method's one caller in `src` is `DefaultDiagramsFetcher.cs:259`, fed by `TrackedLogs` at `:192`.
+  - No unit test passes it an ignored log.
+  - The mutant restores 5.28.2's exact lines.
+  - `PlantUmlCreator` is unchanged in cut 11.
+
+## Measured on cut 10 (baseline n00, 43 suites with my probe)
+
+| Mutation | Result | First or named change |
+|---|---|---|
+| n08a sync filter | Killed | X90, X91, as above |
+| n13 BDDfy no-id write | Killed | rev5-bddfy F01: `f01-seed-nosetup` Setup IGNORED to Unknown, `f01-warm-noaction` Action IGNORED to Unknown, and a diagram appears; fixture dump Setup/Action to Unknown/Unknown |
+| nm31b `AsyncVoidSupportEnabled` gate | Killed, one run | rev5-bddfy B06: `b06-when-sub`, `b06-when-after` Setup to Action, `Given Woven given` [Passed] to [Failed]. B05 and B11 only raced |
+| nm16b `isAsyncMethod` guard | **Survived all 42 suites run, weave Debug and Release and F# included** | B06 row order and races only |
+| nm20 `ActionStartDrawn` | Killed by one test | rev5-bddfy B17: boundary before `b17-given` to before `b17-when`. X19, X07, X08 unchanged |
+| nm27 `TrackingIgnore` | No suite | X89 direct call only |
+| nm15c walk | No suite | X94, X94b boundary before `-when-label` to before `x94-when` / `x94b-when` |
+| nm15d `OpenStepSaysPhase` | **Survived everything** | Races only |
+| nm15e `OutlivedStepSaysPhase` | No suite | X92, X93 boundary gone; X96 before `x96-worker-then` to before `x96-when`; X98 before `x98-left-when-label` to before `x98-when`; L14 row order |
+| n15cde all three (mine) | No suite | X94, X94b, X96, X98 as above; X92, X93, X95, X97 unchanged; L03 and B06 row order |
+| nm32 `IsDetached` | One test, order class | rev4-b G03: boundary before `g03-act` to before `g03-after-detached`, the same move on cut 9 and cut 10, one run each; unmutated 6 of 6 rounds. H01a-c unchanged |
+| n12 own-node removal | **Survived all 43 suites** | L03 row order and races only |
+| n12cde removal and checks (mine) | Killed | X37 boundary gone, H13, A02, A13, A14, A15 |
+
+**What the survivors imply**
+- **nm16b:** no shape needs the guard. All it keeps true is the plan's line that an `async` method's IL does not change.
+- **nm15d:** the check is not needed.
+- **n12:** either side covers for the other, as above.
+- **Only racing tests differed:** nm15d alone. nm16b and n12 add one row-order move each.
+
+## Measured on cut 11 (baseline p00)
+The baseline is 3 rounds over main, rev5, rev6, rev3-plain and my probe. Each mutant ran main plus its named suites.
+
+| Mutation | Result | First or named change |
+|---|---|---|
+| p01 getter before `StartStep` | Killed | S01 to S10 all move: S01 `s01-getter` Setup to Unknown; S02, S10 getter Action to Setup, boundary moves to the act; S03 boundary to `s03-then`; S04, S05, S07 a step that runs today stops running; S06 a step that is skipped today runs; S08 boundary gone; S09 Setup to Unknown |
+| p02 getter's catch removed | Killed | H05 boundary gone, `h05-act`, `h05-then` Action to Setup; G14 same, with `g14-nosetup`, `g14-then` IGNORED; A31 step left open. S01 to S11 unchanged |
+| p03 BDDfy write removed | Killed | B18, B20, B21 `-setup` Unknown to Setup; B22, B23 Unknown to Action; boundaries unchanged |
+| p04 `Without` to `node.Parent` | Killed | I02 boundary before `i02-act` to before `i02-label`; I03 likewise. I01 unchanged |
+| p05 `ActionStartDrawn = false` removed | Killed | B24 boundary before `b24-act` gone, leaving the one before `b24-woven-when`; R41 likewise, leaving the one before `hook-login`, on both Reqnroll hosts; R42 one marker gone |
+| p06 `!FlowHolds` removed | Killed | B32, R40 (both hosts), L40: boundary before the act to before the `Then` |
+| p07, p08 | **Not run** | Disk stop |
+
+**One named test is weak:** S11 moved only by row order under p01, with the same phases and boundary. Its getter's calls now come before the bar. The other named tests caught what you expected.
+
+**What cut 11 itself moved against cut 10 (read-only comparison of the two baselines):** only the throwing-getter tests: E04 on four adapters, H05, A31 and G14. Each gains a `[Failed]` step and its bar. H05, G14 and E04 gain a boundary, and in A31 `a31-after` goes Setup to Action. No other stable test changed in main, rev5 or rev3-plain.
+
+## Not measured
+- **p07, p08:** your list; the disk stop came first.
+- **p09, p10, p11:** my extras, never run.
+  - p09: n15cde on cut 11.
+  - p10: nm15e alone on cut 11, which would include X99.
+  - p11: n12 on cut 11.
+  - So the `Bypassed` answer rests on cut 10 only. X99, a plain async self-bypass at the top level, has only a baseline.
+- **Repeats of nm31b B06 and nm32 G03:** these failed on my own `rerun` bug, which built the wrong project list. It's fixed, but they never ran.
+- **n15ce:** skipped on purpose, as nm15d shows it measures the same as n15cde.
+
+## Other findings
+- **Six `B_matrix(kid: "tuple")` tests in rev6-a fail on unmutated cut 11:** the review's own run shows the same six, and the 5.28.2 dump stops at the same point. So this isn't from the patch. The shape is a skipped `async Task<(int, string)>` step; I did not read the exception.
+- **Row order in rev5-bddfy B06 and B12 and rev5-a L03 and L14 races:** it moves under mutants that can't reach those tests. Only nm31b moved B06's phases.
+- **Racing on p00:**
+  - main B11, X09
+  - rev3-plain B04, B06, C01, C02, C03
+  - rev5-a L01, L02, L04, L12
+  - rev5-bddfy B05
+  - adapters' E06
+  - rev6-a B06, which is new
+
+## To resume (about 45 minutes, most of it p09 and p11)
+p00 holds while cut 11 doesn't change.
+1. Recreate the worktree at 9d994a4b and apply `r1-r2-r3.patch` from cut 11.
+2. With `MUT_CUT=11`, run `mutrun.py control-pack`, then `run p07 p08 p09 p10 p11`, then `clean-control`.
+3. Without `MUT_CUT`, run `rerun nm31b rev5/rev5-bddfy 3` and `rerun nm32 rev4/rev4-b 3`.
+
+## Cleanup
+- **Worktree:** removed.
+- **Leftovers:** 0 bin/obj in my folder, 0 packages in the feed, 0 of my cache folders.
+- **Another session's cache:** 11 `5.28.3-proto225f11` folders match `5.28.3-p*`. They look like #225's, so I left them.
+- **Repo and off-limits folders:** no commits, pushes or issue comments, nothing of mine still running, and I built nothing in your in-use folders (I read and copied from `S/rr` and `S/review6`).
+
+## Files
+Everything is in `C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\31780689-26c4-4084-b1b5-c4efb9a6fd42\scratchpad\mut`:
+- `results\<id>\diff.txt` – each mutant's full list of changes
+- `results\summary.txt` – its KILLED verdicts count my own probes, so nm27 and nm15e read as killed there; use the tables above
+- `results\p00` – cut 11's baseline
+- `results\p07` – holds only the mutation's diff
+- `probes\main\mut-extra\Shapes.cs` – X89 to X99
+- `probes\rev6` – the review6 suites, copied
+- `tools\mutations11.py` – p01 to p11
+- `tools\cut_delta.py` – compares two baselines
+- `tools\mutrun.py` – the driver
+- `logs\run11.out` – the cut 10 chain's log
+- `logs\run12.out` – the cut 11 chain's log
+## Closing: p07 to p16, run on cut 11 after the agent's disk stop
+
+This section supersedes the second round where they differ, above all its "Which Bypassed checks can go? All three", which rested on cut 10's baseline with no sixth-review probes.
+
+| Mutation | Result | What moved |
+|---|---|---|
+| p07 fetcher guard back to `catch (InvalidOperationException)` | Killed | `review6/F2`: the test fails and its rows go |
+| p08 the Action write at `ActionStartDrawn` removed | Killed | `review6/F1`: `f1-when-plain` Action to Unknown |
+| p09 all three `Bypassed` checks gone, the removal kept | Killed | `review6/K08` loses its marker and partition. X94, X94b, X96, X98's boundary moves onto the real When |
+| p10 `OutlivedStepSaysPhase`'s check gone alone | Killed | X92, X93, X95, X99 lose their boundary |
+| p11 `BypassStep`'s own-node removal gone | Nothing solid | Order and known races only, across the main suites, review 3, 5 and 6 |
+| p12 the three deletions together: `TrackingIgnore`, `OpenStepSaysPhase`'s check, the removal | Only X89's direct call | Over the main suites and reviews 3, 5 and 6: `partition` and `end` appear around X89's arrow on a direct call of the public method |
+| p13 nm16b on cut 11: every Task stub gets the catch | Nothing solid | Order and known races only |
+| p14 nm20 on cut 11: `ActionStartDrawn` dropped from the boundary | Killed | `review5/B17`, `review6/B22` |
+| p15 nm32 on cut 11: `IsDetached` dropped | Killed | `review4/G03`'s marker moves from before `g03-act` to before `g03-after-detached` (compared by hand with the cut's own dump, as `p00` has no baseline for `rev4-b`). The driver's "solid" `review5/B06` is row order, unrelated |
+| p16 n08a on cut 11: the sync bypass's `ret` filter removed | Killed | X90, X91 and 18 more, in `review6/B02`, `B04` and `B_matrix` |
+
+**What follows.** `OutlivedStepSaysPhase`'s check stays. The removal and `OpenStepSaysPhase`'s check and the `TrackingIgnore` edit can go together. The walk's check stands in for the removal (n12cde).

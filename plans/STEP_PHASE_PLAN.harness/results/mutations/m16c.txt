@@ -1,0 +1,11 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=1
+first: main/xunit3-plain: X32_a_Task_step_whose_body_ends_in_a_handler: gone: [bar] <color:white>Given Ending in handler; gone: x32-caught-InvalidOperationException Setup Setup; gone: --- ACTION START MARKER ---; gone: Given Ending in handler [Failed]; new: x32-
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X32_a_Task_step_whose_body_ends_in_a_handler
+    gone: [bar] <color:white>Given Ending in handler; gone: x32-caught-InvalidOperationException Setup Setup; gone: --- ACTION START MARKER ---; gone: Given Ending in handler [Failed]; new: x32-caught-InvalidProgramException Unknown Unknown
+      -[bar] <color:white>Given Ending in handler
+      -x32-caught-InvalidOperationException Setup Setup
+      +x32-caught-InvalidProgramException Unknown Unknown
+      ---- ACTION START MARKER ---
+      - Given Ending in handler [Failed]

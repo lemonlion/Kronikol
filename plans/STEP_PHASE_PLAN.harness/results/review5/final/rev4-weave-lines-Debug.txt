@@ -1,0 +1,144 @@
+## 
+## A01
+ShouldAssertException: Value
+Shapes.A01_AssertionInTaskStubFails() @ Suite.cs:line 191
+Shapes.<T_A01>b__57_0() @ Suite.cs:line 251
+
+## A02
+(no exception)
+
+## A03
+ShouldAssertException: Task `Task.CompletedTask`
+
+
+## A04
+ShouldAssertException: Value
+Shapes.A04_TwoAssertionsThenReturnTask() @ Suite.cs:line 208
+Shapes.<T_A04>b__60_0() @ Suite.cs:line 254
+
+## L01
+InvalidOperationException: l01-1
+Shapes.Boom(String m) @ Suite.cs:line 49
+Shapes.L01_TaskStubThrowsFromCallee() @ Suite.cs:line 161
+Shapes.<T_L01>b__53_0() @ Suite.cs:line 247
+
+## L02
+InvalidOperationException: l02
+Shapes.L02_TaskStubThrowsHere() @ Suite.cs:line 169
+Shapes.<T_L02>b__54_0() @ Suite.cs:line 248
+
+## L03
+InvalidOperationException: l03-1
+Shapes.Boom(String m) @ Suite.cs:line 49
+Shapes.L03_SyncStep() @ Suite.cs:line 177
+Shapes.<T_L03>b__55_0() @ Suite.cs:line 249
+
+## L04
+InvalidOperationException: l04
+Shapes.Boom(String m) @ Suite.cs:line 49
+Shapes.L04_AsyncStep() @ Suite.cs:line 184
+
+## S01
+ArgumentException: s01-outer
+Shapes.S01_SyncCatchAtEnd() @ Suite.cs:line 217
+Shapes.<T_S01>b__61_0() @ Suite.cs:line 255
+
+## S02
+ArgumentException: s02-outer
+Shapes.S02_SyncAllPathsThrow() @ Suite.cs:line 226
+Shapes.<T_S02>b__36_0() @ Suite.cs:line 229
+
+## W01
+InvalidOperationException: w01
+Shapes.W01_ExprThrow() @ Suite.cs:line 74
+Shapes.<T_W01>b__37_0() @ Suite.cs:line 231
+
+## W02
+ArgumentException: w02-outer
+Shapes.W02_CatchAtEnd() @ Suite.cs:line 80
+Shapes.<T_W02>b__38_0() @ Suite.cs:line 232
+
+## W03
+InvalidOperationException: w03
+Shapes.W03_FinallyAtEnd() @ Suite.cs:line 86
+Shapes.<T_W03>b__39_0() @ Suite.cs:line 233
+
+## W04
+ArgumentException: w04-outer
+Shapes.W04_FilterAtEnd() @ Suite.cs:line 94
+Shapes.<T_W04>b__40_0() @ Suite.cs:line 234
+
+## W05-0
+(no exception)
+
+## W05-1
+(no exception)
+
+## W05-2
+InvalidOperationException: w05
+Shapes.Boom(String m) @ Suite.cs:line 49
+Shapes.W05_Switch(Int32 n) @ Suite.cs:line 104
+Shapes.<>c__DisplayClass41_0.<T_W05>b__0() @ Suite.cs:line 235
+
+## W05-3
+InvalidOperationException: w05-faulted
+
+
+## W06-0
+(no exception)
+
+## W06-1
+InvalidOperationException: w06
+Shapes.Boom(String m) @ Suite.cs:line 49
+Shapes.W06_Using(Int32 n) @ Suite.cs:line 113
+Shapes.<T_W06>b__42_1() @ Suite.cs:line 236
+
+## W07
+(no exception)
+
+## W08
+(no exception)
+
+## W08-null
+InvalidOperationException: w08
+Shapes.W08_Generic[T](T value) @ Suite.cs:line 124
+Shapes.<T_W08>b__44_1() @ Suite.cs:line 238
+
+## W09
+(no exception)
+
+## W10-0
+(no exception)
+
+## W10-1
+InvalidOperationException: w10
+Shapes.Boom(String m) @ Suite.cs:line 49
+Shapes.W10_Stackalloc(Int32 n) @ Suite.cs:line 134
+Shapes.<T_W10>b__46_1() @ Suite.cs:line 240
+
+## W11
+(no exception)
+
+## W12
+NullReferenceException: Object reference not set to an instance of an object.
+
+
+## W13-a
+(no exception)
+
+## W13-b
+(no exception)
+
+## W14
+InvalidOperationException: w14
+Shapes.Boom(String m) @ Suite.cs:line 49
+Shapes.W14_Inner(Int32 n) @ Suite.cs:line 146
+Shapes.W14_Outer(Int32 n) @ Suite.cs:line 145
+Shapes.<T_W14>b__50_0() @ Suite.cs:line 244
+
+## W15
+(no exception)
+
+## W16
+InvalidOperationException: w16
+

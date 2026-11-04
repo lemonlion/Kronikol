@@ -1,0 +1,24 @@
+## Q13 When Then Given When Then
+  [Step] <color:white>When a call named q13-first-when
+  q13-first-when                               http Action   
+  q13-first-when                               msg  Action   
+  [Step] <color:white>Then a call named q13-first-then
+  q13-first-then                               http Action   
+  q13-first-then                               msg  Action   
+  [Step] <color:white>Given a call named q13-given
+  q13-given                                    http Setup    
+  q13-given                                    msg  Setup    
+  [Step] <color:white>When a call named q13-second-when
+  --- ACTION START MARKER ---
+  q13-second-when                              http Action   
+  q13-second-when                              msg  Action   
+  [Step] <color:white>Then a call named q13-second-then
+  q13-second-then                              http Action   
+  q13-second-then                              msg  Action   
+  steps:
+    When a call named q13-first-when  [Passed]
+    Then a call named q13-first-then  [Passed]
+    Given a call named q13-given  [Passed]
+    When a call named q13-second-when  [Passed]
+    Then a call named q13-second-then  [Passed]
+

@@ -1,0 +1,11 @@
+## PhaseProbe.Bddfy.Scenarios.B2_three_async_steps_that_yield
+call                               http     message  ignored
+[bar] <color:white>Given an async call b2-given
+b2-then                            Action   Action   
+b2-given                           Setup    Setup    
+b2-when                            Action   Action   
+steps:
+  Given an async call b2-given  [Passed]
+    When an async call b2-when  [Passed]
+      Then an async call b2-then  [Passed]
+

@@ -1,0 +1,4 @@
+SURVIVED solid=0 order=0 racing-new=0 racing-seen=1
+first: -
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When

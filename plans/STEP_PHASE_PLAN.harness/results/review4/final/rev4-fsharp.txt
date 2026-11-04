@@ -1,0 +1,14 @@
+unit-tail steps=Unit tail[Passed] open=False :: resolver=True same=True | a | unit-tail: no exception
+async-to-task steps=Async to task[Passed] open=False :: resolver=True same=True | a | async-to-task: no exception
+task-fn-throws steps=Task fn throws[Failed] open=False :: resolver=True same=True | task-fn-throws: InvalidOperationException: boom
+unit-throwing-tail steps=Unit throwing tail[Failed] open=False :: resolver=True same=True | unit-throwing-tail: InvalidOperationException: boom
+task-fn steps=Task fn[Passed] open=False :: resolver=True same=True | task-fn: no exception
+task-ce-int steps=Task ce int[Passed] open=False :: resolver=True same=True | task-ce-int: no exception
+unit-fn steps=Unit fn[Passed] open=False :: resolver=True same=True | unit-fn: no exception
+task-ce-throws steps=Task ce throws[Failed] open=False :: resolver=True same=True | task-ce-throws: Exception: boom
+task-of-int-tail steps=Task of int tail[Passed] open=False :: resolver=True same=True | task-of-int-tail: no exception
+task-generic steps=Task generic[Passed] open=False :: resolver=True same=True | task-generic: no exception
+task-ce-try steps=Task ce try[Passed] open=False :: resolver=True same=True | caught | task-ce-try: no exception
+task-tail steps=Task tail[Passed] open=False :: resolver=True same=True | task-tail: no exception
+task-throwing-tail steps=Task throwing tail[Failed] open=False :: resolver=True same=True | task-throwing-tail: InvalidOperationException: boom
+task-ce steps=Task ce[Passed] open=False :: resolver=True same=True | a | task-ce: no exception

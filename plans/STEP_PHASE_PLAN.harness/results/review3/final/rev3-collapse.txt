@@ -1,0 +1,43 @@
+## PhaseProbe.Rev3.Collapse.Suite.K01_two_same_in_a_Given_two_same_in_a_When_delimiters_off
+  same                                         http Setup    
+  same                                         http Setup    
+  --- ACTION START MARKER ---
+  same                                         http Action   
+  same                                         http Action   
+  steps:
+    Given Two same  [Passed]
+    When Two same  [Passed]
+
+## PhaseProbe.Rev3.Collapse.Suite.K02_one_same_in_a_Given_one_same_in_a_When_delimiters_off
+  same                                         http Setup    
+  --- ACTION START MARKER ---
+  same                                         http Action   
+  steps:
+    Given One same  [Passed]
+    When One same  [Passed]
+
+## PhaseProbe.Rev3.Collapse.Suite.K03_control_with_delimiters_on
+  [Step] <color:white>Given Two same
+  same                                         http Setup    
+  same                                         http Setup    
+  [Step] <color:white>When Two same
+  --- ACTION START MARKER ---
+  same                                         http Action   
+  same                                         http Action   
+  steps:
+    Given Two same  [Passed]
+    When Two same  [Passed]
+
+## PhaseProbe.Rev3.Collapse.Suite.K04_ambient_manual_bypass_under_a_sync_Given
+  [Step] <color:white>Given With ambient manual bypass
+  [Step] <color:white>When K04
+  --- ACTION START MARKER ---
+  k04-when                                     http Action   
+  [Step] <color:white>Then K04
+  k04-then                                     http Action   
+  steps:
+    Given With ambient manual bypass  [Passed]
+      (none) k04-manual-sub  [Bypassed]
+    When K04  [Passed]
+    Then K04  [Passed]
+

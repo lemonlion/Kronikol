@@ -1,0 +1,26 @@
+KILLED solid=3 order=0 racing-new=0 racing-seen=1
+first: main/bddfy-xunit3: B10_a_teardown_after_the_boundary: b10-teardown: Unknown Unknown > Action Action
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B10_a_teardown_after_the_boundary
+    b10-teardown: Unknown Unknown > Action Action
+      -b10-teardown Unknown Unknown
+      +b10-teardown Action Action
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-bddfy] rev4-bddfy.txt: SOLID B01_Async_steps_and_a_tear_down
+    Request: b01-teardown-no-action-tracking phase=Unknown src=TestContext > b01-teardown-no-action-tracking phase=Action src=TestContext IGNORED; Response: b01-teardown-no-action-tracking phase=Unknown src=TestContext > b01-teardown-no-action-tracking phase=Action src=TestContext IGNORED; gone: shop -[#438DD5]-> probe: OK
+      - Request b01-teardown-no-action-tracking phase=Unknown src=TestContext
+      - Response b01-teardown-no-action-tracking phase=Unknown src=TestContext
+      + Request b01-teardown-no-action-tracking phase=Action src=TestContext IGNORED
+      + Response b01-teardown-no-action-tracking phase=Action src=TestContext IGNORED
+      - shop -[#438DD5]-> probe: OK
+[rev4/rev4-bddfy] rev4-bddfy.txt: SOLID B02_Calls_after_the_story_in_the_test_body
+    Request: b02-after-story-no-action-tracking phase=Unknown src=TestContext > b02-after-story-no-action-tracking phase=Action src=TestContext IGNORED; Response: b02-after-story-no-action-tracking phase=Unknown src=TestContext > b02-after-story-no-action-tracking phase=Action src=TestContext IGNORED; Request: b02-after-story phase=Unknown src=TestContext > b02-after-story phase=Action src=TestCon
+      - Request b02-after-story-no-action-tracking phase=Unknown src=TestContext
+      - Response b02-after-story-no-action-tracking phase=Unknown src=TestContext
+      - Request b02-after-story phase=Unknown src=TestContext
+      - Response b02-after-story phase=Unknown src=TestContext
+      + Request b02-after-story-no-action-tracking phase=Action src=TestContext IGNORED
+      + Response b02-after-story-no-action-tracking phase=Action src=TestContext IGNORED
+      + Request b02-after-story phase=Action src=TestContext
+      + Response b02-after-story phase=Action src=TestContext
+      - shop -[#438DD5]-> probe: OK

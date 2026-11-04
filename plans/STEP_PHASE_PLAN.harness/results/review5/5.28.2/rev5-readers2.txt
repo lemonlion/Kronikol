@@ -1,0 +1,144 @@
+## T01_passes
+  [Step] <color:white>Given A customer exists
+  
+  Request  t01-given                      phase=Setup   src=TestContext
+  Response t01-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When The customer orders
+  
+  Request  t01-when                       phase=Action  src=TestContext
+  Response t01-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then The order is shipped
+  
+  Request  t01-then                       phase=Action  src=TestContext
+  Response t01-then                       phase=Action  src=TestContext
+  steps:
+    Given A customer exists [Passed]
+    When The customer orders [Passed]
+    Then The order is shipped [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given A customer exists
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When The customer orders
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then The order is shipped
+      shop -[#438DD5]-> probe: OK
+
+## T02_fails_in_the_Then
+  [Step] <color:white>Given A customer exists
+  
+  Request  t02-given                      phase=Setup   src=TestContext
+  Response t02-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When The customer orders
+  
+  Request  t02-when                       phase=Action  src=TestContext
+  Response t02-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then The order fails
+  
+  Request  t02-then                       phase=Action  src=TestContext
+  Response t02-then                       phase=Action  src=TestContext
+  steps:
+    Given A customer exists [Passed]
+    When The customer orders [Passed]
+    Then The order fails [Failed] msg=Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given A customer exists
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When The customer orders
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then The order fails
+      shop -[#438DD5]-> probe: OK
+
+## T03_two_markers_fails_in_the_Then
+  [Step] <color:white>Given A customer exists
+  
+  Request  t03-given                      phase=Setup   src=TestContext
+  Response t03-given                      phase=Setup   src=TestContext
+  [Step] <color:white>When The customer orders after marking
+  
+  Request  t03-when-arrange               phase=Action  src=TestContext
+  Response t03-when-arrange               phase=Action  src=TestContext
+  --- MARKER ---
+  Request  t03-when                       phase=Action  src=TestContext
+  Response t03-when                       phase=Action  src=TestContext
+  [Step] <color:white>Then The order fails
+  
+  Request  t03-then                       phase=Action  src=TestContext
+  Response t03-then                       phase=Action  src=TestContext
+  steps:
+    Given A customer exists [Passed]
+    When The customer orders after marking [Passed]
+    Then The order fails [Failed] msg=Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   2
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given A customer exists
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When The customer orders after marking
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then The order fails
+      shop -[#438DD5]-> probe: OK
+
+## T05_identical_calls_across_the_boundary
+  [Step] <color:white>Given Identical seeds
+  
+  Request  same                           phase=Setup   src=TestContext
+  Response same                           phase=Setup   src=TestContext
+  Request  same                           phase=Setup   src=TestContext
+  Response same                           phase=Setup   src=TestContext
+  Request  same                           phase=Setup   src=TestContext
+  Response same                           phase=Setup   src=TestContext
+  [Step] <color:white>When Identical calls
+  
+  Request  same                           phase=Action  src=TestContext
+  Response same                           phase=Action  src=TestContext
+  Request  same                           phase=Action  src=TestContext
+  Response same                           phase=Action  src=TestContext
+  Request  same                           phase=Action  src=TestContext
+  Response same                           phase=Action  src=TestContext
+  steps:
+    Given Identical seeds [Passed]
+    When Identical calls [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Identical seeds
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Identical calls
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## T06_fails_in_the_Given_no_marker
+  [Step] <color:white>Given A customer exists
+  
+  Request  t06-given                      phase=Setup   src=TestContext
+  Response t06-given                      phase=Setup   src=TestContext
+  steps:
+    Given A customer exists [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given A customer exists
+      shop -[#438DD5]-> probe: OK
+
+## ead1f9c24acaec5349429ad138a64f60298f3b60dc87ea1e698d3c4ee577c36d
+  [Step] <color:white>Given No calls in this given
+  
+  [Step] <color:white>When Nothing
+  
+  steps:
+    Given No calls in this given [Passed]
+    When Nothing [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given No calls in this given
+      hnote across <<stepDelimiter>> #black:<color:white>When Nothing
+

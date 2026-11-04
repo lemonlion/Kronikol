@@ -1,0 +1,52 @@
+KILLED solid=2 order=3 racing-new=1 racing-seen=28
+first: main/mut-extra: X92_a_fork_bypasses_an_async_Given_then_When: gone: --- ACTION START MARKER ---
+
+[main/mut-extra] mut-extra.txt: SOLID PhaseProbe.MutExtra.BypassedOnAnotherFlow.X92_a_fork_bypasses_an_async_Given_then_When
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/mut-extra] mut-extra.txt: SOLID PhaseProbe.MutExtra.BypassedOnAnotherFlow.X93_a_fork_bypasses_a_sync_Given_then_When
+    gone: --- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/mut-extra] mut-extra.txt: ORDER PhaseProbe.MutExtra.BypassedOnAnotherFlow.X96_a_worker_outlives_a_Given_that_bypassed_itself
+      ---- ACTION START MARKER ---
+      +--- ACTION START MARKER ---
+[main/mut-extra] mut-extra.txt: ORDER PhaseProbe.MutExtra.BypassedOnAnotherFlow.X98_a_hand_bypass_takes_a_Given_left_running_on_another_flow
+      ---- ACTION START MARKER ---
+      +--- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-a] rev4-a.txt: racing, shape seen F02_Poller_silenced_with_the_public_setter
+[rev4/rev4-b] rev4-b.txt: racing, shape seen G05_Plain_background_reader_with_a_TrackDuringAction_false_client
+[rev4/rev4-bddfy] rev4-bddfy.txt: RACING-NEW B05_Async_void_support_off (baseline variants 2, 1 shapes)
+    Request: b05-when-1 phase=Action src=TestContext > b05-when-1 phase=Action src=TestContext
+      + Request b05-when-1 phase=Action src=TestContext
+      - Request b05-when-1 phase=Action src=TestContext
+[rev4/rev4-d] rev4-d.txt: racing, shape seen E01b_Poller_outlives_its_test
+[rev5/adapter-mstest] mstest.txt: racing, shape seen E06_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/adapter-tunit] adapter-tunit.txt: racing, shape seen E06_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L02_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L04_Parallel_ForEach_of_sync_Givens_at_the_top_then_When_with_nested_Given
+[rev5/rev5-a] rev5-a.txt: ORDER L14_A_When_on_a_ContinueWith_after_the_Given_closed
+      - Response l14-after-given phase=Setup src=TestContext
+      + Response l14-after-given phase=Setup src=TestContext
+      + hnote across <<stepDelimiter>> #black:<color:white>When Async
+      - hnote across <<stepDelimiter>> #black:<color:white>When Async
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[review/rev3-lightbdd] rev3-lightbdd.plantuml.txt: racing, shape seen M01 a Given leaves a worker running
+[review/rev3-lightbdd] rev3-lightbdd.plantuml.txt: racing, shape seen M02 a background Then loop then an And in setup
+[review/rev3-lightbdd] rev3-lightbdd.plantuml.txt: racing, shape seen M03 a background Given loop then an And in action
+[review/rev3-lightbdd] rev3-lightbdd.txt: racing, shape seen M02 a background Then loop then an And in setup
+[review/rev3-lightbdd] rev3-lightbdd.txt: racing, shape seen M03 a background Given loop then an And in action
+[review/rev3-more] rev3-more.plantuml.txt: racing, shape seen PhaseProbe.Rev3.More.H_LoopOnANoSetupClient.H41_a_loop_of_Then_steps_from_a_Given_on_a_Tra
+[review/rev3-more] rev3-more.txt: racing, shape seen PhaseProbe.Rev3.More.H_LoopOnANoSetupClient.H41_a_loop_of_Then_steps_from_a_Given_on_a_Tra
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C03_a_loop_of_keyword_free_steps_started_in_a_Given
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C03_a_loop_of_keyword_free_steps_started_in_a_Given
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+[review/rev3-reqnroll] rev3-reqnroll.plantuml.txt: racing, shape seen Q04 a Given binding starts a background loop of keyword-free steps
+[review/rev3-reqnroll] rev3-reqnroll.plantuml.txt: racing, shape seen Q05 a Given binding starts a background loop of Then steps
+[review/rev3-reqnroll] rev3-reqnroll.txt: racing, shape seen Q04 a Given binding starts a background loop of keyword-free steps
+[review/rev3-reqnroll] rev3-reqnroll.txt: racing, shape seen Q05 a Given binding starts a background loop of Then steps

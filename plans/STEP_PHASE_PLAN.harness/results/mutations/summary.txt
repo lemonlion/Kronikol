@@ -1,0 +1,134 @@
+control: no package for Kronikol
+CONTROL_PACKED
+CONTROL_FAST_DONE
+CONTROL_FAST_DONE
+CONTROL_FAST_DONE
+CONTROLS_ALL_DONE
+m01 KILLED solid=26 order=1 racing-new=0 racing-seen=0 60s first: main/bddfy-xunit3: B02_a_When_step_calls_a_woven_Given: b02-in-sub: Action Action > Setup Setup; b02-after-sub: Action Action > Setup Setup
+m02 KILLED solid=25 order=0 racing-new=0 racing-seen=0 73s first: main/bddfy-xunit3: B03_a_Given_step_calls_a_woven_When: gone: --- ACTION START MARKER ---
+m03a KILLED solid=65 order=0 racing-new=7 racing-seen=7 68s first: main/bddfy-xunit3: B01_plain_Given_And_When_And_Then_But: gone: --- ACTION START MARKER ---
+m03b KILLED solid=7 order=0 racing-new=0 racing-seen=1 60s first: main/bddfy-xunit3: B05_async_steps_that_yield: gone: --- ACTION START MARKER ---
+m04 KILLED solid=2 order=0 racing-new=2 racing-seen=18 255s first: rev4/rev4-a: F04_Hand_steps_with_an_async_completer: new: --- MARKER ---; new: partition Setup; new: end escalated:review+rev4
+m05 KILLED solid=1 order=7 racing-new=0 racing-seen=14 354s first: rev4/rev4-d: B06_Own_runner_on_a_thread_under_a_scope: new: --- MARKER ---; new: partition Setup; new: end escalated:review+rev4
+m10a KILLED solid=65 order=0 racing-new=1 racing-seen=0 71s first: main/bddfy-xunit3: B01_plain_Given_And_When_And_Then_But: b01-given: Setup Setup > Unknown Unknown; b01-and: Setup Setup > Unknown Unknown; b01-when: Action Action > Action Unknown; b01-when-and: Action Action > Unknown Unknown; b01-then: Action Ac
+m10b KILLED solid=15 order=0 racing-new=0 racing-seen=0 86s first: main/lightbdd-xunit2: L01 plain Given When Then: l01-given: Setup Setup > Setup Unknown; l01-and: Setup Setup > Setup Unknown; l01-when: Action Action > Action Unknown; l01-when-and: Action Action > Unknown Unknown; l01-then: Action Action
+m11 KILLED solid=1 order=0 racing-new=0 racing-seen=0 58s first: main/lightbdd-xunit2: L13 LightBDDs own setup step type: l13-setup: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---
+m12 KILLED solid=2 order=0 racing-new=0 racing-seen=0 128s first: main/lightbdd-xunit2: L15 an And first over a Given sub step: l15-body: Setup Unknown > Unknown Unknown; l15-given-sub: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---
+m13 KILLED solid=4 order=0 racing-new=0 racing-seen=4 153s first: review/rev3-plain: G04_manual_And_after_a_phase_set_directly: gone: partition #F6F6F6 Setup; gone: end; gone: shop -[#438DD5]-> probe: OK
+m14 KILLED solid=9 order=0 racing-new=0 racing-seen=7 136s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m15a KILLED solid=3 order=1 racing-new=0 racing-seen=14 359s first: review/rev3-collapse: K04_ambient_manual_bypass_under_a_sync_Given: new: hnote across <<stepDelimiter>> #black:<color:white>When K04; new: hnote across <<stepDelimiter>> #black:<color:white>Then K04 escalated:review
+m15b KILLED solid=2 order=0 racing-new=0 racing-seen=0 112s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m15c KILLED solid=1 order=0 racing-new=0 racing-seen=0 88s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m15d KILLED solid=1 order=0 racing-new=0 racing-seen=0 100s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m15e KILLED solid=1 order=0 racing-new=0 racing-seen=0 179s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m15f KILLED solid=2 order=0 racing-new=0 racing-seen=6 111s first: review/rev3-plain: A02_nonasync_Task_Given_with_a_manual_bypassed_sub_step: gone: partition #F6F6F6 Setup; gone: end
+m16a KILLED solid=5 order=0 racing-new=0 racing-seen=0 106s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m16b KILLED solid=1 order=0 racing-new=0 racing-seen=0 88s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m16c KILLED solid=2 order=0 racing-new=0 racing-seen=0 77s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m16d KILLED solid=2 order=0 racing-new=0 racing-seen=0 108s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m17 KILLED solid=2 order=0 racing-new=0 racing-seen=0 120s first: main/lightbdd-xunit2: L16 an And first then a When: gone: --- ACTION START MARKER ---
+m18 KILLED solid=4 order=0 racing-new=0 racing-seen=0 203s first: main/lightbdd-xunit2: L01 plain Given When Then: l01-then-but: Action Action > Setup Setup
+m19 KILLED solid=2 order=0 racing-new=0 racing-seen=0 175s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m20 KILLED solid=1 order=0 racing-new=0 racing-seen=0 307s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m21 KILLED solid=5 order=0 racing-new=1 racing-seen=8 231s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m22 KILLED solid=5 order=0 racing-new=0 racing-seen=2 139s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m23 KILLED solid=2 order=0 racing-new=0 racing-seen=0 99s first: main/lightbdd-xunit2: L16 an And first then a When: gone: --- ACTION START MARKER ---
+m24 KILLED solid=1 order=68 racing-new=0 racing-seen=1 214s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m25 KILLED solid=2 order=0 racing-new=0 racing-seen=6 158s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m26 KILLED solid=3 order=0 racing-new=0 racing-seen=0 161s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m27 KILLED solid=1 order=0 racing-new=0 racing-seen=9 245s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m28 KILLED solid=2 order=0 racing-new=0 racing-seen=0 148s first: main/lightbdd-xunit2: L14 a bypassed sub step in a Given composite: l14-when-sub: Setup Setup > Action Action; WHEN: a call named [label: "l14-when-sub"] [Passed] > a call named [label: "l14-when-sub"] [Passed]; (none): A call named [label: "l14-untyped-sub"
+m29 KILLED solid=9 order=0 racing-new=0 racing-seen=1 159s first: main/bddfy-xunit3: B04_an_async_When_step_calls_a_woven_Given: b04-in-sub: Action Action > Setup Setup; b04-after-sub: Action Action > Setup Setup; Given: Woven given [Passed] > Woven given [Passed]; new: [bar] <color:white>Given Woven given
+m29a KILLED solid=3 order=1 racing-new=0 racing-seen=1 148s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m29b KILLED solid=7 order=0 racing-new=0 racing-seen=1 146s first: main/bddfy-xunit3: B04_an_async_When_step_calls_a_woven_Given: b04-in-sub: Action Action > Setup Setup; b04-after-sub: Action Action > Setup Setup; Given: Woven given [Passed] > Woven given [Passed]; new: [bar] <color:white>Given Woven given
+m30 KILLED solid=2 order=0 racing-new=0 racing-seen=0 169s first: old/lightbdd: outside: gone from lightbdd.txt
+m31a KILLED solid=2 order=0 racing-new=0 racing-seen=0 119s first: main/bddfy-xunit3: B04_an_async_When_step_calls_a_woven_Given: b04-in-sub: Action Action > Setup Setup; b04-after-sub: Action Action > Setup Setup; Given: Woven given [Passed] > Woven given [Passed]; new: [bar] <color:white>Given Woven given
+m31b KILLED solid=1 order=0 racing-new=0 racing-seen=1 84s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m32 KILLED solid=1 order=1 racing-new=0 racing-seen=0 111s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m33 KILLED solid=5 order=0 racing-new=0 racing-seen=1 118s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m34 KILLED solid=5 order=0 racing-new=0 racing-seen=0 184s first: rev4/rev4-c: C02_Identical_service_calls_across_the_When: gone: note: "body": "ACTION-PAYLOAD"
+m35 KILLED solid=3 order=0 racing-new=0 racing-seen=0 125s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m36 KILLED solid=6 order=0 racing-new=0 racing-seen=0 172s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m36a KILLED solid=2 order=0 racing-new=0 racing-seen=0 144s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m36b KILLED solid=5 order=0 racing-new=0 racing-seen=0 139s first: main/xunit3-plain: X09_a_step_left_open_then_a_When: new: late message: x09-open-given
+m37 KILLED solid=4 order=0 racing-new=0 racing-seen=0 165s first: main/bddfy-xunit3: B10_a_teardown_after_the_boundary: b10-teardown: Unknown Unknown > Action Action
+RUN_DONE
+RUN_EXIT 0
+CONTROL_PACKED
+CONTROL_FAST_DONE
+CONTROL_FAST_DONE
+CONTROL_FAST_DONE
+CONTROLS10_DONE
+n01 ORDER-ONLY solid=0 order=4 racing-new=1 racing-seen=27 552s first: (order) rev5/rev5-a: L01_WhenAll_of_Givens_inside_a_When: + Response l01-y phase=Action src=TestContext - Response l01-y phase=Action src=TestContext escalated:review+rev4+rev5+old
+n02 KILLED solid=5 order=1 racing-new=0 racing-seen=2 259s first: rev5/rev5-bddfy: B02_A_woven_Then_runs_before_the_story: gone: --- MARKER ---; gone: partition Setup; gone: end
+n03 KILLED solid=6 order=0 racing-new=0 racing-seen=1 211s first: rev5/rev5-bddfy: B11_A_step_that_marks_the_boundary_later_in_the_story: end:  > ; new: --- MARKER ---
+n04 KILLED solid=4 order=0 racing-new=0 racing-seen=2 213s first: rev5/rev5-bddfy: B08_StartSetup_before_the_story_and_a_tear_down: Request: b08-teardown-nosetup phase=Unknown src=TestContext > b08-teardown-nosetup phase=Setup src=TestContext IGNORED; Response: b08-teardown-nosetup phase=Unknown src=TestContext > b08-tea
+n05 KILLED solid=2 order=0 racing-new=0 racing-seen=2 269s first: rev5/rev5-bddfy: B09_A_scenario_in_a_woven_Given_then_a_tear_down_and_a_When: Request: b09-story-then phase=Setup src=TestContext > b09-story-then phase=Unknown src=TestContext; Response: b09-story-then phase=Setup src=TestContext > b09-story-then phase=Unknown src=Te
+n06 KILLED solid=14 order=0 racing-new=0 racing-seen=1 215s first: rev5/rev5-lightbdd-legacy: L01 plain given when then: Request: l01-then phase=Unknown src=TestContext > l01-then phase=Action src=TestContext; Response: l01-then phase=Unknown src=TestContext > l01-then phase=Action src=TestContext; Request: l0
+n06b KILLED solid=14 order=0 racing-new=0 racing-seen=1 224s first: rev5/rev5-lightbdd-legacy: L01 plain given when then: Request: l01-when-nosetup phase=Action src=TestContext > l01-when-nosetup phase=Unknown src=TestContext; Response: l01-when-nosetup phase=Action src=TestContext > l01-when-nosetup phase=Unkn
+n07 KILLED solid=2 order=3 racing-new=0 racing-seen=3 225s first: review/rev3-lightbdd-legacy: N04 a Given calls a woven When: new: partition #F6F6F6 Setup; new: end
+n08 KILLED solid=1 order=0 racing-new=0 racing-seen=3 179s first: main/xunit3-plain: X30_a_skipped_sub_step_then_a_real_one_in_a_When: x30-real-sub: Action Action > Setup Setup; x30-after: Action Action > Setup Setup; Given: Async [Passed] > Async [Passed]; new: [bar] <color:white>Given Async
+n08a ORDER-ONLY solid=0 order=2 racing-new=2 racing-seen=25 873s first: (order) rev5/rev5-a: L01_WhenAll_of_Givens_inside_a_When: + Response l01-x phase=Action src=TestContext - Response l01-x phase=Action src=TestContext escalated:review+rev4+rev5+old
+n08b KILLED solid=1 order=2 racing-new=0 racing-seen=3 101s first: main/xunit3-plain: X30_a_skipped_sub_step_then_a_real_one_in_a_When: x30-real-sub: Action Action > Setup Setup; x30-after: Action Action > Setup Setup; Given: Async [Passed] > Async [Passed]; new: [bar] <color:white>Given Async
+n09 KILLED solid=1 order=0 racing-new=0 racing-seen=0 87s first: rev5/rev5-reqnroll: R09b a hand step closed on another flow in a sync Given bind: gone: --- MARKER ---; gone: partition Setup; gone: end
+n10 KILLED solid=2 order=0 racing-new=0 racing-seen=4 90s first: rev4/rev4-a: F05_A_hand_step_of_another_id_inside_a_Given: Request: f05-label-under-given phase=Setup src=TestContext > f05-label-under-given phase=Action src=TestContext; Response: f05-label-under-given phase=Setup src=TestContext > f05-label-under
+n11 KILLED solid=9 order=0 racing-new=1 racing-seen=9 99s first: rev5/rev5-a: A01_And_after_Reset_on_the_same_flow: Request: a01-and phase=Unknown src=TestContext > a01-and phase=Setup src=TestContext; Response: a01-and phase=Unknown src=TestContext > a01-and phase=Setup src=TestContext; Request: a01-and-
+STOPPING: C: has 1.5 GB free
+STOPPING: C: has 1.5 GB free
+STOPPING: C: has 1.5 GB free
+STOPPING: C: has 1.5 GB free
+n12 ORDER-ONLY solid=0 order=1 racing-new=1 racing-seen=20 162s first: (order) rev5/rev5-a: L03_WhenAll_of_a_Given_and_a_When_at_the_top: + Response l03-given phase=Setup src=TestContext - Response l03-given phase=Setup src=TestContext escalated:review+rev4+rev5+old
+STOPPING: C: has 1.7 GB free
+RUN_DONE
+RUN10_EXIT 0
+CONTROL_PACKED
+CONTROL_FAST_DONE
+n08a more 1 suites: KILLED solid=2 order=2 racing-new=2 racing-seen=25 first: main/mut-extra: X90_a_skipped_sync_sub_step_then_more_in_a_sync_Given: x90-then-sub: Setup Setup > Action Action; x90-after: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---; Then: Sync [Passed] > Sync [Passed]; new: [bar] <co
+RUN_DONE
+n14 KILLED solid=5 order=1 racing-new=0 racing-seen=12 183s first: rev5/rev5-a: H05_A_SkipIf_getter_that_throws_is_caught_then_When_Then: [Step]: <color:white>When Async > <color:white>Given Skip throws; Request: h05-act phase=Action src=TestContext > h05-act phase=Setup src=TestContext; Response: h05-act phase=Action src=Test
+RUN_DONE
+n13 KILLED solid=2 order=0 racing-new=0 racing-seen=2 218s first: rev5/rev5-bddfy: (whole file): in: Given: Setup, in When: Action > Given: Unknown, in When: Unknown
+nm31b KILLED solid=1 order=0 racing-new=0 racing-seen=4 119s first: rev5/rev5-bddfy: B06_Async_void_support_off_with_a_nested_Given_and_a_failing: gone: [Step] <color:white>When with given sub b06-when; gone: [Step] <color:white>Then when throws b06-then; Response: b06-when-before phase=Action src=TestContext > b06-given phase=Setup sr
+nm16b ORDER-ONLY solid=0 order=1 racing-new=3 racing-seen=23 727s first: (order) rev5/rev5-bddfy: B06_Async_void_support_off_with_a_nested_Given_and_a_failing: + Response b06-given phase=Setup src=TestContext - Response b06-given phase=Setup src=TestContext + shop -[#438DD5]-> probe: OK - shop -[#438DD5]-> probe: OK escalated:review+rev4+rev5+old
+nm20 KILLED solid=1 order=2 racing-new=3 racing-seen=23 608s first: rev5/rev5-bddfy: B17_StartAction_before_a_story_with_a_tear_down: end:  > ; new: --- MARKER --- escalated:review+rev4+rev5
+nm27 KILLED solid=1 order=1 racing-new=4 racing-seen=28 645s first: main/mut-extra: X89 the method called directly, every log: new: partition #F6F6F6 Setup; new: end escalated:review+rev4+rev5+old
+nm15c ORDER-ONLY solid=0 order=3 racing-new=4 racing-seen=23 809s first: (order) main/mut-extra: X94_a_Given_goes_on_after_a_fork_bypassed_its_async_sub_step: ---- ACTION START MARKER --- +--- ACTION START MARKER --- escalated:review+rev4+rev5+old
+nm15d RACING-ONLY solid=0 order=0 racing-new=1 racing-seen=26 1114s first: (racing) rev5/adapter-nunit4: E06_Parallel_ForEach_of_sync_Givens_inside_a_When: e06-b: Action Action > Action Action escalated:review+rev4+rev5+old
+nm15e KILLED solid=2 order=3 racing-new=1 racing-seen=28 899s first: main/mut-extra: X92_a_fork_bypasses_an_async_Given_then_When: gone: --- ACTION START MARKER --- escalated:review+rev4+rev5+old
+n15cde ORDER-ONLY solid=0 order=6 racing-new=0 racing-seen=28 652s first: (order) main/mut-extra: X94_a_Given_goes_on_after_a_fork_bypassed_its_async_sub_step: ---- ACTION START MARKER --- +--- ACTION START MARKER --- escalated:review+rev4+rev5+old
+nm32 ORDER-ONLY solid=0 order=1 racing-new=1 racing-seen=34 692s first: (order) rev4/rev4-b: G03_When_on_a_detached_flow_inside_a_test: + --- MARKER --- - --- MARKER --- + end - end escalated:review+rev4+rev5+old
+RUN_DONE
+n12 more 30 suites: ORDER-ONLY solid=0 order=1 racing-new=3 racing-seen=27 first: (order) rev5/rev5-a: L03_WhenAll_of_a_Given_and_a_When_at_the_top: + Response l03-given phase=Setup src=TestContext - Response l03-given phase=Setup src=TestContext
+RUN_DONE
+n15ce skipped: a SKIP file
+n12cde KILLED solid=8 order=4 racing-new=0 racing-seen=11 263s first: main/xunit3-plain: X37_a_Task_parent_not_async_whose_last_act_is_a_skipped_sub_: gone: --- ACTION START MARKER ---
+RUN_DONE
+nm31b rerun BUILD-FAILED no package for Kronikol
+RUN_DONE
+nm32 rerun BUILD-FAILED no package for Kronikol
+RUN_DONE
+CONTROL_PACKED
+CONTROL_FAST_DONE
+p01 KILLED solid=15 order=3 racing-new=0 racing-seen=13 276s first: rev5/rev5-a: H05_A_SkipIf_getter_that_throws_is_caught_then_When_Then: gone: [Step] <color:white>Given Skip throws; gone: --- MARKER ---; gone: Given Skip throws [Failed] msg=skip getter; gone: hnote across <<stepDelimiter>> #black:<color:white>Given Skip throw
+p02 KILLED solid=5 order=0 racing-new=0 racing-seen=11 190s first: rev5/rev5-a: H05_A_SkipIf_getter_that_throws_is_caught_then_When_Then: gone: [Step] <color:white>When Async; gone: --- MARKER ---; Request: h05-act phase=Action src=TestContext > h05-act phase=Setup src=TestContext; Response: h05-act phase=Action src=TestContex
+p03 KILLED solid=5 order=0 racing-new=0 racing-seen=1 130s first: rev6/rev6-bddfy: B18_By_name_story_after_a_phase_written_by_hand: Request: b18-setup phase=Unknown src=TestContext > b18-setup phase=Setup src=TestContext; Response: b18-setup phase=Unknown src=TestContext > b18-setup phase=Setup src=TestContext; Request: 
+p04 KILLED solid=2 order=0 racing-new=0 racing-seen=1 156s first: rev6/rev6-a: I02_A_step_for_another_id_started_before_a_Given_closes_insi: Request: i02-label phase=Setup src=TestContext > i02-label phase=Action src=TestContext; Response: i02-label phase=Setup src=TestContext > i02-label phase=Action src=TestContext; Request: i0
+p05 KILLED solid=5 order=0 racing-new=0 racing-seen=0 168s first: rev6/rev6-bddfy: B24_A_woven_Given_and_a_woven_When_before_the_story: gone: --- MARKER ---; end:  > 
+p06 KILLED solid=4 order=0 racing-new=0 racing-seen=0 191s first: rev6/rev6-bddfy: B32_A_When_leaves_a_woven_step_running_a_later_Then_marks: hnote: across <<stepDelimiter>> #black:<color:white>When leaves running b32-act > across <<stepDelimiter>> #black:<color:white>When leaves running b32-act; shop: -[#438DD5]-> probe: OK > -[#
+STOPPING: C: has 2.8 GB free
+STOPPING: C: has 3.0 GB free
+RUN_DONE
+CONTROL_PACKED
+p07 KILLED solid=2 order=0 racing-new=0 racing-seen=0 117s first: rev6/rev6-fetch: run outcome: exit=1 | Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 259 ms - Probe.Rev6.Fetch.dll (net10.0)
+p08 KILLED solid=1 order=0 racing-new=0 racing-seen=0 101s first: rev6/rev6-fetch: F1_a_first_test_that_reaches_the_boundary: Request: f1-when-plain phase=Action src=TestContext > f1-when-plain phase=Unknown src=TestContext; Response: f1-when-plain phase=Action src=TestContext > f1-when-plain phase=Unknown src=Test
+p09 KILLED solid=1 order=5 racing-new=1 racing-seen=12 730s first: rev6/rev6-a: K08_Hand_Given_bypassed_on_another_flow_then_When: gone: --- MARKER ---; gone: partition Setup; gone: end escalated:rev5+rev6
+p10 KILLED solid=4 order=4 racing-new=0 racing-seen=0 96s first: main/mut-extra: X92_a_fork_bypasses_an_async_Given_then_When: gone: --- ACTION START MARKER ---
+p11 ORDER-ONLY solid=0 order=2 racing-new=1 racing-seen=15 584s first: (order) rev5/rev5-a: L03_WhenAll_of_a_Given_and_a_When_at_the_top: + Response l03-given phase=Setup src=TestContext - Response l03-given phase=Setup src=TestContext escalated:rev5+rev6
+RUN_DONE
+CONTROL_PACKED
+p12 KILLED solid=1 order=0 racing-new=2 racing-seen=14 515s first: main/mut-extra: X89 the method called directly, every log: new: partition #F6F6F6 Setup; new: end escalated:rev5+rev6
+p13 ORDER-ONLY solid=0 order=1 racing-new=3 racing-seen=2 485s first: (order) rev5/rev5-a: L03_WhenAll_of_a_Given_and_a_When_at_the_top: + Response l03-given phase=Setup src=TestContext - Response l03-given phase=Setup src=TestContext escalated:rev5+rev6
+p14 KILLED solid=2 order=0 racing-new=0 racing-seen=4 463s first: rev5/rev5-bddfy: B17_StartAction_before_a_story_with_a_tear_down: end:  > ; new: --- MARKER --- escalated:rev5+rev6
+p15 KILLED solid=1 order=1 racing-new=0 racing-seen=7 488s first: rev5/rev5-bddfy: B06_Async_void_support_off_with_a_nested_Given_and_a_failing: Response: b06-when-before phase=Action src=TestContext > b06-when-before phase=Action src=TestContext; gone: [Step] <color:white>Given Woven given; Request: b06-when-sub phase=Setup src=Test escalated:rev5+rev6
+p16 KILLED solid=20 order=0 racing-new=2 racing-seen=5 611s first: main/mut-extra: X90_a_skipped_sync_sub_step_then_more_in_a_sync_Given: x90-then-sub: Setup Setup > Action Action; x90-after: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---; Then: Sync [Passed] > Sync [Passed]; new: [bar] <co escalated:rev5+rev6
+RUN_DONE

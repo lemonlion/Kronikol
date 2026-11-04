@@ -1,0 +1,18 @@
+KILLED solid=4 order=0 racing-new=0 racing-seen=1
+first: rev4/rev4-weave: S02: gone: ArgumentException: s02-outer; Shapes.S02_SyncAllPathsThrow(): @ Suite.cs:line 226 > @ (no file); new: InvalidProgramException: Common Language Runtime detected an invalid program.
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-weave] rev4-weave-lines.txt: SOLID S02
+    gone: ArgumentException: s02-outer; Shapes.S02_SyncAllPathsThrow(): @ Suite.cs:line 226 > @ (no file); new: InvalidProgramException: Common Language Runtime detected an invalid program.
+      -ArgumentException: s02-outer
+      -Shapes.S02_SyncAllPathsThrow() @ Suite.cs:line 226
+      +InvalidProgramException: Common Language Runtime detected an invalid program.
+      +Shapes.S02_SyncAllPathsThrow() @ (no file)
+[rev4/rev4-weave] rev4-weave.txt: TEST GONE 9c6dae196a374a775798412d05c2eb87d9597b619991a37df15207473e4501a7
+[rev4/rev4-weave@Release] rev4-weave-lines.txt: SOLID S02
+    gone: ArgumentException: s02-outer; Shapes.S02_SyncAllPathsThrow(): @ Suite.cs:line 226 > @ (no file); new: InvalidProgramException: Common Language Runtime detected an invalid program.
+      -ArgumentException: s02-outer
+      -Shapes.S02_SyncAllPathsThrow() @ Suite.cs:line 226
+      +InvalidProgramException: Common Language Runtime detected an invalid program.
+      +Shapes.S02_SyncAllPathsThrow() @ (no file)
+[rev4/rev4-weave@Release] rev4-weave.txt: TEST GONE efa4da9b360e9c5910c7ecb86f44759d7014c1636fb49c6cb0583b7e399cb7fb

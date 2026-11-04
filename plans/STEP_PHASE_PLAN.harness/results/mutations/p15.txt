@@ -1,0 +1,26 @@
+KILLED solid=1 order=1 racing-new=0 racing-seen=7
+first: rev5/rev5-bddfy: B06_Async_void_support_off_with_a_nested_Given_and_a_failing: Response: b06-when-before phase=Action src=TestContext > b06-when-before phase=Action src=TestContext; gone: [Step] <color:white>Given Woven given; Request: b06-when-sub phase=Setup src=Test
+
+[rev4/rev4-b] no baseline for rev4-b.txt: not compared
+[rev5/adapter-mstest] mstest.txt: racing, shape seen E06_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/adapter-xunit2] xunit2.txt: racing, shape seen Shapes5.E06_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L01_WhenAll_of_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L02_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: ORDER L03_WhenAll_of_a_Given_and_a_When_at_the_top
+      + Response l03-given phase=Setup src=TestContext
+      - Response l03-given phase=Setup src=TestContext
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L04_Parallel_ForEach_of_sync_Givens_at_the_top_then_When_with_nested_Given
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B06_Async_void_support_off_with_a_nested_Given_and_a_failing_step
+    Response: b06-when-before phase=Action src=TestContext > b06-when-before phase=Action src=TestContext; gone: [Step] <color:white>Given Woven given; Request: b06-when-sub phase=Setup src=TestContext > b06-when-sub phase=Setup src=TestContext; Response: b06-given phase=Setup src=TestContext > b06-given phase=Setup src=TestContext; Given: Woven given [Passed] > Woven given [Passed]; gone: hnote a
+      + Response b06-when-before phase=Action src=TestContext
+      + Response b06-given phase=Setup src=TestContext
+      + Request b06-when-sub phase=Setup src=TestContext
+      - Response b06-when-before phase=Action src=TestContext
+      - [Step] <color:white>Given Woven given
+      - Request b06-when-sub phase=Setup src=TestContext
+      - Response b06-given phase=Setup src=TestContext
+      - Given Woven given [Passed]
+      + Given Woven given [Passed]
+      - hnote across <<stepDelimiter>> #black:<color:white>Given Woven given
+[rev6/rev6-a] rev6-a.txt: racing, shape seen B06_A_Parallel_For_of_skipped_and_real_inside_a_When

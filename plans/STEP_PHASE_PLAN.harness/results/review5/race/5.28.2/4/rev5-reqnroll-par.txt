@@ -1,0 +1,1275 @@
+## F01-A a When runs a woven Given
+  [Step] <color:white>Given a call named f01-a-seed
+  
+  Request  f01-a-seed                     phase=Setup   src=TestContext
+  Response f01-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f01-a-seed2
+  
+  Request  f01-a-seed2                    phase=Setup   src=TestContext
+  Response f01-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f01-a-act
+  
+  Request  f01-a-act-before               phase=Action  src=TestContext
+  Response f01-a-act-before               phase=Action  src=TestContext
+  Request  f01-a-act-sub                  phase=Setup   src=TestContext
+  Response f01-a-act-sub                  phase=Setup   src=TestContext
+  Request  f01-a-act-after                phase=Setup   src=TestContext
+  Response f01-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f01-a-act2
+  
+  Request  f01-a-act2                     phase=Setup   src=TestContext
+  Response f01-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f01-a-then
+  
+  Request  f01-a-then                     phase=Action  src=TestContext
+  Response f01-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f01-a-seed [Passed]
+    And a call named f01-a-seed2 [Passed]
+    When a binding calls a woven Given named f01-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f01-a-act2 [Passed]
+    Then a call named f01-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f01-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f01-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f01-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f01-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f01-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F01-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f01-b-seed
+  
+  Request  f01-b-seed-before              phase=Setup   src=TestContext
+  Response f01-b-seed-before              phase=Setup   src=TestContext
+  Request  f01-b-seed-sub                 phase=Action  src=TestContext
+  Response f01-b-seed-sub                 phase=Action  src=TestContext
+  Request  f01-b-seed-after               phase=Action  src=TestContext
+  Response f01-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f01-b-act
+  
+  Request  f01-b-act                      phase=Action  src=TestContext
+  Response f01-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f01-b-then
+  
+  Request  f01-b-then                     phase=Action  src=TestContext
+  Response f01-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f01-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f01-b-act [Passed]
+    Then a call named f01-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f01-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f01-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f01-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F01-C plain
+  [Step] <color:white>Given a call named f01-c-seed
+  
+  Request  f01-c-seed                     phase=Setup   src=TestContext
+  Response f01-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f01-c-act
+  
+  Request  f01-c-act                      phase=Action  src=TestContext
+  Response f01-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f01-c-then
+  
+  Request  f01-c-then                     phase=Action  src=TestContext
+  Response f01-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f01-c-seed [Passed]
+    When a call named f01-c-act [Passed]
+    Then a call named f01-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f01-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f01-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f01-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F02-A a When runs a woven Given
+  [Step] <color:white>Given a call named f02-a-seed
+  
+  Request  f02-a-seed                     phase=Setup   src=TestContext
+  Response f02-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f02-a-seed2
+  
+  Request  f02-a-seed2                    phase=Setup   src=TestContext
+  Response f02-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f02-a-act
+  
+  Request  f02-a-act-before               phase=Action  src=TestContext
+  Response f02-a-act-before               phase=Action  src=TestContext
+  Request  f02-a-act-sub                  phase=Setup   src=TestContext
+  Response f02-a-act-sub                  phase=Setup   src=TestContext
+  Request  f02-a-act-after                phase=Setup   src=TestContext
+  Response f02-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f02-a-act2
+  
+  Request  f02-a-act2                     phase=Setup   src=TestContext
+  Response f02-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f02-a-then
+  
+  Request  f02-a-then                     phase=Action  src=TestContext
+  Response f02-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f02-a-seed [Passed]
+    And a call named f02-a-seed2 [Passed]
+    When a binding calls a woven Given named f02-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f02-a-act2 [Passed]
+    Then a call named f02-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f02-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f02-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f02-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f02-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f02-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F02-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f02-b-seed
+  
+  Request  f02-b-seed-before              phase=Setup   src=TestContext
+  Response f02-b-seed-before              phase=Setup   src=TestContext
+  Request  f02-b-seed-sub                 phase=Action  src=TestContext
+  Response f02-b-seed-sub                 phase=Action  src=TestContext
+  Request  f02-b-seed-after               phase=Action  src=TestContext
+  Response f02-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f02-b-act
+  
+  Request  f02-b-act                      phase=Action  src=TestContext
+  Response f02-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f02-b-then
+  
+  Request  f02-b-then                     phase=Action  src=TestContext
+  Response f02-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f02-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f02-b-act [Passed]
+    Then a call named f02-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f02-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f02-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f02-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F02-C plain
+  [Step] <color:white>Given a call named f02-c-seed
+  
+  Request  f02-c-seed                     phase=Setup   src=TestContext
+  Response f02-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f02-c-act
+  
+  Request  f02-c-act                      phase=Action  src=TestContext
+  Response f02-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f02-c-then
+  
+  Request  f02-c-then                     phase=Action  src=TestContext
+  Response f02-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f02-c-seed [Passed]
+    When a call named f02-c-act [Passed]
+    Then a call named f02-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f02-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f02-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f02-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F03-A a When runs a woven Given
+  [Step] <color:white>Given a call named f03-a-seed
+  
+  Request  f03-a-seed                     phase=Setup   src=TestContext
+  Response f03-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f03-a-seed2
+  
+  Request  f03-a-seed2                    phase=Setup   src=TestContext
+  Response f03-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f03-a-act
+  
+  Request  f03-a-act-before               phase=Action  src=TestContext
+  Response f03-a-act-before               phase=Action  src=TestContext
+  Request  f03-a-act-sub                  phase=Setup   src=TestContext
+  Response f03-a-act-sub                  phase=Setup   src=TestContext
+  Request  f03-a-act-after                phase=Setup   src=TestContext
+  Response f03-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f03-a-act2
+  
+  Request  f03-a-act2                     phase=Setup   src=TestContext
+  Response f03-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f03-a-then
+  
+  Request  f03-a-then                     phase=Action  src=TestContext
+  Response f03-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f03-a-seed [Passed]
+    And a call named f03-a-seed2 [Passed]
+    When a binding calls a woven Given named f03-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f03-a-act2 [Passed]
+    Then a call named f03-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f03-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f03-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f03-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f03-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f03-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F03-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f03-b-seed
+  
+  Request  f03-b-seed-before              phase=Setup   src=TestContext
+  Response f03-b-seed-before              phase=Setup   src=TestContext
+  Request  f03-b-seed-sub                 phase=Action  src=TestContext
+  Response f03-b-seed-sub                 phase=Action  src=TestContext
+  Request  f03-b-seed-after               phase=Action  src=TestContext
+  Response f03-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f03-b-act
+  
+  Request  f03-b-act                      phase=Action  src=TestContext
+  Response f03-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f03-b-then
+  
+  Request  f03-b-then                     phase=Action  src=TestContext
+  Response f03-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f03-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f03-b-act [Passed]
+    Then a call named f03-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f03-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f03-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f03-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F03-C plain
+  [Step] <color:white>Given a call named f03-c-seed
+  
+  Request  f03-c-seed                     phase=Setup   src=TestContext
+  Response f03-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f03-c-act
+  
+  Request  f03-c-act                      phase=Action  src=TestContext
+  Response f03-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f03-c-then
+  
+  Request  f03-c-then                     phase=Action  src=TestContext
+  Response f03-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f03-c-seed [Passed]
+    When a call named f03-c-act [Passed]
+    Then a call named f03-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f03-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f03-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f03-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F04-A a When runs a woven Given
+  [Step] <color:white>Given a call named f04-a-seed
+  
+  Request  f04-a-seed                     phase=Setup   src=TestContext
+  Response f04-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f04-a-seed2
+  
+  Request  f04-a-seed2                    phase=Setup   src=TestContext
+  Response f04-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f04-a-act
+  
+  Request  f04-a-act-before               phase=Action  src=TestContext
+  Response f04-a-act-before               phase=Action  src=TestContext
+  Request  f04-a-act-sub                  phase=Setup   src=TestContext
+  Response f04-a-act-sub                  phase=Setup   src=TestContext
+  Request  f04-a-act-after                phase=Setup   src=TestContext
+  Response f04-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f04-a-act2
+  
+  Request  f04-a-act2                     phase=Setup   src=TestContext
+  Response f04-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f04-a-then
+  
+  Request  f04-a-then                     phase=Action  src=TestContext
+  Response f04-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f04-a-seed [Passed]
+    And a call named f04-a-seed2 [Passed]
+    When a binding calls a woven Given named f04-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f04-a-act2 [Passed]
+    Then a call named f04-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f04-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f04-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f04-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f04-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f04-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F04-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f04-b-seed
+  
+  Request  f04-b-seed-before              phase=Setup   src=TestContext
+  Response f04-b-seed-before              phase=Setup   src=TestContext
+  Request  f04-b-seed-sub                 phase=Action  src=TestContext
+  Response f04-b-seed-sub                 phase=Action  src=TestContext
+  Request  f04-b-seed-after               phase=Action  src=TestContext
+  Response f04-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f04-b-act
+  
+  Request  f04-b-act                      phase=Action  src=TestContext
+  Response f04-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f04-b-then
+  
+  Request  f04-b-then                     phase=Action  src=TestContext
+  Response f04-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f04-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f04-b-act [Passed]
+    Then a call named f04-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f04-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f04-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f04-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F04-C plain
+  [Step] <color:white>Given a call named f04-c-seed
+  
+  Request  f04-c-seed                     phase=Setup   src=TestContext
+  Response f04-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f04-c-act
+  
+  Request  f04-c-act                      phase=Action  src=TestContext
+  Response f04-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f04-c-then
+  
+  Request  f04-c-then                     phase=Action  src=TestContext
+  Response f04-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f04-c-seed [Passed]
+    When a call named f04-c-act [Passed]
+    Then a call named f04-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f04-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f04-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f04-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F05-A a When runs a woven Given
+  [Step] <color:white>Given a call named f05-a-seed
+  
+  Request  f05-a-seed                     phase=Setup   src=TestContext
+  Response f05-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f05-a-seed2
+  
+  Request  f05-a-seed2                    phase=Setup   src=TestContext
+  Response f05-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f05-a-act
+  
+  Request  f05-a-act-before               phase=Action  src=TestContext
+  Response f05-a-act-before               phase=Action  src=TestContext
+  Request  f05-a-act-sub                  phase=Setup   src=TestContext
+  Response f05-a-act-sub                  phase=Setup   src=TestContext
+  Request  f05-a-act-after                phase=Setup   src=TestContext
+  Response f05-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f05-a-act2
+  
+  Request  f05-a-act2                     phase=Setup   src=TestContext
+  Response f05-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f05-a-then
+  
+  Request  f05-a-then                     phase=Action  src=TestContext
+  Response f05-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f05-a-seed [Passed]
+    And a call named f05-a-seed2 [Passed]
+    When a binding calls a woven Given named f05-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f05-a-act2 [Passed]
+    Then a call named f05-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f05-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f05-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f05-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f05-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f05-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F05-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f05-b-seed
+  
+  Request  f05-b-seed-before              phase=Setup   src=TestContext
+  Response f05-b-seed-before              phase=Setup   src=TestContext
+  Request  f05-b-seed-sub                 phase=Action  src=TestContext
+  Response f05-b-seed-sub                 phase=Action  src=TestContext
+  Request  f05-b-seed-after               phase=Action  src=TestContext
+  Response f05-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f05-b-act
+  
+  Request  f05-b-act                      phase=Action  src=TestContext
+  Response f05-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f05-b-then
+  
+  Request  f05-b-then                     phase=Action  src=TestContext
+  Response f05-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f05-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f05-b-act [Passed]
+    Then a call named f05-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f05-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f05-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f05-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F05-C plain
+  [Step] <color:white>Given a call named f05-c-seed
+  
+  Request  f05-c-seed                     phase=Setup   src=TestContext
+  Response f05-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f05-c-act
+  
+  Request  f05-c-act                      phase=Action  src=TestContext
+  Response f05-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f05-c-then
+  
+  Request  f05-c-then                     phase=Action  src=TestContext
+  Response f05-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f05-c-seed [Passed]
+    When a call named f05-c-act [Passed]
+    Then a call named f05-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f05-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f05-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f05-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F06-A a When runs a woven Given
+  [Step] <color:white>Given a call named f06-a-seed
+  
+  Request  f06-a-seed                     phase=Setup   src=TestContext
+  Response f06-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f06-a-seed2
+  
+  Request  f06-a-seed2                    phase=Setup   src=TestContext
+  Response f06-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f06-a-act
+  
+  Request  f06-a-act-before               phase=Action  src=TestContext
+  Response f06-a-act-before               phase=Action  src=TestContext
+  Request  f06-a-act-sub                  phase=Setup   src=TestContext
+  Response f06-a-act-sub                  phase=Setup   src=TestContext
+  Request  f06-a-act-after                phase=Setup   src=TestContext
+  Response f06-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f06-a-act2
+  
+  Request  f06-a-act2                     phase=Setup   src=TestContext
+  Response f06-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f06-a-then
+  
+  Request  f06-a-then                     phase=Action  src=TestContext
+  Response f06-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f06-a-seed [Passed]
+    And a call named f06-a-seed2 [Passed]
+    When a binding calls a woven Given named f06-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f06-a-act2 [Passed]
+    Then a call named f06-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f06-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f06-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f06-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f06-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f06-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F06-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f06-b-seed
+  
+  Request  f06-b-seed-before              phase=Setup   src=TestContext
+  Response f06-b-seed-before              phase=Setup   src=TestContext
+  Request  f06-b-seed-sub                 phase=Action  src=TestContext
+  Response f06-b-seed-sub                 phase=Action  src=TestContext
+  Request  f06-b-seed-after               phase=Action  src=TestContext
+  Response f06-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f06-b-act
+  
+  Request  f06-b-act                      phase=Action  src=TestContext
+  Response f06-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f06-b-then
+  
+  Request  f06-b-then                     phase=Action  src=TestContext
+  Response f06-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f06-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f06-b-act [Passed]
+    Then a call named f06-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f06-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f06-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f06-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F06-C plain
+  [Step] <color:white>Given a call named f06-c-seed
+  
+  Request  f06-c-seed                     phase=Setup   src=TestContext
+  Response f06-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f06-c-act
+  
+  --- MARKER ---
+  Request  f06-c-act                      phase=Action  src=TestContext
+  Response f06-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f06-c-then
+  
+  Request  f06-c-then                     phase=Action  src=TestContext
+  Response f06-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f06-c-seed [Passed]
+    When a call named f06-c-act [Passed]
+    Then a call named f06-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f06-c-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f06-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f06-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F07-A a When runs a woven Given
+  [Step] <color:white>Given a call named f07-a-seed
+  
+  Request  f07-a-seed                     phase=Setup   src=TestContext
+  Response f07-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f07-a-seed2
+  
+  Request  f07-a-seed2                    phase=Setup   src=TestContext
+  Response f07-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f07-a-act
+  
+  Request  f07-a-act-before               phase=Action  src=TestContext
+  Response f07-a-act-before               phase=Action  src=TestContext
+  Request  f07-a-act-sub                  phase=Setup   src=TestContext
+  Response f07-a-act-sub                  phase=Setup   src=TestContext
+  Request  f07-a-act-after                phase=Setup   src=TestContext
+  Response f07-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f07-a-act2
+  
+  Request  f07-a-act2                     phase=Setup   src=TestContext
+  Response f07-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f07-a-then
+  
+  Request  f07-a-then                     phase=Action  src=TestContext
+  Response f07-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f07-a-seed [Passed]
+    And a call named f07-a-seed2 [Passed]
+    When a binding calls a woven Given named f07-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f07-a-act2 [Passed]
+    Then a call named f07-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f07-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f07-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f07-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f07-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f07-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F07-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f07-b-seed
+  
+  Request  f07-b-seed-before              phase=Setup   src=TestContext
+  Response f07-b-seed-before              phase=Setup   src=TestContext
+  Request  f07-b-seed-sub                 phase=Action  src=TestContext
+  Response f07-b-seed-sub                 phase=Action  src=TestContext
+  Request  f07-b-seed-after               phase=Action  src=TestContext
+  Response f07-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f07-b-act
+  
+  Request  f07-b-act                      phase=Action  src=TestContext
+  Response f07-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f07-b-then
+  
+  Request  f07-b-then                     phase=Action  src=TestContext
+  Response f07-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f07-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f07-b-act [Passed]
+    Then a call named f07-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f07-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f07-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f07-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F07-C plain
+  [Step] <color:white>Given a call named f07-c-seed
+  
+  Request  f07-c-seed                     phase=Setup   src=TestContext
+  Response f07-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f07-c-act
+  
+  Request  f07-c-act                      phase=Action  src=TestContext
+  Response f07-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f07-c-then
+  
+  Request  f07-c-then                     phase=Action  src=TestContext
+  Response f07-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f07-c-seed [Passed]
+    When a call named f07-c-act [Passed]
+    Then a call named f07-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f07-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f07-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f07-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F08-A a When runs a woven Given
+  [Step] <color:white>Given a call named f08-a-seed
+  
+  Request  f08-a-seed                     phase=Setup   src=TestContext
+  Response f08-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f08-a-seed2
+  
+  Request  f08-a-seed2                    phase=Setup   src=TestContext
+  Response f08-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f08-a-act
+  
+  Request  f08-a-act-before               phase=Action  src=TestContext
+  Response f08-a-act-before               phase=Action  src=TestContext
+  Request  f08-a-act-sub                  phase=Setup   src=TestContext
+  Response f08-a-act-sub                  phase=Setup   src=TestContext
+  Request  f08-a-act-after                phase=Setup   src=TestContext
+  Response f08-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f08-a-act2
+  
+  Request  f08-a-act2                     phase=Setup   src=TestContext
+  Response f08-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f08-a-then
+  
+  Request  f08-a-then                     phase=Action  src=TestContext
+  Response f08-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f08-a-seed [Passed]
+    And a call named f08-a-seed2 [Passed]
+    When a binding calls a woven Given named f08-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f08-a-act2 [Passed]
+    Then a call named f08-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f08-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f08-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f08-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f08-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f08-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F08-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f08-b-seed
+  
+  Request  f08-b-seed-before              phase=Setup   src=TestContext
+  Response f08-b-seed-before              phase=Setup   src=TestContext
+  Request  f08-b-seed-sub                 phase=Action  src=TestContext
+  Response f08-b-seed-sub                 phase=Action  src=TestContext
+  Request  f08-b-seed-after               phase=Action  src=TestContext
+  Response f08-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f08-b-act
+  
+  Request  f08-b-act                      phase=Action  src=TestContext
+  Response f08-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f08-b-then
+  
+  Request  f08-b-then                     phase=Action  src=TestContext
+  Response f08-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f08-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f08-b-act [Passed]
+    Then a call named f08-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f08-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f08-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f08-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F08-C plain
+  [Step] <color:white>Given a call named f08-c-seed
+  
+  Request  f08-c-seed                     phase=Setup   src=TestContext
+  Response f08-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f08-c-act
+  
+  Request  f08-c-act                      phase=Action  src=TestContext
+  Response f08-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f08-c-then
+  
+  Request  f08-c-then                     phase=Action  src=TestContext
+  Response f08-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f08-c-seed [Passed]
+    When a call named f08-c-act [Passed]
+    Then a call named f08-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f08-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f08-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f08-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F09-A a When runs a woven Given
+  [Step] <color:white>Given a call named f09-a-seed
+  
+  Request  f09-a-seed                     phase=Setup   src=TestContext
+  Response f09-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f09-a-seed2
+  
+  Request  f09-a-seed2                    phase=Setup   src=TestContext
+  Response f09-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f09-a-act
+  
+  Request  f09-a-act-before               phase=Action  src=TestContext
+  Response f09-a-act-before               phase=Action  src=TestContext
+  Request  f09-a-act-sub                  phase=Setup   src=TestContext
+  Response f09-a-act-sub                  phase=Setup   src=TestContext
+  Request  f09-a-act-after                phase=Setup   src=TestContext
+  Response f09-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f09-a-act2
+  
+  Request  f09-a-act2                     phase=Setup   src=TestContext
+  Response f09-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f09-a-then
+  
+  Request  f09-a-then                     phase=Action  src=TestContext
+  Response f09-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f09-a-seed [Passed]
+    And a call named f09-a-seed2 [Passed]
+    When a binding calls a woven Given named f09-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f09-a-act2 [Passed]
+    Then a call named f09-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f09-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f09-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f09-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f09-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f09-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F09-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f09-b-seed
+  
+  Request  f09-b-seed-before              phase=Setup   src=TestContext
+  Response f09-b-seed-before              phase=Setup   src=TestContext
+  Request  f09-b-seed-sub                 phase=Action  src=TestContext
+  Response f09-b-seed-sub                 phase=Action  src=TestContext
+  Request  f09-b-seed-after               phase=Action  src=TestContext
+  Response f09-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f09-b-act
+  
+  Request  f09-b-act                      phase=Action  src=TestContext
+  Response f09-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f09-b-then
+  
+  Request  f09-b-then                     phase=Action  src=TestContext
+  Response f09-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f09-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f09-b-act [Passed]
+    Then a call named f09-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f09-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f09-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f09-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F09-C plain
+  [Step] <color:white>Given a call named f09-c-seed
+  
+  Request  f09-c-seed                     phase=Setup   src=TestContext
+  Response f09-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f09-c-act
+  
+  Request  f09-c-act                      phase=Action  src=TestContext
+  Response f09-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f09-c-then
+  
+  Request  f09-c-then                     phase=Action  src=TestContext
+  Response f09-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f09-c-seed [Passed]
+    When a call named f09-c-act [Passed]
+    Then a call named f09-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f09-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f09-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f09-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F10-A a When runs a woven Given
+  [Step] <color:white>Given a call named f10-a-seed
+  
+  Request  f10-a-seed                     phase=Setup   src=TestContext
+  Response f10-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f10-a-seed2
+  
+  Request  f10-a-seed2                    phase=Setup   src=TestContext
+  Response f10-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f10-a-act
+  
+  Request  f10-a-act-before               phase=Action  src=TestContext
+  Response f10-a-act-before               phase=Action  src=TestContext
+  Request  f10-a-act-sub                  phase=Setup   src=TestContext
+  Response f10-a-act-sub                  phase=Setup   src=TestContext
+  Request  f10-a-act-after                phase=Setup   src=TestContext
+  Response f10-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f10-a-act2
+  
+  Request  f10-a-act2                     phase=Setup   src=TestContext
+  Response f10-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f10-a-then
+  
+  Request  f10-a-then                     phase=Action  src=TestContext
+  Response f10-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f10-a-seed [Passed]
+    And a call named f10-a-seed2 [Passed]
+    When a binding calls a woven Given named f10-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f10-a-act2 [Passed]
+    Then a call named f10-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f10-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f10-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f10-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f10-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f10-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F10-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f10-b-seed
+  
+  Request  f10-b-seed-before              phase=Setup   src=TestContext
+  Response f10-b-seed-before              phase=Setup   src=TestContext
+  Request  f10-b-seed-sub                 phase=Action  src=TestContext
+  Response f10-b-seed-sub                 phase=Action  src=TestContext
+  Request  f10-b-seed-after               phase=Action  src=TestContext
+  Response f10-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f10-b-act
+  
+  Request  f10-b-act                      phase=Action  src=TestContext
+  Response f10-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f10-b-then
+  
+  Request  f10-b-then                     phase=Action  src=TestContext
+  Response f10-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f10-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f10-b-act [Passed]
+    Then a call named f10-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f10-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f10-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f10-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F10-C plain
+  [Step] <color:white>Given a call named f10-c-seed
+  
+  Request  f10-c-seed                     phase=Setup   src=TestContext
+  Response f10-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f10-c-act
+  
+  Request  f10-c-act                      phase=Action  src=TestContext
+  Response f10-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f10-c-then
+  
+  Request  f10-c-then                     phase=Action  src=TestContext
+  Response f10-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f10-c-seed [Passed]
+    When a call named f10-c-act [Passed]
+    Then a call named f10-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f10-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f10-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f10-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F11-A a When runs a woven Given
+  [Step] <color:white>Given a call named f11-a-seed
+  
+  Request  f11-a-seed                     phase=Setup   src=TestContext
+  Response f11-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f11-a-seed2
+  
+  Request  f11-a-seed2                    phase=Setup   src=TestContext
+  Response f11-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f11-a-act
+  
+  Request  f11-a-act-before               phase=Action  src=TestContext
+  Response f11-a-act-before               phase=Action  src=TestContext
+  Request  f11-a-act-sub                  phase=Setup   src=TestContext
+  Response f11-a-act-sub                  phase=Setup   src=TestContext
+  Request  f11-a-act-after                phase=Setup   src=TestContext
+  Response f11-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f11-a-act2
+  
+  Request  f11-a-act2                     phase=Setup   src=TestContext
+  Response f11-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f11-a-then
+  
+  Request  f11-a-then                     phase=Action  src=TestContext
+  Response f11-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f11-a-seed [Passed]
+    And a call named f11-a-seed2 [Passed]
+    When a binding calls a woven Given named f11-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f11-a-act2 [Passed]
+    Then a call named f11-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f11-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f11-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f11-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f11-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f11-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F11-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f11-b-seed
+  
+  Request  f11-b-seed-before              phase=Setup   src=TestContext
+  Response f11-b-seed-before              phase=Setup   src=TestContext
+  Request  f11-b-seed-sub                 phase=Action  src=TestContext
+  Response f11-b-seed-sub                 phase=Action  src=TestContext
+  Request  f11-b-seed-after               phase=Action  src=TestContext
+  Response f11-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f11-b-act
+  
+  Request  f11-b-act                      phase=Action  src=TestContext
+  Response f11-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f11-b-then
+  
+  Request  f11-b-then                     phase=Action  src=TestContext
+  Response f11-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f11-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f11-b-act [Passed]
+    Then a call named f11-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f11-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f11-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f11-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F11-C plain
+  [Step] <color:white>Given a call named f11-c-seed
+  
+  Request  f11-c-seed                     phase=Setup   src=TestContext
+  Response f11-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f11-c-act
+  
+  Request  f11-c-act                      phase=Action  src=TestContext
+  Response f11-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f11-c-then
+  
+  Request  f11-c-then                     phase=Action  src=TestContext
+  Response f11-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f11-c-seed [Passed]
+    When a call named f11-c-act [Passed]
+    Then a call named f11-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f11-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f11-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f11-c-then
+      shop -[#438DD5]-> probe: OK
+
+## F12-A a When runs a woven Given
+  [Step] <color:white>Given a call named f12-a-seed
+  
+  Request  f12-a-seed                     phase=Setup   src=TestContext
+  Response f12-a-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f12-a-seed2
+  
+  Request  f12-a-seed2                    phase=Setup   src=TestContext
+  Response f12-a-seed2                    phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named f12-a-act
+  
+  Request  f12-a-act-before               phase=Action  src=TestContext
+  Response f12-a-act-before               phase=Action  src=TestContext
+  Request  f12-a-act-sub                  phase=Setup   src=TestContext
+  Response f12-a-act-sub                  phase=Setup   src=TestContext
+  Request  f12-a-act-after                phase=Setup   src=TestContext
+  Response f12-a-act-after                phase=Setup   src=TestContext
+  [Step] <color:white>And a call named f12-a-act2
+  
+  Request  f12-a-act2                     phase=Setup   src=TestContext
+  Response f12-a-act2                     phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named f12-a-then
+  
+  Request  f12-a-then                     phase=Action  src=TestContext
+  Response f12-a-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f12-a-seed [Passed]
+    And a call named f12-a-seed2 [Passed]
+    When a binding calls a woven Given named f12-a-act [Passed]
+      Given Sub [Passed]
+    And a call named f12-a-act2 [Passed]
+    Then a call named f12-a-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f12-a-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f12-a-seed2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named f12-a-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named f12-a-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f12-a-then
+      shop -[#438DD5]-> probe: OK
+
+## F12-B a Given runs a woven When
+  [Step] <color:white>Given a binding calls a woven When named f12-b-seed
+  
+  Request  f12-b-seed-before              phase=Setup   src=TestContext
+  Response f12-b-seed-before              phase=Setup   src=TestContext
+  Request  f12-b-seed-sub                 phase=Action  src=TestContext
+  Response f12-b-seed-sub                 phase=Action  src=TestContext
+  Request  f12-b-seed-after               phase=Action  src=TestContext
+  Response f12-b-seed-after               phase=Action  src=TestContext
+  [Step] <color:white>When a call named f12-b-act
+  
+  Request  f12-b-act                      phase=Action  src=TestContext
+  Response f12-b-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f12-b-then
+  
+  Request  f12-b-then                     phase=Action  src=TestContext
+  Response f12-b-then                     phase=Action  src=TestContext
+  steps:
+    Given a binding calls a woven When named f12-b-seed [Passed]
+      When Sub [Passed]
+    When a call named f12-b-act [Passed]
+    Then a call named f12-b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding calls a woven When named f12-b-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f12-b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f12-b-then
+      shop -[#438DD5]-> probe: OK
+
+## F12-C plain
+  [Step] <color:white>Given a call named f12-c-seed
+  
+  Request  f12-c-seed                     phase=Setup   src=TestContext
+  Response f12-c-seed                     phase=Setup   src=TestContext
+  [Step] <color:white>When a call named f12-c-act
+  
+  Request  f12-c-act                      phase=Action  src=TestContext
+  Response f12-c-act                      phase=Action  src=TestContext
+  [Step] <color:white>Then a call named f12-c-then
+  
+  Request  f12-c-then                     phase=Action  src=TestContext
+  Response f12-c-then                     phase=Action  src=TestContext
+  steps:
+    Given a call named f12-c-seed [Passed]
+    When a call named f12-c-act [Passed]
+    Then a call named f12-c-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named f12-c-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named f12-c-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named f12-c-then
+      shop -[#438DD5]-> probe: OK
+

@@ -1,0 +1,43 @@
+KILLED solid=1 order=6 racing-new=0 racing-seen=15
+first: rev4/rev4-d: B06_Own_runner_on_a_thread_under_a_scope: new: --- MARKER ---; new: partition Setup; new: end
+
+[matrix/xunit3] xunit3.txt: ORDER PhaseProbe.Suite.Shapes.T01_a_When_on_an_unflowed_thread_inside_a_Given
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[matrix/xunit3] xunit3.txt: ORDER PhaseProbe.Suite.Shapes.T03_a_When_on_an_unflowed_thread_while_a_Given_is_left_running
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[matrix/xunit3] xunit3.txt: ORDER PhaseProbe.Suite.Shapes.T04_an_async_When_on_an_unflowed_thread_inside_a_Given
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[rev4/rev4-a] rev4-a.txt: racing, shape seen F02_Poller_silenced_with_the_public_setter
+[rev4/rev4-b] rev4-b.txt: ORDER G03_When_on_a_detached_flow_inside_a_test
+      + --- MARKER ---
+      - --- MARKER ---
+      + end
+      - end
+[rev4/rev4-d] rev4-d.txt: SOLID B06_Own_runner_on_a_thread_under_a_scope
+    new: --- MARKER ---; new: partition Setup; new: end
+      + --- MARKER ---
+      + partition Setup
+      + end
+[rev4/rev4-d] rev4-d.txt: racing, shape seen E01b_Poller_outlives_its_test
+[review/rev3-bddfy] rev3-bddfy.txt: racing, shape seen PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running
+[review/rev3-lightbdd] rev3-lightbdd.plantuml.txt: racing, shape seen M02 a background Then loop then an And in setup
+[review/rev3-lightbdd] rev3-lightbdd.plantuml.txt: racing, shape seen M03 a background Given loop then an And in action
+[review/rev3-lightbdd] rev3-lightbdd.txt: racing, shape seen M02 a background Then loop then an And in setup
+[review/rev3-lightbdd] rev3-lightbdd.txt: racing, shape seen M03 a background Given loop then an And in action
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C03_a_loop_of_keyword_free_steps_started_in_a_Given
+[review/rev3-plain] rev3-plain.plantuml.txt: ORDER PhaseProbe.Rev3.C_Background.C05_a_When_on_a_detached_flow_with_an_explicit_identity
+      + end
+      - end
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C03_a_loop_of_keyword_free_steps_started_in_a_Given
+[review/rev3-plain] rev3-plain.txt: ORDER PhaseProbe.Rev3.C_Background.C05_a_When_on_a_detached_flow_with_an_explicit_identity
+      + --- ACTION START MARKER ---
+      - --- ACTION START MARKER ---
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps

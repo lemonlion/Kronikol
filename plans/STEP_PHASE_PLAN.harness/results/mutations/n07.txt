@@ -1,0 +1,24 @@
+KILLED solid=2 order=3 racing-new=0 racing-seen=3
+first: review/rev3-lightbdd-legacy: N04 a Given calls a woven When: new: partition #F6F6F6 Setup; new: end
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev5/rev5-lightbdd-legacy] rev5-lightbdd-legacy.txt: ORDER L07 a given runs a woven when
+      + --- MARKER ---
+      - --- MARKER ---
+      + end
+      - end
+[review/rev3-lightbdd-legacy] rev3-lightbdd-legacy.plantuml.txt: SOLID N04 a Given calls a woven When
+    new: partition #F6F6F6 Setup; new: end
+      + partition #F6F6F6 Setup
+      + end
+[review/rev3-lightbdd-legacy] rev3-lightbdd-legacy.txt: SOLID N04 a Given calls a woven When
+    new: --- ACTION START MARKER ---
+      + --- ACTION START MARKER ---
+[review/rev3-more] rev3-more.plantuml.txt: ORDER PhaseProbe.Rev3.More.H_FetcherMix.H23_fetcher_and_one_woven_When
+      + end
+      - end
+[review/rev3-more] rev3-more.plantuml.txt: racing, shape seen PhaseProbe.Rev3.More.H_LoopOnANoSetupClient.H41_a_loop_of_Then_steps_from_a_Given_on_a_Tra
+[review/rev3-more] rev3-more.txt: ORDER PhaseProbe.Rev3.More.H_FetcherMix.H23_fetcher_and_one_woven_When
+      + --- ACTION START MARKER ---
+      - --- ACTION START MARKER ---
+[review/rev3-more] rev3-more.txt: racing, shape seen PhaseProbe.Rev3.More.H_LoopOnANoSetupClient.H41_a_loop_of_Then_steps_from_a_Given_on_a_Tra

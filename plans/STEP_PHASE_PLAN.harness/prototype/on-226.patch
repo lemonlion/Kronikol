@@ -1,0 +1,2848 @@
+diff --git a/src/Kronikol.AssertionTracking/AssertionWeaver.cs b/src/Kronikol.AssertionTracking/AssertionWeaver.cs
+index 0f3ebf94..83b49b84 100644
+--- a/src/Kronikol.AssertionTracking/AssertionWeaver.cs
++++ b/src/Kronikol.AssertionTracking/AssertionWeaver.cs
+@@ -73,18 +73,20 @@ public WeaveResult Weave(string assemblyPath, string? pdbPath)
+         // can stall on Linux overlay filesystems used by CI runners).
+         var assemblyBytes = File.ReadAllBytes(assemblyPath);
+ 
++        // It holds every assembly it opens: left open on a reused MSBuild node, they would stop the next build copying them.
++        using var resolver = CreateResolver(assemblyPath);
+         var readerParams = new ReaderParameters
+         {
+             ReadSymbols = true,
+             SymbolReaderProvider = new DefaultSymbolReaderProvider(throwIfNoSymbol: false),
+             ReadingMode = ReadingMode.Immediate,
+-            AssemblyResolver = CreateResolver(assemblyPath)
++            AssemblyResolver = resolver
+         };
+         if (pdbPath != null)
+             readerParams.SymbolStream = new MemoryStream(File.ReadAllBytes(pdbPath));
+ 
+         using var assemblyStream = new MemoryStream(assemblyBytes);
+-        using var assembly = AssemblyDefinition.ReadAssembly(assemblyStream, readerParams);
++        using var assembly = ReadAssembly(assemblyStream, readerParams, ref pdbPath);
+ 
+         var readMs = sw.ElapsedMilliseconds;
+ 
+@@ -189,7 +191,25 @@ public WeaveResult Weave(string assemblyPath, string? pdbPath)
+ 
+             // The symbols go back where they came from: into the assembly when it embedded them, so a stack
+             // trace through a woven method keeps its line numbers either way.
+-            if (pdbPath != null)
++            // The runtime finds a PDB by the name the assembly gives it. Cecil gives the name of a file it opens itself, and for a
++            // stream the assembly's own, so a PDB the project named for itself is written beside an assembly of that name.
++            var namedForItself = pdbPath != null && !string.Equals(Path.GetFileName(pdbPath), assembly.Name.Name + ".pdb", StringComparison.OrdinalIgnoreCase);
++            if (namedForItself)
++            {
++                // Under an extension of its own, since a file with the PDB's name and a .dll's may be one of the project's.
++                var besideIt = Path.ChangeExtension(pdbPath!, ".kronikol-woven");
++                try
++                {
++                    File.Delete(pdbPath!);
++                    assembly.Write(besideIt, new WriterParameters { WriteSymbols = true, SymbolWriterProvider = new PortablePdbWriterProvider() });
++                    File.Copy(besideIt, assemblyPath, overwrite: true);
++                }
++                finally
++                {
++                    File.Delete(besideIt);
++                }
++            }
++            else if (pdbPath != null)
+             {
+                 using var outputAssembly = new MemoryStream();
+                 using var outputPdb = new MemoryStream();
+@@ -337,6 +357,29 @@ private static bool HasTrackAssertionsAttribute(AssemblyDefinition assembly)
+             a.AttributeType.FullName == "Kronikol.Tracking.TrackAssertionsBetaAttribute");
+     }
+ 
++    /// <summary>
++    /// The assembly, with its symbols where they match. A project whose DebugType changed keeps the old PDB in obj until it is
++    /// cleaned, and that PDB is not this assembly's. With DebugType=none it fails to match, and the weave says it has no symbols.
++    /// With DebugType=embedded Cecil reads what is embedded and never looks at it, so those go back in and it is left alone.
++    /// </summary>
++    private static AssemblyDefinition ReadAssembly(MemoryStream assembly, ReaderParameters parameters, ref string? pdbPath)
++    {
++        try
++        {
++            var read = AssemblyDefinition.ReadAssembly(assembly, parameters);
++            if (read.MainModule.HasDebugHeader && read.MainModule.GetDebugHeader().Entries.Any(entry => entry.Directory.Type == ImageDebugType.EmbeddedPortablePdb))
++                pdbPath = null;
++            return read;
++        }
++        catch (SymbolsNotMatchingException)
++        {
++            assembly.Position = 0;
++            parameters.SymbolStream = null;
++            pdbPath = null;
++            return AssemblyDefinition.ReadAssembly(assembly, parameters);
++        }
++    }
++
+     private static bool ReferencesAssertionLibrary(AssemblyDefinition assembly)
+     {
+         // Check assembly references (normal case: assertions from NuGet packages)
+@@ -508,7 +551,11 @@ instruction.OpCode.Code is not (Code.Ldftn or Code.Ldvirtftn or Code.Call or Cod
+         }
+         else
+         {
+-            coreVersion = ttdAssemblyRef.Version;
++            // The compiler keeps no reference for a project that names no type of the core, and the step weaver, which runs first,
++            // adds one with no version: the core's own is read from the references, as for one this weave adds.
++            coreVersion = ttdAssemblyRef.Version == new Version(0, 0, 0, 0)
++                ? ReferencedCoreVersion(module, ttdAssemblyRef)
++                : ttdAssemblyRef.Version;
+         }
+ 
+         // Construct the Track type reference
+@@ -576,7 +623,7 @@ instruction.OpCode.Code is not (Code.Ldftn or Code.Ldvirtftn or Code.Call or Cod
+     private static Version? ReferencedCoreVersion(ModuleDefinition module, AssemblyNameReference core)
+     {
+         try { return module.AssemblyResolver.Resolve(core)?.Name.Version; }
+-        catch (AssemblyResolutionException) { return null; }
++        catch (Exception ex) when (ex is AssemblyResolutionException or IOException or UnauthorizedAccessException or BadImageFormatException) { return null; }
+     }
+ 
+     /// <summary>
+@@ -2841,6 +2888,48 @@ private int WrapAssertions(
+         return woven;
+     }
+ 
++    /// <summary>
++    /// Where the step weaver's wrapper of this method ends, if it has one: its catch is the handler that calls
++    /// StepCollector, and each of the method's returns became a leave to that end.
++    /// </summary>
++    private static Instruction? StepWrapperEnd(MethodDefinition method) =>
++        method.Body.ExceptionHandlers.LastOrDefault(h => h.HandlerType == ExceptionHandlerType.Catch && h.HandlerEnd != null
++            && Range(h.HandlerStart, h.HandlerEnd).Any(i => i.Operand is MethodReference called && called.DeclaringType.Name == "StepCollector"))?.HandlerEnd;
++
++    /// <summary>
++    /// Whether the statement can return from a step after one of its assertions has run, along the statement's own branches.
++    /// A leave to anywhere else is the compiler's own, out of a using, a lock or a try, and the method carries on after it.
++    /// </summary>
++    private static bool LeavesAfterTheAssertion(MethodDefinition method, Instruction start, Instruction end)
++    {
++        var wrapperEnd = StepWrapperEnd(method);
++        if (wrapperEnd == null)
++            return false;
++
++        var statement = new HashSet<Instruction>(Range(start, end));
++        var seen = new HashSet<Instruction>();
++        var pending = new Stack<Instruction>(statement.Where(i => IsCallInstruction(i) && i.Operand is MethodReference called && IsAssertionCall(called)));
++        while (pending.Count > 0)
++        {
++            var at = pending.Pop();
++            if (!seen.Add(at))
++                continue;
++            if ((at.OpCode == OpCodes.Leave || at.OpCode == OpCodes.Leave_S) && at.Operand == wrapperEnd)
++                return true;
++
++            var next = new List<Instruction>();
++            if (at.Operand is Instruction target)
++                next.Add(target);
++            else if (at.Operand is Instruction[] targets)
++                next.AddRange(targets);
++            if (at.OpCode.FlowControl != FlowControl.Branch && at.OpCode.FlowControl != FlowControl.Return && at.OpCode.FlowControl != FlowControl.Throw && at.Next != null)
++                next.Add(at.Next);
++            foreach (var instruction in next.Where(statement.Contains))
++                pending.Push(instruction);
++        }
++        return false;
++    }
++
+     /// <summary>
+     /// The values on the stack where the statement's <c>try</c> opens (<paramref name="entry"/>, stored before it
+     /// and loaded back inside it) and where the statement ends (<paramref name="exit"/>, stored before its
+@@ -2865,9 +2954,25 @@ private int WrapAssertions(
+         // method) cannot stay inside a try; it can leave to the method's own return when the statement is followed
+         // by one and there is no value to return.
+         if (Range(start, end).Any(i => i.OpCode == OpCodes.Ret) &&
+-            (method.ReturnType.MetadataType != MetadataType.Void || end.Next?.OpCode != OpCodes.Ret))
++            (!StackAnalysis.IsVoid(method.ReturnType) || end.Next?.OpCode != OpCodes.Ret))
+             return "the statement returns from the method part-way";
+ 
++        // The step weaver has turned a value's return into a store and a leave by the time a real build gets here. A leave that can
++        // run after the assertion jumps past the note, so the assertion would run with nothing to show for it and nothing said. One it
++        // cannot reach is the compiler's null path out of a using, a lock or a try: the assertion did not run, so no note is lost. In a
++        // state machine a leave part-way is the await's own, and a void method's null path skips its statement as it always has.
++        if (!StackAnalysis.IsVoid(method.ReturnType) && method.Name != "MoveNext" && LeavesAfterTheAssertion(method, start, end))
++            return "a way through the statement leaves the method after its assertion has run";
++
++        // The statement's own throw would reach the wrapper's catch and read as the assertion failing, and one that ends its
++        // method, try or handler leaves nothing after it for the wrapper to leave to.
++        if (end.OpCode == OpCodes.Throw)
++            return "the statement ends by throwing";
++
++        // A filter has the exception on the stack as it starts and can only end at its endfilter.
++        if (method.Body.ExceptionHandlers.Any(h => h.HandlerType == ExceptionHandlerType.Filter && Range(h.FilterStart, h.HandlerStart).Contains(start)))
++            return "the statement is in an exception filter";
++
+         // A try is entered only through its first instruction: a branch from outside the statement to any later one
+         // would jump into it. An awaited statement is entered at its merge point by both of the await's paths.
+         if (EntersPartWay(method, start, end))
+@@ -3145,8 +3250,15 @@ private void WrapSingleAssertion(
+         {
+             if (existingHandler.TryStart == firstInstr)
+                 existingHandler.TryStart = tryStart;
++            // An assertion that is a finally's or a catch's first statement, with no nop before it in Release: without these the
++            // wrapper starts outside the handler it belongs to, which the runtime refuses. A catch starts with the exception on
++            // the stack, so the handler starts where that is stored, before the try, and the handler before it ends there too.
+             if (existingHandler.HandlerEnd == firstInstr)
+-                existingHandler.HandlerEnd = tryStart;
++                existingHandler.HandlerEnd = prologueStart;
++            if (existingHandler.TryEnd == firstInstr)
++                existingHandler.TryEnd = prologueStart;
++            if (existingHandler.HandlerStart == firstInstr)
++                existingHandler.HandlerStart = prologueStart;
+         }
+ 
+         // Fix branch-into-try: any branch/leave from outside our try region that targets
+diff --git a/src/Kronikol.AssertionTracking/StackAnalysis.cs b/src/Kronikol.AssertionTracking/StackAnalysis.cs
+index aaf26e6b..aedad8ec 100644
+--- a/src/Kronikol.AssertionTracking/StackAnalysis.cs
++++ b/src/Kronikol.AssertionTracking/StackAnalysis.cs
+@@ -271,7 +271,7 @@ bool Pop(int count)
+             case Code.Jmp:
+                 return true;
+             case Code.Ret:
+-                return IsVoid(body.Method.ReturnType) || Pop(1);
++                return IsVoid(body.Method.ReturnType) || ReturnsNothingUnderRuntimeAsync(body.Method) || Pop(1);
+ 
+             case Code.Ldfld:
+             {
+@@ -651,7 +651,12 @@ internal static bool SameType(TypeReference? a, TypeReference? b) =>
+         }
+     }
+ 
+-    private static bool IsVoid(TypeReference type)
++    /// <summary>Compiled for runtime async (MethodImplAttributes.Async, which Cecil does not name yet), a method's ret carries the
++    /// task's result, so a Task's or a ValueTask's carries nothing.</summary>
++    private static bool ReturnsNothingUnderRuntimeAsync(MethodDefinition method) =>
++        ((int)method.ImplAttributes & 0x2000) != 0 && method.ReturnType is not GenericInstanceType;
++
++    internal static bool IsVoid(TypeReference type)
+     {
+         while (type is RequiredModifierType required)
+             type = required.ElementType;
+diff --git a/src/Kronikol.AssertionTracking/WeaveAssertionsTask.cs b/src/Kronikol.AssertionTracking/WeaveAssertionsTask.cs
+index a6e53b2f..fcb02936 100644
+--- a/src/Kronikol.AssertionTracking/WeaveAssertionsTask.cs
++++ b/src/Kronikol.AssertionTracking/WeaveAssertionsTask.cs
+@@ -24,6 +24,9 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
+     [Required]
+     public string AssemblyPath { get; set; } = string.Empty;
+ 
++    /// <summary>The project's PdbFile property: symbols it writes somewhere other than beside the assembly.</summary>
++    public string? PdbFile { get; set; }
++
+     /// <summary>
+     /// The build's source roots (<c>@(SourceRoot)</c>). A root whose <c>MappedPath</c> metadata differs from its path
+     /// is a name the compiler wrote for that directory, and a document under that name is read from the directory.
+@@ -72,9 +75,10 @@ private bool ExecuteCore()
+             return true;
+         }
+ 
+-        // A project that embeds its PDB (DebugType=embedded) has no file beside the assembly: the weaver reads
+-        // the symbols from the assembly itself, and leaves one with none at all (DebugType=none) unwoven.
+-        string? pdbPath = Path.ChangeExtension(AssemblyPath, ".pdb");
++        // A project that embeds its PDB (DebugType=embedded) has no file of this build's beside the assembly: the weaver reads
++        // the symbols from the assembly itself, and leaves one with none at all (DebugType=none) unwoven. The build writes a
++        // PdbFile with its extension changed to .pdb, whatever it was given.
++        string? pdbPath = Path.ChangeExtension(!string.IsNullOrEmpty(PdbFile) ? PdbFile : AssemblyPath, ".pdb");
+         if (!File.Exists(pdbPath))
+             pdbPath = null;
+ 
+diff --git a/src/Kronikol.AssertionTracking/build/Kronikol.AssertionTracking.targets b/src/Kronikol.AssertionTracking/build/Kronikol.AssertionTracking.targets
+index a4f06d07..8353f48d 100644
+--- a/src/Kronikol.AssertionTracking/build/Kronikol.AssertionTracking.targets
++++ b/src/Kronikol.AssertionTracking/build/Kronikol.AssertionTracking.targets
+@@ -57,6 +57,7 @@ namespace Kronikol.Tracking
+ 
+     <WeaveAssertionsTask
+       AssemblyPath="@(IntermediateAssembly)"
++      PdbFile="$(PdbFile)"
+       SourceRoots="@(SourceRoot)"
+       PathMap="$(PathMap)"
+       CodePage="$(CodePage)"
+diff --git a/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs b/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
+index 396b2565..7e9f9056 100644
+--- a/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
++++ b/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
+@@ -1,5 +1,6 @@
+ using System.Text.RegularExpressions;
+ using TestStack.BDDfy;
++using TestStack.BDDfy.Configuration;
+ using Kronikol.Reports;
+ using Kronikol.Tracking;
+ 
+@@ -25,33 +26,65 @@ public object Execute(Step step, object testObject)
+         };
+ 
+         CurrentStepTypeLocal.Value = keyword?.ToUpperInvariant();
+-        TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(keyword);
+ 
+         // Resolve the xUnit test ID for StepCollector
+         string? testId = null;
+         try { testId = Xunit.TestContext.Current.Test?.UniqueID; } catch { /* not in xUnit context */ }
+ 
++        var underKeyword = testId is not null && StepCollector.UnderOpenKeyword(testId);
++        var phaseBefore = underKeyword ? TestPhaseContext.Current : TestPhase.Unknown;
++        if (testId is null || (keyword is null && !underKeyword))
++            TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(keyword);
++
+         var stepText = ExtractStepText(step.Title, keyword);
+         if (testId is not null)
+-            StepCollector.StartStep(testId, keyword, stepText, null, null);
++            StepCollector.StartStep(testId, keyword, stepText, null, null, table: null, docString: null, phaseKeyword: keyword);
+ 
++        var closed = false;
+         try
+         {
+-            return inner.Execute(step, testObject);
++            var result = inner.Execute(step, testObject);
++            if (testId is not null && Configurator.AsyncVoidSupportEnabled && result is Task task)
++            {
++                // Its own flow leaves it now, and its task closes it.
++                closed = true;
++                StepCollector.LeaveCompletedStep(testId);
++                return CloseWhenDone(testId, task);
++            }
++            return result;
+         }
+         catch (Exception)
+         {
+             if (testId is not null)
+                 StepCollector.CompleteStep(testId, passed: false);
++
++            // The finally would close the step above it.
++            closed = true;
+             throw;
+         }
+         finally
+         {
+-            if (testId is not null && StepCollector.HasActiveStep(testId))
++            if (!closed && testId is not null && StepCollector.HasActiveStep(testId))
+                 StepCollector.CompleteStep(testId, passed: true);
+             CurrentStepTypeLocal.Value = null;
+-            TestPhaseContext.Current = TestPhase.Unknown;
++            TestPhaseContext.Current = phaseBefore;
++        }
++    }
++
++    private static async Task CloseWhenDone(string testId, Task task)
++    {
++        try
++        {
++            await task.ConfigureAwait(false);
++        }
++        catch
++        {
++            StepCollector.CompleteStep(testId, passed: false);
++            throw;
+         }
++
++        if (StepCollector.HasActiveStep(testId))
++            StepCollector.CompleteStep(testId, passed: true);
+     }
+ 
+     /// <summary>
+diff --git a/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs b/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs
+index 04624a61..5255c72a 100644
+--- a/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs
++++ b/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs
+@@ -33,7 +33,10 @@ public LightBddTestTrackingMessageHandlerOptions()
+             info = parentStep;
+ 
+         var stepType = info.Name?.StepTypeName?.Name;
+-        TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
++        // Only for a suite with no step decorator (ReportWritersConfiguration's CreateStandardReportsWithDiagrams registers
++        // none): where the decorator runs, the phase is the test's, and a top-level AND is not a setup step.
++        if (!StepCollector.FrameworkStepsSetPhase())
++            TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
+         return stepType;
+     }
+ }
+\ No newline at end of file
+diff --git a/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs b/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
+index 586c1f9b..eac080a2 100644
+--- a/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
++++ b/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
+@@ -25,7 +25,11 @@ public async Task ExecuteAsync(IStep step, Func<Task> stepInvocation)
+         catch { /* not in scenario context */ }
+ 
+         if (testId is not null)
+-            StepCollector.StartStep(testId, keyword, text, null, null);
++        {
++            // A suite's BUT continues the step before it, as LightBDD's own AND does.
++            var phaseKeyword = string.Equals(keyword, "BUT", StringComparison.OrdinalIgnoreCase) ? "AND" : keyword;
++            StepCollector.StartStep(testId, keyword, text, null, null, table: null, docString: null, phaseKeyword);
++        }
+ 
+         try
+         {
+@@ -37,11 +41,10 @@ public async Task ExecuteAsync(IStep step, Func<Task> stepInvocation)
+                 StepCollector.CompleteStep(testId, passed: false);
+             throw;
+         }
+-        finally
+-        {
+-            if (testId is not null && StepCollector.HasActiveStep(testId))
+-                StepCollector.CompleteStep(testId, passed: true);
+-        }
++
++        // Not in a finally: after the catch above has closed this step, it would close the step above it.
++        if (testId is not null && StepCollector.HasActiveStep(testId))
++            StepCollector.CompleteStep(testId, passed: true);
+     }
+ 
+     /// <summary>
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+index c340e385..f122cf2b 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+@@ -92,7 +92,6 @@ public void BeforeStep()
+ 
+         var stepType = _scenarioContext.StepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString();
+         ReqNRollTestContext.CurrentStepType = stepType;
+-        TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
+         _scenarioContext[ReqNRollConstants.StepStopwatchKey] = Stopwatch.StartNew();
+ 
+         // Push a step onto StepCollector so assertion tracking sub-steps attach here. The step's
+@@ -100,8 +99,10 @@ public void BeforeStep()
+         // an outline step already has its <placeholders> substituted.
+         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+         var stepInfo = _scenarioContext.StepContext.StepInfo;
++        // The keyword as written is the step's label. Its phase is the type Reqnroll resolved, And and But to the keyword
++        // they continue (#195).
+         StepCollector.StartStep(scenarioId, stepType, stepInfo.Text, null, null,
+-            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText);
++            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText, phaseKeyword: stepInfo.StepDefinitionType.ToString());
+     }
+ 
+     [AfterStep(Order = int.MaxValue)]
+diff --git a/src/Kronikol.StepTracking/StepWeaver.cs b/src/Kronikol.StepTracking/StepWeaver.cs
+index d404a899..1a07d443 100644
+--- a/src/Kronikol.StepTracking/StepWeaver.cs
++++ b/src/Kronikol.StepTracking/StepWeaver.cs
+@@ -54,24 +54,31 @@ public StepWeaver(TaskLoggingHelper? log = null, string[]? searchDirectories = n
+         _searchDirectories = searchDirectories ?? Array.Empty<string>();
+     }
+ 
+-    public WeaveResult Weave(string assemblyPath, string pdbPath)
++    /// <param name="assemblyPath">The compiled assembly, woven in place.</param>
++    /// <param name="pdbPath">Its portable PDB file, or null when the assembly embeds its symbols
++    /// (<c>DebugType=embedded</c>) or has none (<c>DebugType=none</c>): a step needs no symbols to be woven, and it keeps
++    /// the ones it has, in the file or in the assembly.</param>
++    public WeaveResult Weave(string assemblyPath, string? pdbPath)
+     {
+         var result = new WeaveResult();
+ 
+         var assemblyBytes = File.ReadAllBytes(assemblyPath);
+-        var pdbBytes = File.ReadAllBytes(pdbPath);
+ 
++        // It holds every assembly it opens, and asking what a step returns opens the ones its types come from: left open on a
++        // reused MSBuild node, they would stop the next build copying them.
++        using var resolver = CreateResolver(assemblyPath);
+         var readerParams = new ReaderParameters
+         {
+             ReadSymbols = true,
+             SymbolReaderProvider = new DefaultSymbolReaderProvider(throwIfNoSymbol: false),
+             ReadingMode = ReadingMode.Immediate,
+-            AssemblyResolver = CreateResolver(assemblyPath)
++            AssemblyResolver = resolver
+         };
+-        readerParams.SymbolStream = new MemoryStream(pdbBytes);
++        if (pdbPath != null)
++            readerParams.SymbolStream = new MemoryStream(File.ReadAllBytes(pdbPath));
+ 
+         using var assemblyStream = new MemoryStream(assemblyBytes);
+-        using var assembly = AssemblyDefinition.ReadAssembly(assemblyStream, readerParams);
++        using var assembly = ReadAssembly(assemblyStream, readerParams, ref pdbPath);
+ 
+         // Fast-path: check for [assembly: TrackSteps]
+         if (!HasTrackStepsAttribute(assembly))
+@@ -95,27 +102,68 @@ public WeaveResult Weave(string assemblyPath, string pdbPath)
+             return result;
+         }
+ 
+-        // Also need Exception.get_Message
+-        var exceptionType = assembly.MainModule.ImportReference(typeof(Exception));
+-        var getMessageMethod = assembly.MainModule.ImportReference(
+-            typeof(Exception).GetProperty("Message")!.GetGetMethod()!);
++        // Also need Exception.get_Message, named from the module's own core library, not the one this task runs on
++        var module = assembly.MainModule;
++        var exceptionType = new TypeReference("System", "Exception", module, module.TypeSystem.CoreLibrary);
++        var getMessageMethod = new MethodReference("get_Message", module.TypeSystem.String, exceptionType) { HasThis = true };
+ 
+-        foreach (var type in assembly.MainModule.GetTypes())
++        foreach (var type in module.GetTypes())
+         {
++            // A C# 14 extension block's skeleton repeats its members' attributes over bodies that throw: what runs is the
++            // static method the compiler writes on the enclosing class.
++            if (type.Name.StartsWith("<G>$", StringComparison.Ordinal))
++                continue;
++
+             foreach (var method in type.Methods)
+             {
+                 if (!method.HasBody)
++                {
++                    // Nothing to bracket, and an override does not inherit the attribute. Its override may carry its own, so
++                    // this is no warning, only a line at normal verbosity.
++                    if (GetStepAttribute(method) != null)
++                        result.StepsWithNoBody.Add(UnwovenStepOf(method, "it has no body to bracket"));
+                     continue;
++                }
+ 
+                 var stepAttr = GetStepAttribute(method);
+                 if (stepAttr == null)
+                     continue;
+ 
++                // A method whose work the weaver cannot bracket runs as the compiler wrote it, and the build says so.
++                ReturnKind? kind;
++                string? refusal;
++                try
++                {
++                    kind = ClassifyReturn(method, stepAttr, out refusal);
++                }
++                catch (Exception ex)
++                {
++                    kind = null;
++                    refusal = $"the weave could not read its return type ({ex.GetType().Name}: {ex.Message})";
++                }
++
++                if (kind == null)
++                {
++                    if (stepAttr.Properties.Any(p => p.Name == "SkipIf"))
++                        refusal += ", and its SkipIf is not read, so the body runs whatever that says";
++                    result.UnwovenSteps.Add(UnwovenStepOf(method, refusal!));
++                    continue;
++                }
++
+                 var keyword = GetKeyword(stepAttr);
+                 var stepText = GetStepText(stepAttr, method);
+-                var skipIf = GetSkipIfInfo(stepAttr, method, type);
++                SkipIfInfo? skipIf;
++                try
++                {
++                    skipIf = GetSkipIfInfo(stepAttr, method, type);
++                }
++                catch (Exception ex)
++                {
++                    skipIf = null;
++                    WarnSkipIf($"SkipIf on '{type.FullName}.{method.Name}' could not be read ({ex.GetType().Name}: {ex.Message}). Step will execute normally.");
++                }
+ 
+-                WrapMethodWithStepTracking(method, keyword, stepText, stepMethods.Value, getMessageMethod, exceptionType, skipIf);
++                WrapMethodWithStepTracking(method, keyword, stepText, stepMethods.Value, getMessageMethod, exceptionType, kind.Value, skipIf);
+                 result.WeavedCount++;
+             }
+         }
+@@ -125,24 +173,231 @@ public WeaveResult Weave(string assemblyPath, string pdbPath)
+             AddWeavedSentinel(assembly);
+             DropTypeDefinitionDocuments(assembly.MainModule);
+ 
+-            using var outputAssembly = new MemoryStream();
+-            using var outputPdb = new MemoryStream();
+-
+-            var writerParams = new WriterParameters
++            // The runtime finds a PDB by the name the assembly gives it. Cecil gives the name of a file it opens itself, and for a
++            // stream the assembly's own, so a PDB the project named for itself is written beside an assembly of that name.
++            var namedForItself = pdbPath != null && !string.Equals(Path.GetFileName(pdbPath), assembly.Name.Name + ".pdb", StringComparison.OrdinalIgnoreCase);
++            if (namedForItself)
+             {
+-                WriteSymbols = true,
+-                SymbolWriterProvider = new PortablePdbWriterProvider(),
+-                SymbolStream = outputPdb
+-            };
+-            assembly.Write(outputAssembly, writerParams);
++                // Under an extension of its own, since a file with the PDB's name and a .dll's may be one of the project's.
++                var besideIt = Path.ChangeExtension(pdbPath!, ".kronikol-woven");
++                try
++                {
++                    File.Delete(pdbPath!);
++                    assembly.Write(besideIt, new WriterParameters { WriteSymbols = true, SymbolWriterProvider = new PortablePdbWriterProvider() });
++                    File.Copy(besideIt, assemblyPath, overwrite: true);
++                }
++                finally
++                {
++                    File.Delete(besideIt);
++                }
++            }
++            else if (pdbPath != null)
++            {
++                using var outputAssembly = new MemoryStream();
++                using var outputPdb = new MemoryStream();
+ 
+-            File.WriteAllBytes(assemblyPath, outputAssembly.ToArray());
+-            File.WriteAllBytes(pdbPath, outputPdb.ToArray());
++                var writerParams = new WriterParameters
++                {
++                    WriteSymbols = true,
++                    SymbolWriterProvider = new PortablePdbWriterProvider(),
++                    SymbolStream = outputPdb
++                };
++                assembly.Write(outputAssembly, writerParams);
++
++                File.WriteAllBytes(assemblyPath, outputAssembly.ToArray());
++                File.WriteAllBytes(pdbPath, outputPdb.ToArray());
++            }
++            else
++            {
++                // Cecil's embedded writer refuses a stream without a file name, as the assertion weaver found, so the
++                // woven assembly is written to a file beside the original and copied over it.
++                var weavingPath = assemblyPath + ".weaving";
++                try
++                {
++                    assembly.Write(weavingPath, assembly.MainModule.HasSymbols
++                        ? new WriterParameters { WriteSymbols = true, SymbolWriterProvider = new EmbeddedPortablePdbWriterProvider() }
++                        : new WriterParameters());
++                    File.Copy(weavingPath, assemblyPath, overwrite: true);
++                }
++                finally
++                {
++                    File.Delete(weavingPath);
++                }
++            }
+         }
+ 
+         return result;
+     }
+ 
++    /// <summary>
++    /// The assembly, with its symbols where they match. A project whose DebugType changed keeps the old PDB in obj until it
++    /// is cleaned, and that PDB is not this assembly's. With DebugType=none it fails to match, and a step needs no symbols, so
++    /// it weaves on without them. With DebugType=embedded Cecil reads what is embedded and never looks at it, so those go back
++    /// in and it is left alone.
++    /// </summary>
++    private static AssemblyDefinition ReadAssembly(MemoryStream assembly, ReaderParameters parameters, ref string? pdbPath)
++    {
++        try
++        {
++            var read = AssemblyDefinition.ReadAssembly(assembly, parameters);
++            if (read.MainModule.HasDebugHeader && read.MainModule.GetDebugHeader().Entries.Any(entry => entry.Directory.Type == ImageDebugType.EmbeddedPortablePdb))
++                pdbPath = null;
++            return read;
++        }
++        catch (SymbolsNotMatchingException)
++        {
++            assembly.Position = 0;
++            parameters.SymbolStream = null;
++            pdbPath = null;
++            return AssemblyDefinition.ReadAssembly(assembly, parameters);
++        }
++    }
++
++    /// <summary>
++    /// What a step method gives back, which decides when its step ends and how the method leaves. A void method and a
++    /// value end when the method returns; the four task types end when the task does.
++    /// </summary>
++    private enum ReturnKind { Void, Value, Task, GenericTask, ValueTask, GenericValueTask }
++
++    private const string TasksNamespace = "System.Threading.Tasks";
++
++    /// <summary>MethodImplAttributes.Async, set by a compiler targeting runtime async, which Cecil does not name yet.</summary>
++    private const int RuntimeAsyncImpl = 0x2000;
++
++    private static bool IsRuntimeAsync(MethodDefinition method) => ((int)method.ImplAttributes & RuntimeAsyncImpl) != 0;
++
++    /// <summary>
++    /// The method's kind, or null with the reason when its step could not say when its work ended: the only shapes are
++    /// ones this list names, and a method the list does not recognise is a value, never assumed void.
++    /// </summary>
++    private static ReturnKind? ClassifyReturn(MethodDefinition method, CustomAttribute stepAttr, out string? refusal)
++    {
++        refusal = null;
++        var returnType = WithoutModifiers(method.ReturnType);
++
++        // Compiled for runtime async, a method is one frame to the JIT: its awaits are calls and its ret carries the task's
++        // result, not the task. So its step is bracketed as a void method or a value is, and ends when its work does.
++        if (IsRuntimeAsync(method))
++        {
++            if (returnType.GetElementType().Namespace == TasksNamespace && returnType.GetElementType().Name is "Task" or "Task`1" or "ValueTask" or "ValueTask`1")
++                return returnType is GenericInstanceType ? ReturnKind.Value : ReturnKind.Void;
++            refusal = "it is compiled for runtime async and returns a type the weaver does not know how to read";
++            return null;
++        }
++
++        if (HasAttribute(method, "IteratorStateMachineAttribute") || HasAttribute(method, "AsyncIteratorStateMachineAttribute"))
++        {
++            refusal = "it is an iterator, whose body runs while its caller enumerates it, after the method has returned";
++            return null;
++        }
++
++        var isAsync = HasAttribute(method, "AsyncStateMachineAttribute");
++        if (returnType.MetadataType == MetadataType.Void)
++        {
++            // A SkipIf says the body does not run, which a refusal would break, so that one is woven as any void method is, and
++            // its step closes at its first await as it always has.
++            if (!isAsync || stepAttr.Properties.Any(p => p.Name == "SkipIf"))
++                return ReturnKind.Void;
++            refusal = "it is async void, which nothing can wait for, so its step would close at its first await";
++            return null;
++        }
++
++        if (returnType.Namespace == TasksNamespace)
++        {
++            switch (returnType.Name)
++            {
++                case "Task": return ReturnKind.Task;
++                case "Task`1": return ReturnKind.GenericTask;
++                case "ValueTask": return ReturnKind.ValueTask;
++                case "ValueTask`1": return ReturnKind.GenericValueTask;
++            }
++        }
++
++        if (isAsync || IsAwaitable(returnType, method.Module.Assembly))
++        {
++            refusal = $"it returns {returnType.Name}, which the weaver cannot wait for, so its step would close when the method returns";
++            return null;
++        }
++
++        return ReturnKind.Value;
++    }
++
++    private static bool HasAttribute(MethodDefinition method, string name) =>
++        method.HasCustomAttributes && method.CustomAttributes.Any(a => a.AttributeType.Name == name);
++
++    /// <summary>A return type a caller awaits: it, or a base of it, has an instance GetAwaiter().</summary>
++    private static bool IsAwaitable(TypeReference type, AssemblyDefinition reader)
++    {
++        if (type is GenericParameter parameter)
++            return parameter.Constraints.Any(c => IsAwaitable(c.ConstraintType, reader));
++        if (type is ArrayType || type is PointerType || type is ByReferenceType || type is FunctionPointerType)
++            return false;
++
++        for (var definition = TryResolve(type); definition != null; definition = definition.BaseType == null ? null : TryResolve(definition.BaseType))
++        {
++            if (definition.Methods.Any(m => m.Name == "GetAwaiter" && !m.IsStatic && !m.HasParameters && !m.HasGenericParameters
++                    && m.ReturnType.MetadataType != MetadataType.Void
++                    && (m.IsPublic || ((m.IsAssembly || m.IsFamilyOrAssembly) && SharesInternals(definition.Module.Assembly, reader)))))
++                return true;
++            if (definition.IsInterface && definition.Interfaces.Any(i => IsAwaitable(i.InterfaceType, reader)))
++                return true;
++        }
++
++        return false;
++    }
++
++    private static TypeDefinition? TryResolve(TypeReference type)
++    {
++        try
++        {
++            return type.Resolve();
++        }
++        catch (Exception ex) when (ex is AssemblyResolutionException or IOException or UnauthorizedAccessException or BadImageFormatException)
++        {
++            return null;
++        }
++    }
++
++    /// <summary>The type with its modifiers off: an init accessor returns void under a modreq, a ref readonly return a ref under one.</summary>
++    private static TypeReference WithoutModifiers(TypeReference type)
++    {
++        while (type is IModifierType modified)
++            type = modified.ElementType;
++        return type;
++    }
++
++    private static UnwovenStep UnwovenStepOf(MethodDefinition method, string reason)
++    {
++        var point = FirstVisiblePoint(method) ?? FirstVisiblePoint(StateMachineOf(method));
++        return new UnwovenStep($"{method.DeclaringType.FullName}.{method.Name}", point?.Document?.Url, point?.StartLine ?? 0, reason);
++    }
++
++    private static SequencePoint? FirstVisiblePoint(MethodDefinition? method) =>
++        method?.DebugInformation?.HasSequencePoints == true
++            ? method.DebugInformation.SequencePoints.FirstOrDefault(p => !p.IsHidden)
++            : null;
++
++    /// <summary>An async or iterator method's lines are on its state machine's MoveNext; the compiler's attribute names the type.</summary>
++    private static MethodDefinition? StateMachineOf(MethodDefinition method)
++    {
++        var attribute = method.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.EndsWith("StateMachineAttribute", StringComparison.Ordinal));
++        var type = attribute?.ConstructorArguments.FirstOrDefault().Value as TypeReference;
++        return type == null ? null : TryResolve(type)?.Methods.FirstOrDefault(m => m.Name == "MoveNext");
++    }
++
++    /// <summary>
++    /// Brackets a step method, whatever it returns:
++    /// <code>
++    ///   StartStep
++    ///   try { [SkipIf's bypass, which leaves as the method would with nothing to give back]
++    ///         the method's body, each ret storing its value and leaving }
++    ///   catch { CompleteStep(false, message); rethrow }
++    ///   [the end: CompleteStep(true) and the value, or the task handed to CompleteStepAsync]
++    /// </code>
++    /// The bypass is inside the try, so a getter that throws fails the step as the body would. A method returning a task gets
++    /// the try too: one that is not async can throw before it has a task to return, while what an async one's body throws
++    /// goes in its task, so only the getter reaches its catch.
++    /// </summary>
+     private void WrapMethodWithStepTracking(
+         MethodDefinition method,
+         string? keyword,
+@@ -150,391 +405,411 @@ private void WrapMethodWithStepTracking(
+         (MethodReference StartStep, MethodReference CompleteStepPassed, MethodReference CompleteStepFailed) stepMethods,
+         MethodReference getMessageMethod,
+         TypeReference exceptionType,
++        ReturnKind kind,
+         SkipIfInfo? skipIf)
+     {
+-        // Detect async methods (returning Task or Task<T>)
+-        var asyncKind = GetAsyncKind(method);
+-        if (asyncKind != AsyncKind.None)
+-        {
+-            WrapAsyncMethodWithStepTracking(method, keyword, stepText, stepMethods, asyncKind, skipIf);
+-            return;
+-        }
+-
+         var body = method.Body;
+         var il = body.GetILProcessor();
++        var module = method.Module;
+         body.SimplifyMacros();
++        body.InitLocals = true;
+ 
+-        // Build parameter name and value arrays
+-        var paramNames = GetParameterNames(method);
+-        var hasParams = paramNames.Length > 0;
++        var returnType = WithoutModifiers(method.ReturnType);
++        if (IsRuntimeAsync(method) && returnType is GenericInstanceType awaited)
++            returnType = awaited.GenericArguments[0];
+ 
+-        // Create local variables for the exception in catch block
+         var exLocal = new VariableDefinition(exceptionType);
+         body.Variables.Add(exLocal);
+ 
+-        // Create local for parameter arrays if needed
+-        VariableDefinition? paramNamesLocal = null;
+-        VariableDefinition? paramValuesLocal = null;
+-        if (hasParams)
++        // What the method returned rides across the leave in a local, since a leave empties the stack. InitLocals makes
++        // it the type's default until the method stores to it, which is what the bypass hands back.
++        VariableDefinition? result = null;
++        if (kind != ReturnKind.Void)
+         {
+-            paramNamesLocal = new VariableDefinition(method.Module.ImportReference(typeof(string[])));
+-            paramValuesLocal = new VariableDefinition(method.Module.ImportReference(typeof(object[])));
+-            body.Variables.Add(paramNamesLocal);
+-            body.Variables.Add(paramValuesLocal);
++            result = new VariableDefinition(returnType);
++            body.Variables.Add(result);
+         }
+ 
+-        body.InitLocals = true;
+-
+-        // Get the first original instruction (entry point of try block)
+         var originalFirst = body.Instructions[0];
+ 
+-        // === Emit preamble: build param arrays and call StartStep ===
++        // The method's own returns. The bypass's goes in after them, past the end, since a bypassed step is not ended again.
++        var rets = body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToList();
++        var end = il.Create(OpCodes.Nop);
++
++        // === Preamble: StartStep(keyword, text, names, values) ===
+         var preamble = new List<Instruction>();
+ 
+-        if (hasParams)
++        preamble.Add(keyword != null ? il.Create(OpCodes.Ldstr, keyword) : il.Create(OpCodes.Ldnull));
++        preamble.Add(il.Create(OpCodes.Ldstr, stepText));
++        EmitParameterArrays(preamble, il, method);
++        preamble.Add(il.Create(OpCodes.Call, stepMethods.StartStep));
++
++        // === SkipIf's bypass, inside the try: a getter that throws fails the step, as the body would ===
++        var bypass = new List<Instruction>();
++        var bypassExit = new List<Instruction>();
++
++        if (skipIf != null)
+         {
+-            // Build string[] paramNames
+-            preamble.Add(il.Create(OpCodes.Ldc_I4, paramNames.Length));
+-            preamble.Add(il.Create(OpCodes.Newarr, method.Module.ImportReference(typeof(string))));
+-            for (int i = 0; i < paramNames.Length; i++)
++            if (skipIf.Constant != null)
+             {
+-                preamble.Add(il.Create(OpCodes.Dup));
+-                preamble.Add(il.Create(OpCodes.Ldc_I4, i));
+-                preamble.Add(il.Create(OpCodes.Ldstr, paramNames[i]));
+-                preamble.Add(il.Create(OpCodes.Stelem_Ref));
++                // A const has no field to read at run time: the compiler keeps only its value.
++                bypass.Add(il.Create(skipIf.Constant.Value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0));
+             }
+-            preamble.Add(il.Create(OpCodes.Stloc, paramNamesLocal!));
+-
+-            // Build object[] paramValues from method arguments
+-            preamble.Add(il.Create(OpCodes.Ldc_I4, paramNames.Length));
+-            preamble.Add(il.Create(OpCodes.Newarr, method.Module.ImportReference(typeof(object))));
+-            var methodParams = method.Parameters;
+-            for (int i = 0; i < paramNames.Length; i++)
++            else
+             {
+-                preamble.Add(il.Create(OpCodes.Dup));
+-                preamble.Add(il.Create(OpCodes.Ldc_I4, i));
++                if (!skipIf.IsStatic)
++                    bypass.Add(il.Create(OpCodes.Ldarg_0)); // this
++                if (skipIf.IsField)
++                    bypass.Add(il.Create(skipIf.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, skipIf.FieldRef!));
++                else
++                    bypass.Add(il.Create(skipIf.GetterIsVirtualCall ? OpCodes.Callvirt : OpCodes.Call, skipIf.PropertyGetterRef!));
++            }
+ 
+-                // Load argument (offset by 1 for instance methods)
+-                var argIndex = method.IsStatic ? i : i + 1;
+-                preamble.Add(il.Create(OpCodes.Ldarg, argIndex));
++            // brfalse → the body
++            bypass.Add(il.Create(OpCodes.Brfalse, originalFirst));
+ 
+-                // Box value types
+-                var paramType = methodParams[i].ParameterType;
+-                if (paramType.IsValueType || paramType.IsGenericParameter)
+-                {
+-                    preamble.Add(il.Create(OpCodes.Box, paramType));
+-                }
++            bypass.Add(skipIf.Reason != null ? il.Create(OpCodes.Ldstr, skipIf.Reason) : il.Create(OpCodes.Ldnull));
++            bypass.Add(il.Create(OpCodes.Call, GetBypassStepReference(module)));
+ 
+-                preamble.Add(il.Create(OpCodes.Stelem_Ref));
++            // An out parameter is assigned on every way out of a method, this one too.
++            foreach (var parameter in method.Parameters.Where(IsOutOnly))
++            {
++                bypass.Add(il.Create(OpCodes.Ldarg, parameter));
++                bypass.Add(il.Create(OpCodes.Initobj, ((ByReferenceType)WithoutModifiers(parameter.ParameterType)).ElementType));
+             }
+-            preamble.Add(il.Create(OpCodes.Stloc, paramValuesLocal!));
++
++            EmitBypassReturn(bypassExit, il, kind, returnType, result, module);
++            bypass.Add(il.Create(OpCodes.Leave, bypassExit[0]));
+         }
+ 
+-        // Call StepCollector.StartStep(keyword, text, paramNames, paramValues)
+-        if (keyword != null)
+-            preamble.Add(il.Create(OpCodes.Ldstr, keyword));
+-        else
+-            preamble.Add(il.Create(OpCodes.Ldnull));
++        foreach (var instruction in preamble)
++            il.InsertBefore(originalFirst, instruction);
++        foreach (var instruction in bypass)
++            il.InsertBefore(originalFirst, instruction);
+ 
+-        preamble.Add(il.Create(OpCodes.Ldstr, stepText));
++        // A tail call hands the frame on, and this frame still has its catch and its end to run.
++        foreach (var prefix in body.Instructions.Where(i => i.OpCode == OpCodes.Tail).ToList())
++            prefix.OpCode = OpCodes.Nop;
+ 
+-        if (hasParams)
++        // A ValueTask is awaited as the Task it wraps and handed back as a ValueTask of that Task, as TrackingProxy does. The weaver
++        // runs on netstandard2.0, which has no ValueTask, so its members are named from the method's own reference to the type.
++        VariableDefinition? taskOfValueTask = null;
++        MethodReference? asTask = null;
++        if (kind == ReturnKind.ValueTask || kind == ReturnKind.GenericValueTask)
+         {
+-            preamble.Add(il.Create(OpCodes.Ldloc, paramNamesLocal!));
+-            preamble.Add(il.Create(OpCodes.Ldloc, paramValuesLocal!));
++            var task = kind == ReturnKind.ValueTask
++                ? TaskType(module)
++                : GenericTask(module, FirstParameterOf((GenericInstanceType)returnType));
++            asTask = new MethodReference("AsTask", task, returnType) { HasThis = true };
++            taskOfValueTask = new VariableDefinition(kind == ReturnKind.ValueTask
++                ? TaskType(module)
++                : GenericTask(module, ((GenericInstanceType)returnType).GenericArguments[0]));
++            body.Variables.Add(taskOfValueTask);
+         }
+-        else
+-        {
+-            preamble.Add(il.Create(OpCodes.Ldnull));
+-            preamble.Add(il.Create(OpCodes.Ldnull));
+-        }
+-
+-        preamble.Add(il.Create(OpCodes.Call, stepMethods.StartStep));
+ 
+-        // === Emit SkipIf bypass check (after StartStep, before try block) ===
+-        if (skipIf != null)
++        // === Each ret stores its value and leaves for the end ===
++        // In place, so a branch to the ret still lands on it, with the value on the stack.
++        foreach (var ret in rets)
+         {
+-            var bypassStepRef = GetBypassStepReference(method.Module);
+-
+-            // Load the bool property/field
+-            if (skipIf.IsField)
++            if (result != null)
+             {
+-                if (!skipIf.IsStatic)
+-                    preamble.Add(il.Create(OpCodes.Ldarg_0)); // this
+-                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld,
+-                    method.Module.ImportReference(skipIf.FieldRef!)));
++                ret.OpCode = OpCodes.Stloc;
++                ret.Operand = result;
++                var leave = il.Create(OpCodes.Leave, end);
++                il.InsertAfter(ret, leave);
++                if (taskOfValueTask != null)
++                {
++                    il.InsertBefore(leave, il.Create(OpCodes.Ldloca, result));
++                    il.InsertBefore(leave, il.Create(OpCodes.Call, asTask!));
++                    il.InsertBefore(leave, il.Create(OpCodes.Stloc, taskOfValueTask));
++                }
+             }
+             else
+             {
+-                if (!skipIf.IsStatic)
+-                    preamble.Add(il.Create(OpCodes.Ldarg_0)); // this
+-                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Call : OpCodes.Callvirt,
+-                    method.Module.ImportReference(skipIf.PropertyGetterRef!)));
++                ret.OpCode = OpCodes.Leave;
++                ret.Operand = end;
+             }
++        }
+ 
+-            // brfalse → normalPath (originalFirst) — skip bypass if false
+-            preamble.Add(il.Create(OpCodes.Brfalse, originalFirst));
++        // === catch: the step failed, and the exception goes on ===
++        var catchStart = il.Create(OpCodes.Stloc, exLocal);
++        var message = new VariableDefinition(module.TypeSystem.String);
++        body.Variables.Add(message);
+ 
+-            // Bypass path: call BypassStep(reason), then ret (void sync method)
+-            if (skipIf.Reason != null)
+-                preamble.Add(il.Create(OpCodes.Ldstr, skipIf.Reason));
+-            else
+-                preamble.Add(il.Create(OpCodes.Ldnull));
+-            preamble.Add(il.Create(OpCodes.Call, bypassStepRef));
+-            preamble.Add(il.Create(OpCodes.Ret));
+-        }
+-
+-        // Insert preamble before original first instruction
+-        foreach (var instr in preamble)
+-        {
+-            il.InsertBefore(originalFirst, instr);
+-        }
+-
+-        // === Wrap original body in try/catch ===
+-        // Layout:
+-        //   [preamble: StartStep call]
+-        //   TryStart: [original body with ret→leave]
+-        //   TryEnd/HandlerStart: [catch: stloc ex, CompleteStep(false, msg), rethrow]
+-        //   HandlerEnd: [success: CompleteStep(true, null), ret]  ← leave target
+-
+-        // Create the catch block instructions
+-        var exLocal2 = exLocal; // already declared above
+-        var catchStart = il.Create(OpCodes.Stloc, exLocal2);
+-        var catchLoadFalse = il.Create(OpCodes.Ldc_I4_0); // false
+-        var catchLoadMessage = il.Create(OpCodes.Ldloc, exLocal2);
+-        var catchGetMessage = il.Create(OpCodes.Callvirt, getMessageMethod);
+-        var catchCompleteCall = il.Create(OpCodes.Call, stepMethods.CompleteStepFailed);
+-        var catchRethrow = il.Create(OpCodes.Rethrow);
+-
+-        // Create the success block (AFTER catch) — this is where leave jumps to
+-        var successNop = il.Create(OpCodes.Nop);
+-        var successLoadTrue = il.Create(OpCodes.Ldc_I4_1); // true
+-        var successLoadNull = il.Create(OpCodes.Ldnull); // null errorMessage
+-        var successCompleteCall = il.Create(OpCodes.Call, stepMethods.CompleteStepPassed);
+-        var finalRet = il.Create(OpCodes.Ret);
+-
+-        // Replace all existing 'ret' instructions with 'leave' to the success block (after handler).
+-        // We modify instructions in-place (not il.Replace) to preserve branch targets that
+-        // reference these instructions — otherwise branches become dangling references.
+-        var rets = body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToList();
+-        foreach (var ret in rets)
++        // A handler the method ended in has no end of its own: Cecil reads that as the method's end, which is about to move.
++        foreach (var inner in body.ExceptionHandlers.Where(h => h.HandlerEnd == null))
++            inner.HandlerEnd = catchStart;
++
++        EndTheLastStatement(method, catchStart);
++        body.Instructions.Add(catchStart);
++
++        // Reading the message runs the exception's own code: if that throws too, the step fails with no message, and the caller
++        // still gets what the method threw.
++        var messageRead = il.Create(OpCodes.Ldloc, exLocal);
++        var messageFailed = il.Create(OpCodes.Pop);
++        var failTheStep = il.Create(OpCodes.Ldc_I4_0); // false
++        body.Instructions.Add(messageRead);
++        body.Instructions.Add(il.Create(OpCodes.Callvirt, getMessageMethod));
++        body.Instructions.Add(il.Create(OpCodes.Stloc, message));
++        body.Instructions.Add(il.Create(OpCodes.Leave, failTheStep));
++        body.Instructions.Add(messageFailed);
++        body.Instructions.Add(il.Create(OpCodes.Leave, failTheStep));
++        body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
+         {
+-            ret.OpCode = OpCodes.Leave;
+-            ret.Operand = successNop;
++            TryStart = messageRead,
++            TryEnd = messageFailed,
++            HandlerStart = messageFailed,
++            HandlerEnd = failTheStep,
++            CatchType = exceptionType
++        });
++
++        body.Instructions.Add(failTheStep);
++        body.Instructions.Add(il.Create(OpCodes.Ldloc, message));
++        body.Instructions.Add(il.Create(OpCodes.Call, stepMethods.CompleteStepFailed));
++        body.Instructions.Add(il.Create(OpCodes.Rethrow));
++
++        // === The end: outside the try, so a step that passed is never also failed ===
++        body.Instructions.Add(end);
++        switch (kind)
++        {
++            case ReturnKind.Void:
++            case ReturnKind.Value:
++                body.Instructions.Add(il.Create(OpCodes.Ldc_I4_1)); // true
++                body.Instructions.Add(il.Create(OpCodes.Ldnull));
++                body.Instructions.Add(il.Create(OpCodes.Call, stepMethods.CompleteStepPassed));
++                if (result != null)
++                    body.Instructions.Add(il.Create(OpCodes.Ldloc, result));
++                break;
++
++            case ReturnKind.Task:
++            case ReturnKind.GenericTask:
++                body.Instructions.Add(il.Create(OpCodes.Ldloc, result!));
++                body.Instructions.Add(il.Create(OpCodes.Call, GetCompleteStepAsyncReference(module, returnType)));
++                break;
++
++            case ReturnKind.ValueTask:
++            case ReturnKind.GenericValueTask:
++                body.Instructions.Add(il.Create(OpCodes.Ldloc, taskOfValueTask!));
++                body.Instructions.Add(il.Create(OpCodes.Call, GetCompleteStepAsyncReference(module, taskOfValueTask!.VariableType)));
++                var constructor = new MethodReference(".ctor", module.TypeSystem.Void, returnType) { HasThis = true };
++                constructor.Parameters.Add(new ParameterDefinition(asTask!.ReturnType));
++                body.Instructions.Add(il.Create(OpCodes.Newobj, constructor));
++                break;
+         }
++        body.Instructions.Add(il.Create(OpCodes.Ret));
+ 
+-        // Append catch block after the body
+-        body.Instructions.Add(catchStart);
+-        body.Instructions.Add(catchLoadFalse);
+-        body.Instructions.Add(catchLoadMessage);
+-        body.Instructions.Add(catchGetMessage);
+-        body.Instructions.Add(catchCompleteCall);
+-        body.Instructions.Add(catchRethrow);
+-
+-        // Append success block AFTER catch (leave target)
+-        body.Instructions.Add(successNop);
+-        body.Instructions.Add(successLoadTrue);
+-        body.Instructions.Add(successLoadNull);
+-        body.Instructions.Add(successCompleteCall);
+-        body.Instructions.Add(finalRet);
+-
+-        // Set up exception handler
+-        var handler = new ExceptionHandler(ExceptionHandlerType.Catch)
+-        {
+-            TryStart = originalFirst,
++        foreach (var instruction in bypassExit)
++            body.Instructions.Add(instruction);
++
++        body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
++        {
++            TryStart = bypass.Count > 0 ? bypass[0] : originalFirst,
+             TryEnd = catchStart,
+             HandlerStart = catchStart,
+-            HandlerEnd = successNop,
++            HandlerEnd = end,
+             CatchType = exceptionType
+-        };
++        });
+ 
+-        body.ExceptionHandlers.Add(handler);
+         body.OptimizeMacros();
+     }
+ 
+-    private enum AsyncKind { None, Task, GenericTask }
+-
+-    private static AsyncKind GetAsyncKind(MethodDefinition method)
++    /// <summary>
++    /// The compiler's last sequence point reaches the method's end, and what follows here is the weave's, not that statement's.
++    /// An expression-bodied method has no closing brace to end it, so an assertion in one would take the weave's catch for its
++    /// own, and the assertion weaver would refuse it: a hidden point ends the statement where the source does.
++    /// </summary>
++    private static void EndTheLastStatement(MethodDefinition method, Instruction next)
+     {
+-        var returnType = method.ReturnType;
+-        if (returnType.FullName == "System.Threading.Tasks.Task")
+-            return AsyncKind.Task;
+-        if (returnType is GenericInstanceType git && git.ElementType.FullName == "System.Threading.Tasks.Task`1")
+-            return AsyncKind.GenericTask;
+-        return AsyncKind.None;
++        if (method.DebugInformation?.HasSequencePoints != true)
++            return;
++        var points = method.DebugInformation.SequencePoints;
++        points.Add(new SequencePoint(next, points[0].Document) { StartLine = 0xFEEFEE, EndLine = 0xFEEFEE });
+     }
+ 
+-    /// <summary>
+-    /// Wraps an async step method. Instead of try/catch (which doesn't work for async
+-    /// state machines), we emit StartStep at the beginning, then replace each 'ret'
+-    /// with a call to StepCollector.CompleteStepAsync(task) which awaits the task and
+-    /// calls CompleteStep on success or failure.
+-    /// </summary>
+-    private void WrapAsyncMethodWithStepTracking(
+-        MethodDefinition method,
+-        string? keyword,
+-        string stepText,
+-        (MethodReference StartStep, MethodReference CompleteStepPassed, MethodReference CompleteStepFailed) stepMethods,
+-        AsyncKind asyncKind,
+-        SkipIfInfo? skipIf)
++    /// <summary>How the bypass leaves: as the method would, with nothing done. A local it never stored to is default(T), and
++    /// a default ValueTask is a finished one.</summary>
++    private static void EmitBypassReturn(List<Instruction> exit, ILProcessor il, ReturnKind kind, TypeReference returnType, VariableDefinition? result, ModuleDefinition module)
+     {
+-        var body = method.Body;
+-        var il = body.GetILProcessor();
+-        body.SimplifyMacros();
++        switch (kind)
++        {
++            case ReturnKind.Void:
++                break;
+ 
+-        var module = method.Module;
++            case ReturnKind.Value:
++            case ReturnKind.ValueTask:
++            case ReturnKind.GenericValueTask:
++                exit.Add(il.Create(OpCodes.Ldloc, result!));
++                break;
+ 
+-        // Build parameter arrays
+-        var paramNames = GetParameterNames(method);
+-        var hasParams = paramNames.Length > 0;
++            case ReturnKind.Task:
++                exit.Add(il.Create(OpCodes.Call, new MethodReference("get_CompletedTask", TaskType(module), TaskType(module))));
++                break;
+ 
+-        VariableDefinition? paramNamesLocal = null;
+-        VariableDefinition? paramValuesLocal = null;
+-        if (hasParams)
+-        {
+-            paramNamesLocal = new VariableDefinition(module.ImportReference(typeof(string[])));
+-            paramValuesLocal = new VariableDefinition(module.ImportReference(typeof(object[])));
+-            body.Variables.Add(paramNamesLocal);
+-            body.Variables.Add(paramValuesLocal);
++            case ReturnKind.GenericTask:
++                // Task.FromResult<T>(default)
++                var value = ((GenericInstanceType)returnType).GenericArguments[0];
++                var fallback = new VariableDefinition(value);
++                il.Body.Variables.Add(fallback);
++                var fromResult = new MethodReference("FromResult", module.TypeSystem.Void, TaskType(module));
++                var t = new GenericParameter("TResult", fromResult);
++                fromResult.GenericParameters.Add(t);
++                fromResult.ReturnType = GenericTask(module, t);
++                fromResult.Parameters.Add(new ParameterDefinition(t));
++                var closed = new GenericInstanceMethod(fromResult);
++                closed.GenericArguments.Add(value);
++                exit.Add(il.Create(OpCodes.Ldloc, fallback));
++                exit.Add(il.Create(OpCodes.Call, closed));
++                break;
+         }
+ 
+-        body.InitLocals = true;
+-
+-        var originalFirst = body.Instructions[0];
+-
+-        // === Emit preamble: build param arrays and call StartStep ===
+-        var preamble = new List<Instruction>();
++        exit.Add(il.Create(OpCodes.Ret));
++    }
+ 
+-        if (hasParams)
++    /// <summary>
++    /// Pushes the names and the values StartStep takes, or two nulls with none. An out parameter has no value yet and a
++    /// closure the compiler passes is not the method's own, so neither is captured. A ref or in parameter is read through,
++    /// for its value as the step starts. What cannot be put in an object (a span, a pointer) is named by its type, as a
++    /// complex object is.
++    /// </summary>
++    private static void EmitParameterArrays(List<Instruction> preamble, ILProcessor il, MethodDefinition method)
++    {
++        var module = method.Module;
++        var captured = method.Parameters.Where(p => !IsOutOnly(p) && !IsCompilerClosure(p)).ToList();
++        if (captured.Count == 0)
+         {
+-            // Build string[] paramNames
+-            preamble.Add(il.Create(OpCodes.Ldc_I4, paramNames.Length));
+-            preamble.Add(il.Create(OpCodes.Newarr, module.ImportReference(typeof(string))));
+-            for (int i = 0; i < paramNames.Length; i++)
+-            {
+-                preamble.Add(il.Create(OpCodes.Dup));
+-                preamble.Add(il.Create(OpCodes.Ldc_I4, i));
+-                preamble.Add(il.Create(OpCodes.Ldstr, paramNames[i]));
+-                preamble.Add(il.Create(OpCodes.Stelem_Ref));
+-            }
+-            preamble.Add(il.Create(OpCodes.Stloc, paramNamesLocal!));
++            preamble.Add(il.Create(OpCodes.Ldnull));
++            preamble.Add(il.Create(OpCodes.Ldnull));
++            return;
++        }
+ 
+-            // Build object[] paramValues from method arguments
+-            preamble.Add(il.Create(OpCodes.Ldc_I4, paramNames.Length));
+-            preamble.Add(il.Create(OpCodes.Newarr, module.ImportReference(typeof(object))));
+-            var methodParams = method.Parameters;
+-            for (int i = 0; i < paramNames.Length; i++)
+-            {
+-                preamble.Add(il.Create(OpCodes.Dup));
+-                preamble.Add(il.Create(OpCodes.Ldc_I4, i));
+-                var argIndex = method.IsStatic ? i : i + 1;
+-                preamble.Add(il.Create(OpCodes.Ldarg, argIndex));
+-                var paramType = methodParams[i].ParameterType;
+-                if (paramType.IsValueType || paramType.IsGenericParameter)
+-                    preamble.Add(il.Create(OpCodes.Box, paramType));
+-                preamble.Add(il.Create(OpCodes.Stelem_Ref));
+-            }
+-            preamble.Add(il.Create(OpCodes.Stloc, paramValuesLocal!));
++        preamble.Add(il.Create(OpCodes.Ldc_I4, captured.Count));
++        preamble.Add(il.Create(OpCodes.Newarr, module.TypeSystem.String));
++        for (var i = 0; i < captured.Count; i++)
++        {
++            preamble.Add(il.Create(OpCodes.Dup));
++            preamble.Add(il.Create(OpCodes.Ldc_I4, i));
++            preamble.Add(il.Create(OpCodes.Ldstr, captured[i].Name));
++            preamble.Add(il.Create(OpCodes.Stelem_Ref));
+         }
+ 
+-        // Call StepCollector.StartStep(keyword, text, paramNames, paramValues)
+-        if (keyword != null)
+-            preamble.Add(il.Create(OpCodes.Ldstr, keyword));
+-        else
+-            preamble.Add(il.Create(OpCodes.Ldnull));
++        preamble.Add(il.Create(OpCodes.Ldc_I4, captured.Count));
++        preamble.Add(il.Create(OpCodes.Newarr, module.TypeSystem.Object));
++        for (var i = 0; i < captured.Count; i++)
++        {
++            preamble.Add(il.Create(OpCodes.Dup));
++            preamble.Add(il.Create(OpCodes.Ldc_I4, i));
++            EmitParameterValue(preamble, il, captured[i]);
++            preamble.Add(il.Create(OpCodes.Stelem_Ref));
++        }
++    }
+ 
+-        preamble.Add(il.Create(OpCodes.Ldstr, stepText));
++    private static void EmitParameterValue(List<Instruction> preamble, ILProcessor il, ParameterDefinition parameter)
++    {
++        var type = WithoutModifiers(parameter.ParameterType);
++        var byReference = type as ByReferenceType;
++        var value = byReference != null ? WithoutModifiers(byReference.ElementType) : type;
+ 
+-        if (hasParams)
++        if (!CanBeBoxed(value))
+         {
+-            preamble.Add(il.Create(OpCodes.Ldloc, paramNamesLocal!));
+-            preamble.Add(il.Create(OpCodes.Ldloc, paramValuesLocal!));
++            preamble.Add(il.Create(OpCodes.Ldstr, $"[{ReadableName(value)}]"));
++            return;
+         }
+-        else
++
++        var box = value.IsValueType || value.IsGenericParameter;
++        if (byReference == null)
+         {
+-            preamble.Add(il.Create(OpCodes.Ldnull));
+-            preamble.Add(il.Create(OpCodes.Ldnull));
++            preamble.Add(il.Create(OpCodes.Ldarg, parameter));
++            if (box)
++                preamble.Add(il.Create(OpCodes.Box, value));
++            return;
+         }
+ 
+-        preamble.Add(il.Create(OpCodes.Call, stepMethods.StartStep));
++        // A null reference is legal (Unsafe.NullRef), and reading one would fail the test before the method's first line.
++        var read = il.Create(OpCodes.Ldarg, parameter);
++        var done = il.Create(OpCodes.Nop);
++        preamble.Add(il.Create(OpCodes.Ldarg, parameter));
++        preamble.Add(il.Create(OpCodes.Brtrue, read));
++        preamble.Add(il.Create(OpCodes.Ldnull));
++        preamble.Add(il.Create(OpCodes.Br, done));
++        preamble.Add(read);
++        preamble.Add(il.Create(OpCodes.Ldobj, value));
++        if (box)
++            preamble.Add(il.Create(OpCodes.Box, value));
++        preamble.Add(done);
++    }
+ 
+-        // === Emit SkipIf bypass check for async method ===
+-        if (skipIf != null)
+-        {
+-            var bypassStepRef = GetBypassStepReference(method.Module);
++    private static bool IsOutOnly(ParameterDefinition parameter) =>
++        parameter.IsOut && !parameter.IsIn && WithoutModifiers(parameter.ParameterType) is ByReferenceType;
+ 
+-            // Load the bool property/field
+-            if (skipIf.IsField)
+-            {
+-                if (!skipIf.IsStatic)
+-                    preamble.Add(il.Create(OpCodes.Ldarg_0)); // this
+-                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld,
+-                    method.Module.ImportReference(skipIf.FieldRef!)));
+-            }
+-            else
+-            {
+-                if (!skipIf.IsStatic)
+-                    preamble.Add(il.Create(OpCodes.Ldarg_0)); // this
+-                preamble.Add(il.Create(skipIf.IsStatic ? OpCodes.Call : OpCodes.Callvirt,
+-                    method.Module.ImportReference(skipIf.PropertyGetterRef!)));
+-            }
++    private static bool IsCompilerClosure(ParameterDefinition parameter)
++    {
++        var type = WithoutModifiers(parameter.ParameterType);
++        if (type is ByReferenceType byReference)
++            type = WithoutModifiers(byReference.ElementType);
++        return type.Name.StartsWith("<>c__DisplayClass", StringComparison.Ordinal);
++    }
+ 
+-            // brfalse → normalPath (originalFirst)
+-            preamble.Add(il.Create(OpCodes.Brfalse, originalFirst));
++    private static bool CanBeBoxed(TypeReference type)
++    {
++        if (type is PointerType || type is FunctionPointerType || type is ByReferenceType || type.MetadataType == MetadataType.TypedByReference)
++            return false;
+ 
+-            // Bypass path: call BypassStep(reason), return Task.CompletedTask / Task.FromResult<T>(default)
+-            if (skipIf.Reason != null)
+-                preamble.Add(il.Create(OpCodes.Ldstr, skipIf.Reason));
+-            else
+-                preamble.Add(il.Create(OpCodes.Ldnull));
+-            preamble.Add(il.Create(OpCodes.Call, bypassStepRef));
++        if (type is GenericParameter parameter)
++            return ((int)parameter.Attributes & AllowByRefLike) == 0;
+ 
+-            // Return appropriate Task
+-            if (asyncKind == AsyncKind.Task)
+-            {
+-                var completedTaskProp = module.ImportReference(
+-                    typeof(System.Threading.Tasks.Task).GetProperty("CompletedTask")!.GetGetMethod()!);
+-                preamble.Add(il.Create(OpCodes.Call, completedTaskProp));
+-            }
+-            else
+-            {
+-                // Task.FromResult<T>(default(T))
+-                var git = (GenericInstanceType)method.ReturnType;
+-                var innerType = git.GenericArguments[0];
+-                var fromResultOpen = typeof(System.Threading.Tasks.Task)
+-                    .GetMethod("FromResult")!;
+-                var fromResultRef = module.ImportReference(fromResultOpen);
+-                var fromResultGeneric = new GenericInstanceMethod(fromResultRef);
+-                fromResultGeneric.GenericArguments.Add(innerType);
+-                preamble.Add(EmitDefault(il, innerType));
+-                preamble.Add(il.Create(OpCodes.Call, fromResultGeneric));
+-            }
+-            preamble.Add(il.Create(OpCodes.Ret));
+-        }
++        if (!type.IsValueType)
++            return true;
+ 
+-        // Insert preamble before original first instruction
+-        foreach (var instr in preamble)
+-        {
+-            il.InsertBefore(originalFirst, instr);
+-        }
++        // A value type this build cannot read is left out rather than risk a box the runtime refuses.
++        var definition = TryResolve(type);
++        return definition != null && !definition.CustomAttributes.Any(a => a.AttributeType.Name == "IsByRefLikeAttribute");
++    }
+ 
+-        // === Replace each 'ret' with a call to CompleteStepAsync ===
+-        // The method returns Task (or Task<T>). At each ret, the Task is on the stack.
+-        // We replace: [task on stack] ret
+-        // With:       [task on stack] call CompleteStepAsync ret
+-        var completeStepAsyncRef = GetCompleteStepAsyncReference(module, method.ReturnType, asyncKind);
++    /// <summary><c>allows ref struct</c>: GenericParameterAttributes.AllowByRefLike, which Cecil does not name yet.</summary>
++    private const int AllowByRefLike = 0x20;
+ 
+-        var rets = body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToList();
+-        foreach (var ret in rets)
++    private static string ReadableName(TypeReference type)
++    {
++        switch (type)
+         {
+-            var callComplete = il.Create(OpCodes.Call, completeStepAsyncRef);
+-            il.InsertBefore(ret, callComplete);
++            case PointerType pointer:
++                return ReadableName(pointer.ElementType) + "*";
++            case FunctionPointerType _:
++                return "delegate*";
++            case GenericInstanceType generic:
++                var name = generic.ElementType.Name;
++                var tick = name.IndexOf('`');
++                return (tick > 0 ? name.Substring(0, tick) : name) + "<" + string.Join(", ", generic.GenericArguments.Select(ReadableName)) + ">";
++            default:
++                return type.Name;
+         }
++    }
+ 
+-        body.OptimizeMacros();
++    /// <summary>The generic type's own first parameter, as its members' signatures name it (<c>!0</c>).</summary>
++    private static GenericParameter FirstParameterOf(GenericInstanceType type)
++    {
++        var open = type.ElementType;
++        if (!open.HasGenericParameters)
++            open.GenericParameters.Add(new GenericParameter("TResult", open));
++        return open.GenericParameters[0];
+     }
+ 
+-    private static MethodReference GetCompleteStepAsyncReference(ModuleDefinition module, TypeReference returnType, AsyncKind asyncKind)
++    /// <summary>System.Threading.Tasks.Task, named from the module's own core library.</summary>
++    private static TypeReference TaskType(ModuleDefinition module) =>
++        new TypeReference(TasksNamespace, "Task", module, module.TypeSystem.CoreLibrary);
++
++    /// <summary>Task&lt;<paramref name="argument"/>&gt;, named from the module's own core library.</summary>
++    private static GenericInstanceType GenericTask(ModuleDefinition module, TypeReference argument)
++    {
++        var open = new TypeReference(TasksNamespace, "Task`1", module, module.TypeSystem.CoreLibrary);
++        open.GenericParameters.Add(new GenericParameter("TResult", open));
++        var closed = new GenericInstanceType(open);
++        closed.GenericArguments.Add(argument);
++        return closed;
++    }
++
++    /// <summary>StepCollector.CompleteStepAsync for a Task or a Task&lt;T&gt;.</summary>
++    private static MethodReference GetCompleteStepAsyncReference(ModuleDefinition module, TypeReference task)
+     {
+         var ttdAssemblyRef = module.AssemblyReferences
+             .FirstOrDefault(r => r.Name == "Kronikol");
+@@ -548,47 +823,30 @@ private static MethodReference GetCompleteStepAsyncReference(ModuleDefinition mo
+             "Kronikol.Tracking", "StepCollector",
+             module, ttdAssemblyRef);
+ 
+-        if (asyncKind == AsyncKind.Task)
+-        {
+-            // CompleteStepAsync(Task task) → Task
+-            var method = new MethodReference("CompleteStepAsync", module.ImportReference(typeof(System.Threading.Tasks.Task)), stepCollectorTypeRef)
+-            {
+-                HasThis = false
+-            };
+-            method.Parameters.Add(new ParameterDefinition(module.ImportReference(typeof(System.Threading.Tasks.Task))));
+-            return method;
+-        }
+-        else
++        if (task is GenericInstanceType generic)
+         {
+             // CompleteStepAsync<T>(Task<T> task) → Task<T>
+-            var git = (GenericInstanceType)returnType;
+-            var innerType = git.GenericArguments[0];
+-
+-            var taskOfT = module.ImportReference(typeof(System.Threading.Tasks.Task<>));
+-
+-            // Build the open generic method reference
+-            var openMethod = new MethodReference("CompleteStepAsync", taskOfT, stepCollectorTypeRef)
++            var openMethod = new MethodReference("CompleteStepAsync", module.TypeSystem.Void, stepCollectorTypeRef)
+             {
+                 HasThis = false
+             };
+-            openMethod.GenericParameters.Add(new GenericParameter("T", openMethod));
+-            openMethod.ReturnType = new GenericInstanceType(taskOfT) { GenericArguments = { openMethod.GenericParameters[0] } };
+-            openMethod.Parameters.Add(new ParameterDefinition(
+-                new GenericInstanceType(taskOfT) { GenericArguments = { openMethod.GenericParameters[0] } }));
++            var t = new GenericParameter("T", openMethod);
++            openMethod.GenericParameters.Add(t);
++            openMethod.ReturnType = GenericTask(module, t);
++            openMethod.Parameters.Add(new ParameterDefinition(GenericTask(module, t)));
+ 
+-            // Instantiate with the concrete type argument
+             var closedMethod = new GenericInstanceMethod(openMethod);
+-            closedMethod.GenericArguments.Add(innerType);
+-
++            closedMethod.GenericArguments.Add(generic.GenericArguments[0]);
+             return closedMethod;
+         }
+-    }
+ 
+-    private static string[] GetParameterNames(MethodDefinition method)
+-    {
+-        return method.Parameters
+-            .Select(p => p.Name)
+-            .ToArray();
++        // CompleteStepAsync(Task task) → Task
++        var method = new MethodReference("CompleteStepAsync", TaskType(module), stepCollectorTypeRef)
++        {
++            HasThis = false
++        };
++        method.Parameters.Add(new ParameterDefinition(TaskType(module)));
++        return method;
+     }
+ 
+     private static string? GetKeyword(CustomAttribute attr)
+@@ -617,7 +875,7 @@ private static string GetStepText(CustomAttribute attr, MethodDefinition method)
+         }
+ 
+         // The method's name as a sentence: PascalCase → "Pascal case", underscores → spaces, a word in capitals kept
+-        var text = HumanizeMethodName(method.Name);
++        var text = HumanizeMethodName(SourceName(method));
+ 
+         // Strip leading keyword to avoid duplication (e.g. [WhenStep] WhenTheyGo → "They go" not "When they go")
+         // Use display keyword for dedup so [ButWhenStep] strips "But" (not "ButWhen")
+@@ -632,6 +890,85 @@ private static string GetStepText(CustomAttribute attr, MethodDefinition method)
+         return text;
+     }
+ 
++    /// <summary>
++    /// The name a method has in its source. The compiler names a local function <c>&lt;Outer&gt;g__Local|0_0</c> and a
++    /// lambda <c>&lt;Outer&gt;b__0_0</c>: the first reads by its own name, and the second, which has none, by its method's,
++    /// or by its type's in a constructor or a field's initializer. The outer name can hold brackets of its own, as
++    /// <c>&lt;Main&gt;$</c> and <c>IS&lt;System.Int32&gt;.M</c> do.
++    /// </summary>
++    private static string SourceName(MethodDefinition method)
++    {
++        var name = method.Name;
++        if (name.Length == 0 || name[0] != '<')
++            return PastInterfaceName(name);
++
++        var close = ClosingBracket(name);
++        if (close < 0)
++            return name;
++        var bar = name.IndexOf('|', close);
++        if (string.CompareOrdinal(name, close + 1, "g__", 0, 3) == 0 && bar > close + 4)
++            return name.Substring(close + 4, bar - close - 4);
++
++        var outer = name.Substring(1, close - 1);
++        if (outer == ".ctor" || outer == ".cctor")
++        {
++            var type = method.DeclaringType;
++            while (type.Name.StartsWith("<", StringComparison.Ordinal) && type.DeclaringType != null)
++                type = type.DeclaringType;
++            return TypeNameAsWritten(type.Name);
++        }
++
++        // Out of the brackets of a top-level program's <Main>$.
++        return PastInterfaceName(outer).TrimStart('<').Replace(">$", "");
++    }
++
++    /// <summary>An explicit implementation is named <c>IS&lt;System.Int32&gt;.M</c>, and it reads as <c>M</c>.</summary>
++    private static string PastInterfaceName(string name)
++    {
++        var depth = 0;
++        var start = 0;
++        for (var i = 0; i < name.Length; i++)
++        {
++            if (name[i] == '<')
++                depth++;
++            else if (name[i] == '>')
++                depth--;
++            else if (name[i] == '.' && depth == 0)
++                start = i + 1;
++        }
++
++        return name.Substring(start);
++    }
++
++    /// <summary>A type's metadata name without its arity, <c>Steps`1</c>, or a file-local type's mangling, <c>&lt;File&gt;F0__Steps</c>.</summary>
++    private static string TypeNameAsWritten(string name)
++    {
++        if (name.StartsWith("<", StringComparison.Ordinal))
++        {
++            var mangled = name.IndexOf("__", Math.Max(0, name.IndexOf('>')), StringComparison.Ordinal);
++            if (mangled > 0)
++                name = name.Substring(mangled + 2);
++        }
++
++        var arity = name.IndexOf('`');
++        return arity > 0 ? name.Substring(0, arity) : name;
++    }
++
++    /// <summary>Where the bracket that opens <paramref name="name"/> closes, or -1.</summary>
++    private static int ClosingBracket(string name)
++    {
++        var depth = 0;
++        for (var i = 0; i < name.Length; i++)
++        {
++            if (name[i] == '<')
++                depth++;
++            else if (name[i] == '>' && --depth == 0)
++                return i;
++        }
++
++        return -1;
++    }
++
+     /// <summary>
+     /// A step method's name as a sentence, by the rule a scenario's title takes (<c>Kronikol.Naming.SentenceCase</c>,
+     /// whose source this assembly compiles): <c>GetHTTPResponse</c> reads "Get HTTP response". Culture-invariant: the
+@@ -736,11 +1073,13 @@ private static void DropTypeDefinitionDocuments(ModuleDefinition module)
+     private static void AddWeavedSentinel(AssemblyDefinition assembly)
+     {
+         var module = assembly.MainModule;
++        // An Attribute, as a custom attribute's type must be, taken from the module's own core library.
++        var attributeType = new TypeReference("System", "Attribute", module, module.TypeSystem.CoreLibrary);
+         var attrType = new TypeDefinition(
+             "Kronikol.StepTracking.Internal",
+             "__StepTrackingWeaved__",
+             Mono.Cecil.TypeAttributes.NotPublic | Mono.Cecil.TypeAttributes.Sealed,
+-            module.TypeSystem.Object);
++            attributeType);
+         module.Types.Add(attrType);
+ 
+         var ctor = new MethodDefinition(
+@@ -748,6 +1087,9 @@ private static void AddWeavedSentinel(AssemblyDefinition assembly)
+             Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.HideBySig |
+             Mono.Cecil.MethodAttributes.SpecialName | Mono.Cecil.MethodAttributes.RTSpecialName,
+             module.TypeSystem.Void);
++        ctor.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
++        ctor.Body.Instructions.Add(Instruction.Create(OpCodes.Call,
++            new MethodReference(".ctor", module.TypeSystem.Void, attributeType) { HasThis = true }));
+         ctor.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+         attrType.Methods.Add(ctor);
+ 
+@@ -759,6 +1101,15 @@ private IAssemblyResolver CreateResolver(string assemblyPath)
+     {
+         var resolver = new DefaultAssemblyResolver();
+ 
++        // Cecil searches "." and "bin" first, relative to the process's current directory. Given the build's
++        // references, they come first instead, as in the assertion weaver.
++        var references = _searchDirectories.Length > 0;
++        if (references)
++        {
++            resolver.RemoveSearchDirectory(".");
++            resolver.RemoveSearchDirectory("bin");
++        }
++
+         var assemblyDir = Path.GetDirectoryName(assemblyPath);
+         if (!string.IsNullOrEmpty(assemblyDir))
+             resolver.AddSearchDirectory(assemblyDir);
+@@ -768,6 +1119,12 @@ private IAssemblyResolver CreateResolver(string assemblyPath)
+             resolver.AddSearchDirectory(dir);
+         }
+ 
++        if (references)
++        {
++            resolver.AddSearchDirectory(".");
++            resolver.AddSearchDirectory("bin");
++        }
++
+         return resolver;
+     }
+ 
+@@ -777,8 +1134,10 @@ private class SkipIfInfo
+     {
+         public bool IsField { get; set; }
+         public bool IsStatic { get; set; }
++        public bool? Constant { get; set; }
+         public FieldReference? FieldRef { get; set; }
+         public MethodReference? PropertyGetterRef { get; set; }
++        public bool GetterIsVirtualCall { get; set; }
+         public string? Reason { get; set; }
+     }
+ 
+@@ -794,76 +1153,218 @@ private class SkipIfInfo
+         var skipReasonProp = attr.Properties.FirstOrDefault(p => p.Name == "SkipReason");
+         var reason = skipReasonProp.Name != null ? skipReasonProp.Argument.Value as string : null;
+ 
+-        // Resolve the member on the declaring type (walk base types)
+-        var currentType = declaringType;
+-        while (currentType != null)
++        // A ref return must hand back a reference, and a bypassed step has none to give.
++        if (WithoutModifiers(method.ReturnType) is ByReferenceType)
+         {
++            WarnSkipIf(
++                $"SkipIf on '{declaringType.FullName}.{method.Name}': a method that returns a ref has nothing to return when it is bypassed. Step will execute normally.");
++            return null;
++        }
++
++        var module = method.Module;
++
++        // Each member is read through the step's own view of the type that holds it: Steps<T>, and a base's arguments as
++        // this type gives them, so the reference names a closed type where the type is generic. A reference to the open
++        // type is one the runtime refuses to call.
++        string? unreachable = null;
++        TypeReference? current = SelfReference(declaringType);
++        while (current != null)
++        {
++            var definition = TryResolve(current);
++            if (definition == null)
++                break; // Can't resolve base type (external assembly) — give up
++
+             // Check properties first
+-            var property = currentType.Properties.FirstOrDefault(p => p.Name == memberName);
+-            if (property != null && property.GetMethod != null)
++            var property = definition.Properties.FirstOrDefault(p => p.Name == memberName && p.GetMethod != null && !p.GetMethod.HasParameters);
++            if (property != null)
+             {
+-                // Verify it returns bool
+-                if (property.PropertyType.FullName == "System.Boolean")
++                var getter = property.GetMethod;
++                // What C# bound lies further up: a member the step's type cannot see does not hide one it can.
++                if (!CanReach(getter.IsPublic, getter.IsPrivate, getter.IsFamily, getter.IsFamilyOrAssembly, getter.IsAssembly || getter.IsFamilyAndAssembly, definition, declaringType))
+                 {
+-                    return new SkipIfInfo
+-                    {
+-                        IsField = false,
+-                        IsStatic = property.GetMethod.IsStatic,
+-                        PropertyGetterRef = property.GetMethod,
+-                        Reason = reason
+-                    };
++                    unreachable ??= definition.FullName;
++                    current = BaseOf(definition, current, module);
++                    continue;
+                 }
+-                else
++
++                // A static virtual member has a body to read: the interface's own, since a method on the interface has no type
++                // argument to read an override through. A static abstract one has none, and the runtime refuses the read.
++                if (getter.IsStatic && getter.IsAbstract)
++                {
++                    WarnSkipIf(
++                        $"SkipIf member '{memberName}' on type '{definition.FullName}' is static abstract, so it has no value without a type argument. Step will execute normally.");
++                    return null;
++                }
++
++                // Verify it returns bool
++                if (property.PropertyType.FullName != "System.Boolean")
+                 {
+-                    _log?.LogWarning(
++                    WarnSkipIf(
+                         $"SkipIf member '{memberName}' on type '{declaringType.FullName}' is not a bool property (found {property.PropertyType.FullName}). Step will execute normally.");
+                     return null;
+                 }
++
++                if (!getter.IsStatic && method.IsStatic)
++                    return InstanceMemberOnStaticStep(memberName, declaringType, method);
++
++                return new SkipIfInfo
++                {
++                    IsField = false,
++                    IsStatic = getter.IsStatic,
++                    PropertyGetterRef = current.IsGenericInstance
++                        ? new MethodReference(getter.Name, module.TypeSystem.Boolean, current) { HasThis = getter.HasThis }
++                        : module.ImportReference(getter),
++                    // A struct's this is a reference to it, which call takes and callvirt does not.
++                    GetterIsVirtualCall = !getter.IsStatic && !definition.IsValueType,
++                    Reason = reason
++                };
+             }
+ 
+             // Check fields
+-            var field = currentType.Fields.FirstOrDefault(f => f.Name == memberName);
++            var field = definition.Fields.FirstOrDefault(f => f.Name == memberName);
+             if (field != null)
+             {
+-                if (field.FieldType.FullName == "System.Boolean")
++                if (!CanReach(field.IsPublic, field.IsPrivate, field.IsFamily, field.IsFamilyOrAssembly, field.IsAssembly || field.IsFamilyAndAssembly, definition, declaringType))
+                 {
+-                    return new SkipIfInfo
+-                    {
+-                        IsField = true,
+-                        IsStatic = field.IsStatic,
+-                        FieldRef = field,
+-                        Reason = reason
+-                    };
++                    unreachable ??= definition.FullName;
++                    current = BaseOf(definition, current, module);
++                    continue;
+                 }
+-                else
++
++                if (WithoutModifiers(field.FieldType).FullName != "System.Boolean")
+                 {
+-                    _log?.LogWarning(
++                    WarnSkipIf(
+                         $"SkipIf member '{memberName}' on type '{declaringType.FullName}' is not a bool field (found {field.FieldType.FullName}). Step will execute normally.");
+                     return null;
+                 }
++
++                if (!field.IsStatic && method.IsStatic)
++                    return InstanceMemberOnStaticStep(memberName, declaringType, method);
++
++                return new SkipIfInfo
++                {
++                    IsField = true,
++                    IsStatic = field.IsStatic,
++                    Constant = field.IsLiteral ? Equals(field.Constant, true) : null,
++                    FieldRef = current.IsGenericInstance
++                        ? new FieldReference(field.Name, module.ImportReference(field.FieldType), current)
++                        : module.ImportReference(field),
++                    Reason = reason
++                };
+             }
+ 
+             // Walk base type
+-            var baseTypeRef = currentType.BaseType;
+-            if (baseTypeRef == null)
+-                break;
++            current = BaseOf(definition, current, module);
++        }
+ 
+-            try
+-            {
+-                currentType = baseTypeRef.Resolve();
+-            }
+-            catch
+-            {
+-                // Can't resolve base type (external assembly) — give up
+-                break;
+-            }
++        if (unreachable != null)
++        {
++            WarnSkipIf(
++                $"SkipIf member '{memberName}' on type '{unreachable}' cannot be read from '{declaringType.FullName}'. Step will execute normally.");
++            return null;
+         }
+ 
+-        _log?.LogWarning(
++        WarnSkipIf(
+             $"SkipIf member '{memberName}' not found on type '{declaringType.FullName}' or its base types. Step will execute normally.");
+         return null;
+     }
+ 
++    /// <summary>A SkipIf the weave cannot use: the step runs regardless, and the build says so under a code a project can silence.</summary>
++    private void WarnSkipIf(string message) =>
++        _log?.LogWarning(subcategory: null, warningCode: "KRONIKOL005", helpKeyword: null, file: null,
++            lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: "{0}", message);
++
++    private SkipIfInfo? InstanceMemberOnStaticStep(string memberName, TypeDefinition declaringType, MethodDefinition method)
++    {
++        WarnSkipIf(
++            $"SkipIf member '{memberName}' on type '{declaringType.FullName}' is an instance member, and step '{method.Name}' is static, so it has no instance to read it from. Step will execute normally.");
++        return null;
++    }
++
++    private static TypeReference? BaseOf(TypeDefinition definition, TypeReference current, ModuleDefinition module) =>
++        definition.BaseType == null ? null : Close(definition.BaseType, current as GenericInstanceType, module);
++
++    /// <summary>Whether a method of <paramref name="reader"/>, which derives from <paramref name="owner"/> or is it, can read
++    /// a member of the owner. The runtime's rule: it throws at the read otherwise.</summary>
++    private static bool CanReach(bool isPublic, bool isPrivate, bool isFamily, bool isFamilyOrAssembly, bool isAssemblyOnly, TypeDefinition owner, TypeDefinition reader)
++    {
++        if (isPublic || isFamily || isFamilyOrAssembly || IgnoresChecksOn(reader.Module.Assembly, owner.Module.Assembly))
++            return true;
++        if (isPrivate)
++        {
++            // Its own, and a type nested in the owner sees the owner's private members.
++            for (var type = reader; type != null; type = type.DeclaringType)
++            {
++                if (type == owner)
++                    return true;
++            }
++
++            return false;
++        }
++
++        return isAssemblyOnly && SharesInternals(owner.Module.Assembly, reader.Module.Assembly);
++    }
++
++    private static bool SharesInternals(AssemblyDefinition owner, AssemblyDefinition reader) =>
++        owner == reader || NamesAssembly(owner, "InternalsVisibleToAttribute", reader) || IgnoresChecksOn(reader, owner);
++
++    private static bool IgnoresChecksOn(AssemblyDefinition reader, AssemblyDefinition owner) =>
++        NamesAssembly(reader, "IgnoresAccessChecksToAttribute", owner);
++
++    private static bool NamesAssembly(AssemblyDefinition holder, string attribute, AssemblyDefinition named) =>
++        holder.CustomAttributes.Any(a =>
++            a.AttributeType.Name == attribute
++            && a.ConstructorArguments.Count == 1
++            && a.ConstructorArguments[0].Value is string name
++            && string.Equals(name.Split(',')[0].Trim(), named.Name.Name, StringComparison.OrdinalIgnoreCase));
++
++    /// <summary>The type as its own methods see it: Steps&lt;T&gt; with its own T, or the type itself.</summary>
++    private static TypeReference SelfReference(TypeDefinition type)
++    {
++        if (!type.HasGenericParameters)
++            return type;
++
++        var self = new GenericInstanceType(type);
++        foreach (var parameter in type.GenericParameters)
++            self.GenericArguments.Add(parameter);
++        return self;
++    }
++
++    /// <summary>A base type as written on its derived type, with the derived type's arguments in place of its parameters,
++    /// and named from <paramref name="module"/>.</summary>
++    private static TypeReference Close(TypeReference type, GenericInstanceType? derived, ModuleDefinition module)
++    {
++        switch (type)
++        {
++            case GenericParameter parameter when derived != null && parameter.Type == GenericParameterType.Type:
++                return derived.GenericArguments[parameter.Position];
++            case GenericInstanceType generic:
++                var closed = new GenericInstanceType(module.ImportReference(generic.ElementType));
++                foreach (var argument in generic.GenericArguments)
++                    closed.GenericArguments.Add(Close(argument, derived, module));
++                return closed;
++            case ArrayType array:
++                return new ArrayType(Close(array.ElementType, derived, module), array.Rank);
++            case PointerType pointer:
++                return new PointerType(Close(pointer.ElementType, derived, module));
++            case ByReferenceType reference:
++                return new ByReferenceType(Close(reference.ElementType, derived, module));
++            case FunctionPointerType function:
++                var closedFunction = new FunctionPointerType
++                {
++                    ReturnType = Close(function.ReturnType, derived, module),
++                    CallingConvention = function.CallingConvention,
++                    HasThis = function.HasThis,
++                    ExplicitThis = function.ExplicitThis
++                };
++                foreach (var parameter in function.Parameters)
++                    closedFunction.Parameters.Add(new ParameterDefinition(Close(parameter.ParameterType, derived, module)));
++                return closedFunction;
++            default:
++                return module.ImportReference(type);
++        }
++    }
++
+     private static MethodReference GetBypassStepReference(ModuleDefinition module)
+     {
+         var ttdAssemblyRef = module.AssemblyReferences
+@@ -886,27 +1387,4 @@ private static MethodReference GetBypassStepReference(ModuleDefinition module)
+         bypassStep.Parameters.Add(new ParameterDefinition(module.TypeSystem.String));
+         return bypassStep;
+     }
+-
+-    private static Instruction EmitDefault(ILProcessor il, TypeReference type)
+-    {
+-        // For reference types, just push null
+-        if (!type.IsValueType)
+-            return il.Create(OpCodes.Ldnull);
+-
+-        // For value types, use ldc.i4.0 for common primitive types
+-        if (type.FullName == "System.Int32" || type.FullName == "System.Boolean" ||
+-            type.FullName == "System.Byte" || type.FullName == "System.Int16")
+-            return il.Create(OpCodes.Ldc_I4_0);
+-        if (type.FullName == "System.Int64")
+-            return il.Create(OpCodes.Ldc_I8, 0L);
+-        if (type.FullName == "System.Single")
+-            return il.Create(OpCodes.Ldc_R4, 0.0f);
+-        if (type.FullName == "System.Double")
+-            return il.Create(OpCodes.Ldc_R8, 0.0);
+-
+-        // For other value types (structs), load null and box — but that's wrong.
+-        // In practice step methods returning Task<ValueType> are extremely rare.
+-        // Fallback: use ldc.i4.0 which is safe for most small value types.
+-        return il.Create(OpCodes.Ldc_I4_0);
+-    }
+ }
+diff --git a/src/Kronikol.StepTracking/WeaveResult.cs b/src/Kronikol.StepTracking/WeaveResult.cs
+index 5404b079..5dde74d4 100644
+--- a/src/Kronikol.StepTracking/WeaveResult.cs
++++ b/src/Kronikol.StepTracking/WeaveResult.cs
+@@ -1,3 +1,5 @@
++using System.Collections.Generic;
++
+ namespace Kronikol.StepTracking;
+ 
+ /// <summary>
+@@ -7,4 +9,31 @@ public class WeaveResult
+ {
+     public int WeavedCount { get; set; }
+     public string? SkipReason { get; set; }
++
++    /// <summary>The step methods left as the compiler wrote them, each with why: they run, without a step.</summary>
++    public List<UnwovenStep> UnwovenSteps { get; } = new List<UnwovenStep>();
++
++    /// <summary>Methods with a step attribute and no body: abstract, an interface's, extern. Nothing to bracket, and nothing wrong: an override
++    /// that wants a step carries the attribute itself.</summary>
++    public List<UnwovenStep> StepsWithNoBody { get; } = new();
++}
++
++/// <summary>A step method the weaver left as the compiler wrote it, and why.</summary>
++public sealed class UnwovenStep
++{
++    public UnwovenStep(string method, string? document, int line, string reason)
++    {
++        Method = method;
++        Document = document;
++        Line = line;
++        Reason = reason;
++    }
++
++    public string Method { get; }
++    public string? Document { get; }
++    public int Line { get; }
++    public string Reason { get; }
++
++    public override string ToString() =>
++        Document == null ? $"{Method}: {Reason}" : $"{Document}, line {Line}, in {Method}: {Reason}";
+ }
+diff --git a/src/Kronikol.StepTracking/WeaveStepsTask.cs b/src/Kronikol.StepTracking/WeaveStepsTask.cs
+index b8cbcb8f..eedc13c8 100644
+--- a/src/Kronikol.StepTracking/WeaveStepsTask.cs
++++ b/src/Kronikol.StepTracking/WeaveStepsTask.cs
+@@ -10,13 +10,17 @@ namespace Kronikol.StepTracking;
+ /// MSBuild task that runs after compilation and uses Mono.Cecil to instrument
+ /// methods decorated with [GivenStep], [WhenStep], [ThenStep], [Step] attributes
+ /// with StepCollector.StartStep/CompleteStep calls.
+-/// Only activates if [assembly: TrackSteps] is found in the compiled assembly.
++/// Only activates if [assembly: TrackSteps] is found in the compiled assembly. Warns (KRONIKOL004) when it leaves a step
++/// method as the compiler wrote it, and (KRONIKOL005) when a SkipIf cannot be used and the step runs regardless.
+ /// </summary>
+ public class WeaveStepsTask : Microsoft.Build.Utilities.Task
+ {
+     [Required]
+     public string AssemblyPath { get; set; } = string.Empty;
+ 
++    /// <summary>The project's PdbFile property: symbols it writes somewhere other than beside the assembly.</summary>
++    public string? PdbFile { get; set; }
++
+     /// <summary>
+     /// Resolved reference paths (from MSBuild @(ReferencePath)). Used to configure
+     /// Cecil's assembly resolver so it can locate referenced assemblies.
+@@ -44,12 +48,12 @@ private bool ExecuteCore()
+             return true;
+         }
+ 
+-        var pdbPath = Path.ChangeExtension(AssemblyPath, ".pdb");
++        // A project that embeds its PDB (DebugType=embedded) or writes none (DebugType=none) has no file of this build's
++        // beside the assembly: the weaver reads what symbols there are from the assembly itself, and a step needs none to be
++        // woven. The build writes a PdbFile with its extension changed to .pdb, whatever it was given.
++        string? pdbPath = Path.ChangeExtension(!string.IsNullOrEmpty(PdbFile) ? PdbFile : AssemblyPath, ".pdb");
+         if (!File.Exists(pdbPath))
+-        {
+-            Log.LogMessage(MessageImportance.Low, "StepTracking: PDB not found at {0}, skipping", pdbPath);
+-            return true;
+-        }
++            pdbPath = null;
+ 
+         var sw = System.Diagnostics.Stopwatch.StartNew();
+         var searchDirectories = References
+@@ -61,6 +65,27 @@ private bool ExecuteCore()
+         var result = weaver.Weave(AssemblyPath, pdbPath);
+         sw.Stop();
+ 
++        // A step method the weave cannot bracket is left as the compiler wrote it; it still runs, without a step. The
++        // build says so once, as a warning a project can silence with <NoWarn>, naming how many and the first.
++        if (result.UnwovenSteps.Count > 0)
++        {
++            var first = result.UnwovenSteps
++                .OrderBy(u => u.Document, StringComparer.Ordinal).ThenBy(u => u.Line).First();
++            Log.LogWarning(subcategory: null, warningCode: "KRONIKOL004", helpKeyword: null, file: null,
++                lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0,
++                message: "Kronikol.StepTracking: {0} step method(s) were left as written, so they run without a step. "
++                    + "First: {1}. The build lists each one at normal verbosity (-v:n).",
++                result.UnwovenSteps.Count, first);
++            Log.LogMessage(MessageImportance.Normal,
++                "Kronikol.StepTracking: Left {0} step method(s) unwoven; they run as written, without a step:",
++                result.UnwovenSteps.Count);
++            foreach (var unwoven in result.UnwovenSteps)
++                Log.LogMessage(MessageImportance.Normal, "  {0}", unwoven);
++        }
++
++        foreach (var noBody in result.StepsWithNoBody)
++            Log.LogMessage(MessageImportance.Normal, "Kronikol.StepTracking: A step attribute did nothing: {0}", noBody);
++
+         if (result.WeavedCount > 0)
+         {
+             Log.LogMessage(MessageImportance.Normal,
+diff --git a/src/Kronikol.StepTracking/build/Kronikol.StepTracking.targets b/src/Kronikol.StepTracking/build/Kronikol.StepTracking.targets
+index 5449772b..11094193 100644
+--- a/src/Kronikol.StepTracking/build/Kronikol.StepTracking.targets
++++ b/src/Kronikol.StepTracking/build/Kronikol.StepTracking.targets
+@@ -155,6 +155,7 @@ namespace Kronikol.Tracking
+ 
+     <WeaveStepsTask
+       AssemblyPath="@(IntermediateAssembly)"
++      PdbFile="$(PdbFile)"
+       References="@(ReferencePath)" />
+ 
+     <Touch Files="$(IntermediateOutputPath)__step_tracking_weaved__.marker" AlwaysCreate="true" />
+diff --git a/src/Kronikol/PlantUml/PlantUmlCreator.cs b/src/Kronikol/PlantUml/PlantUmlCreator.cs
+index 4768a712..d911ad31 100644
+--- a/src/Kronikol/PlantUml/PlantUmlCreator.cs
++++ b/src/Kronikol/PlantUml/PlantUmlCreator.cs
+@@ -119,7 +119,8 @@ public static IEnumerable<PlantUmlForTest> GetPlantUmlImageTagsPerTestId(
+             .Select(testTraces =>
+         {
+             var traces = testTraces.ToList();
+-            var testName = testTraces.First().TestName;
++            // A boundary drawn before a test's first call carries the test's id as its name.
++            var testName = (testTraces.FirstOrDefault(t => !t.IsActionStart) ?? testTraces.First()).TestName;
+             var results = CreatePlantUml(
+                 traces, 
+                 requestPreFormattingProcessor,
+@@ -191,23 +192,42 @@ private static PlantUmlResult[] CreatePlantUml(
+         bool systemUiFont = false)
+     {
+         // Collapse poll/retry bursts and apply the arrow cap before rendering (no-op when both are off).
++        // With no partition to draw, the boundary is not on the page, so it must not end a run of identical calls.
++        // Nor with a call that takes its phase variant from its place: there it is on the page after all.
++        var heldBoundary = !separateSetup && collapseConsecutiveIdenticalCalls && !tracesForTest.Any(t => t.SetupVariant is not null || t.ActionVariant is not null)
++            ? tracesForTest.FindLastIndex(t => t.IsActionStart) : -1;
++        var afterBoundary = heldBoundary >= 0 ? tracesForTest.Skip(heldBoundary + 1).Where(t => !t.IsActionStart).ToList() : [];
++        var boundaryMarker = heldBoundary >= 0 ? tracesForTest[heldBoundary] : null;
++        if (boundaryMarker is not null)
++            tracesForTest = tracesForTest.Where(t => !t.IsActionStart).ToList();
++
+         var collapsed = SequenceCollapser.Apply(tracesForTest, collapseConsecutiveIdenticalCalls, collapseThreshold, maxArrowsPerDiagram);
+         tracesForTest = collapsed.Traces;
+         var omittedPairs = collapsed.OmittedPairs;
+-        if (tracesForTest.Count == 0)
++        if (tracesForTest.Count == 0 || tracesForTest.All(t => t.IsActionStart))
+             return [];
+ 
++        if (boundaryMarker is not null)
++        {
++            var kept = tracesForTest.ToHashSet();
++            var next = afterBoundary.FirstOrDefault(kept.Contains);
++            tracesForTest = [.. tracesForTest];
++            tracesForTest.Insert(next is null ? tracesForTest.Count : tracesForTest.IndexOf(next), boundaryMarker);
++        }
++
+         var builder = new DiagramBuilder(tracesForTest, plantUmlTheme, clientSideSplitting ? int.MaxValue : maxEncodedDiagramLength,
+             sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides,
+             diagramNoteWrapWidth, systemUiFont);
+-        var lastTrace = tracesForTest[^1];
++        // The boundary draws nothing: a diagram split at the last call before it would leave one more, empty.
++        var lastTrace = tracesForTest.Last(t => !t.IsActionStart);
+ 
+         var currentlyOverriding = false;
+         var hasActionStart = separateSetup && tracesForTest.Any(t => t.IsActionStart);
+-        var actionStartIndex = tracesForTest.FindIndex(t => t.IsActionStart);
++        // The last marker wins: at most one a step or a client drew, and the first explicit StartAction() after it.
++        var actionStartIndex = tracesForTest.FindLastIndex(t => t.IsActionStart);
+         var hasSetupTraces = hasActionStart && tracesForTest
+             .Take(actionStartIndex)
+-            .Any(t => !t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart);
++            .Any(t => !t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart && !t.TrackingIgnore);
+         var setupPartitionClosed = false;
+         var effectiveColor = setupHighlightColor ?? DiagramLook.SetupFill;
+         var partitionLine = highlightSetup ? $"partition {effectiveColor} Setup" : "partition Setup";
+@@ -221,7 +241,7 @@ private static PlantUmlResult[] CreatePlantUml(
+         for (var i = actionStartIndex - 1; i >= 0; i--)
+         {
+             var t = tracesForTest[i];
+-            if (!t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart)
++            if (!t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart && !t.TrackingIgnore)
+             {
+                 lastSetupTraceIndex = i;
+                 break;
+@@ -234,9 +254,12 @@ private static PlantUmlResult[] CreatePlantUml(
+             traceIndex++;
+             if (trace.IsActionStart)
+             {
+-                builder.ClosePartition();
+-                setupPartitionClosed = true;
+-                isInActionPhase = true;
++                if (traceIndex == actionStartIndex)
++                {
++                    builder.ClosePartition();
++                    setupPartitionClosed = true;
++                    isInActionPhase = true;
++                }
+                 continue;
+             }
+ 
+diff --git a/src/Kronikol/Tracking/PhaseConfiguration.cs b/src/Kronikol/Tracking/PhaseConfiguration.cs
+index 44587daa..4e8b5cf2 100644
+--- a/src/Kronikol/Tracking/PhaseConfiguration.cs
++++ b/src/Kronikol/Tracking/PhaseConfiguration.cs
+@@ -49,13 +49,40 @@ internal static T[] DrawnAt<T>(T defaultVerbosity, T? setupVerbosity, T? actionV
+             ? [defaultVerbosity, setupVerbosity ?? defaultVerbosity, actionVerbosity ?? defaultVerbosity]
+             : [GetEffectiveVerbosity(defaultVerbosity, setupVerbosity, actionVerbosity)];
+ 
++    /// <summary>The phase a step attribute's keyword, or a hand-made step's, says. Exact case: a word it does not know says nothing.</summary>
++    internal static TestPhase? PhaseOfAttribute(string? keyword) => keyword switch
++    {
++        "Given" or "But" => TestPhase.Setup,
++        "When" or "Then" or "ButWhen" => TestPhase.Action,
++        _ => null
++    };
++
++    /// <summary>
++    /// What a step's keyword says about its test's phase: the phase it moves the test to, <paramref name="previous"/> for
++    /// a keyword that continues the step before it, or null for no keyword or a word that says nothing about phases
++    /// (a LightBDD step type of the suite's own). <c>But</c> is <c>[ButStep]</c>'s, a setup step; an adapter gives a
++    /// framework's <c>But</c>, which continues the step before it, as the keyword it continues.
++    /// </summary>
++    internal static TestPhase? PhaseOfStep(string? keyword, TestPhase previous) => keyword?.ToUpperInvariant() switch
++    {
++        "GIVEN" or "SETUP" or "BUT" => TestPhase.Setup,
++        "WHEN" or "THEN" or "BUTWHEN" => TestPhase.Action,
++        "AND" => previous,
++        _ => null
++    };
++
+     /// <summary>
+-    /// Maps a BDD step-type string (e.g. "Given", "When", "Then") to a <see cref="TestPhase"/>.
++    /// Maps a BDD step-type string (e.g. "Given", "When", "Then") to a <see cref="TestPhase"/>. It reads one word with
++    /// nothing before it, so <c>And</c> and <c>But</c>, which continue a step, read as <see cref="TestPhase.Setup"/>; a
++    /// test's steps go through <see cref="StepCollector"/>, which knows the step before.
+     /// </summary>
+     public static TestPhase ResolvePhaseFromStepType(string? stepType)
+     {
+         if (stepType is null) return TestPhase.Unknown;
+ 
++        if (stepType.StartsWith("BUTWHEN", StringComparison.OrdinalIgnoreCase))
++            return TestPhase.Action;
++
+         if (stepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
+             || stepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
+             || stepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase))
+diff --git a/src/Kronikol/Tracking/StepCollector.cs b/src/Kronikol/Tracking/StepCollector.cs
+index 4946362e..18aa09b7 100644
+--- a/src/Kronikol/Tracking/StepCollector.cs
++++ b/src/Kronikol/Tracking/StepCollector.cs
+@@ -27,7 +27,8 @@ public static class StepCollector
+     /// </summary>
+     public static void StartStep(string? keyword, string text, string[]? paramNames, object?[]? paramValues)
+     {
+-        StartStep(ResolveTestId(), keyword, text, paramNames, paramValues);
++        var testId = ResolveTestId();
++        StartStep(testId, keyword, text, paramNames, paramValues, table: null, docString: null, phaseKeyword: null, frameworkStep: false);
+     }
+ 
+     /// <summary>
+@@ -53,6 +54,16 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+     /// </summary>
+     public static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
+         string[][]? table, string? docString)
++        => StartStep(testId, keyword, text, paramNames, paramValues, table, docString, phaseKeyword: null, frameworkStep: false);
++
++    /// <summary>
++    /// Starts a new step whose phase a framework adapter names. <paramref name="phaseKeyword"/> stands in for
++    /// <paramref name="keyword"/> where the phase is concerned, so Reqnroll's And and But are written as they are and take
++    /// the phase of the keyword they continue (#195), and it holds whatever
++    /// <see cref="StepTrackingOptions.WhenTriggersAction"/> says, which is about step attributes.
++    /// </summary>
++    internal static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
++        string[][]? table, string? docString, string? phaseKeyword, bool frameworkStep = true)
+     {
+         if (testId is null)
+             return;
+@@ -68,15 +79,55 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+         };
+ 
+         var isTopLevel = false;
++        var named = phaseKeyword is not null || FrameworkNamesThisFlow();
++        var flowPhase = TestPhaseContext.Current;
++        var phaseNow = TestPhase.Unknown;
++        var startsAction = false;
+         lock (state)
+         {
+             // Resolve effective keyword (Given/And/And sequencing)
+             step.EffectiveKeyword = ResolveKeyword(state, keyword);
+ 
+             isTopLevel = state.StepStack.Count == 0;
++
++            // The outermost open step that says anything about phases decides the test's phase, and a keyword under it is a
++            // label (#224). A step with no keyword says nothing, so the keywords under it still decide.
++            var says = phaseKeyword is not null
++                ? PhaseConfiguration.PhaseOfStep(phaseKeyword, flowPhase != TestPhase.Unknown ? flowPhase : state.Phase)
++                : Options.WhenTriggersAction ? PhaseConfiguration.PhaseOfAttribute(keyword) : null;
++            step.SaysPhase = says is not (null or TestPhase.Unknown);
++            if (step.SaysPhase && !OpenStepSaysPhase(testId))
++            {
++                phaseNow = says!.Value;
++
++                // A flow the framework does not name, or one that outlived the step it was forked inside, runs for the test and is not
++                // the test: its step keeps its phase to itself.
++                if (named && !OutlivedStepSaysPhase(testId) && (frameworkStep || !state.StepsSetPhase))
++                {
++                    if (frameworkStep && !state.StepsSetPhase)
++                    {
++                        state.ActionStepSeen = false;
++                        if (!state.ExplicitBoundaryDrawn && !state.ClientDrewBoundary)
++                            state.ActionStartDrawn = false;
++                    }
++
++                    // The Setup/Action boundary: the first time this test's steps go from Setup to Action, and never once an Action step
++                    // has run, as a Setup partition over it would hide an act.
++                    startsAction = says == TestPhase.Action && (state.Phase == TestPhase.Setup || (frameworkStep && state.CallInSetupStep)) && !state.ActionStartDrawn && !state.ActionStepSeen;
++                    state.ActionStepSeen |= says == TestPhase.Action;
++                    state.ActionStartDrawn |= startsAction;
++                    if (startsAction && frameworkStep)
++                        state.BoundaryStep = step;
++                    state.StepsSetPhase |= frameworkStep;
++                    state.Phase = phaseNow;
++                }
++            }
++
+             state.StepStack.Push(step);
+         }
+ 
++        EnterFlow(testId, step);
++
+         // Emit step delimiter hnote for top-level steps
+         if (isTopLevel && Options.ShowStepDelimiters)
+         {
+@@ -100,24 +151,203 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+             DefaultTrackingDiagramOverride.InsertPlantUml(testId, bar, DiagramMarkerKind.Step);
+         }
+ 
+-        // Phase transitions: set ambient test phase based on keyword
+-        if (Options.WhenTriggersAction && keyword is not null)
++        // This flow reads its own step's phase from here on, and so does a flow the framework cannot name.
++        if (phaseNow != TestPhase.Unknown)
++            TestPhaseContext.Current = phaseNow;
++
++        // After the step's bar, so the bar closes the Setup partition as the first bar past the setup calls always has.
++        if (startsAction)
++            DefaultTrackingDiagramOverride.DrawBoundary(testId);
++    }
++
++    /// <summary>
++    /// Whether an HTTP handler still has to ask its <c>CurrentStepTypeFetcher</c> about this test: no while the test's own
++    /// steps set its phase, as every adapter's do, or once its boundary is drawn.
++    /// </summary>
++    internal static bool NeedsStepTypeFromHandler(string testId, object client)
++    {
++        if (!States.TryGetValue(testId, out var state))
++            return true;
++
++        lock (state)
++            return !state.StepsSetPhase && !state.ClientsPastBoundary.Contains(client);
++    }
++
++    /// <summary>
++    /// Draws the boundary from the step type an HTTP handler reports for a call, for a test whose framework starts no steps
++    /// here: a custom <c>CurrentStepTypeFetcher</c>, or LightBDD with no step decorator. What it has seen is the test's, not
++    /// the handler's: a handler shared by two tests drew the boundary for the first alone.
++    /// </summary>
++    internal static void NoteCallInStepType(string testId, string stepType, object client)
++    {
++        var inSetup = stepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
++                      || stepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
++                      || (stepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase)
++                          && !stepType.StartsWith("BUTWHEN", StringComparison.OrdinalIgnoreCase));
++
++        var state = States.GetOrAdd(testId, _ => new TestStepState());
++        lock (state)
+         {
+-            switch (keyword)
++            if (inSetup)
+             {
+-                case "Given":
+-                case "But":
+-                    TestPhaseContext.Current = TestPhase.Setup;
+-                    break;
+-                case "When":
+-                case "Then":
+-                case "ButWhen":
+-                    TestPhaseContext.Current = TestPhase.Action;
+-                    break;
++                state.CallInSetupStep = true;
++                state.ClientsInSetup.Add(client);
++                return;
++            }
++
++            if (!state.ClientsInSetup.Contains(client))
++                return;
++
++            state.ClientsPastBoundary.Add(client);
++            if (state.ActionStartDrawn)
++            {
++                TestPhaseContext.Current = TestPhase.Action;
++                return;
+             }
++
++            state.ActionStartDrawn = true;
++            state.ClientDrewBoundary = true;
++        }
++
++        DefaultTrackingDiagramOverride.DrawBoundary(testId);
++    }
++
++    /// <summary>
++    /// Whether the framework itself says this flow is running a test. A <see cref="TestIdentityScope"/> alone, on a thread or on the
++    /// server's side of a call, runs for the test and is not the test.
++    /// </summary>
++    private static bool FrameworkNamesThisFlow()
++    {
++        // A detached flow inherits the framework's context and is nobody's test, as TestInfoResolver reads it.
++        if (TestIdentityScope.IsDetached)
++            return false;
++
++        if (Track.TestIdResolver is not { } resolver)
++            return true;
++
++        try
++        {
++            return resolver() is not null;
++        }
++        catch
++        {
++            return false;
++        }
++    }
++
++    /// <summary>A consumer's StartAction(): whether it is the first, as a second one asks for the same boundary again.</summary>
++    internal static bool NoteExplicitBoundary(string testId)
++    {
++        NotePhase(testId, TestPhase.Action);
++        var state = States.GetOrAdd(testId, _ => new TestStepState());
++        lock (state)
++        {
++            var superseded = state.ClientDrewBoundary || (state.BoundaryStep is { } boundary && (boundary.EndTime > 0 || !FlowHolds(boundary)));
++            var first = !state.ExplicitBoundaryDrawn && !superseded;
++            state.ExplicitBoundaryDrawn = true;
++            return first;
++        }
++    }
++
++    /// <summary>
++    /// Notes a phase the test set itself, with <c>StartSetup()</c> or <c>StartAction()</c>, so a step that continues the one
++    /// before it continues that, and a test that drew its own boundary draws no second one.
++    /// </summary>
++    internal static void NotePhase(string? testId, TestPhase phase)
++    {
++        if (testId is null)
++            return;
++
++        var state = States.GetOrAdd(testId, _ => new TestStepState());
++        lock (state)
++        {
++            state.Phase = phase;
++
++            state.ActionStartDrawn |= phase == TestPhase.Action;
+         }
+     }
+ 
++    /// <summary>
++    /// The steps open in this flow, innermost first. A step's parent is what opened it in its own flow, where the stack in
++    /// <see cref="TestStepState"/> is the whole test's: a step left running (not awaited, or in a Task.WhenAll) is above
++    /// nothing its caller starts next.
++    /// </summary>
++    private static readonly AsyncLocal<FlowStep?> CurrentFlowStep = new();
++
++    private sealed record FlowStep(string TestId, CollectedStep Step, FlowStep? Parent);
++
++    internal static bool UnderOpenKeyword(string testId) => OpenStepSaysPhase(testId);
++
++    private static bool FlowHolds(CollectedStep step)
++    {
++        for (var node = CurrentFlowStep.Value; node is not null; node = node.Parent)
++            if (ReferenceEquals(node.Step, step))
++                return true;
++        return false;
++    }
++
++    private static bool OpenStepSaysPhase(string testId)
++    {
++        for (var node = CurrentFlowStep.Value; node is not null; node = node.Parent)
++            if (node.TestId == testId && node.Step.SaysPhase && !node.Step.Bypassed && node.Step.EndTime == 0)
++                return true;
++        return false;
++    }
++
++    // Every completer takes its own step off its flow's chain, so a closed step still on one means this flow was forked inside it and outlived it.
++    private static bool OutlivedStepSaysPhase(string testId)
++    {
++        for (var node = CurrentFlowStep.Value; node is not null; node = node.Parent)
++            if (node.TestId == testId && node.Step.SaysPhase && !node.Step.Bypassed && node.Step.EndTime != 0)
++                return true;
++        return false;
++    }
++
++    /// <summary>
++    /// Whether this test's framework has started a step that decided its phase, so the phase an HTTP handler's fetcher reports for a
++    /// call has nothing to add.
++    /// </summary>
++    internal static bool FrameworkStepsSetPhase()
++    {
++        if (ResolveTestId() is not { } testId || !States.TryGetValue(testId, out var state))
++            return false;
++
++        lock (state)
++            return state.StepsSetPhase;
++    }
++
++    /// <summary>
++    /// The innermost step of this test on this flow is the one completing here, whatever the stack popped: a step left running above it
++    /// (not awaited, or past a timeout) sits on the stack's top and takes this completion, and its own closes this one later.
++    /// </summary>
++    internal static void LeaveCompletedStep(string testId)
++    {
++        var node = CurrentFlowStep.Value;
++        while (node is not null && (node.TestId != testId || node.Step.Bypassed))
++            node = node.Parent;
++        if (node is not null)
++            CurrentFlowStep.Value = Without(CurrentFlowStep.Value!, node);
++    }
++
++    // Only the step that left: another test's step above it on this flow is still open.
++    private static FlowStep? Without(FlowStep head, FlowStep node) =>
++        ReferenceEquals(head, node) ? node.Parent : head with { Parent = Without(head.Parent!, node) };
++
++    private static void EnterFlow(string testId, CollectedStep step) =>
++        CurrentFlowStep.Value = new FlowStep(testId, step, CurrentFlowStep.Value);
++
++    /// <summary>The step whose stub is returning its task is no longer above what the caller does next.</summary>
++    private static void LeaveFlow()
++    {
++        var node = CurrentFlowStep.Value;
++
++        // A stub with no test id started nothing, so it has nothing to leave.
++        if (node is null || ResolveTestId() is not { } testId)
++            return;
++
++        LeaveCompletedStep(testId);
++    }
++
+     /// <summary>
+     /// Completes the current active step for the given test.
+     /// </summary>
+@@ -126,6 +356,8 @@ public static void CompleteStep(string? testId, bool passed, string? errorMessag
+         if (testId is null)
+             return;
+ 
++        LeaveCompletedStep(testId);
++
+         if (!States.TryGetValue(testId, out var state))
+             return;
+ 
+@@ -140,6 +372,13 @@ public static void CompleteStep(string? testId, bool passed, string? errorMessag
+             completed.Passed = passed;
+             completed.ErrorMessage = errorMessage;
+ 
++            for (var node = CurrentFlowStep.Value; node is not null; node = node.Parent)
++                if (ReferenceEquals(node.Step, completed))
++                {
++                    CurrentFlowStep.Value = node.Parent;
++                    break;
++                }
++
+             if (state.StepStack.Count > 0)
+             {
+                 // Nested: add as sub-step of parent
+@@ -185,6 +424,9 @@ public static void BypassStep(string? testId, string? reason = null)
+             bypassed.Bypassed = true;
+             bypassed.BypassReason = reason;
+ 
++            if (CurrentFlowStep.Value is { } head && ReferenceEquals(head.Step, bypassed))
++                CurrentFlowStep.Value = head.Parent;
++
+             if (state.StepStack.Count > 0)
+             {
+                 // Nested: add as sub-step of parent
+@@ -431,21 +673,18 @@ .. tabular.Rows.Select(r => r.Values.Select(v => v.Value).ToArray()),
+ 
+         for (var i = 0; i < count; i++)
+         {
+-            if (paramValues[i] is ITabularParameterData tabular)
++            if (paramValues[i] is ITabularParameterData tabular && ReadTabular(tabular) is { } table)
+             {
+                 result[i] = new StepParameter
+                 {
+                     Name = paramNames[i],
+                     Kind = StepParameterKind.Tabular,
+-                    TabularValue = new TabularParameterValue(
+-                        tabular.GetColumns(),
+-                        tabular.GetRows(),
+-                        tabular.IsLinkedOutput)
++                    TabularValue = table
+                 };
+             }
+             else
+             {
+-                var stringValue = paramValues[i]?.ToString() ?? "null";
++                var stringValue = Printed(paramValues[i]);
+                 // Truncate complex objects (record ToString, generic collections) to [TypeName]
+                 if (ParameterParser.IsComplexObjectString(stringValue))
+                 {
+@@ -467,6 +706,33 @@ .. tabular.Rows.Select(r => r.Values.Select(v => v.Value).ToArray()),
+         return result;
+     }
+ 
++    /// <summary>A table's rows, or null when a row's own getter throws: the step reads it as its type, as for <see cref="Printed"/>.</summary>
++    private static TabularParameterValue? ReadTabular(ITabularParameterData tabular)
++    {
++        try
++        {
++            return new TabularParameterValue(tabular.GetColumns(), tabular.GetRows(), tabular.IsLinkedOutput);
++        }
++        catch (Exception)
++        {
++            return null;
++        }
++    }
++
++    /// <summary>A parameter's text. Its ToString is the test's own code, run as the step starts: if it throws, the test
++    /// must not fail for being tracked, so the value reads as its type.</summary>
++    private static string Printed(object? value)
++    {
++        try
++        {
++            return value?.ToString() ?? "null";
++        }
++        catch (Exception)
++        {
++            return $"[{value!.GetType().Name}]";
++        }
++    }
++
+     private static ScenarioStep ToScenarioStep(CollectedStep step)
+     {
+         var duration = step.EndTime > 0
+@@ -498,12 +764,32 @@ private static ScenarioStep ToScenarioStep(CollectedStep step)
+         };
+     }
+ 
++    /// <summary>An exception's message, or null if reading it throws: a step fails with no message, and the caller gets what the method threw.</summary>
++    private static string? MessageOf(Exception ex)
++    {
++        try
++        {
++            return ex.Message;
++        }
++        catch (Exception)
++        {
++            return null;
++        }
++    }
++
+     /// <summary>
+     /// Wraps an async step's returned Task so that CompleteStep is called on
+     /// completion or failure. Called by the IL weaver for async step methods.
+     /// The original exception is preserved (re-thrown via await).
+     /// </summary>
+-    public static async Task CompleteStepAsync(Task task)
++    public static Task CompleteStepAsync(Task task)
++    {
++        // Not async: this runs in the woven stub, which is the caller's flow, and an async method's write never reaches it.
++        LeaveFlow();
++        return CompleteWhenDoneAsync(task);
++    }
++
++    private static async Task CompleteWhenDoneAsync(Task task)
+     {
+         try
+         {
+@@ -512,7 +798,7 @@ public static async Task CompleteStepAsync(Task task)
+         }
+         catch (Exception ex)
+         {
+-            CompleteStep(false, ex.Message);
++            CompleteStep(false, MessageOf(ex));
+             throw;
+         }
+     }
+@@ -520,7 +806,13 @@ public static async Task CompleteStepAsync(Task task)
+     /// <summary>
+     /// Generic variant for async step methods returning Task&lt;T&gt;.
+     /// </summary>
+-    public static async Task<T> CompleteStepAsync<T>(Task<T> task)
++    public static Task<T> CompleteStepAsync<T>(Task<T> task)
++    {
++        LeaveFlow();
++        return CompleteWhenDoneAsync(task);
++    }
++
++    private static async Task<T> CompleteWhenDoneAsync<T>(Task<T> task)
+     {
+         try
+         {
+@@ -530,7 +822,7 @@ public static async Task<T> CompleteStepAsync<T>(Task<T> task)
+         }
+         catch (Exception ex)
+         {
+-            CompleteStep(false, ex.Message);
++            CompleteStep(false, MessageOf(ex));
+             throw;
+         }
+     }
+@@ -540,6 +832,16 @@ private class TestStepState
+         public Stack<CollectedStep> StepStack { get; } = new();
+         public List<CollectedStep> CompletedSteps { get; } = new();
+         public string? LastKeywordCategory { get; set; }
++        public TestPhase Phase { get; set; }
++        public bool StepsSetPhase { get; set; }
++        public bool ActionStepSeen { get; set; }
++        public bool ActionStartDrawn { get; set; }
++        public bool ExplicitBoundaryDrawn { get; set; }
++        public HashSet<object> ClientsInSetup { get; } = [];
++        public HashSet<object> ClientsPastBoundary { get; } = [];
++        public CollectedStep? BoundaryStep { get; set; }
++        public bool ClientDrewBoundary { get; set; }
++        public bool CallInSetupStep { get; set; }
+         public List<FileAttachment>? ScenarioAttachments { get; set; }
+     }
+ 
+@@ -548,6 +850,7 @@ private class CollectedStep
+         public bool IsAssertion { get; set; }
+         public string? OriginalKeyword { get; set; }
+         public string? EffectiveKeyword { get; set; }
++        public bool SaysPhase { get; set; }
+         public string Text { get; set; } = "";
+         public long StartTime { get; set; }
+         public long EndTime { get; set; }
+diff --git a/src/Kronikol/Tracking/StepTrackingOptions.cs b/src/Kronikol/Tracking/StepTrackingOptions.cs
+index 2f9d0192..c00c52f1 100644
+--- a/src/Kronikol/Tracking/StepTrackingOptions.cs
++++ b/src/Kronikol/Tracking/StepTrackingOptions.cs
+@@ -12,7 +12,7 @@ public record StepTrackingOptions
+     /// <summary>Whether to include parameter values inline in step text. Default: true.</summary>
+     public bool InlineParameters { get; set; } = true;
+ 
+-    /// <summary>Whether [WhenStep] triggers Action phase transition (equivalent to StartAction()). Default: true.</summary>
++    /// <summary>Whether a step attribute's keyword moves the test's phase ([GivenStep] and [ButStep] to Setup, [WhenStep], [ThenStep] and [ButWhenStep] to Action), for a step with no keyword above it that does so, the first move from Setup to Action drawing the boundary StartAction() draws. A framework's own steps are not step attributes: Reqnroll's, LightBDD's and BDDfy's move the phase whatever this says. Default: true.</summary>
+     public bool WhenTriggersAction { get; set; } = true;
+ 
+     /// <summary>Whether to insert step delimiter hnotes into sequence diagrams when top-level steps start. Default: true.</summary>
+diff --git a/src/Kronikol/Tracking/TestTrackingMessageHandler.cs b/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
+index 23b10ca3..cb01cf19 100644
+--- a/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
++++ b/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
+@@ -34,9 +34,6 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
+     private readonly bool _trackDuringSetup;
+     private readonly bool _trackDuringAction;
+     private readonly IReadOnlyCollection<string> _excludedHosts;
+-    private string? _lastStepType;
+-    private bool _wasInGivenSection;
+-    private bool _actionStartInjected;
+     private int _invocationCount;
+     private bool _listenerStarted;
+ 
+@@ -449,30 +446,22 @@ private static void AddIfAbsent(HttpRequestMessage request, string name, string?
+ 
+     private void InjectImplicitActionStartIfNeeded(TestIdentity currentTestInfo)
+     {
+-        if (_actionStartInjected || _currentStepTypeFetcher is null)
++        if (_currentStepTypeFetcher is null || !StepCollector.NeedsStepTypeFromHandler(currentTestInfo.Id, this))
+             return;
+ 
+-        var currentStepType = _currentStepTypeFetcher();
+-        if (currentStepType is null)
+-        {
+-            _lastStepType = null;
+-            return;
+-        }
+-
+-        var isGivenOrAnd = currentStepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
+-                           || currentStepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
+-                           || currentStepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase);
+-
+-        if (isGivenOrAnd)
++        // A fetcher can throw for a call outside a scenario, as LightBDD's does, or on a test it does not know, as a shared handler now asks for each. A call
++        // must not fail for want of a step type.
++        string? currentStepType;
++        try
+         {
+-            _wasInGivenSection = true;
++            currentStepType = _currentStepTypeFetcher();
+         }
+-        else if (_wasInGivenSection)
++        catch (Exception)
+         {
+-            _actionStartInjected = true;
+-            DefaultTrackingDiagramOverride.StartAction(currentTestInfo.Id);
++            return;
+         }
+ 
+-        _lastStepType = currentStepType;
++        if (currentStepType is not null)
++            StepCollector.NoteCallInStepType(currentTestInfo.Id, currentStepType, this);
+     }
+ }
+\ No newline at end of file
+diff --git a/src/Kronikol/TrackingDiagramOverride.cs b/src/Kronikol/TrackingDiagramOverride.cs
+index 6b6968f4..76c49318 100644
+--- a/src/Kronikol/TrackingDiagramOverride.cs
++++ b/src/Kronikol/TrackingDiagramOverride.cs
+@@ -91,6 +91,20 @@ internal static string TestDelimiterStatement(string? testIdentifier)
+     public static void StartAction(string testId)
+     {
+         TestPhaseContext.Current = TestPhase.Action;
++        if (StepCollector.NoteExplicitBoundary(testId))
++            LogBoundary(testId);
++    }
++
++    /// <summary>The boundary a step or a client draws, which an explicit <see cref="StartAction(string)"/> overrides.</summary>
++    internal static void DrawBoundary(string testId)
++    {
++        TestPhaseContext.Current = TestPhase.Action;
++        StepCollector.NotePhase(testId, TestPhase.Action);
++        LogBoundary(testId);
++    }
++
++    private static void LogBoundary(string testId)
++    {
+         var log = new RequestResponseLog(
+             testId,
+             testId,
+@@ -114,6 +128,7 @@ public static void StartAction(string testId)
+     public static void StartSetup(string testId)
+     {
+         TestPhaseContext.Current = TestPhase.Setup;
++        StepCollector.NotePhase(testId, TestPhase.Setup);
+     }
+ 
+     // Delegate-based overloads for framework adapters

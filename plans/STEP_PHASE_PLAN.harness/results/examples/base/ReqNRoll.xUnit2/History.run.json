@@ -1,0 +1,116 @@
+{
+  "historyFormatVersion": 1,
+  "generator": "5.28.2\u002B9d994a4b014afb4ff0f304e4c5d6d2e3925c9341",
+  "roster": {
+    "t": "roster",
+    "hash": "7f1d3fefd20f7f61",
+    "suite": null,
+    "ids": [
+      "c2c6f45c30797b1a",
+      "5f117438ae6900e4"
+    ],
+    "slots": [
+      0,
+      0
+    ],
+    "names": [
+      "Calling Create Cake Endpoint Successfully",
+      "Calling Create Cake Endpoint Without Eggs"
+    ],
+    "features": [
+      "Cake",
+      "Cake"
+    ],
+    "sources": [
+      "Features/Cake.feature:8",
+      "Features/Cake.feature:13"
+    ]
+  },
+  "run": {
+    "t": "run",
+    "id": "local:20261103T124020Z:01c49a56",
+    "suite": null,
+    "partial": null,
+    "at": "2026-11-03T12:40:20Z",
+    "branch": null,
+    "commit": null,
+    "provider": null,
+    "url": null,
+    "generator": "5.28.2\u002B9d994a4b014afb4ff0f304e4c5d6d2e3925c9341",
+    "shards": 1,
+    "roster": "7f1d3fefd20f7f61",
+    "results": "PP",
+    "attempts": "--",
+    "durations": [
+      621,
+      63
+    ],
+    "calls": [
+      6,
+      5
+    ],
+    "shapeSet": [
+      "4dbbcb8d",
+      "d6635711"
+    ],
+    "shapeOrdered": [
+      "ed8bef4b",
+      "5262c477"
+    ],
+    "shapeVersion": 11,
+    "shapes": "1879489dfc4c9c2f",
+    "callSets": [
+      [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6
+      ],
+      [
+        0,
+        1,
+        2,
+        4,
+        5
+      ]
+    ],
+    "errors": [
+      null,
+      null
+    ],
+    "errorText": {},
+    "deps": [
+      "Caller\u003EDessert Provider",
+      "Dessert Provider\u003ECow Service",
+      "Dessert Provider\u003EEvent broker"
+    ],
+    "bridge": {
+      "10": {},
+      "6": {},
+      "7": {},
+      "8": {},
+      "9": {}
+    }
+  },
+  "shapes": {
+    "t": "shapes",
+    "hash": "1879489dfc4c9c2f",
+    "calls": [
+      "Caller\u003EDessert Provider GET /eggs 200",
+      "Caller\u003EDessert Provider GET /flour 200",
+      "Caller\u003EDessert Provider GET /milk 200",
+      "Caller\u003EDessert Provider POST /cake 200",
+      "Caller\u003EDessert Provider POST /cake 400",
+      "Dessert Provider\u003ECow Service GET /milk 200",
+      "Dessert Provider\u003EEvent broker Send (Event Protocol) /cake_events Responded"
+    ]
+  },
+  "rawCalls": {
+    "calls": [{"caller":"Caller","service":"Dessert Provider","method":"GET","path":"/milk","status":"200"},{"caller":"Dessert Provider","service":"Cow Service","method":"GET","path":"/milk","status":"200"},{"caller":"Caller","service":"Dessert Provider","method":"GET","path":"/eggs","status":"200"},{"caller":"Caller","service":"Dessert Provider","method":"GET","path":"/flour","status":"200"},{"caller":"Caller","service":"Dessert Provider","method":"POST","path":"/cake","status":"200"},{"caller":"Dessert Provider","service":"Event broker","method":"Send (Event Protocol)","path":"/cake_events","status":"Responded"},{"caller":"Caller","service":"Dessert Provider","method":"POST","path":"/cake","status":"400"}
+    ],
+    "order": [[0,1,2,3,4,5],[0,1,2,3,6]
+    ]
+  }
+}

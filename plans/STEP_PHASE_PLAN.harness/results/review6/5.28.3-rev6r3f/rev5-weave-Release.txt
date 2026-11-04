@@ -1,0 +1,295 @@
+## 022856120909a3069084fd76c85dbd7282ad46ad1a119a6bac8ac1f10dae69c3
+  [Step] <color:white>Then L02 task stub throws here
+  
+  steps:
+    Then L02 task stub throws here [Failed] msg=l02
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Then L02 task stub throws here
+
+## 11e0f18cab25d02817dc0ec9d13ae38b9aee3b7e9ae9ae0f6b82be6eeb2693c5
+  [Step] <color:white>Then A04 two assertions then return task
+  
+  [Assertion] hnote across <<assertionNote>> #d4edda
+  
+  [Assertion] hnote across <<assertionNote>> #f8d7da
+  
+  steps:
+    Then A04 two assertions then return task [Failed] msg=Value
+    should be greater than
+5
+    but was
+1
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Then A04 two assertions then return task
+      hnote across <<assertionNote>> #d4edda
+      hnote across <<assertionNote>> #f8d7da
+
+## 11e51e8b9f98b6ddc3c540b648e3db4d2d0d22d1516716d4a7170afc916b82ba
+  [Step] <color:white>Given W16 already faulted
+  
+  steps:
+    Given W16 already faulted [Failed] msg=w16
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W16 already faulted
+
+## 27f6d9790574d0576cf28951519f522e0e9361bef9781016eed10e7f0a3cd7da
+  [Step] <color:white>Given W11 skip if task stub
+  
+  steps:
+    Given W11 skip if task stub [Bypassed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W11 skip if task stub
+
+## 2c25272380a22bb2b72dded79f1ce7e72b2a28414056ff2c186113e6c444af8d
+  [Step] <color:white>Then L01 task stub throws from callee
+  
+  steps:
+    Then L01 task stub throws from callee [Failed] msg=l01-1
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Then L01 task stub throws from callee
+
+## 3753ef14dbbd04ff59553d96db142882b9eb9291897b5cdbf16b1b76f16283a6
+  [Step] <color:white>Given W06 using
+  
+  [Step] <color:white>And W06 using
+  
+  steps:
+    Given W06 using [Passed]
+    And W06 using [Failed] msg=w06
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W06 using
+      hnote across <<stepDelimiter>> #black:<color:white>And W06 using
+
+## 3e4141d4c0e825eb642624265c9ccb6bf840bba9f13f1b6224945c7e89d3a16d
+  [Step] <color:white>Given W15 fixed
+  
+  steps:
+    Given W15 fixed [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W15 fixed
+
+## 465e4f81498f81bd08eead45eac0236d4a92628795395170be08c3e06ca4e357
+  [Step] <color:white>Given W04 filter at end
+  
+  steps:
+    Given W04 filter at end [Failed] msg=w04-outer
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W04 filter at end
+
+## 5769106513108868d269253f81289c2157b8371c891b2fe4cb6302f81e1c940d
+  [Step] <color:white>Then A02 assertion in task stub passes
+  
+  [Assertion] hnote across <<assertionNote>> #d4edda
+  
+  steps:
+    Then A02 assertion in task stub passes [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Then A02 assertion in task stub passes
+      hnote across <<assertionNote>> #d4edda
+
+## 5c151ccc51490ddeb4f7caf7c2dcdd2f3b9f61604cc7877978eaded7b707f769
+  [Step] <color:white>Given W01 expr throw
+  
+  steps:
+    Given W01 expr throw [Failed] msg=w01
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W01 expr throw
+
+## 6cd13de5c78d57be6e7859df1c0ec14afc1772dfdbb274e9ab078c6426b211b9
+  [Step] <color:white>Given S01 sync catch at end
+  
+  steps:
+    Given S01 sync catch at end [Failed] msg=s01-outer
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given S01 sync catch at end
+
+## 72229b84b01a87047703871307f694ec04207893352e003f8005de35bf802ab0
+  [Step] <color:white>Given W10 stackalloc
+  
+  [Step] <color:white>And W10 stackalloc
+  
+  steps:
+    Given W10 stackalloc [Passed]
+    And W10 stackalloc [Failed] msg=w10
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W10 stackalloc
+      hnote across <<stepDelimiter>> #black:<color:white>And W10 stackalloc
+
+## 75a54dd0f21c02f97c8794b4a697176aaf82a95b70dce09ac56a369e380a3661
+  [Step] <color:white>Given S02 sync all paths throw
+  
+  steps:
+    Given S02 sync all paths throw [Failed] msg=s02-outer
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given S02 sync all paths throw
+
+## 7d8692932332ee012e7e90d491060ad89c57496c8e672d51d7646e348c62a412
+  [Step] <color:white>Then L03 sync step
+  
+  steps:
+    Then L03 sync step [Failed] msg=l03-1
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Then L03 sync step
+
+## 87c7fea5cab6b0f0c254a0b2e5496d31ce1a6b954aae925001da82fe0c953c3a
+  [Step] <color:white>Given W09 generic result
+  
+  steps:
+    Given W09 generic result [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W09 generic result
+
+## 9478fb617c2ba5c2edb4c30498826d98b274503865d463bfea91da9c4af19e30
+  [Step] <color:white>Given W05 switch
+  
+  [Step] <color:white>And W05 switch
+  
+  [Step] <color:white>And W05 switch
+  
+  [Step] <color:white>And W05 switch
+  
+  steps:
+    Given W05 switch [Passed]
+    And W05 switch [Passed]
+    And W05 switch [Failed] msg=w05
+    And W05 switch [Failed] msg=w05-faulted
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W05 switch
+      hnote across <<stepDelimiter>> #black:<color:white>And W05 switch
+      hnote across <<stepDelimiter>> #black:<color:white>And W05 switch
+      hnote across <<stepDelimiter>> #black:<color:white>And W05 switch
+
+## 9d85d33e49e4e64cf6b65f27daa7b1098a332ab6cf0395fbd68588f0d031715c
+  [Step] <color:white>Then A03 awaitable assertion expr body
+  
+  [Assertion] hnote across <<assertionNote>> #f8d7da
+  
+  steps:
+    Then A03 awaitable assertion expr body [Failed] msg=Task `Task.CompletedTask`
+    should throw
+System.InvalidOperationException
+    but did not
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Then A03 awaitable assertion expr body
+      hnote across <<assertionNote>> #f8d7da
+
+## T_W13
+  [Step] <color:white>Given W13 ternary
+  
+  Request  w13-a                          phase=Setup   src=TestContext
+  Response w13-a                          phase=Setup   src=TestContext
+  [Step] <color:white>And W13 ternary
+  
+  Request  w13-b                          phase=Setup   src=TestContext
+  Response w13-b                          phase=Setup   src=TestContext
+  steps:
+    Given W13 ternary [Passed]
+    And W13 ternary [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W13 ternary
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And W13 ternary
+      shop -[#438DD5]-> probe: OK
+
+## a228d24a520aeb28a9316755998598101891c708f83798eb49395ebcc9471c0a
+  [Step] <color:white>Then L04 async step
+  
+  steps:
+    Then L04 async step [Failed] msg=l04
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Then L04 async step
+
+## a4198e9bf06c43f7c11a4a544abefd5d954ebbb477769abea97af626e047f2aa
+  [Step] <color:white>Given W03 finally at end
+  
+  steps:
+    Given W03 finally at end [Failed] msg=w03
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W03 finally at end
+
+## ac119a224beba092533df995115cafc44fc12a8ab62065b685e7a26475a6ec24
+  [Step] <color:white>Given W08 generic
+  
+  [Step] <color:white>And W08 generic
+  
+  steps:
+    Given W08 generic [Passed]
+    And W08 generic [Failed] msg=w08
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W08 generic
+      hnote across <<stepDelimiter>> #black:<color:white>And W08 generic
+
+## b08d38364dbef4d004a187636dd95c8a113daa4b44d6c15c5634417079a66c57
+  [Step] <color:white>Given W07 lock
+  
+  steps:
+    Given W07 lock [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W07 lock
+
+## cabeb6a450decdf4149c5e47634b900507f936d70de0fb8781e62148591cbee9
+  [Step] <color:white>Given W02 catch at end
+  
+  steps:
+    Given W02 catch at end [Failed] msg=w02-outer
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W02 catch at end
+
+## d270c45c44f57e1494cc105617ad55e61c42d885f1b1551688f4cdffed9cd8a4
+  [Step] <color:white>When W14 outer
+  
+  steps:
+    When W14 outer [Failed] msg=w14
+      Given W14 inner [Failed] msg=w14
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>When W14 outer
+
+## d2bff09492707eba4991d6acff7bd3634e469d78d0017e962d02b88fb9089191
+  [Step] <color:white>Given W12 null task
+  
+  steps:
+    Given W12 null task [Failed] msg=Object reference not set to an instance of an object.
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given W12 null task
+
+## dc36ddccfd3a7336965622095433fc6e3ae740ee545101a4de7a4df16d9d1432
+  [Step] <color:white>Then A01 assertion in task stub fails
+  
+  [Assertion] hnote across <<assertionNote>> #f8d7da
+  
+  steps:
+    Then A01 assertion in task stub fails [Failed] msg=Value
+    should be
+2
+    but was
+1
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Then A01 assertion in task stub fails
+      hnote across <<assertionNote>> #f8d7da
+

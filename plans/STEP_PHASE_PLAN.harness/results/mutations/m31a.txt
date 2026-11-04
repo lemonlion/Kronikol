@@ -1,0 +1,13 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=1
+first: main/bddfy-xunit3: B04_an_async_When_step_calls_a_woven_Given: b04-in-sub: Action Action > Setup Setup; b04-after-sub: Action Action > Setup Setup; Given: Woven given [Passed] > Woven given [Passed]; new: [bar] <color:white>Given Woven given
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B04_an_async_When_step_calls_a_woven_Given
+    b04-in-sub: Action Action > Setup Setup; b04-after-sub: Action Action > Setup Setup; Given: Woven given [Passed] > Woven given [Passed]; new: [bar] <color:white>Given Woven given
+      -b04-in-sub Action Action
+      -b04-after-sub Action Action
+      +[bar] <color:white>Given Woven given
+      +b04-in-sub Setup Setup
+      +b04-after-sub Setup Setup
+      - Given Woven given [Passed]
+      + Given Woven given [Passed]
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When

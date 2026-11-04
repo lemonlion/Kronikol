@@ -1,0 +1,38 @@
+##### 05-sizes.txt
+@@ -1,7 +1,7 @@
+-TestRunReport.krkl: 5,667 bytes on disk, 49,632 as JSON, 49,632 decoded · formatVersion 3
++TestRunReport.krkl: 5,695 bytes on disk, 49,701 as JSON, 49,701 decoded · formatVersion 3
+ part                          stored       decoded  share
+-steps                          3,138         3,138   6.3%  0 of them keys holding null or nothing
+-calls                         24,329        24,329  49.0%  everything in a call but its body
++steps                          3,137         3,137   6.3%  0 of them keys holding null or nothing
++calls                         24,313        24,313  48.9%  everything in a call but its body
+ bodies                           516           516   1.0%  36 bodies, 2 distinct: 6 decoded
+-diagrams                      14,254        14,254  28.7%
++diagrams                      14,322        14,322  28.8%
+ annotations                        0             0   0.0%
+@@ -10,11 +10,11 @@
+ whitespace                         0             0   0.0%  outside strings
+-other                          7,395         7,395  14.9%
++other                          7,413         7,413  14.9%
+ 
+ Scenarios, largest first, decoded:
+-s1            11,109  22.4%  Suite / R02 fails in the then
+-s0             9,783  19.7%  Suite / R01 passes
+-s6             8,760  17.6%  Suite / R07 fails after a manual bypass under a given
+-s2             8,494  17.1%  Suite / R03 fails with a given with no calls
++s1            11,143  22.4%  Suite / R02 fails in the then
++s0             9,811  19.7%  Suite / R01 passes
++s6             8,764  17.6%  Suite / R07 fails after a manual bypass under a given
++s2             8,495  17.1%  Suite / R03 fails with a given with no calls
+ s5             4,735   9.5%  Suite / R06 fails with no steps
+-s4             4,135   8.3%  Suite / R05 keyword free
++s4             4,131   8.3%  Suite / R05 keyword free
+ s3             1,537   3.1%  Suite / R04 steps but no calls at all
+##### 11-interactions___group_by_step_phase_method_path.txt
+@@ -4,3 +4,3 @@
+ 0     Setup   bus     /r01-given      1      0     <dur>     <dur>      1       <size>
+-1     Action  GET     /r01-when       1      0    <dur>    <dur>      1       <size>
++1     Action  GET     /r01-when       1      0     <dur>     <dur>      1       <size>
+ 1     Action  bus     /r01-when       1      0     <dur>     <dur>      1       <size>
+identical verbs: 42

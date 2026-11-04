@@ -1,0 +1,112 @@
+== BDDfy: 202 same, 10 differ in structure: {'no partition, lines differ': 5, 'no partition, same lines': 5}
+   s123-d0.puml
+      -breakfastProvider -[#0E7C86]> cosmosDB: [[#iflow Query: /colls/orders]]
+      -cosmosDB -[#0E7C86]-> breakfastProvider: OK
+   s57-d0.puml
+      -supplierService -[#438DD5]-> breakfastProvider: OK
+      +supplierService -[#438DD5]-> breakfastProvider: OK
+   s58-d0.puml
+      +breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      +breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      +goatService -[#438DD5]-> breakfastProvider: OK
+      -goatService -[#438DD5]-> breakfastProvider: OK
+   s59-d0.puml
+      +breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+      +breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+      +kitchenService -[#438DD5]-> breakfastProvider: OK
+      +supplierService -[#438DD5]-> breakfastProvider: OK
+   s60-d0.puml
+      +breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      -kitchenService -[#438DD5]-> breakfastProvider: Service Unavailable
+      +kitchenService -[#438DD5]-> breakfastProvider: Service Unavailable
+== LightBDD: 178 same, 9 differ in structure: {'no partition, lines differ': 5, 'no partition, same lines': 4}
+   s181-d0.puml
+      +caller -[#438DD5]> breakfastProvider: [[#iflow POST: /waffles]]
+      +breakfastProvider -[#438DD5]-> caller: Unsupported Media Type
+   s58-d0.puml
+      +breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      +supplierService -[#438DD5]-> breakfastProvider: OK
+      -supplierService -[#438DD5]-> breakfastProvider: OK
+   s59-d0.puml
+      +breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      +breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      +kitchenService -[#438DD5]-> breakfastProvider: Service Unavailable
+      +goatService -[#438DD5]-> breakfastProvider: OK
+   s62-d0.puml
+      +breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      +breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      +cowService -[#438DD5]-> breakfastProvider: OK
+      +goatService -[#438DD5]-> breakfastProvider: OK
+   s63-d0.puml
+      +goatService -[#438DD5]-> breakfastProvider: OK
+      -goatService -[#438DD5]-> breakfastProvider: OK
+== ReqNRoll: 205 same, 9 differ in structure: {'no partition, same lines': 5, 'no partition, lines differ': 4}
+   s44-d0.puml
+      +breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+   s45-d0.puml
+      +breakfastProvider -[#438DD5]> supplierService: [[#iflow GET: /health]]
+      +breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> supplierService: [[#iflow GET: /health]]
+      -supplierService -[#438DD5]-> breakfastProvider: OK
+      +supplierService -[#438DD5]-> breakfastProvider: OK
+   s46-d0.puml
+      +breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health-degraded]]
+      -breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health-degraded]]
+      +kitchenService -[#438DD5]-> breakfastProvider: Service Unavailable
+      -kitchenService -[#438DD5]-> breakfastProvider: Service Unavailable
+   s66-d0.puml
+      +breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      +goatService -[#438DD5]-> breakfastProvider: OK
+      +kitchenService -[#438DD5]-> breakfastProvider: OK
+      -goatService -[#438DD5]-> breakfastProvider: OK
+      -kitchenService -[#438DD5]-> breakfastProvider: OK
+   s67-d0.puml
+      -breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> supplierService: [[#iflow GET: /health]]
+      +breakfastProvider -[#438DD5]> supplierService: [[#iflow GET: /health]]
+      +breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+      +supplierService -[#438DD5]-> breakfastProvider: OK
+      -supplierService -[#438DD5]-> breakfastProvider: OK
+== xUnit: 203 same, 9 differ in structure: {'no partition, same lines': 5, 'no partition, lines differ': 4}
+   s58-d0.puml
+      +breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      +goatService -[#438DD5]-> breakfastProvider: OK
+      -goatService -[#438DD5]-> breakfastProvider: OK
+   s59-d0.puml
+      +breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> goatService: [[#iflow GET: /health]]
+   s60-d0.puml
+      +breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health-degraded]]
+      +breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> cowService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health-degraded]]
+      +kitchenService -[#438DD5]-> breakfastProvider: Service Unavailable
+      +cowService -[#438DD5]-> breakfastProvider: OK
+   s63-d0.puml
+      +breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+      +supplierService -[#438DD5]-> breakfastProvider: OK
+      +cowService -[#438DD5]-> breakfastProvider: OK
+      -cowService -[#438DD5]-> breakfastProvider: OK
+      -supplierService -[#438DD5]-> breakfastProvider: OK
+   s64-d0.puml
+      +breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+      +breakfastProvider -[#438DD5]> supplierService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> supplierService: [[#iflow GET: /health]]
+      -breakfastProvider -[#438DD5]> kitchenService: [[#iflow GET: /health]]
+      +goatService -[#438DD5]-> breakfastProvider: OK
+      -goatService -[#438DD5]-> breakfastProvider: OK

@@ -1,0 +1,34 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=2
+first: rev5/rev5-bddfy: B09_A_scenario_in_a_woven_Given_then_a_tear_down_and_a_When: Request: b09-story-then phase=Setup src=TestContext > b09-story-then phase=Unknown src=TestContext; Response: b09-story-then phase=Setup src=TestContext > b09-story-then phase=Unknown src=Te
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B09_A_scenario_in_a_woven_Given_then_a_tear_down_and_a_When
+    Request: b09-story-then phase=Setup src=TestContext > b09-story-then phase=Unknown src=TestContext; Response: b09-story-then phase=Setup src=TestContext > b09-story-then phase=Unknown src=TestContext; Request: b09-story-teardown-nosetup phase=Setup src=TestContext IGNORED > b09-story-teardown-nosetup phase=Unknown src=TestContext; Response: b09-story-teardown-nosetup phase=Setup src=TestContex
+      - Request b09-story-then phase=Setup src=TestContext
+      - Response b09-story-then phase=Setup src=TestContext
+      - Request b09-story-teardown-nosetup phase=Setup src=TestContext IGNORED
+      - Response b09-story-teardown-nosetup phase=Setup src=TestContext IGNORED
+      - Request b09-story-teardown-noaction phase=Setup src=TestContext
+      - Response b09-story-teardown-noaction phase=Setup src=TestContext
+      - Request b09-after-story phase=Setup src=TestContext
+      - Response b09-after-story phase=Setup src=TestContext
+      - Request b09-after-woven phase=Setup src=TestContext
+      - Response b09-after-woven phase=Setup src=TestContext
+      + Request b09-story-then phase=Unknown src=TestContext
+      + Response b09-story-then phase=Unknown src=TestContext
+      + Request b09-story-teardown-nosetup phase=Unknown src=TestContext
+      + Response b09-story-teardown-nosetup phase=Unknown src=TestContext
+      + Request b09-story-teardown-noaction phase=Unknown src=TestContext
+      + Response b09-story-teardown-noaction phase=Unknown src=TestContext
+      + Request b09-after-story phase=Unknown src=TestContext
+      + Response b09-after-story phase=Unknown src=TestContext
+      + Request b09-after-woven phase=Unknown src=TestContext
+      + Response b09-after-woven phase=Unknown src=TestContext
+      + shop -[#438DD5]-> probe: OK
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B10_A_scenario_in_a_woven_When_failing_in_its_Given
+    Request: b10-after-woven phase=Action src=TestContext > b10-after-woven phase=Unknown src=TestContext; Response: b10-after-woven phase=Action src=TestContext > b10-after-woven phase=Unknown src=TestContext
+      - Request b10-after-woven phase=Action src=TestContext
+      - Response b10-after-woven phase=Action src=TestContext
+      + Request b10-after-woven phase=Unknown src=TestContext
+      + Response b10-after-woven phase=Unknown src=TestContext

@@ -1,0 +1,35 @@
+KILLED solid=5 order=0 racing-new=0 racing-seen=0
+first: rev4/rev4-c: C02_Identical_service_calls_across_the_When: gone: note: "body": "ACTION-PAYLOAD"
+
+[rev4/rev4-c] rev4-c-diagrams.txt: SOLID C02_Identical_service_calls_across_the_When
+    gone: note: "body": "ACTION-PAYLOAD"
+      - note: "body": "ACTION-PAYLOAD"
+[rev4/rev4-diagram] rev4-diagram.txt: SOLID D1 S | M | A A B variants (separateSetup=False, collapse=True, maxEncoded=2000, cap=)
+    note:: REQ-ACTION-VARIANT > REQ-SETUP-VARIANT
+      - note: REQ-ACTION-VARIANT
+      + note: REQ-SETUP-VARIANT
+[rev4/rev4-diagram] rev4-diagram.txt: SOLID D1s same, a Setup variant that skips (separateSetup=False, collapse=True, maxEncoded=2000, cap=)
+    gone: loop ×2; gone: end; note:: REQ-ACTION-VARIANT > RES-ACTION-VARIANT; shop: -[#438DD5]-> probe: OK > -[#438DD5]-> probe: OK; gone: note: RES-ACTION-VARIANT
+      - loop ×2
+      + shop -[#438DD5]-> probe: OK
+      + note: RES-ACTION-VARIANT
+      - end
+      - note: REQ-ACTION-VARIANT
+      - shop -[#438DD5]-> probe: OK
+      - note: RES-ACTION-VARIANT
+[rev4/rev4-diagram] rev4-diagram.txt: SOLID D2 S S | M | S S variants (separateSetup=False, collapse=True, maxEncoded=2000, cap=)
+    loop: ×2 > ×4; gone: loop ×2; gone: note: REQ-ACTION-VARIANT; gone: shop -[#438DD5]-> probe: OK; gone: note: RES-ACTION-VARIANT; gone: end
+      - loop ×2
+      + loop ×4
+      - loop ×2
+      - note: REQ-ACTION-VARIANT
+      - shop -[#438DD5]-> probe: OK
+      - note: RES-ACTION-VARIANT
+      - end
+[rev4/rev4-diagram] rev4-diagram.txt: SOLID D3 S | M | S variants (separateSetup=False, collapse=True, maxEncoded=2000, cap=)
+    gone: note: REQ-ACTION-VARIANT; gone: shop -[#438DD5]-> probe: OK; gone: note: RES-ACTION-VARIANT; new: loop ×2; new: end
+      + loop ×2
+      - note: REQ-ACTION-VARIANT
+      - shop -[#438DD5]-> probe: OK
+      - note: RES-ACTION-VARIANT
+      + end

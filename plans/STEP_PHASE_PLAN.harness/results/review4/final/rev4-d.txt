@@ -1,0 +1,380 @@
+## B01_Async_helper_bridge
+  [Step] <color:white>Given b01 given
+  
+  Request  b01-seed                       phase=Setup   src=TestContext
+  Response b01-seed                       phase=Setup   src=TestContext
+  Request  b01-between-setup              phase=Unknown src=TestContext
+  Response b01-between-setup              phase=Unknown src=TestContext
+  [Step] <color:white>When b01 when
+  
+  --- MARKER ---
+  Request  b01-act                        phase=Action  src=TestContext
+  Response b01-act                        phase=Action  src=TestContext
+  Request  b01-between-action             phase=Unknown src=TestContext
+  Response b01-between-action             phase=Unknown src=TestContext
+  [Step] <color:white>Then b01 then
+  
+  Request  b01-then                       phase=Action  src=TestContext
+  Response b01-then                       phase=Action  src=TestContext
+  steps:
+    Given b01 given [Passed]
+    When b01 when [Passed]
+    Then b01 then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given b01 given
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When b01 when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then b01 then
+      shop -[#438DD5]-> probe: OK
+
+## B02_Ambient_overloads_on_the_test_flow
+  [Step] <color:white>Given b02 given
+  
+  Request  b02-seed                       phase=Setup   src=TestContext
+  Response b02-seed                       phase=Setup   src=TestContext
+  Request  b02-between-setup              phase=Setup   src=TestContext IGNORED
+  Response b02-between-setup              phase=Setup   src=TestContext IGNORED
+  [Step] <color:white>When b02 when
+  
+  --- MARKER ---
+  Request  b02-act                        phase=Action  src=TestContext
+  Response b02-act                        phase=Action  src=TestContext
+  Request  b02-between-action             phase=Action  src=TestContext
+  Response b02-between-action             phase=Action  src=TestContext
+  steps:
+    Given b02 given [Passed]
+    When b02 when [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given b02 given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When b02 when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B03_Keywords_in_capitals
+  [Step] <color:white>GIVEN b03 given
+  
+  Request  b03-seed                       phase=Unknown src=TestContext
+  Response b03-seed                       phase=Unknown src=TestContext
+  [Step] <color:white>WHEN b03 when
+  
+  Request  b03-act                        phase=Unknown src=TestContext
+  Response b03-act                        phase=Unknown src=TestContext
+  Request  b03-after                      phase=Unknown src=TestContext
+  Response b03-after                      phase=Unknown src=TestContext
+  steps:
+    GIVEN b03 given [Passed]
+    WHEN b03 when [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>GIVEN b03 given
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>WHEN b03 when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B03b_Keywords_in_capitals_on_the_test_flow
+  [Step] <color:white>GIVEN b03b given
+  
+  Request  b03b-seed                      phase=Unknown src=TestContext
+  Response b03b-seed                      phase=Unknown src=TestContext
+  [Step] <color:white>WHEN b03b when
+  
+  Request  b03b-act                       phase=Unknown src=TestContext
+  Response b03b-act                       phase=Unknown src=TestContext
+  Request  b03b-after                     phase=Unknown src=TestContext
+  Response b03b-after                     phase=Unknown src=TestContext
+  steps:
+    GIVEN b03b given [Passed]
+    WHEN b03b when [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>GIVEN b03b given
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>WHEN b03b when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B04_Other_words_of_a_bridge
+  [Step] <color:white>Setup b04 setup
+  
+  Request  b04-setup                      phase=Unknown src=TestContext
+  Response b04-setup                      phase=Unknown src=TestContext
+  [Step] <color:white>Scenario b04 scenario
+  
+  Request  b04-scenario                   phase=Unknown src=TestContext
+  Response b04-scenario                   phase=Unknown src=TestContext
+  [Step] <color:white>Act b04 act
+  
+  Request  b04-act                        phase=Unknown src=TestContext
+  Response b04-act                        phase=Unknown src=TestContext
+  steps:
+    Setup b04 setup [Passed]
+    Scenario b04 scenario [Passed]
+    Act b04 act [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Setup b04 setup
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Scenario b04 scenario
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Act b04 act
+      shop -[#438DD5]-> probe: OK
+
+## B05_Start_and_complete_on_child_flows
+  [Step] <color:white>Given b05 given
+  
+  Request  b05-seed                       phase=Unknown src=TestContext
+  Response b05-seed                       phase=Unknown src=TestContext
+  [Step] <color:white>When b05 when
+  
+  --- MARKER ---
+  Request  b05-act                        phase=Unknown src=TestContext
+  Response b05-act                        phase=Unknown src=TestContext
+  Request  b05-after                      phase=Unknown src=TestContext
+  Response b05-after                      phase=Unknown src=TestContext
+  steps:
+    Given b05 given [Passed]
+    When b05 when [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given b05 given
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When b05 when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B06_Own_runner_on_a_thread_under_a_scope
+  [Step] <color:white>Given b06 given
+  
+  Request  b06-seed                       phase=Setup   src=Scope
+  Response b06-seed                       phase=Setup   src=Scope
+  Request  b06-seed-quiet                 phase=Setup   src=Scope IGNORED
+  Response b06-seed-quiet                 phase=Setup   src=Scope IGNORED
+  [Step] <color:white>When b06 when
+  
+  Request  b06-act                        phase=Action  src=Scope
+  Response b06-act                        phase=Action  src=Scope
+  Request  b06-act-quiet                  phase=Action  src=Scope
+  Response b06-act-quiet                  phase=Action  src=Scope
+  steps:
+    Given b06 given [Passed]
+    When b06 when [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given b06 given
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When b06 when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B07_Bridge_wrapper_with_no_keyword_around_woven_steps
+  [Step] <color:white>B07 wrapper
+  
+  Request  b07-seed                       phase=Setup   src=TestContext
+  Response b07-seed                       phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  b07-act                        phase=Action  src=TestContext
+  Response b07-act                        phase=Action  src=TestContext
+  Request  b07-after                      phase=Action  src=TestContext
+  Response b07-after                      phase=Action  src=TestContext
+  steps:
+    (none) b07 wrapper [Passed]
+      Given Async [Passed]
+      When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>B07 wrapper
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## B08_Bridge_When_with_a_woven_Given_under_it
+  [Step] <color:white>When b08 when
+  
+  Request  b08-label                      phase=Action  src=TestContext
+  Response b08-label                      phase=Action  src=TestContext
+  Request  b08-in-when                    phase=Action  src=TestContext
+  Response b08-in-when                    phase=Action  src=TestContext
+  steps:
+    When b08 when [Passed]
+      Given Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>When b08 when
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## E01a_Poller_outlives_its_test
+  [Step] <color:white>Given Async
+  
+  Request  e01a-seed                      phase=Setup   src=TestContext
+  Request  e01-poll1                      phase=Unknown src=TestContext
+  Response e01-poll1                      phase=Unknown src=TestContext
+  Response e01a-seed                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  --- MARKER ---
+  Request  e01a-act                       phase=Action  src=TestContext
+  Response e01a-act                       phase=Action  src=TestContext
+  Request  e01-poll2                      phase=Unknown src=TestContext
+  Response e01-poll2                      phase=Unknown src=TestContext
+  Request  e01-poll3                      phase=Unknown src=TestContext
+  Response e01-poll3                      phase=Unknown src=TestContext
+  Request  e01-poll4                      phase=Unknown src=TestContext
+  Response e01-poll4                      phase=Unknown src=TestContext
+  Request  e01-poll5                      phase=Unknown src=TestContext
+  Response e01-poll5                      phase=Unknown src=TestContext
+  Request  e01-poll6                      phase=Unknown src=TestContext
+  Response e01-poll6                      phase=Unknown src=TestContext
+  Request  e01-poll7                      phase=Unknown src=TestContext
+  Response e01-poll7                      phase=Unknown src=TestContext
+  Request  e01-poll8                      phase=Unknown src=TestContext
+  Response e01-poll8                      phase=Unknown src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## E01b_Poller_outlives_its_test
+  [Step] <color:white>Given Async
+  
+  Request  e01b-seed                      phase=Setup   src=TestContext
+  Response e01b-seed                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  --- MARKER ---
+  Request  e01b-act                       phase=Action  src=TestContext
+  Response e01b-act                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## H02a_Detached_worker_with_no_scope
+  [Step] <color:white>Given Async
+  
+  Request  h02a-seed                      phase=Setup   src=TestContext
+  Response h02a-seed                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  --- MARKER ---
+  Request  h02a-act                       phase=Action  src=TestContext
+  Response h02a-act                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## H02b_Detached_worker_with_no_scope
+  [Step] <color:white>Given Async
+  
+  Request  h02b-seed                      phase=Setup   src=TestContext
+  Response h02b-seed                      phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  --- MARKER ---
+  Request  h02b-act                       phase=Action  src=TestContext
+  Response h02b-act                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+
+## O01_Two_responses_lose_their_requests
+  [Step] <color:white>Given Starts
+  
+  [Step] <color:white>When Async
+  
+  --- MARKER ---
+  Request  o01-act                        phase=Action  src=TestContext
+  Response o01-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then Async
+  
+  Request  o01-then                       phase=Action  src=TestContext
+  Response o01-then                       phase=Action  src=TestContext
+  steps:
+    Given Starts [Passed]
+    When Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Starts
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## O02_Two_responses_lose_their_requests_and_the_Then_fails
+  [Step] <color:white>Given Starts
+  
+  [Step] <color:white>When Async
+  
+  --- MARKER ---
+  Request  o02-act                        phase=Action  src=TestContext
+  Response o02-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then Fails
+  
+  Request  o02-then                       phase=Action  src=TestContext
+  Response o02-then                       phase=Action  src=TestContext
+  steps:
+    Given Starts [Passed]
+    When Async [Passed]
+    Then Fails [Failed] msg=o02 fails in its Then
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Starts
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Fails
+      shop -[#438DD5]-> probe: OK
+

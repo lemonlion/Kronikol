@@ -1,0 +1,49 @@
+## F1_a_first_test_that_reaches_the_boundary
+  Request  f1-given                       phase=Unknown src=TestContext
+  Response f1-given                       phase=Unknown src=TestContext
+  Request  f1-given-plain                 phase=Unknown src=TestContext
+  Response f1-given-plain                 phase=Unknown src=TestContext
+  --- MARKER ---
+  Request  f1-when                        phase=Action  src=TestContext
+  Response f1-when                        phase=Action  src=TestContext
+  --- MARKER ---
+  Request  f1-when-plain                  phase=Action  src=TestContext
+  Response f1-when-plain                  phase=Action  src=TestContext
+  Request  f1-after-step                  phase=Unknown src=TestContext
+  Response f1-after-step                  phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## F2_a_later_test_with_a_call_outside_any_step
+  Request  f2-outside-any-step            phase=Unknown src=TestContext
+  Response f2-outside-any-step            phase=Unknown src=TestContext
+  Request  f2-given                       phase=Unknown src=TestContext
+  Response f2-given                       phase=Unknown src=TestContext
+  Request  f2-when                        phase=Unknown src=TestContext
+  Response f2-when                        phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## F3_a_later_test_on_the_plain_fetcher
+  Request  f3-given                       phase=Unknown src=TestContext
+  Response f3-given                       phase=Unknown src=TestContext
+  Request  f3-when                        phase=Unknown src=TestContext
+  Response f3-when                        phase=Unknown src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+

@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);CS1591;CS4014;xUnit1041;CA2024</NoWarn>
+    <!-- 5.27.13 from nuget.org by default. A prototype comes from localfeed: -p:KronikolVersion=5.27.14-proto -->
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">5.28.2</KronikolVersion>
+  </PropertyGroup>
+</Project>

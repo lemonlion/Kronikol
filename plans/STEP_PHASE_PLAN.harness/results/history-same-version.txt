@@ -1,0 +1,11 @@
+Passed!  - Failed:     0, Passed:    36, Skipped:     0, Total:    36, Duration: 2 s - Pro
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 1 s - Pro
+Passed!  - Failed:     0, Passed:    36, Skipped:     0, Total:    36, Duration: 2 s - Pro
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 1 s - Pro
+Passed!  - Failed:     0, Passed:    36, Skipped:     0, Total:    36, Duration: 2 s - Pro
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 1 s - Pro
+xunit3-plain X09 a step left open then a when sets 1 orders 2
+xunit3-plain X10 when all of a given and a when sets 1 orders 2
+xunit3-plain X21 a given left running then a when sets 1 orders 2
+bddfy-xunit3 B11 async steps with AsyncVoidSupport off sets 1 orders 3
+SAME_DONE

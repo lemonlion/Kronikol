@@ -1,0 +1,237 @@
+## D1 S | M | A A B variants (separateSetup=False, collapse=True, maxEncoded=2000, cap=)
+  diagram 1:
+      note: REQ-SETUP-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-SETUP-VARIANT
+    loop ×2 · 0 ms
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+    end
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+
+## D1s same, a Setup variant that skips (separateSetup=False, collapse=True, maxEncoded=2000, cap=)
+  diagram 1:
+      note: REQ-SETUP-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-SETUP-VARIANT
+    loop ×2 · 0 ms
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+    end
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+
+## D1c control: no collapse (separateSetup=False, collapse=False, maxEncoded=2000, cap=)
+  diagram 1:
+      note: REQ-SETUP-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-SETUP-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+
+## D2 S S | M | S S variants (separateSetup=False, collapse=True, maxEncoded=2000, cap=)
+  diagram 1:
+    loop ×2 · 0 ms
+      note: REQ-SETUP-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-SETUP-VARIANT
+    end
+    loop ×2 · 0 ms
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+    end
+
+## D3 S | M | S variants (separateSetup=False, collapse=True, maxEncoded=2000, cap=)
+  diagram 1:
+      note: REQ-SETUP-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-SETUP-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+
+## D4 big | M | big identical (patch: marker last) (separateSetup=False, collapse=True, maxEncoded=1500, cap=)
+  diagram 1:
+    shop -[#438DD5]-> probe: OK
+    shop -[#438DD5]-> probe: OK
+
+## D4c big | M at the end (both) (separateSetup=False, collapse=False, maxEncoded=1500, cap=)
+  diagram 1:
+    shop -[#438DD5]-> probe: OK
+
+## D5 S | M | S | M | A (separateSetup=True, collapse=True, maxEncoded=2000, cap=)
+  diagram 1:
+    partition Setup
+    shop -[#438DD5]-> probe: OK
+    end
+    shop -[#438DD5]-> probe: OK
+    shop -[#438DD5]-> probe: OK
+
+## D6 S1 S2 | M | A1 A2 cap 2 (separateSetup=False, collapse=True, maxEncoded=2000, cap=2)
+  diagram 1:
+    shop -[#438DD5]-> probe: OK
+    shop -[#438DD5]-> probe: OK
+
+## D6v S1 | M | A1 A2 cap 2, variants (separateSetup=False, collapse=True, maxEncoded=2000, cap=2)
+  diagram 1:
+      note: REQ-SETUP-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-SETUP-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+
+## D7 M alone (separateSetup=True, collapse=False, maxEncoded=2000, cap=)
+  diagram 1:
+
+## D7b M M alone held (separateSetup=False, collapse=True, maxEncoded=2000, cap=)
+  diagram 1:
+
+## D8 S | M | A1 | M | A2 variants (separateSetup=True, collapse=False, maxEncoded=2000, cap=)
+  diagram 1:
+    partition Setup
+      note: REQ-SETUP-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-SETUP-VARIANT
+    end
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+
+## D8n same without partition (separateSetup=False, collapse=False, maxEncoded=2000, cap=)
+  diagram 1:
+      note: REQ-SETUP-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-SETUP-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+
+## D9 big | M | big | M | big split (separateSetup=True, collapse=False, maxEncoded=1500, cap=)
+  diagram 1:
+    partition Setup
+    end
+  diagram 2:
+    partition Setup
+    shop -[#438DD5]-> probe: OK
+    end
+  diagram 3:
+  diagram 4:
+    shop -[#438DD5]-> probe: OK
+  diagram 5:
+  diagram 6:
+    shop -[#438DD5]-> probe: OK
+
+## D9c big big big | M | big, one marker, split (separateSetup=True, collapse=False, maxEncoded=1500, cap=)
+  diagram 1:
+    partition Setup
+    end
+  diagram 2:
+    partition Setup
+    shop -[#438DD5]-> probe: OK
+    end
+  diagram 3:
+    partition Setup
+    end
+  diagram 4:
+    partition Setup
+    shop -[#438DD5]-> probe: OK
+    end
+  diagram 5:
+    partition Setup
+    end
+  diagram 6:
+    partition Setup
+    shop -[#438DD5]-> probe: OK
+    end
+  diagram 7:
+  diagram 8:
+    shop -[#438DD5]-> probe: OK
+
+## D9d big | M | M | big, split (separateSetup=True, collapse=False, maxEncoded=1500, cap=)
+  diagram 1:
+    partition Setup
+    end
+  diagram 2:
+    partition Setup
+    shop -[#438DD5]-> probe: OK
+    end
+  diagram 3:
+  diagram 4:
+    shop -[#438DD5]-> probe: OK
+
+## D9e M first | big | M | big, split (separateSetup=True, collapse=False, maxEncoded=1500, cap=)
+  diagram 1:
+  diagram 2:
+    shop -[#438DD5]-> probe: OK
+  diagram 3:
+  diagram 4:
+    shop -[#438DD5]-> probe: OK
+
+## D9f big | M last, split (separateSetup=True, collapse=False, maxEncoded=1500, cap=)
+  diagram 1:
+    partition Setup
+    end
+  diagram 2:
+    partition Setup
+    shop -[#438DD5]-> probe: OK
+    end
+  diagram 3:
+
+## D9g big | M | big | M last, split (separateSetup=True, collapse=False, maxEncoded=1500, cap=)
+  diagram 1:
+    partition Setup
+    end
+  diagram 2:
+    partition Setup
+    shop -[#438DD5]-> probe: OK
+    end
+  diagram 3:
+  diagram 4:
+    shop -[#438DD5]-> probe: OK
+  diagram 5:
+
+## D9h same collapse (separateSetup=True, collapse=True, maxEncoded=1500, cap=)
+  diagram 1:
+    partition Setup
+    end
+  diagram 2:
+    partition Setup
+    shop -[#438DD5]-> probe: OK
+    end
+  diagram 3:
+  diagram 4:
+    shop -[#438DD5]-> probe: OK
+  diagram 5:
+
+## D9i no separate, two markers with variants, split (separateSetup=False, collapse=False, maxEncoded=1500, cap=)
+  diagram 1:
+      note: REQ-SETUP-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-SETUP-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+      note: REQ-ACTION-VARIANT
+    shop -[#438DD5]-> probe: OK
+      note: RES-ACTION-VARIANT
+

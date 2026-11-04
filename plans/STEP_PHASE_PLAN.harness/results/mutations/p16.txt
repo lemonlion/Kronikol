@@ -1,0 +1,400 @@
+KILLED solid=20 order=0 racing-new=2 racing-seen=5
+first: main/mut-extra: X90_a_skipped_sync_sub_step_then_more_in_a_sync_Given: x90-then-sub: Setup Setup > Action Action; x90-after: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---; Then: Sync [Passed] > Sync [Passed]; new: [bar] <co
+
+[main/mut-extra] mut-extra.txt: SOLID PhaseProbe.MutExtra.Shapes.X90_a_skipped_sync_sub_step_then_more_in_a_sync_Given
+    x90-then-sub: Setup Setup > Action Action; x90-after: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---; Then: Sync [Passed] > Sync [Passed]; new: [bar] <color:white>Then Sync
+      -x90-then-sub Setup Setup
+      -x90-after Setup Setup
+      +[bar] <color:white>Then Sync
+      +--- ACTION START MARKER ---
+      +x90-then-sub Action Action
+      +x90-after Action Action
+      ---- ACTION START MARKER ---
+      - Then Sync [Passed]
+      + Then Sync [Passed]
+[main/mut-extra] mut-extra.txt: SOLID PhaseProbe.MutExtra.Shapes.X91_a_skipped_sync_sub_step_then_more_in_an_async_Given
+    x91-then-sub: Setup Setup > Action Action; x91-after: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---; Then: Sync [Passed] > Sync [Passed]; new: [bar] <color:white>Then Sync
+      -x91-then-sub Setup Setup
+      -x91-after Setup Setup
+      +[bar] <color:white>Then Sync
+      +--- ACTION START MARKER ---
+      +x91-then-sub Action Action
+      +x91-after Action Action
+      ---- ACTION START MARKER ---
+      - Then Sync [Passed]
+      + Then Sync [Passed]
+[rev5/adapter-mstest] mstest.txt: racing, shape seen E06_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/adapter-tunit] adapter-tunit.txt: racing, shape seen E06_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/adapter-xunit2] xunit2.txt: RACING-NEW Shapes5.E06_Parallel_ForEach_of_sync_Givens_inside_a_When (baseline variants 3, 2 shapes)
+    e06-c: Action Action > Action Action
+      +e06-c Action Action
+      -e06-c Action Action
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L02_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L04_Parallel_ForEach_of_sync_Givens_at_the_top_then_When_with_nested_Given
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev6/rev6-a] rev6-a.txt: SOLID B02_Bypass_at_depth_three_of_each_stub
+    Given: Skip async int [Bypassed] > Skip async int [Bypassed]
+      - Given Skip async int [Bypassed]
+      + Given Skip async int [Bypassed]
+[rev6/rev6-a] rev6-a.txt: SOLID B04_A_skipped_Given_on_a_forked_flow_inside_a_When
+    Request: b04-fork-sub phase=Action src=TestContext > b04-fork-sub phase=Setup src=TestContext; Response: b04-fork-sub phase=Action src=TestContext > b04-fork-sub phase=Setup src=TestContext; Request: b04-fork-after phase=Action src=TestContext > b04-fork-after phase=Setup src=TestContext; Response: b04-fork-after phase=Action src=TestContext > b04-fork-after phase=Setup src=TestContext; Reques
+      - Request b04-fork-sub phase=Action src=TestContext
+      - Response b04-fork-sub phase=Action src=TestContext
+      - Request b04-fork-after phase=Action src=TestContext
+      - Response b04-fork-after phase=Action src=TestContext
+      - Request b04-fork-after-nosetup phase=Action src=TestContext
+      - Response b04-fork-after-nosetup phase=Action src=TestContext
+      - Request b04-fork-after-noaction phase=Action src=TestContext IGNORED
+      - Response b04-fork-after-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Async
+      + Request b04-fork-sub phase=Setup src=TestContext
+      + Response b04-fork-sub phase=Setup src=TestContext
+      + Request b04-fork-after phase=Setup src=TestContext
+      + Response b04-fork-after phase=Setup src=TestContext
+      + Request b04-fork-after-nosetup phase=Setup src=TestContext IGNORED
+      + Response b04-fork-after-nosetup phase=Setup src=TestContext IGNORED
+      + Request b04-fork-after-noaction phase=Setup src=TestContext
+      + Response b04-fork-after-noaction phase=Setup src=TestContext
+      - Given Async [Passed]
+      + Given Async [Passed]
+      + hnote across <<stepDelimiter>> #black:<color:white>Given Async
+[rev6/rev6-a] rev6-a.txt: RACING-NEW B06_A_Parallel_For_of_skipped_and_real_inside_a_When (baseline variants 3, 2 shapes)
+    Request: b06-real1 phase=Action src=TestContext > b06-real1 phase=Setup src=TestContext; Request: b06-real3 phase=Action src=TestContext > b06-real3 phase=Setup src=TestContext; Request: b06-real5 phase=Action src=TestContext > b06-real5 phase=Setup src=TestContext; Response: b06-real3 phase=Action src=TestContext > b06-real7 phase=Setup src=TestContext; Response: b06-real1 phase=Action src=Te
+      - Request b06-real1 phase=Action src=TestContext
+      - Request b06-real3 phase=Action src=TestContext
+      - Request b06-real5 phase=Action src=TestContext
+      - Response b06-real3 phase=Action src=TestContext
+      - Response b06-real1 phase=Action src=TestContext
+      - Response b06-real5 phase=Action src=TestContext
+      - Request b06-real7 phase=Action src=TestContext
+      - Response b06-real7 phase=Action src=TestContext
+      + [Step] <color:white>Given Sync
+      + [Step] <color:white>And Sync
+      + Request b06-real1 phase=Setup src=TestContext
+      + Request b06-real3 phase=Setup src=TestContext
+      + Request b06-real5 phase=Setup src=TestContext
+      + Request b06-real7 phase=Setup src=TestContext
+      + Response b06-real7 phase=Setup src=TestContext
+      + Response b06-real3 phase=Setup src=TestContext
+      + Response b06-real5 phase=Setup src=TestContext
+      + Response b06-real1 phase=Setup src=TestContext
+      + Given Sync [Bypassed]
+      + Given Skip sync [Bypassed]
+      + Given Skip sync [Passed]
+      + And Sync [Passed]
+      - Given Sync [Passed]
+      - Given Skip sync [Bypassed]
+[rev6/rev6-a] rev6-a.txt: SOLID B_matrix(parent: "async", kid: "sync")
+    Request: m-async-sync-sub phase=Action src=TestContext > m-async-sync-sub phase=Setup src=TestContext; Response: m-async-sync-sub phase=Action src=TestContext > m-async-sync-sub phase=Setup src=TestContext; Request: m-async-sync-after-sub phase=Action src=TestContext > m-async-sync-after-sub phase=Setup src=TestContext; Response: m-async-sync-after-sub phase=Action src=TestContext > m-async-sy
+      - Request m-async-sync-sub phase=Action src=TestContext
+      - Response m-async-sync-sub phase=Action src=TestContext
+      - Request m-async-sync-after-sub phase=Action src=TestContext
+      - Response m-async-sync-after-sub phase=Action src=TestContext
+      - Request m-async-sync-after-sub-nosetup phase=Action src=TestContext
+      - Response m-async-sync-after-sub-nosetup phase=Action src=TestContext
+      - Request m-async-sync-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Response m-async-sync-after-sub-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Async
+      + Request m-async-sync-sub phase=Setup src=TestContext
+      + Response m-async-sync-sub phase=Setup src=TestContext
+      + Request m-async-sync-after-sub phase=Setup src=TestContext
+      + Response m-async-sync-after-sub phase=Setup src=TestContext
+      + Request m-async-sync-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Response m-async-sync-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Request m-async-sync-after-sub-noaction phase=Setup src=TestContext
+      + Response m-async-sync-after-sub-noaction phase=Setup src=TestContext
+      - Given Async [Passed]
+      + Given Async [Passed]
+      + hnote across <<stepDelimiter>> #black:<color:white>Given Async
+[rev6/rev6-a] rev6-a.txt: SOLID B_matrix(parent: "async", kid: "then")
+    Request: m-async-then-sub phase=Action src=TestContext > m-async-then-sub phase=Setup src=TestContext; Response: m-async-then-sub phase=Action src=TestContext > m-async-then-sub phase=Setup src=TestContext; Request: m-async-then-after-sub phase=Action src=TestContext > m-async-then-after-sub phase=Setup src=TestContext; Response: m-async-then-after-sub phase=Action src=TestContext > m-async-th
+      - Request m-async-then-sub phase=Action src=TestContext
+      - Response m-async-then-sub phase=Action src=TestContext
+      - Request m-async-then-after-sub phase=Action src=TestContext
+      - Response m-async-then-after-sub phase=Action src=TestContext
+      - Request m-async-then-after-sub-nosetup phase=Action src=TestContext
+      - Response m-async-then-after-sub-nosetup phase=Action src=TestContext
+      - Request m-async-then-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Response m-async-then-after-sub-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Async
+      + Request m-async-then-sub phase=Setup src=TestContext
+      + Response m-async-then-sub phase=Setup src=TestContext
+      + Request m-async-then-after-sub phase=Setup src=TestContext
+      + Response m-async-then-after-sub phase=Setup src=TestContext
+      + Request m-async-then-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Response m-async-then-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Request m-async-then-after-sub-noaction phase=Setup src=TestContext
+      + Response m-async-then-after-sub-noaction phase=Setup src=TestContext
+      - Given Async [Passed]
+      + Given Async [Passed]
+      + hnote across <<stepDelimiter>> #black:<color:white>Given Async
+[rev6/rev6-a] rev6-a.txt: SOLID B_matrix(parent: "sync", kid: "sync")
+    Request: m-sync-sync-sub phase=Action src=TestContext > m-sync-sync-sub phase=Setup src=TestContext; Response: m-sync-sync-sub phase=Action src=TestContext > m-sync-sync-sub phase=Setup src=TestContext; Request: m-sync-sync-after-sub phase=Action src=TestContext > m-sync-sync-after-sub phase=Setup src=TestContext; Response: m-sync-sync-after-sub phase=Action src=TestContext > m-sync-sync-after
+      - Request m-sync-sync-sub phase=Action src=TestContext
+      - Response m-sync-sync-sub phase=Action src=TestContext
+      - Request m-sync-sync-after-sub phase=Action src=TestContext
+      - Response m-sync-sync-after-sub phase=Action src=TestContext
+      - Request m-sync-sync-after-sub-nosetup phase=Action src=TestContext
+      - Response m-sync-sync-after-sub-nosetup phase=Action src=TestContext
+      - Request m-sync-sync-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Response m-sync-sync-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Request m-sync-sync-after-parent phase=Action src=TestContext
+      - Response m-sync-sync-after-parent phase=Action src=TestContext
+      - Request m-sync-sync-after-parent-nosetup phase=Action src=TestContext
+      - Response m-sync-sync-after-parent-nosetup phase=Action src=TestContext
+      - Request m-sync-sync-after-parent-noaction phase=Action src=TestContext IGNORED
+      - Response m-sync-sync-after-parent-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Sync
+      + Request m-sync-sync-sub phase=Setup src=TestContext
+      + Response m-sync-sync-sub phase=Setup src=TestContext
+      + Request m-sync-sync-after-sub phase=Setup src=TestContext
+      + Response m-sync-sync-after-sub phase=Setup src=TestContext
+      + Request m-sync-sync-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Response m-sync-sync-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Request m-sync-sync-after-sub-noaction phase=Setup src=TestContext
+      + Response m-sync-sync-after-sub-noaction phase=Setup src=TestContext
+      + Request m-sync-sync-after-parent phase=Setup src=TestContext
+[rev6/rev6-a] rev6-a.txt: SOLID B_matrix(parent: "sync", kid: "then")
+    Request: m-sync-then-sub phase=Action src=TestContext > m-sync-then-sub phase=Setup src=TestContext; Response: m-sync-then-sub phase=Action src=TestContext > m-sync-then-sub phase=Setup src=TestContext; Request: m-sync-then-after-sub phase=Action src=TestContext > m-sync-then-after-sub phase=Setup src=TestContext; Response: m-sync-then-after-sub phase=Action src=TestContext > m-sync-then-after
+      - Request m-sync-then-sub phase=Action src=TestContext
+      - Response m-sync-then-sub phase=Action src=TestContext
+      - Request m-sync-then-after-sub phase=Action src=TestContext
+      - Response m-sync-then-after-sub phase=Action src=TestContext
+      - Request m-sync-then-after-sub-nosetup phase=Action src=TestContext
+      - Response m-sync-then-after-sub-nosetup phase=Action src=TestContext
+      - Request m-sync-then-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Response m-sync-then-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Request m-sync-then-after-parent phase=Action src=TestContext
+      - Response m-sync-then-after-parent phase=Action src=TestContext
+      - Request m-sync-then-after-parent-nosetup phase=Action src=TestContext
+      - Response m-sync-then-after-parent-nosetup phase=Action src=TestContext
+      - Request m-sync-then-after-parent-noaction phase=Action src=TestContext IGNORED
+      - Response m-sync-then-after-parent-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Sync
+      + Request m-sync-then-sub phase=Setup src=TestContext
+      + Response m-sync-then-sub phase=Setup src=TestContext
+      + Request m-sync-then-after-sub phase=Setup src=TestContext
+      + Response m-sync-then-after-sub phase=Setup src=TestContext
+      + Request m-sync-then-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Response m-sync-then-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Request m-sync-then-after-sub-noaction phase=Setup src=TestContext
+      + Response m-sync-then-after-sub-noaction phase=Setup src=TestContext
+      + Request m-sync-then-after-parent phase=Setup src=TestContext
+[rev6/rev6-a] rev6-a.txt: SOLID B_matrix(parent: "task", kid: "sync")
+    Request: m-task-sync-sub phase=Action src=TestContext > m-task-sync-sub phase=Setup src=TestContext; Response: m-task-sync-sub phase=Action src=TestContext > m-task-sync-sub phase=Setup src=TestContext; Request: m-task-sync-after-sub phase=Action src=TestContext > m-task-sync-after-sub phase=Setup src=TestContext; Response: m-task-sync-after-sub phase=Action src=TestContext > m-task-sync-after
+      - Request m-task-sync-sub phase=Action src=TestContext
+      - Response m-task-sync-sub phase=Action src=TestContext
+      - Request m-task-sync-after-sub phase=Action src=TestContext
+      - Response m-task-sync-after-sub phase=Action src=TestContext
+      - Request m-task-sync-after-sub-nosetup phase=Action src=TestContext
+      - Response m-task-sync-after-sub-nosetup phase=Action src=TestContext
+      - Request m-task-sync-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Response m-task-sync-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Request m-task-sync-after-parent phase=Action src=TestContext
+      - Response m-task-sync-after-parent phase=Action src=TestContext
+      - Request m-task-sync-after-parent-nosetup phase=Action src=TestContext
+      - Response m-task-sync-after-parent-nosetup phase=Action src=TestContext
+      - Request m-task-sync-after-parent-noaction phase=Action src=TestContext IGNORED
+      - Response m-task-sync-after-parent-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Sync
+      + Request m-task-sync-sub phase=Setup src=TestContext
+      + Response m-task-sync-sub phase=Setup src=TestContext
+      + Request m-task-sync-after-sub phase=Setup src=TestContext
+      + Response m-task-sync-after-sub phase=Setup src=TestContext
+      + Request m-task-sync-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Response m-task-sync-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Request m-task-sync-after-sub-noaction phase=Setup src=TestContext
+      + Response m-task-sync-after-sub-noaction phase=Setup src=TestContext
+      + Request m-task-sync-after-parent phase=Setup src=TestContext
+[rev6/rev6-a] rev6-a.txt: SOLID B_matrix(parent: "task", kid: "then")
+    Request: m-task-then-sub phase=Action src=TestContext > m-task-then-sub phase=Setup src=TestContext; Response: m-task-then-sub phase=Action src=TestContext > m-task-then-sub phase=Setup src=TestContext; Request: m-task-then-after-sub phase=Action src=TestContext > m-task-then-after-sub phase=Setup src=TestContext; Response: m-task-then-after-sub phase=Action src=TestContext > m-task-then-after
+      - Request m-task-then-sub phase=Action src=TestContext
+      - Response m-task-then-sub phase=Action src=TestContext
+      - Request m-task-then-after-sub phase=Action src=TestContext
+      - Response m-task-then-after-sub phase=Action src=TestContext
+      - Request m-task-then-after-sub-nosetup phase=Action src=TestContext
+      - Response m-task-then-after-sub-nosetup phase=Action src=TestContext
+      - Request m-task-then-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Response m-task-then-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Request m-task-then-after-parent phase=Action src=TestContext
+      - Response m-task-then-after-parent phase=Action src=TestContext
+      - Request m-task-then-after-parent-nosetup phase=Action src=TestContext
+      - Response m-task-then-after-parent-nosetup phase=Action src=TestContext
+      - Request m-task-then-after-parent-noaction phase=Action src=TestContext IGNORED
+      - Response m-task-then-after-parent-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Sync
+      + Request m-task-then-sub phase=Setup src=TestContext
+      + Response m-task-then-sub phase=Setup src=TestContext
+      + Request m-task-then-after-sub phase=Setup src=TestContext
+      + Response m-task-then-after-sub phase=Setup src=TestContext
+      + Request m-task-then-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Response m-task-then-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Request m-task-then-after-sub-noaction phase=Setup src=TestContext
+      + Response m-task-then-after-sub-noaction phase=Setup src=TestContext
+      + Request m-task-then-after-parent phase=Setup src=TestContext
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B29_An_async_When_runs_skipped_woven_steps
+    Request: b29-sub phase=Action src=TestContext > b29-sub phase=Setup src=TestContext; Response: b29-sub phase=Action src=TestContext > b29-sub phase=Setup src=TestContext; Request: b29-after phase=Action src=TestContext > b29-after phase=Setup src=TestContext; Response: b29-after phase=Action src=TestContext > b29-after phase=Setup src=TestContext; Request: b29-after-nosetup phase=Action src=Te
+      - Request b29-sub phase=Action src=TestContext
+      - Response b29-sub phase=Action src=TestContext
+      - Request b29-after phase=Action src=TestContext
+      - Response b29-after phase=Action src=TestContext
+      - Request b29-after-nosetup phase=Action src=TestContext
+      - Response b29-after-nosetup phase=Action src=TestContext
+      - Request b29-after-noaction phase=Action src=TestContext IGNORED
+      - Response b29-after-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Skip task int
+      + [Step] <color:white>And Woven given
+      + Request b29-sub phase=Setup src=TestContext
+      + Response b29-sub phase=Setup src=TestContext
+      + Request b29-after phase=Setup src=TestContext
+      + Response b29-after phase=Setup src=TestContext
+      + Request b29-after-nosetup phase=Setup src=TestContext IGNORED
+      + Response b29-after-nosetup phase=Setup src=TestContext IGNORED
+      + Request b29-after-noaction phase=Setup src=TestContext
+      + Response b29-after-noaction phase=Setup src=TestContext
+      - Given Skip task int [Bypassed]
+      - Given Woven given [Passed]
+      + Given Skip task int [Bypassed]
+      + And Woven given [Passed]
+      + hnote across <<stepDelimiter>> #black:<color:white>Given Skip task int
+      + hnote across <<stepDelimiter>> #black:<color:white>And Woven given
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B30_A_sync_When_runs_skipped_woven_steps
+    Request: b30-sub phase=Action src=TestContext > b30-sub phase=Setup src=TestContext; Response: b30-sub phase=Action src=TestContext > b30-sub phase=Setup src=TestContext; Request: b30-after phase=Action src=TestContext > b30-after phase=Setup src=TestContext; Response: b30-after phase=Action src=TestContext > b30-after phase=Setup src=TestContext; Request: b30-after-nosetup phase=Action src=Te
+      - Request b30-sub phase=Action src=TestContext
+      - Response b30-sub phase=Action src=TestContext
+      - Request b30-after phase=Action src=TestContext
+      - Response b30-after phase=Action src=TestContext
+      - Request b30-after-nosetup phase=Action src=TestContext
+      - Response b30-after-nosetup phase=Action src=TestContext
+      - Request b30-after-noaction phase=Action src=TestContext IGNORED
+      - Response b30-after-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Skip async
+      + [Step] <color:white>And Woven given
+      + Request b30-sub phase=Setup src=TestContext
+      + Response b30-sub phase=Setup src=TestContext
+      + Request b30-after phase=Setup src=TestContext
+      + Response b30-after phase=Setup src=TestContext
+      + Request b30-after-nosetup phase=Setup src=TestContext IGNORED
+      + Response b30-after-nosetup phase=Setup src=TestContext IGNORED
+      + Request b30-after-noaction phase=Setup src=TestContext
+      + Response b30-after-noaction phase=Setup src=TestContext
+      - Given Skip async [Bypassed]
+      - Given Woven given [Passed]
+      + Given Skip async [Bypassed]
+      + And Woven given [Passed]
+      + hnote across <<stepDelimiter>> #black:<color:white>Given Skip async
+      + hnote across <<stepDelimiter>> #black:<color:white>And Woven given
+[rev6/rev6-bddfy] rev6-bddfy.txt: SOLID B31_A_sync_Given_runs_skipped_woven_steps
+    gone: Given Skip async [Bypassed]; gone: Given Woven given [Passed]; new: [Step] <color:white>And Skip async; new: [Step] <color:white>And Woven given; new: And Skip async [Bypassed]; new: And Woven given [Passed]; new: hnote across <<stepDelimiter>> #black:<color:white>And Skip async; new: hnote across <<stepDelimiter>> #black:<color:white>And Woven given
+      + [Step] <color:white>And Skip async
+      + [Step] <color:white>And Woven given
+      - Given Skip async [Bypassed]
+      - Given Woven given [Passed]
+      + And Skip async [Bypassed]
+      + And Woven given [Passed]
+      + hnote across <<stepDelimiter>> #black:<color:white>And Skip async
+      + hnote across <<stepDelimiter>> #black:<color:white>And Woven given
+[rev6/rev6-lightbdd-x2] rev6-lightbdd-x2.txt: SOLID L41 a When runs skipped woven steps
+    Request: l41-after-async phase=Action src=TestContext > l41-after-async phase=Setup src=TestContext; Response: l41-after-async phase=Action src=TestContext > l41-after-async phase=Setup src=TestContext; Request: l41-after-async-nosetup phase=Action src=TestContext > l41-after-async-nosetup phase=Setup src=TestContext IGNORED; Response: l41-after-async-nosetup phase=Action src=TestContext > l41
+      - Request l41-after-async phase=Action src=TestContext
+      - Response l41-after-async phase=Action src=TestContext
+      - Request l41-after-async-nosetup phase=Action src=TestContext
+      - Response l41-after-async-nosetup phase=Action src=TestContext
+      - Request l41-after-async-noaction phase=Action src=TestContext IGNORED
+      - Response l41-after-async-noaction phase=Action src=TestContext IGNORED
+      - Request l41-sub phase=Action src=TestContext
+      - Response l41-sub phase=Action src=TestContext
+      - Request l41-sub-nosetup phase=Action src=TestContext
+      - Response l41-sub-nosetup phase=Action src=TestContext
+      - Request l41-sub-noaction phase=Action src=TestContext IGNORED
+      - Response l41-sub-noaction phase=Action src=TestContext IGNORED
+      - Request l41-after phase=Action src=TestContext
+      - Response l41-after phase=Action src=TestContext
+      - Request l41-after-nosetup phase=Action src=TestContext
+      - Response l41-after-nosetup phase=Action src=TestContext
+      - Request l41-after-noaction phase=Action src=TestContext IGNORED
+      - Response l41-after-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Skip async
+      + Request l41-after-async phase=Setup src=TestContext
+      + Response l41-after-async phase=Setup src=TestContext
+      + Request l41-after-async-nosetup phase=Setup src=TestContext IGNORED
+      + Response l41-after-async-nosetup phase=Setup src=TestContext IGNORED
+      + Request l41-after-async-noaction phase=Setup src=TestContext
+[rev6/rev6-mix] rev6-mix.txt: SOLID M04_A_sync_skip_under_a_When
+    Request: m04-sub phase=Action src=TestContext > m04-sub phase=Setup src=TestContext; Response: m04-sub phase=Action src=TestContext > m04-sub phase=Setup src=TestContext; Request: m04-after-sub phase=Action src=TestContext > m04-after-sub phase=Setup src=TestContext; Response: m04-after-sub phase=Action src=TestContext > m04-after-sub phase=Setup src=TestContext; Request: m04-after-sub-nosetup
+      - Request m04-sub phase=Action src=TestContext
+      - Response m04-sub phase=Action src=TestContext
+      - Request m04-after-sub phase=Action src=TestContext
+      - Response m04-after-sub phase=Action src=TestContext
+      - Request m04-after-sub-nosetup phase=Action src=TestContext
+      - Response m04-after-sub-nosetup phase=Action src=TestContext
+      - Request m04-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Response m04-after-sub-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Async
+      + Request m04-sub phase=Setup src=TestContext
+      + Response m04-sub phase=Setup src=TestContext
+      + Request m04-after-sub phase=Setup src=TestContext
+      + Response m04-after-sub phase=Setup src=TestContext
+      + Request m04-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Response m04-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Request m04-after-sub-noaction phase=Setup src=TestContext
+      + Response m04-after-sub-noaction phase=Setup src=TestContext
+      - Given Async [Passed]
+      + Given Async [Passed]
+      + hnote across <<stepDelimiter>> #black:<color:white>Given Async
+[rev6/rev6-mix] rev6-mix.txt: SOLID M11_An_async_void_skip_under_a_When
+    Request: m11-sub phase=Action src=TestContext > m11-sub phase=Setup src=TestContext; Response: m11-sub phase=Action src=TestContext > m11-sub phase=Setup src=TestContext; Request: m11-after-sub phase=Action src=TestContext > m11-after-sub phase=Setup src=TestContext; Response: m11-after-sub phase=Action src=TestContext > m11-after-sub phase=Setup src=TestContext; Request: m11-after-sub-nosetup
+      - Request m11-sub phase=Action src=TestContext
+      - Response m11-sub phase=Action src=TestContext
+      - Request m11-after-sub phase=Action src=TestContext
+      - Response m11-after-sub phase=Action src=TestContext
+      - Request m11-after-sub-nosetup phase=Action src=TestContext
+      - Response m11-after-sub-nosetup phase=Action src=TestContext
+      - Request m11-after-sub-noaction phase=Action src=TestContext IGNORED
+      - Response m11-after-sub-noaction phase=Action src=TestContext IGNORED
+      + [Step] <color:white>Given Async
+      + Request m11-sub phase=Setup src=TestContext
+      + Response m11-sub phase=Setup src=TestContext
+      + Request m11-after-sub phase=Setup src=TestContext
+      + Response m11-after-sub phase=Setup src=TestContext
+      + Request m11-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Response m11-after-sub-nosetup phase=Setup src=TestContext IGNORED
+      + Request m11-after-sub-noaction phase=Setup src=TestContext
+      + Response m11-after-sub-noaction phase=Setup src=TestContext
+      - Given Async [Passed]
+      + Given Async [Passed]
+      + hnote across <<stepDelimiter>> #black:<color:white>Given Async
+[rev6/rev6-reqnroll] rev6-reqnroll.txt: SOLID R46 a When binding runs skipped woven steps of each stub
+    Request: r46-act-after-async phase=Action src=TestContext > r46-act-after-async phase=Setup src=TestContext; Response: r46-act-after-async phase=Action src=TestContext > r46-act-after-async phase=Setup src=TestContext; Request: r46-act-after-task phase=Action src=TestContext > r46-act-after-task phase=Setup src=TestContext; Response: r46-act-after-task phase=Action src=TestContext > r46-act-af
+      - Request r46-act-after-async phase=Action src=TestContext
+      - Response r46-act-after-async phase=Action src=TestContext
+      - Request r46-act-after-task phase=Action src=TestContext
+      - Response r46-act-after-task phase=Action src=TestContext
+      + [Step] <color:white>Given Skip async
+      + Request r46-act-after-async phase=Setup src=TestContext
+      + Response r46-act-after-async phase=Setup src=TestContext
+      + [Step] <color:white>And Skip task
+      + Request r46-act-after-task phase=Setup src=TestContext
+      + Response r46-act-after-task phase=Setup src=TestContext
+      + [Step] <color:white>When Skip when int
+      + [Step] <color:white>Then Skip then str
+      - Given Skip async [Bypassed]
+      - Given Skip task [Bypassed]
+      - When Skip when int [Bypassed]
+      - Then Skip then str [Bypassed]
+      + Given Skip async [Bypassed]
+      + And Skip task [Bypassed]
+      + When Skip when int [Bypassed]
+      + Then Skip then str [Bypassed]
+      + hnote across <<stepDelimiter>> #black:<color:white>Given Skip async
+      + hnote across <<stepDelimiter>> #black:<color:white>And Skip task
+      + hnote across <<stepDelimiter>> #black:<color:white>When Skip when int
+      + hnote across <<stepDelimiter>> #black:<color:white>Then Skip then str
+[rev6/rev6-reqnroll] rev6-reqnroll.txt: SOLID R47 a Given binding runs skipped woven steps of each stub
+    Request: r47-seed-after-when-int phase=Setup src=TestContext > r47-seed-after-when-int phase=Action src=TestContext; Response: r47-seed-after-when-int phase=Setup src=TestContext > r47-seed-after-when-int phase=Action src=TestContext; Request: r47-seed-after phase=Setup src=TestContext > r47-seed-after phase=Action src=TestContext; Response: r47-seed-after phase=Setup src=TestContext > r47-see
+      + [Step] <color:white>And Skip async
+      + [Step] <color:white>And Skip task
+      - Request r47-seed-after-when-int phase=Setup src=TestContext
+      - Response r47-seed-after-when-int phase=Setup src=TestContext
+      - Request r47-seed-after phase=Setup src=TestContext
+      - Response r47-seed-after phase=Setup src=TestContext

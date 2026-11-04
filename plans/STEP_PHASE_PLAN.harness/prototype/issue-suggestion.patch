@@ -1,0 +1,13 @@
+diff --git a/src/Kronikol/Tracking/StepCollector.cs b/src/Kronikol/Tracking/StepCollector.cs
+index 4946362e..36e0947e 100644
+--- a/src/Kronikol/Tracking/StepCollector.cs
++++ b/src/Kronikol/Tracking/StepCollector.cs
+@@ -101,7 +101,7 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+         }
+ 
+         // Phase transitions: set ambient test phase based on keyword
+-        if (Options.WhenTriggersAction && keyword is not null)
++        if (isTopLevel && Options.WhenTriggersAction && keyword is not null)
+         {
+             switch (keyword)
+             {

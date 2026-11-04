@@ -1,0 +1,196 @@
+## S01 a When binding with a nested GivenStep, on the default TestServer
+call                               http     message  ignored
+[bar] <color:white>Given a server call named s01-given
+s01-given                          Setup    Setup    
+svc-s01-given                      Unknown  -        
+svcmsg-s01-given                   -        Unknown  
+[bar] <color:white>When a When binding calls the server around a nested GivenStep, as s01
+--- ACTION START MARKER ---
+s01-before-sub                     Action   Action   
+svc-s01-before-sub                 Unknown  -        
+svcmsg-s01-before-sub              -        Unknown  
+s01-in-sub                         Setup    Setup    
+svc-s01-in-sub                     Unknown  -        
+svcmsg-s01-in-sub                  -        Unknown  
+s01-after-sub                      Setup    Setup    
+svc-s01-after-sub                  Unknown  -        
+svcmsg-s01-after-sub               -        Unknown  
+[bar] <color:white>Then a server call named s01-then
+s01-then                           Action   Action   
+svc-s01-then                       Unknown  -        
+svcmsg-s01-then                    -        Unknown  
+steps:
+  Given a server call named s01-given  [Passed]
+  When a When binding calls the server around a nested GivenStep, as s01  [Passed]
+    Given Async  [Passed]
+  Then a server call named s01-then  [Passed]
+
+## S02 a When binding with a nested Gherkin Given, on the default TestServer
+call                               http     message  ignored
+[bar] <color:white>Given a server call named s02-given
+s02-given                          Setup    Setup    
+svc-s02-given                      Unknown  -        
+svcmsg-s02-given                   -        Unknown  
+[bar] <color:white>When a When binding calls the server around a nested Gherkin Given, as s02
+--- ACTION START MARKER ---
+s02-before-nested                  Action   Action   
+svc-s02-before-nested              Unknown  -        
+svcmsg-s02-before-nested           -        Unknown  
+s02-nested-given                   Setup    Setup    
+svc-s02-nested-given               Unknown  -        
+svcmsg-s02-nested-given            -        Unknown  
+s02-after-nested                   Action   Action   
+svc-s02-after-nested               Unknown  -        
+svcmsg-s02-after-nested            -        Unknown  
+[bar] <color:white>Then a server call named s02-then
+s02-then                           Action   Action   
+svc-s02-then                       Unknown  -        
+svcmsg-s02-then                    -        Unknown  
+steps:
+  Given a server call named s02-given  [Passed]
+  When a When binding calls the server around a nested Gherkin Given, as s02  [Passed]
+    Given a server call named s02-nested-given  [Passed]
+  Then a server call named s02-then  [Passed]
+
+## S03 a Given binding with a nested WhenStep, on the default TestServer
+call                               http     message  ignored
+[bar] <color:white>Given a Given binding calls the server around a nested WhenStep, as s03
+s03-before-sub                     Setup    Setup    
+svc-s03-before-sub                 Unknown  -        
+svcmsg-s03-before-sub              -        Unknown  
+s03-in-sub                         Action   Action   
+svc-s03-in-sub                     Unknown  -        
+svcmsg-s03-in-sub                  -        Unknown  
+s03-after-sub                      Action   Action   
+svc-s03-after-sub                  Unknown  -        
+svcmsg-s03-after-sub               -        Unknown  
+[bar] <color:white>When a server call named s03-when
+--- ACTION START MARKER ---
+s03-when                           Action   Action   
+svc-s03-when                       Unknown  -        
+svcmsg-s03-when                    -        Unknown  
+[bar] <color:white>Then a server call named s03-then
+s03-then                           Action   Action   
+svc-s03-then                       Unknown  -        
+svcmsg-s03-then                    -        Unknown  
+steps:
+  Given a Given binding calls the server around a nested WhenStep, as s03  [Passed]
+    When Async  [Passed]
+  When a server call named s03-when  [Passed]
+  Then a server call named s03-then  [Passed]
+
+## S04 And and But after a When, on the default TestServer
+call                               http     message  ignored
+[bar] <color:white>Given a server call named s04-given
+s04-given                          Setup    Setup    
+svc-s04-given                      Unknown  -        
+svcmsg-s04-given                   -        Unknown  
+[bar] <color:white>And a server call named s04-given-and
+s04-given-and                      Setup    Setup    
+svc-s04-given-and                  Unknown  -        
+svcmsg-s04-given-and               -        Unknown  
+[bar] <color:white>When a server call named s04-when
+--- ACTION START MARKER ---
+s04-when                           Action   Action   
+svc-s04-when                       Unknown  -        
+svcmsg-s04-when                    -        Unknown  
+[bar] <color:white>And a server call named s04-when-and
+s04-when-and                       Setup    Setup    
+svc-s04-when-and                   Unknown  -        
+svcmsg-s04-when-and                -        Unknown  
+[bar] <color:white>But a server call named s04-when-but
+s04-when-but                       Setup    Setup    
+svc-s04-when-but                   Unknown  -        
+svcmsg-s04-when-but                -        Unknown  
+[bar] <color:white>Then a server call named s04-then
+s04-then                           Action   Action   
+svc-s04-then                       Unknown  -        
+svcmsg-s04-then                    -        Unknown  
+steps:
+  Given a server call named s04-given  [Passed]
+  And a server call named s04-given-and  [Passed]
+  When a server call named s04-when  [Passed]
+  And a server call named s04-when-and  [Passed]
+  But a server call named s04-when-but  [Passed]
+  Then a server call named s04-then  [Passed]
+
+## S11 a When binding with a nested GivenStep, with the test's execution context preserved into the server
+call                               http     message  ignored
+[bar] <color:white>Given a server call named s11-given
+s11-given                          Setup    Setup    
+svc-s11-given                      Setup    -        
+svcmsg-s11-given                   -        Setup    
+[bar] <color:white>When a When binding calls the server around a nested GivenStep, as s11
+--- ACTION START MARKER ---
+s11-before-sub                     Action   Action   
+svc-s11-before-sub                 Action   -        
+svcmsg-s11-before-sub              -        Action   
+s11-in-sub                         Setup    Setup    
+svc-s11-in-sub                     Setup    -        
+svcmsg-s11-in-sub                  -        Setup    
+s11-after-sub                      Setup    Setup    
+svc-s11-after-sub                  Setup    -        
+svcmsg-s11-after-sub               -        Setup    
+[bar] <color:white>Then a server call named s11-then
+s11-then                           Action   Action   
+svc-s11-then                       Action   -        
+svcmsg-s11-then                    -        Action   
+steps:
+  Given a server call named s11-given  [Passed]
+  When a When binding calls the server around a nested GivenStep, as s11  [Passed]
+    Given Async  [Passed]
+  Then a server call named s11-then  [Passed]
+
+## S21 a When binding with a nested GivenStep, on Kestrel
+call                               http     message  ignored
+[bar] <color:white>Given a server call named s21-given
+s21-given                          Setup    Setup    
+svc-s21-given                      Unknown  -        
+svcmsg-s21-given                   -        Unknown  
+[bar] <color:white>When a When binding calls the server around a nested GivenStep, as s21
+--- ACTION START MARKER ---
+s21-before-sub                     Action   Action   
+svc-s21-before-sub                 Unknown  -        
+svcmsg-s21-before-sub              -        Unknown  
+s21-in-sub                         Setup    Setup    
+svc-s21-in-sub                     Unknown  -        
+svcmsg-s21-in-sub                  -        Unknown  
+s21-after-sub                      Setup    Setup    
+svc-s21-after-sub                  Unknown  -        
+svcmsg-s21-after-sub               -        Unknown  
+[bar] <color:white>Then a server call named s21-then
+s21-then                           Action   Action   
+svc-s21-then                       Unknown  -        
+svcmsg-s21-then                    -        Unknown  
+steps:
+  Given a server call named s21-given  [Passed]
+  When a When binding calls the server around a nested GivenStep, as s21  [Passed]
+    Given Async  [Passed]
+  Then a server call named s21-then  [Passed]
+
+## S31 a woven When on the server's flow, during a Given
+call                               http     message  ignored
+[bar] <color:white>Given a server call named s31-woven-given
+s31-woven-given                    Setup    Setup    
+svc-s31-woven-given                Unknown  -        
+svcmsg-s31-woven-given             -        Action   
+[bar] <color:white>And a server call named s31-given-and
+s31-given-and                      Setup    Setup    
+svc-s31-given-and                  Unknown  -        
+svcmsg-s31-given-and               -        Unknown  
+[bar] <color:white>When a server call named s31-when
+--- ACTION START MARKER ---
+s31-when                           Action   Action   
+svc-s31-when                       Unknown  -        
+svcmsg-s31-when                    -        Unknown  
+[bar] <color:white>Then a server call named s31-then
+s31-then                           Action   Action   
+svc-s31-then                       Unknown  -        
+svcmsg-s31-then                    -        Unknown  
+steps:
+  Given a server call named s31-woven-given  [Passed]
+    When Handle the event  [Passed]
+  And a server call named s31-given-and  [Passed]
+  When a server call named s31-when  [Passed]
+  Then a server call named s31-then  [Passed]
+

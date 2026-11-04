@@ -1,0 +1,83 @@
+== ReqNRoll.xUnit2
+phase buckets: same
+diagrams: 2 same, 0 changed
+2 of 2 scenarios keep their fingerprints
+== ReqNRoll.xUnit3
+phase buckets: same
+diagrams: 11 same, 0 changed
+11 of 11 scenarios keep their fingerprints
+== ReqNRoll.TUnit
+phase buckets: same
+diagrams: 2 same, 0 changed
+2 of 2 scenarios keep their fingerprints
+== LightBDD.xUnit2
+phase buckets:
+  before: phase   caller            service           calls errors   m
+  before: Setup   Caller            Dessert Provider      9      0    
+  before: -       Dessert Provider  Cow Service           3      0    
+  before: Action  Caller            Dessert Provider      3      2    
+  before: -       Caller            Dessert Provider      2      2    
+  before: -       Dessert Provider  Event broker          1      0    
+  before: 5 buckets
+  after:  phase   caller            service           calls errors   m
+  after:  Setup   Caller            Dessert Provider      9      0    
+  after:  Action  Caller            Dessert Provider      5      4    
+  after:  -       Dessert Provider  Cow Service           3      0    
+  after:  -       Dessert Provider  Event broker          1      0    
+  after:  4 buckets
+diagrams: 3 same, 0 changed
+3 of 3 scenarios keep their fingerprints
+== LightBDD.xUnit3
+phase buckets:
+  before: phase   caller            service           calls errors   m
+  before: Setup   Caller            Dessert Provider      9      0    
+  before: -       Dessert Provider  Cow Service           3      0    
+  before: Action  Caller            Dessert Provider      3      2    
+  before: -       Caller            Dessert Provider      2      2    
+  before: -       Dessert Provider  Event broker          1      0    
+  before: 5 buckets
+  after:  phase   caller            service           calls errors   m
+  after:  Setup   Caller            Dessert Provider      9      0    
+  after:  Action  Caller            Dessert Provider      5      4    
+  after:  -       Dessert Provider  Cow Service           3      0    
+  after:  -       Dessert Provider  Event broker          1      0    
+  after:  4 buckets
+diagrams: 6 same, 0 changed
+6 of 6 scenarios keep their fingerprints
+== LightBDD.TUnit
+phase buckets:
+  before: phase   caller            service           calls errors   m
+  before: Setup   Caller            Dessert Provider      9      0    
+  before: -       Dessert Provider  Cow Service           3      0    
+  before: Action  Caller            Dessert Provider      3      2    
+  before: -       Caller            Dessert Provider      2      2    
+  before: -       Dessert Provider  Event broker          1      0    
+  before: 5 buckets
+  after:  phase   caller            service           calls errors   m
+  after:  Setup   Caller            Dessert Provider      9      0    
+  after:  Action  Caller            Dessert Provider      5      4    
+  after:  -       Dessert Provider  Cow Service           3      0   1
+  after:  -       Dessert Provider  Event broker          1      0    
+  after:  4 buckets
+diagrams: 3 same, 0 changed
+3 of 3 scenarios keep their fingerprints
+== BDDfy.xUnit3
+phase buckets: same
+diagrams: 2 same, 0 changed
+2 of 2 scenarios keep their fingerprints
+== xUnit2
+phase buckets: same
+diagrams: 2 same, 0 changed
+2 of 2 scenarios keep their fingerprints
+== xUnit3
+phase buckets: same
+diagrams: 2 same, 0 changed
+5 of 5 scenarios keep their fingerprints
+== NUnit4
+phase buckets: same
+diagrams: 2 same, 0 changed
+2 of 2 scenarios keep their fingerprints
+== TUnit
+phase buckets: same
+diagrams: 2 same, 0 changed
+12 of 12 scenarios keep their fingerprints

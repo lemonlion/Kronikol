@@ -1,0 +1,177 @@
+## C01_a_test_after_before_class
+call                               http     message  ignored
+[bar] <color:white>Given Fixture
+c01-async-seed                     Setup    -        IGNORED
+[bar] <color:white>And Sync fixture
+c01-sync-seed                      Setup    -        IGNORED
+c01-after-seeds                    Setup    -        IGNORED
+c01-first-in-test                  Unknown  Unknown  
+[bar] <color:white>And Async
+c01-seed                           Setup    Setup    
+[bar] <color:white>When Async
+c01-act                            Action   Action   
+steps:
+  Given Fixture  [Passed]
+  And Sync fixture  [Passed]
+  And Async  [Passed]
+  When Async  [Passed]
+
+## E01_Then_poller_forked_at_the_start_fires_during_the_Given
+call                               http     message  ignored
+[bar] <color:white>Given Async
+e01-seed1                          Setup    Setup    
+[bar] <color:white>Then Async
+e01-poll                           Action   Action   
+[bar] <color:white>Given Async
+e01-seed2                          Setup    Setup    
+[bar] <color:white>When Async
+e01-act                            Action   Action   
+steps:
+  Given Async  [Passed]
+  Then Async  [Passed]
+  Given Async  [Passed]
+  When Async  [Passed]
+
+## E02_Ambient_bypass_in_a_sync_Given_then_When_Then
+call                               http     message  ignored
+[bar] <color:white>Given With ambient bypass
+[bar] <color:white>When Async
+e02-act                            Action   Action   
+[bar] <color:white>Then Async
+e02-then                           Action   Action   
+steps:
+  Given With ambient bypass  [Passed]
+    (none) e02-manual  [Bypassed]
+  When Async  [Passed]
+  Then Async  [Passed]
+
+## E03_Hand_Given_never_completed_then_When_Then
+call                               http     message  ignored
+[bar] <color:white>Given e03-hand
+e03-seed                           Setup    Setup    
+e03-act                            Setup    Setup    
+e03-then                           Setup    Setup    
+steps:
+
+## E04_A_SkipIf_getter_that_throws_is_caught_then_When_Then
+call                               http     message  ignored
+[bar] <color:white>Given Skip throws
+[bar] <color:white>When Async
+e04-act                            Action   Action   
+[bar] <color:white>Then Async
+e04-then                           Action   Action   
+steps:
+  Given Skip throws  [Failed]
+  When Async  [Passed]
+  Then Async  [Passed]
+
+## E05_WhenAll_of_Givens_inside_a_When
+call                               http     message  ignored
+[bar] <color:white>Given Async
+e05-seed                           Setup    Setup    
+[bar] <color:white>When When all givens
+e05-x                              Action   Action   
+e05-y                              Action   Action   
+e05-after                          Action   Action   
+[bar] <color:white>Then Async
+e05-then                           Action   Action   
+steps:
+  Given Async  [Passed]
+  When When all givens  [Passed]
+    Given Async  [Passed]
+      Given Async  [Passed]
+  Then Async  [Passed]
+
+## E06_Parallel_ForEach_of_sync_Givens_inside_a_When
+call                               http     message  ignored
+[bar] <color:white>Given Async
+e06-seed                           Setup    Setup    
+[bar] <color:white>When Parallel for each givens
+e06-a                              Action   Action   
+e06-b                              Action   Action   
+e06-c                              Action   Action   
+e06-after                          Action   Action   
+[bar] <color:white>Then Async
+e06-then                           Action   Action   
+steps:
+  Given Async  [Passed]
+  When Parallel for each givens  [Passed]
+    Given Sync  [Passed]
+      Given Sync  [Passed]
+        Given Sync  [Passed]
+  Then Async  [Passed]
+
+## E07_A_flow_forked_before_the_Given_runs_a_consumer_with_SetFromMessage
+call                               http     message  ignored
+[bar] <color:white>Given Async
+e07-seed1                          Setup    Setup    
+[bar] <color:white>When Async
+e07-consumer-when                  Action   Action   
+e07-consumer-after                 Action   Action   
+[bar] <color:white>Given Async
+e07-seed2                          Setup    Setup    
+[bar] <color:white>When Async
+e07-act                            Action   Action   
+steps:
+  Given Async  [Passed]
+  When Async  [Passed]
+  Given Async  [Passed]
+  When Async  [Passed]
+
+## F01_body_fails_in_its_When_then_a_Then_in_tear_down
+call                               http     message  ignored
+[bar] <color:white>Given Async
+f01-seed                           Setup    Setup    
+[bar] <color:white>When Throws
+f01-act                            Action   Action   
+[bar] <color:white>Then Async
+teardown-then                      Action   Action   
+teardown-after                     Action   Action   
+steps:
+  Given Async  [Passed]
+  When Throws  [Failed]
+  Then Async  [Passed]
+
+## F02_body_fails_in_its_Given_then_a_Then_in_tear_down
+call                               http     message  ignored
+[bar] <color:white>Given Throws async
+f02-seed                           Setup    Setup    
+[bar] <color:white>Then Async
+teardown-then                      Action   Action   
+teardown-after                     Action   Action   
+steps:
+  Given Throws async  [Failed]
+  Then Async  [Passed]
+
+## R01_Repeat_one_Given_When_with_nested_Given_Then
+call                               http     message  ignored
+[bar] <color:white>Given Async
+r01-seed                           Setup    Setup    
+[bar] <color:white>When With sub
+r01-before                         Action   Action   
+r01-sub                            Action   Action   
+r01-after                          Action   Action   
+[bar] <color:white>Then Async
+r01-then                           Action   Action   
+steps:
+  Given Async  [Passed]
+  When With sub  [Passed]
+    Given Async  [Passed]
+  Then Async  [Passed]
+
+## R01_Repeat_one_Given_When_with_nested_Given_Then
+call                               http     message  ignored
+[bar] <color:white>Given Async
+r01-seed                           Setup    Setup    
+[bar] <color:white>When With sub
+r01-before                         Action   Action   
+r01-sub                            Action   Action   
+r01-after                          Action   Action   
+[bar] <color:white>Then Async
+r01-then                           Action   Action   
+steps:
+  Given Async  [Passed]
+  When With sub  [Passed]
+    Given Async  [Passed]
+  Then Async  [Passed]
+

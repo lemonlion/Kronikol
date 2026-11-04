@@ -1,0 +1,33 @@
+KILLED solid=5 order=1 racing-new=0 racing-seen=2
+first: rev5/rev5-bddfy: B02_A_woven_Then_runs_before_the_story: gone: --- MARKER ---; gone: partition Setup; gone: end
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B02_A_woven_Then_runs_before_the_story
+    gone: --- MARKER ---; gone: partition Setup; gone: end
+      - --- MARKER ---
+      - partition Setup
+      - end
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B03_A_woven_When_runs_before_the_story
+    gone: --- MARKER ---; gone: partition Setup; gone: end
+      - --- MARKER ---
+      - partition Setup
+      - end
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev5/rev5-bddfy] rev5-bddfy.txt: ORDER B06_Async_void_support_off_with_a_nested_Given_and_a_failing_step
+      + Response b06-given phase=Setup src=TestContext
+      - Response b06-given phase=Setup src=TestContext
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID B16_A_woven_When_before_a_story_with_a_tear_down
+    gone: --- MARKER ---; gone: partition Setup; gone: end
+      - --- MARKER ---
+      - partition Setup
+      - end
+[rev5/rev5-reqnroll] rev5-reqnroll.txt: SOLID R04 a before-scenario hook runs a woven Then, a health check
+    gone: --- MARKER ---; gone: partition Setup; gone: end
+      - --- MARKER ---
+      - partition Setup
+      - end
+[rev5/rev5-reqnroll] rev5-reqnroll.txt: SOLID R05 a before-scenario hook runs a woven When, a log-in
+    gone: --- MARKER ---; gone: partition Setup; gone: end
+      - --- MARKER ---
+      - partition Setup
+      - end

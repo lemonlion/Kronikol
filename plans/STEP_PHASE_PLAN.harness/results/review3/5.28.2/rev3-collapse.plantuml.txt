@@ -1,0 +1,35 @@
+## PhaseProbe.Rev3.Collapse.Suite.K01_two_same_in_a_Given_two_same_in_a_When_delimiters_off (TestName field: PhaseProbe.Rev3.Collapse.Suite.K01_two_same_in_a_Given_two_same_in_a_When_delimiters_off)
+  @startuml
+  loop ×4 · 4–21 ms
+  shop -[#438DD5]-> probe: OK
+  end
+  @enduml
+
+## PhaseProbe.Rev3.Collapse.Suite.K02_one_same_in_a_Given_one_same_in_a_When_delimiters_off (TestName field: PhaseProbe.Rev3.Collapse.Suite.K02_one_same_in_a_Given_one_same_in_a_When_delimiters_off)
+  @startuml
+  loop ×2 · 20 ms
+  shop -[#438DD5]-> probe: OK
+  end
+  @enduml
+
+## PhaseProbe.Rev3.Collapse.Suite.K03_control_with_delimiters_on (TestName field: 8d8b52294fb2a5cf1f2111dfc435e678c5b2bc4265acd3837f50e0c4efc4ba14)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given Two same
+  loop ×2 · 1–16 ms
+  shop -[#438DD5]-> probe: OK
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When Two same
+  loop ×2 · 12–16 ms
+  shop -[#438DD5]-> probe: OK
+  end
+  @enduml
+
+## PhaseProbe.Rev3.Collapse.Suite.K04_ambient_manual_bypass_under_a_sync_Given (TestName field: f9c48d29349e11f5a69382d089caa45fdbbca34a36df5daab29a734c3687f70d)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given With ambient manual bypass
+  hnote across <<stepDelimiter>> #black:<color:white>When K04
+  shop -[#438DD5]-> probe: OK
+  hnote across <<stepDelimiter>> #black:<color:white>Then K04
+  shop -[#438DD5]-> probe: OK
+  @enduml
+

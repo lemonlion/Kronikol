@@ -1,0 +1,2 @@
+wrote 187 diagrams, 1864.5 KB → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\31780689-26c4-4084-b1b5-c4efb9a6fd42\scratchpad\rr\results\consumer\final4\LightBDD\diagrams
+each file is named by its address; scenarios --json maps an address to its id

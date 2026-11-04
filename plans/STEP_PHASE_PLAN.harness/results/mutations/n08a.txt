@@ -1,0 +1,68 @@
+KILLED solid=2 order=2 racing-new=2 racing-seen=25
+first: main/mut-extra: X90_a_skipped_sync_sub_step_then_more_in_a_sync_Given: x90-then-sub: Setup Setup > Action Action; x90-after: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---; Then: Sync [Passed] > Sync [Passed]; new: [bar] <co
+
+[main/mut-extra] mut-extra.txt: SOLID PhaseProbe.MutExtra.Shapes.X90_a_skipped_sync_sub_step_then_more_in_a_sync_Given
+    x90-then-sub: Setup Setup > Action Action; x90-after: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---; Then: Sync [Passed] > Sync [Passed]; new: [bar] <color:white>Then Sync
+      -x90-then-sub Setup Setup
+      -x90-after Setup Setup
+      +[bar] <color:white>Then Sync
+      +--- ACTION START MARKER ---
+      +x90-then-sub Action Action
+      +x90-after Action Action
+      ---- ACTION START MARKER ---
+      - Then Sync [Passed]
+      + Then Sync [Passed]
+[main/mut-extra] mut-extra.txt: SOLID PhaseProbe.MutExtra.Shapes.X91_a_skipped_sync_sub_step_then_more_in_an_async_Given
+    x91-then-sub: Setup Setup > Action Action; x91-after: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---; Then: Sync [Passed] > Sync [Passed]; new: [bar] <color:white>Then Sync
+      -x91-then-sub Setup Setup
+      -x91-after Setup Setup
+      +[bar] <color:white>Then Sync
+      +--- ACTION START MARKER ---
+      +x91-then-sub Action Action
+      +x91-after Action Action
+      ---- ACTION START MARKER ---
+      - Then Sync [Passed]
+      + Then Sync [Passed]
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-a] rev4-a.txt: racing, shape seen F02_Poller_silenced_with_the_public_setter
+[rev4/rev4-b] rev4-b.txt: racing, shape seen G05_Plain_background_reader_with_a_TrackDuringAction_false_client
+[rev5/adapter-nunit4] nunit4.txt: RACING-NEW E06_Parallel_ForEach_of_sync_Givens_inside_a_When (baseline variants 2, 2 shapes)
+    e06-a: Action Action > Action Action
+      -e06-a Action Action
+      +e06-a Action Action
+[rev5/adapter-tunit] adapter-tunit.txt: racing, shape seen E06_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/adapter-xunit2] xunit2.txt: racing, shape seen Shapes5.E06_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: ORDER L01_WhenAll_of_Givens_inside_a_When
+      + Response l01-x phase=Action src=TestContext
+      - Response l01-x phase=Action src=TestContext
+[rev5/rev5-a] rev5-a.txt: RACING-NEW L02_Parallel_ForEach_of_sync_Givens_inside_a_When (baseline variants 3, 2 shapes)
+    Request: l02-b phase=Action src=TestContext > l02-b phase=Action src=TestContext; Response: l02-a phase=Action src=TestContext > l02-a phase=Action src=TestContext; Given: Sync [Passed] > Sync [Passed]
+      + Request l02-b phase=Action src=TestContext
+      - Request l02-b phase=Action src=TestContext
+      - Response l02-a phase=Action src=TestContext
+      + Response l02-a phase=Action src=TestContext
+      - Given Sync [Passed]
+      + Given Sync [Passed]
+[rev5/rev5-a] rev5-a.txt: ORDER L03_WhenAll_of_a_Given_and_a_When_at_the_top
+      + Response l03-given phase=Setup src=TestContext
+      - Response l03-given phase=Setup src=TestContext
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L04_Parallel_ForEach_of_sync_Givens_at_the_top_then_When_with_nested_Given
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[review/rev3-lightbdd] rev3-lightbdd.plantuml.txt: racing, shape seen M02 a background Then loop then an And in setup
+[review/rev3-lightbdd] rev3-lightbdd.plantuml.txt: racing, shape seen M03 a background Given loop then an And in action
+[review/rev3-lightbdd] rev3-lightbdd.txt: racing, shape seen M02 a background Then loop then an And in setup
+[review/rev3-lightbdd] rev3-lightbdd.txt: racing, shape seen M03 a background Given loop then an And in action
+[review/rev3-more] rev3-more.plantuml.txt: racing, shape seen PhaseProbe.Rev3.More.H_LoopOnANoSetupClient.H41_a_loop_of_Then_steps_from_a_Given_on_a_Tra
+[review/rev3-more] rev3-more.plantuml.txt: racing, shape seen PhaseProbe.Rev3.More.H_PoppedBeforeItsStubReturned.H40_a_step_popped_before_its_stub_retur
+[review/rev3-more] rev3-more.txt: racing, shape seen PhaseProbe.Rev3.More.H_PoppedBeforeItsStubReturned.H40_a_step_popped_before_its_stub_retur
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C03_a_loop_of_keyword_free_steps_started_in_a_Given
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C03_a_loop_of_keyword_free_steps_started_in_a_Given
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+[review/rev3-reqnroll] rev3-reqnroll.plantuml.txt: racing, shape seen Q04 a Given binding starts a background loop of keyword-free steps
+[review/rev3-reqnroll] rev3-reqnroll.plantuml.txt: racing, shape seen Q05 a Given binding starts a background loop of Then steps
+[review/rev3-reqnroll] rev3-reqnroll.txt: racing, shape seen Q04 a Given binding starts a background loop of keyword-free steps
+[review/rev3-reqnroll] rev3-reqnroll.txt: racing, shape seen Q05 a Given binding starts a background loop of Then steps

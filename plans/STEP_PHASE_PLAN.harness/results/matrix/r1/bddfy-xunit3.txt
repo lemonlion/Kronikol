@@ -1,0 +1,213 @@
+## PhaseProbe.Bddfy.Scenarios.B01_plain_Given_And_When_And_Then_But
+call                               http     message  ignored
+[bar] <color:white>Given a call b01-given
+b01-given                          Setup    Setup    
+[bar] <color:white>And And a call b01-and
+b01-and                            Setup    Setup    
+[bar] <color:white>When a call b01-when
+--- ACTION START MARKER ---
+b01-when                           Action   Action   
+[bar] <color:white>And And a call b01-when-and
+b01-when-and                       Action   Action   
+[bar] <color:white>Then a call b01-then
+b01-then                           Action   Action   
+[bar] <color:white>And And but a call b01-then-but
+b01-then-but                       Action   Action   
+steps:
+  Given a call b01-given  [Passed]
+  And And a call b01-and  [Passed]
+  When a call b01-when  [Passed]
+  And And a call b01-when-and  [Passed]
+  Then a call b01-then  [Passed]
+  And And but a call b01-then-but  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B02_a_When_step_calls_a_woven_Given
+call                               http     message  ignored
+[bar] <color:white>Given a call b02-given
+b02-given                          Setup    Setup    
+[bar] <color:white>When a step calls a woven Given b02
+--- ACTION START MARKER ---
+b02-before-sub                     Action   Action   
+b02-in-sub                         Action   Action   
+b02-after-sub                      Action   Action   
+[bar] <color:white>Then a call b02-then
+b02-then                           Action   Action   
+steps:
+  Given a call b02-given  [Passed]
+  When a step calls a woven Given b02  [Passed]
+    Given Woven given  [Passed]
+  Then a call b02-then  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B03_a_Given_step_calls_a_woven_When
+call                               http     message  ignored
+[bar] <color:white>Given a step calls a woven When b03
+b03-before-sub                     Setup    Setup    
+b03-in-sub                         Setup    Setup    
+b03-after-sub                      Setup    Setup    
+[bar] <color:white>When a call b03-when
+--- ACTION START MARKER ---
+b03-when                           Action   Action   
+steps:
+  Given a step calls a woven When b03  [Passed]
+    When Woven when  [Passed]
+  When a call b03-when  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B04_an_async_When_step_calls_a_woven_Given
+call                               http     message  ignored
+[bar] <color:white>Given a call b04-given
+b04-given                          Setup    Setup    
+[bar] <color:white>When an async step calls a woven Given b04
+--- ACTION START MARKER ---
+b04-before-sub                     Action   Action   
+[bar] <color:white>Given Woven given
+b04-in-sub                         Setup    Setup    
+b04-after-sub                      Setup    Setup    
+[bar] <color:white>Then a call b04-then
+b04-then                           Action   Action   
+steps:
+  Given a call b04-given  [Passed]
+  When an async step calls a woven Given b04  [Passed]
+  Given Woven given  [Passed]
+  Then a call b04-then  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B05_async_steps_that_yield
+call                               http     message  ignored
+[bar] <color:white>Given an async call b05-given
+b05-given                          Setup    Setup    
+[bar] <color:white>When an async call b05-when
+--- ACTION START MARKER ---
+b05-when                           Action   Action   
+[bar] <color:white>Then a call b05-then
+b05-then                           Action   Action   
+steps:
+  Given an async call b05-given  [Passed]
+  When an async call b05-when  [Passed]
+  Then a call b05-then  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B06_first_scenario_on_a_shared_handler
+call                               http     message  ignored
+[bar] <color:white>Given a call b06-given
+b06-given                          Setup    Setup    
+[bar] <color:white>When a call b06-when
+b06-when                           Action   Action   
+steps:
+  Given a call b06-given  [Passed]
+  When a call b06-when  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B07_second_scenario_on_a_shared_handler
+call                               http     message  ignored
+[bar] <color:white>Given a call b07-given
+b07-given                          Setup    Setup    
+[bar] <color:white>When a call b07-when
+b07-when                           Action   Action   
+steps:
+  Given a call b07-given  [Passed]
+  When a call b07-when  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B08_a_When_with_no_HTTP_call
+call                               http     message  ignored
+[bar] <color:white>Given a call b08-given
+b08-given                          Setup    Setup    
+[bar] <color:white>When a message b08-when-message
+b08-when-message                   -        Action   
+[bar] <color:white>Then a call b08-then
+--- ACTION START MARKER ---
+b08-then                           Action   Action   
+steps:
+  Given a call b08-given  [Passed]
+  When a message b08-when-message  [Passed]
+  Then a call b08-then  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B09_a_Given_with_no_HTTP_call
+call                               http     message  ignored
+[bar] <color:white>Given a message b09-given-message
+b09-given-message                  -        Setup    
+[bar] <color:white>When a call b09-when
+b09-when                           Action   Action   
+steps:
+  Given a message b09-given-message  [Passed]
+  When a call b09-when  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B10_a_teardown_after_the_boundary
+call                               http     message  ignored
+[bar] <color:white>Given a call b10-given
+b10-given                          Setup    Setup    
+[bar] <color:white>When a call b10-when
+--- ACTION START MARKER ---
+b10-when                           Action   Action   
+[bar] <color:white>A teardown call b10-teardown
+b10-teardown                       Unknown  Unknown  
+steps:
+  Given a call b10-given  [Passed]
+  When a call b10-when  [Passed]
+  (none) A teardown call b10-teardown  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B11_async_steps_with_AsyncVoidSupport_off
+call                               http     message  ignored
+[bar] <color:white>Given an async call b11-given
+b11-given                          Setup    Setup    
+[bar] <color:white>When an async call b11-when
+[bar] <color:white>Then a call b11-then
+--- ACTION START MARKER ---
+b11-then                           Action   Action   
+b11-when                           Action   Action   
+steps:
+  Given an async call b11-given  [Passed]
+  When an async call b11-when  [Passed]
+  Then a call b11-then  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B90_retried_with_a_handler_per_attempt
+call                               http     message  ignored
+[bar] <color:white>Given a call b90-a1-given
+b90-a1-given                       Setup    Setup    
+[bar] <color:white>When a call b90-a1-when
+--- ACTION START MARKER ---
+b90-a1-when                        Action   Action   
+[bar] <color:white>Then the first attempt fails 1
+[bar] <color:white>And And a call b90-a1-then
+b90-a1-then                        Action   Action   
+[bar] <color:white>Given a call b90-a2-given
+b90-a2-given                       Setup    Setup    
+[bar] <color:white>When a call b90-a2-when
+--- ACTION START MARKER ---
+b90-a2-when                        Action   Action   
+[bar] <color:white>Then the first attempt fails 2
+[bar] <color:white>And And a call b90-a2-then
+b90-a2-then                        Action   Action   
+steps:
+  Given a call b90-a1-given  [Passed]
+  When a call b90-a1-when  [Passed]
+  Then the first attempt fails 1  [Failed]
+  And And a call b90-a1-then  [Passed]
+  Given a call b90-a2-given  [Passed]
+  When a call b90-a2-when  [Passed]
+  Then the first attempt fails 2  [Passed]
+  And And a call b90-a2-then  [Passed]
+
+## PhaseProbe.Bddfy.Scenarios.B91_retried_with_a_shared_handler
+call                               http     message  ignored
+[bar] <color:white>Given a call b91-a1-given
+b91-a1-given                       Setup    Setup    
+[bar] <color:white>When a call b91-a1-when
+--- ACTION START MARKER ---
+b91-a1-when                        Action   Action   
+[bar] <color:white>Then the first attempt fails 1
+[bar] <color:white>And And a call b91-a1-then
+b91-a1-then                        Action   Action   
+[bar] <color:white>Given a call b91-a2-given
+b91-a2-given                       Setup    Setup    
+[bar] <color:white>When a call b91-a2-when
+b91-a2-when                        Action   Action   
+[bar] <color:white>Then the first attempt fails 2
+[bar] <color:white>And And a call b91-a2-then
+b91-a2-then                        Action   Action   
+steps:
+  Given a call b91-a1-given  [Passed]
+  When a call b91-a1-when  [Passed]
+  Then the first attempt fails 1  [Failed]
+  And And a call b91-a1-then  [Passed]
+  Given a call b91-a2-given  [Passed]
+  When a call b91-a2-when  [Passed]
+  Then the first attempt fails 2  [Passed]
+  And And a call b91-a2-then  [Passed]
+

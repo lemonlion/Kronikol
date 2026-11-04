@@ -1,0 +1,4 @@
+5.28.2 {'G A W A T A': 3, 'G W T': 2, 'G A W T A': 2, 'G W A T A': 1}
+5.28.3-rev11r1 {'G A W T': 3, 'G W T': 2, 'G W T A': 1, 'G A W A T A': 1, 'G A W T A': 1}
+5.28.3-rev11r2 {'G A W A T A': 4, 'G A W T W T': 1, 'G A W T': 2, 'G W T': 1}
+5.28.3-rev11 {'G W T': 4, 'G': 2, 'G W': 1, 'G T': 1}

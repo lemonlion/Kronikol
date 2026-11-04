@@ -1,0 +1,40 @@
+KILLED solid=3 order=0 racing-new=0 racing-seen=15
+first: review/rev3-collapse: K04_ambient_manual_bypass_under_a_sync_Given: new: hnote across <<stepDelimiter>> #black:<color:white>When K04; new: hnote across <<stepDelimiter>> #black:<color:white>Then K04
+
+[review/rev3-bddfy] rev3-bddfy.plantuml.txt: racing, shape seen PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running
+[review/rev3-bddfy] rev3-bddfy.txt: racing, shape seen PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running
+[review/rev3-collapse] rev3-collapse.plantuml.txt: SOLID PhaseProbe.Rev3.Collapse.Suite.K04_ambient_manual_bypass_under_a_sync_Given
+    new: hnote across <<stepDelimiter>> #black:<color:white>When K04; new: hnote across <<stepDelimiter>> #black:<color:white>Then K04
+      + hnote across <<stepDelimiter>> #black:<color:white>When K04
+      + hnote across <<stepDelimiter>> #black:<color:white>Then K04
+[review/rev3-collapse] rev3-collapse.separate-off.txt: SOLID PhaseProbe.Rev3.Collapse.Suite.K04_ambient_manual_bypass_under_a_sync_Given
+    new: hnote across <<stepDelimiter>> #black:<color:white>When K04; new: hnote across <<stepDelimiter>> #black:<color:white>Then K04
+      + hnote across <<stepDelimiter>> #black:<color:white>When K04
+      + hnote across <<stepDelimiter>> #black:<color:white>Then K04
+[review/rev3-collapse] rev3-collapse.txt: SOLID PhaseProbe.Rev3.Collapse.Suite.K04_ambient_manual_bypass_under_a_sync_Given
+    k04-when: http Setup > http Action; k04-then: http Setup > http Action; gone: !!! A STEP IS STILL OPEN AT THE END OF THE RUN; new: [Step] <color:white>When K04; new: --- ACTION START MARKER ---; new: [Step] <color:white>Then K04; new: Given With ambient manual bypass [Passed]; new: (none) k04-manual-sub [Bypassed]; new: When K04 [Passed]; new: Then K04 [Passed]
+      - k04-when http Setup
+      - k04-then http Setup
+      + [Step] <color:white>When K04
+      + --- ACTION START MARKER ---
+      + k04-when http Action
+      + [Step] <color:white>Then K04
+      + k04-then http Action
+      - !!! A STEP IS STILL OPEN AT THE END OF THE RUN
+      + Given With ambient manual bypass [Passed]
+      + (none) k04-manual-sub [Bypassed]
+      + When K04 [Passed]
+      + Then K04 [Passed]
+[review/rev3-lightbdd] rev3-lightbdd.plantuml.txt: racing, shape seen M02 a background Then loop then an And in setup
+[review/rev3-lightbdd] rev3-lightbdd.plantuml.txt: racing, shape seen M03 a background Given loop then an And in action
+[review/rev3-lightbdd] rev3-lightbdd.txt: racing, shape seen M02 a background Then loop then an And in setup
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+[review/rev3-reqnroll] rev3-reqnroll.plantuml.txt: racing, shape seen Q04 a Given binding starts a background loop of keyword-free steps
+[review/rev3-reqnroll] rev3-reqnroll.plantuml.txt: racing, shape seen Q05 a Given binding starts a background loop of Then steps
+[review/rev3-reqnroll] rev3-reqnroll.txt: racing, shape seen Q04 a Given binding starts a background loop of keyword-free steps
+[review/rev3-reqnroll] rev3-reqnroll.txt: racing, shape seen Q05 a Given binding starts a background loop of Then steps

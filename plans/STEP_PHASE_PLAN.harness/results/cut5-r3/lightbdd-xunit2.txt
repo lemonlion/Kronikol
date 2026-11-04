@@ -1,0 +1,237 @@
+## L01 plain Given When Then
+call                               http     message  ignored
+[bar] <color:white>GIVEN a call named [label: "l01-given"]
+l01-given                          Setup    Setup    
+[bar] <color:white>AND a call named [label: "l01-and"]
+l01-and                            Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l01-when"]
+--- ACTION START MARKER ---
+l01-when                           Action   Action   
+[bar] <color:white>AND a call named [label: "l01-when-and"]
+l01-when-and                       Action   Action   
+[bar] <color:white>THEN a call named [label: "l01-then"]
+l01-then                           Action   Action   
+[bar] <color:white>BUT a call named [label: "l01-then-but"]
+l01-then-but                       Action   Action   
+steps:
+  GIVEN a call named [label: "l01-given"]  [Passed]
+  AND a call named [label: "l01-and"]  [Passed]
+  WHEN a call named [label: "l01-when"]  [Passed]
+  AND a call named [label: "l01-when-and"]  [Passed]
+  THEN a call named [label: "l01-then"]  [Passed]
+  BUT a call named [label: "l01-then-but"]  [Passed]
+
+## L02 When composite with a Given sub step
+call                               http     message  ignored
+[bar] <color:white>GIVEN a call named [label: "l02-given"]
+l02-given                          Setup    Setup    
+[bar] <color:white>WHEN composite with a Given sub step [label: "l02"]
+--- ACTION START MARKER ---
+l02-composite-body                 Action   Action   
+l02-first-untyped-sub              Action   Action   
+l02-given-sub                      Action   Action   
+l02-untyped-sub-after-given        Action   Action   
+[bar] <color:white>THEN a call named [label: "l02-then"]
+l02-then                           Action   Action   
+steps:
+  GIVEN a call named [label: "l02-given"]  [Passed]
+  WHEN composite with a Given sub step [label: "l02"]  [Passed]
+    (none) A call named [label: "l02-first-untyped-sub"]  [Passed]
+    GIVEN a call named [label: "l02-given-sub"]  [Passed]
+    (none) A call named [label: "l02-untyped-sub-after-given"]  [Passed]
+  THEN a call named [label: "l02-then"]  [Passed]
+
+## L03 Given composite with a When sub step
+call                               http     message  ignored
+[bar] <color:white>GIVEN composite with a When sub step [label: "l03"]
+l03-composite-body                 Setup    Setup    
+l03-when-sub                       Setup    Setup    
+l03-untyped-sub-after-when         Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l03-when"]
+--- ACTION START MARKER ---
+l03-when                           Action   Action   
+steps:
+  GIVEN composite with a When sub step [label: "l03"]  [Passed]
+    WHEN a call named [label: "l03-when-sub"]  [Passed]
+    (none) A call named [label: "l03-untyped-sub-after-when"]  [Passed]
+  WHEN a call named [label: "l03-when"]  [Passed]
+
+## L04 a LightBDD When calls a woven Given
+call                               http     message  ignored
+[bar] <color:white>GIVEN a call named [label: "l04-given"]
+l04-given                          Setup    Setup    
+[bar] <color:white>WHEN a LightBDD step calls a woven Given [label: "l04"]
+--- ACTION START MARKER ---
+l04-before-sub                     Action   Action   
+l04-in-sub                         Action   Action   
+l04-after-sub                      Action   Action   
+[bar] <color:white>THEN a call named [label: "l04-then"]
+l04-then                           Action   Action   
+steps:
+  GIVEN a call named [label: "l04-given"]  [Passed]
+  WHEN a LightBDD step calls a woven Given [label: "l04"]  [Passed]
+    Given Woven given  [Passed]
+  THEN a call named [label: "l04-then"]  [Passed]
+
+## L05 a LightBDD Given calls a woven When
+call                               http     message  ignored
+[bar] <color:white>GIVEN a LightBDD step calls a woven When [label: "l05"]
+l05-before-sub                     Setup    Setup    
+l05-in-sub                         Setup    Setup    
+l05-after-sub                      Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l05-when"]
+--- ACTION START MARKER ---
+l05-when                           Action   Action   
+steps:
+  GIVEN a LightBDD step calls a woven When [label: "l05"]  [Passed]
+    When Woven when  [Passed]
+  WHEN a call named [label: "l05-when"]  [Passed]
+
+## L06 first scenario on a shared handler
+call                               http     message  ignored
+[bar] <color:white>GIVEN a call named [label: "l06-given"]
+l06-given                          Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l06-when"]
+--- ACTION START MARKER ---
+l06-when                           Action   Action   
+[bar] <color:white>THEN a call named [label: "l06-then"]
+l06-then                           Action   Action   
+steps:
+  GIVEN a call named [label: "l06-given"]  [Passed]
+  WHEN a call named [label: "l06-when"]  [Passed]
+  THEN a call named [label: "l06-then"]  [Passed]
+
+## L07 second scenario on a shared handler
+call                               http     message  ignored
+[bar] <color:white>GIVEN a call named [label: "l07-given"]
+l07-given                          Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l07-when"]
+--- ACTION START MARKER ---
+l07-when                           Action   Action   
+[bar] <color:white>THEN a call named [label: "l07-then"]
+l07-then                           Action   Action   
+steps:
+  GIVEN a call named [label: "l07-given"]  [Passed]
+  WHEN a call named [label: "l07-when"]  [Passed]
+  THEN a call named [label: "l07-then"]  [Passed]
+
+## L08 untyped steps only
+call                               http     message  ignored
+[bar] <color:white>A call named [label: "l08-first"]
+l08-first                          Unknown  Unknown  
+[bar] <color:white>A call named [label: "l08-second"]
+l08-second                         Unknown  Unknown  
+steps:
+  (none) A call named [label: "l08-first"]  [Passed]
+  (none) A call named [label: "l08-second"]  [Passed]
+
+## L09 a When with no HTTP call then an And
+call                               http     message  ignored
+[bar] <color:white>GIVEN a call named [label: "l09-given"]
+l09-given                          Setup    Setup    
+[bar] <color:white>WHEN a message named [label: "l09-when-message"]
+--- ACTION START MARKER ---
+l09-when-message                   -        Action   
+[bar] <color:white>AND a call named [label: "l09-when-and"]
+l09-when-and                       Action   Action   
+[bar] <color:white>THEN a call named [label: "l09-then"]
+l09-then                           Action   Action   
+steps:
+  GIVEN a call named [label: "l09-given"]  [Passed]
+  WHEN a message named [label: "l09-when-message"]  [Passed]
+  AND a call named [label: "l09-when-and"]  [Passed]
+  THEN a call named [label: "l09-then"]  [Passed]
+
+## L10 a Given with no HTTP call
+call                               http     message  ignored
+[bar] <color:white>GIVEN a message named [label: "l10-given-message"]
+l10-given-message                  -        Setup    
+[bar] <color:white>WHEN a call named [label: "l10-when"]
+--- ACTION START MARKER ---
+l10-when                           Action   Action   
+steps:
+  GIVEN a message named [label: "l10-given-message"]  [Passed]
+  WHEN a call named [label: "l10-when"]  [Passed]
+
+## L11 a message tracker that does not track setup
+call                               http     message  ignored
+[bar] <color:white>GIVEN a call named [label: "l11-given"]
+l11-given                          Setup    -        
+[bar] <color:white>WHEN a call named [label: "l11-when"]
+--- ACTION START MARKER ---
+l11-when                           Action   Action   
+steps:
+  GIVEN a call named [label: "l11-given"]  [Passed]
+  WHEN a call named [label: "l11-when"]  [Passed]
+
+## L12 an untyped step after a typed one
+call                               http     message  ignored
+[bar] <color:white>GIVEN a call named [label: "l12-given"]
+l12-given                          Setup    Setup    
+[bar] <color:white>A call named [label: "l12-untyped-after-given"]
+l12-untyped-after-given            Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l12-when"]
+--- ACTION START MARKER ---
+l12-when                           Action   Action   
+[bar] <color:white>A call named [label: "l12-untyped-after-when"]
+l12-untyped-after-when             Action   Action   
+steps:
+  GIVEN a call named [label: "l12-given"]  [Passed]
+  (none) A call named [label: "l12-untyped-after-given"]  [Passed]
+  WHEN a call named [label: "l12-when"]  [Passed]
+  (none) A call named [label: "l12-untyped-after-when"]  [Passed]
+
+## L13 LightBDDs own setup step type
+call                               http     message  ignored
+[bar] <color:white>SETUP a call named [label: "l13-setup"]
+l13-setup                          Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l13-when"]
+--- ACTION START MARKER ---
+l13-when                           Action   Action   
+steps:
+  SETUP a call named [label: "l13-setup"]  [Passed]
+  WHEN a call named [label: "l13-when"]  [Passed]
+
+## L14 a bypassed sub step in a Given composite
+call                               http     message  ignored
+[bar] <color:white>GIVEN composite with a bypassed sub step [label: "l14"]
+l14-body                           Setup    Setup    
+l14-when-sub                       Setup    Setup    
+l14-untyped-sub                    Setup    Setup    
+[bar] <color:white>AND a call named [label: "l14-and"]
+l14-and                            Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l14-when"]
+--- ACTION START MARKER ---
+l14-when                           Action   Action   
+steps:
+  GIVEN composite with a bypassed sub step [label: "l14"]  [Passed]
+    (none) A bypassed sub step  [Failed]
+    WHEN a call named [label: "l14-when-sub"]  [Passed]
+    (none) A call named [label: "l14-untyped-sub"]  [Passed]
+  AND a call named [label: "l14-and"]  [Passed]
+  WHEN a call named [label: "l14-when"]  [Passed]
+
+## L15 an And first over a Given sub step
+call                               http     message  ignored
+[bar] <color:white>AND composite with a Given sub step [label: "l15"]
+l15-body                           Setup    Unknown  
+l15-given-sub                      Setup    Setup    
+[bar] <color:white>WHEN a call named [label: "l15-when"]
+--- ACTION START MARKER ---
+l15-when                           Action   Action   
+steps:
+  AND composite with a Given sub step [label: "l15"]  [Passed]
+    GIVEN a call named [label: "l15-given-sub"]  [Passed]
+  WHEN a call named [label: "l15-when"]  [Passed]
+
+## L16 an And first then a When
+call                               http     message  ignored
+[bar] <color:white>AND a call named [label: "l16-and"]
+l16-and                            Setup    Unknown  
+[bar] <color:white>WHEN a call named [label: "l16-when"]
+--- ACTION START MARKER ---
+l16-when                           Action   Action   
+steps:
+  AND a call named [label: "l16-and"]  [Passed]
+  WHEN a call named [label: "l16-when"]  [Passed]
+

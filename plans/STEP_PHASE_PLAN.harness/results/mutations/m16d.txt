@@ -1,0 +1,14 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=1
+first: rev4/rev4-fsharp: (whole file): task-fn-throws: steps=Task fn throws[Failed] open=False :: resolver=* same=True | task-fn-throws: InvalidOperationException: boom > steps= open=False :: resolver=* same=True | task-fn-throws
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-fsharp] rev4-fsharp.txt: SOLID (whole file)
+    task-fn-throws: steps=Task fn throws[Failed] open=False :: resolver=* same=True | task-fn-throws: InvalidOperationException: boom > steps= open=False :: resolver=* same=True | task-fn-throws: InvalidProgramException: Common Language Runtime detected an invalid progr; task-fn: steps=Task fn[Passed] open=False :: resolver=* same=True | task-fn: no exception > steps= open=False :: resolver=* same
+      -task-fn-throws steps=Task fn throws[Failed] open=False :: resolver=* same=True | task-fn-throws: InvalidOperationException: boom
+      +task-fn-throws steps= open=False :: resolver=* same=True | task-fn-throws: InvalidProgramException: Common Language Runtime detected an invalid progr
+      -task-fn steps=Task fn[Passed] open=False :: resolver=* same=True | task-fn: no exception
+      +task-fn steps= open=False :: resolver=* same=True | task-fn: InvalidProgramException: Common Language Runtime detected an invalid program.
+      -task-generic steps=Task generic[Passed] open=False :: resolver=* same=True | task-generic: no exception
+      -async-to-task steps=Async to task[Passed] open=False :: resolver=* same=True | a | async-to-task: no exception
+      +task-generic steps= open=False :: resolver=* same=True | task-generic: InvalidProgramException: Common Language Runtime detected an invalid program.
+      +async-to-task steps= open=False :: resolver=* same=True | async-to-task: InvalidProgramException: Common Language Runtime detected an invalid program

@@ -1,0 +1,8 @@
+KILLED solid=1 order=0 racing-new=0 racing-seen=1
+first: rev4/rev4-fsharp: (whole file): unit-tail: steps=Unit tail[Passed] open=False :: resolver=* same=True | a | unit-tail: no exception > steps= open=False :: resolver=* same=True | unit-tail: InvalidProgramException: Common L
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev4/rev4-fsharp] rev4-fsharp.txt: SOLID (whole file)
+    unit-tail: steps=Unit tail[Passed] open=False :: resolver=* same=True | a | unit-tail: no exception > steps= open=False :: resolver=* same=True | unit-tail: InvalidProgramException: Common Language Runtime detected an invalid program.
+      -unit-tail steps=Unit tail[Passed] open=False :: resolver=* same=True | a | unit-tail: no exception
+      +unit-tail steps= open=False :: resolver=* same=True | unit-tail: InvalidProgramException: Common Language Runtime detected an invalid program.

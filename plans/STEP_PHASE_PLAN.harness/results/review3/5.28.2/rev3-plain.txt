@@ -1,0 +1,1208 @@
+## PhaseProbe.Rev3.A_Bypass.A01_sync_Given_with_a_manual_bypassed_sub_step
+  [Step] <color:white>Given Sync with manual bypassed sub
+  a01-given                                    http Setup    
+  a01-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  a01-when                                     http Action   
+  a01-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a01-then                                     http Action   
+  a01-then                                     msg  Action   
+  steps:
+    Given Sync with manual bypassed sub  [Passed]
+      (none) a01-given-manual-sub  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A02_nonasync_Task_Given_with_a_manual_bypassed_sub_step
+  [Step] <color:white>Given Task with manual bypassed sub
+  a02-given                                    http Setup    
+  a02-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  a02-when                                     http Action   
+  a02-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a02-then                                     http Action   
+  a02-then                                     msg  Action   
+  steps:
+    Given Task with manual bypassed sub  [Passed]
+      (none) a02-given-manual-sub  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A03_async_Given_with_a_manual_bypassed_sub_step
+  [Step] <color:white>Given Async with manual bypassed sub
+  a03-given                                    http Setup    
+  a03-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  a03-when                                     http Action   
+  a03-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a03-then                                     http Action   
+  a03-then                                     msg  Action   
+  steps:
+    Given Async with manual bypassed sub  [Passed]
+      (none) a03-given-manual-sub  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A04_sync_Given_throws_after_a_manual_bypassed_sub_step_caught
+  [Step] <color:white>Given Sync throws after manual bypassed sub
+  [Step] <color:white>When Async
+  a04-when                                     http Action   
+  a04-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a04-then                                     http Action   
+  a04-then                                     msg  Action   
+  steps:
+    Given Sync throws after manual bypassed sub  [Failed]
+      (none) a04-given-manual-sub  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A05_manual_pair_at_top_level_then_woven_steps
+  [Step] <color:white>A05-manual
+  [Step] <color:white>Given Async
+  a05-given                                    http Setup    
+  a05-given                                    msg  Setup    
+  [Step] <color:white>When Sync
+  a05-when                                     http Action   
+  a05-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a05-then                                     http Action   
+  a05-then                                     msg  Action   
+  steps:
+    (none) a05-manual  [Bypassed]
+    Given Async  [Passed]
+    When Sync  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A10_sync_parent_skipped_sync_last
+  [Step] <color:white>Given Sync parent skipped sync last
+  a10                                          http Setup    
+  a10                                          msg  Setup    
+  [Step] <color:white>When Async
+  a10-when                                     http Action   
+  a10-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a10-then                                     http Action   
+  a10-then                                     msg  Action   
+  steps:
+    Given Sync parent skipped sync last  [Passed]
+      (none) Skipped sync  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A11_sync_parent_skipped_task_last
+  [Step] <color:white>Given Sync parent skipped task last
+  a11                                          http Setup    
+  a11                                          msg  Setup    
+  [Step] <color:white>When Async
+  a11-when                                     http Action   
+  a11-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a11-then                                     http Action   
+  a11-then                                     msg  Action   
+  steps:
+    Given Sync parent skipped task last  [Passed]
+      (none) Skipped task  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A12_sync_parent_skipped_async_last
+  [Step] <color:white>Given Sync parent skipped async last
+  a12                                          http Setup    
+  a12                                          msg  Setup    
+  [Step] <color:white>When Async
+  a12-when                                     http Action   
+  a12-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a12-then                                     http Action   
+  a12-then                                     msg  Action   
+  steps:
+    Given Sync parent skipped async last  [Passed]
+      (none) Skipped async  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A13_task_parent_skipped_sync
+  [Step] <color:white>Given Task parent skipped sync last
+  a13                                          http Setup    
+  a13                                          msg  Setup    
+  [Step] <color:white>When Async
+  a13-when                                     http Action   
+  a13-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a13-then                                     http Action   
+  a13-then                                     msg  Action   
+  steps:
+    Given Task parent skipped sync last  [Passed]
+      (none) Skipped sync  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A14_task_parent_returns_skipped
+  [Step] <color:white>Given Task parent returns skipped task
+  [Step] <color:white>When Async
+  a14-when                                     http Action   
+  a14-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a14-then                                     http Action   
+  a14-then                                     msg  Action   
+  steps:
+    Given Task parent returns skipped task  [Passed]
+      (none) Skipped task  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A15_ofT_parent_returns_skipped
+  [Step] <color:white>Given Of T parent returns skipped
+  [Step] <color:white>And Non async of T parent returns skipped
+  [Step] <color:white>When Async
+  a15-when                                     http Action   
+  a15-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a15-then                                     http Action   
+  a15-then                                     msg  Action   
+  steps:
+    Given Of T parent returns skipped  [Passed]
+      (none) Skipped async of T  [Bypassed]
+    And Non async of T parent returns skipped  [Passed]
+      (none) Skipped async of T  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A20_self_bypass_sync_in_a_parent
+  [Step] <color:white>Outer self sync
+  a20-after                                    http Setup    
+  a20-after                                    msg  Setup    
+  [Step] <color:white>When Async
+  a20-when                                     http Action   
+  a20-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a20-then                                     http Action   
+  a20-then                                     msg  Action   
+  steps:
+    (none) Outer self sync  [Passed]
+      Given Self bypass sync  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A21_self_bypass_task_in_a_parent
+  [Step] <color:white>Outer self task
+  a21-after                                    http Setup    
+  a21-after                                    msg  Setup    
+  [Step] <color:white>When Async
+  a21-when                                     http Action   
+  a21-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a21-then                                     http Action   
+  a21-then                                     msg  Action   
+  steps:
+    (none) Outer self task  [Passed]
+      Given Self bypass task  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A22_self_bypass_async_before_await_in_a_parent
+  [Step] <color:white>Outer self first
+  a22-after                                    http Setup    
+  a22-after                                    msg  Setup    
+  [Step] <color:white>When Async
+  a22-when                                     http Action   
+  a22-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a22-then                                     http Action   
+  a22-then                                     msg  Action   
+  steps:
+    (none) Outer self first  [Passed]
+      Given Self bypass async first  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A23_self_bypass_async_after_await_in_a_parent
+  [Step] <color:white>Outer self later
+  a23-after                                    http Setup    
+  a23-after                                    msg  Setup    
+  [Step] <color:white>When Async
+  a23-when                                     http Action   
+  a23-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a23-then                                     http Action   
+  a23-then                                     msg  Action   
+  steps:
+    (none) Outer self later  [Passed]
+      Given Self bypass async later  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A30_skip_in_task_run_in_a_sync_parent
+  [Step] <color:white>Given Parent skips in task run
+  a30                                          http Setup    
+  a30                                          msg  Setup    
+  [Step] <color:white>When Async
+  a30-when                                     http Action   
+  a30-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  a30-then                                     http Action   
+  a30-then                                     msg  Action   
+  steps:
+    Given Parent skips in task run  [Passed]
+      (none) Skipped sync  [Bypassed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.A_Bypass.A31_a_SkipIf_getter_that_throws_is_caught
+  [Step] <color:white>Given Async
+  a31-given                                    http Setup    
+  a31-given                                    msg  Setup    
+  [Step] <color:white>When Skipif throws
+  a31-after                                    http Action   
+  a31-after                                    msg  Action   
+  a31-when                                     http Action   
+  a31-when                                     msg  Action   
+  a31-then                                     http Action   
+  a31-then                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    !!! A STEP IS STILL OPEN AT THE END OF THE RUN
+
+## PhaseProbe.Rev3.B_LeftRunning.B01_sync_Given_leaves_a_worker_step_running_then_When_Then
+  [Step] <color:white>Given The worker runs
+  b01-worker-start                             http Setup    
+  b01-after-given                              http Setup    
+  b01-after-given                              msg  Setup    
+  b01-worker-start                             msg  Setup    
+  b01-when                                     http Action   
+  b01-when                                     msg  Action   
+  b01-after-when-nosetup                       http Action   
+  b01-after-when-nosetup                       msg  Action   
+  b01-then                                     http Action   
+  b01-then                                     msg  Action   
+  b01-then-nosetup                             http Action   
+  b01-then-nosetup                             msg  Action   
+  b01-worker-end                               http Setup    
+  b01-worker-end                               msg  Setup    
+  steps:
+    Given The worker runs  [Passed]
+      (none) Worker step  [Passed]
+      When Async  [Passed]
+      Then Async  [Passed]
+      Then Ns then async  [Passed]
+
+## PhaseProbe.Rev3.B_LeftRunning.B02_async_Given_leaves_a_worker_step_running_then_When_Then
+  [Step] <color:white>Given Async the worker runs
+  b02-worker-start                             http Setup    
+  b02-given-call                               http Setup    
+  b02-given-call                               msg  Setup    
+  b02-when                                     http Action   
+  b02-worker-start                             msg  Setup    
+  b02-when                                     msg  Action   
+  b02-then                                     http Action   
+  b02-then                                     msg  Action   
+  b02-worker-end                               http Setup    
+  b02-worker-end                               msg  Setup    
+  steps:
+    Given Async the worker runs  [Passed]
+      (none) Worker step  [Passed]
+      When Async  [Passed]
+      Then Async  [Passed]
+
+## PhaseProbe.Rev3.B_LeftRunning.B03_sync_Given_waits_with_a_timeout_on_a_step
+  [Step] <color:white>Given Timeout wait
+  b03-worker-start                             http Setup    
+  b03-worker-start                             msg  Setup    
+  b03-when                                     http Action   
+  b03-when                                     msg  Action   
+  b03-then-nosetup                             http Action   
+  b03-then-nosetup                             msg  Action   
+  b03-worker-end                               http Setup    
+  b03-worker-end                               msg  Setup    
+  steps:
+    Given Timeout wait  [Passed]
+      (none) Worker step  [Passed]
+      When Async  [Passed]
+      Then Ns then async  [Passed]
+
+## PhaseProbe.Rev3.B_LeftRunning.B04_sync_When_leaves_a_worker_running_then_a_Given_and_When
+  [Step] <color:white>When The worker runs
+  b04-worker-start                             http Action   
+  b04-given                                    http Setup    
+  b04-worker-start                             msg  Action   
+  b04-given                                    msg  Setup    
+  b04-when                                     http Action   
+  b04-when                                     msg  Action   
+  b04-worker-end                               http Action   
+  b04-worker-end                               msg  Action   
+  steps:
+    When The worker runs  [Passed]
+      (none) Worker step  [Passed]
+      Given Async  [Passed]
+      When Async  [Passed]
+
+## PhaseProbe.Rev3.B_LeftRunning.B05_sync_Given_worker_ends_before_the_When
+  [Step] <color:white>Given The worker runs
+  b05-worker-start                             http Setup    
+  b05-worker-start                             msg  Setup    
+  b05-worker-end                               http Setup    
+  b05-worker-end                               msg  Setup    
+  [Step] <color:white>When Async
+  b05-when                                     http Action   
+  b05-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  b05-then                                     http Action   
+  b05-then                                     msg  Action   
+  steps:
+    Given The worker runs  [Passed]
+      (none) Worker step  [Passed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.B_LeftRunning.B06_sync_Given_with_a_Task_Run_worker_step_then_When
+  [Step] <color:white>Given Task run worker
+  b06-worker-start                             http Setup    
+  b06-when                                     http Action   
+  b06-when                                     msg  Action   
+  b06-then-nosetup                             http Action   
+  b06-worker-start                             msg  Setup    
+  b06-then-nosetup                             msg  Action   
+  b06-worker-end                               http Setup    
+  b06-worker-end                               msg  Setup    
+  steps:
+    Given Task run worker  [Passed]
+      (none) Worker step  [Passed]
+      When Async  [Passed]
+      Then Ns then async  [Passed]
+
+## PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_When
+  [Step] <color:white>Given A poller
+  [Step] <color:white>Then Poll then
+  c01-poll0                                    http Action   
+  c01-poll0                                    msg  Action   
+  [Step] <color:white>And Poll then
+  c01-poll1                                    http Action   
+  c01-poll1                                    msg  Action   
+  [Step] <color:white>And Poll then
+  c01-poll2                                    http Action   
+  c01-poll2                                    msg  Action   
+  [Step] <color:white>And Poll then
+  c01-poll3                                    http Action   
+  c01-second-given                             http Setup    
+  c01-poll3                                    msg  Action   
+  c01-second-given                             msg  Setup    
+  [Step] <color:white>Given Ns given async
+  c01-second-given-nosetup                     http Setup    IGNORED
+  c01-poll4                                    http Action   
+  c01-poll4                                    msg  Action   
+  c01-second-given-nosetup                     msg  Setup    
+  [Step] <color:white>When Async
+  c01-when                                     http Action   
+  c01-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  c01-then                                     http Action   
+  c01-poll5                                    http Action   
+  c01-then                                     msg  Action   
+  c01-poll5                                    msg  Action   
+  steps:
+    Given A poller  [Passed]
+    Then Poll then  [Passed]
+    And Poll then  [Passed]
+    And Poll then  [Passed]
+    And Poll then  [Passed]
+      Given Async  [Passed]
+    Given Ns given async  [Passed]
+      Then Poll then  [Passed]
+    When Async  [Passed]
+    Then Async  [Passed]
+      Then Poll then  [Passed]
+
+## PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+  [Step] <color:white>Poll plain
+  c02-poll0                                    http Unknown  
+  c02-poll0                                    msg  Unknown  
+  [Step] <color:white>Poll plain
+  c02-poll1                                    http Unknown  
+  c02-given                                    http Setup    
+  c02-poll1                                    msg  Unknown  
+  c02-given                                    msg  Setup    
+  [Step] <color:white>Poll plain
+  c02-poll2                                    http Unknown  
+  c02-poll2                                    msg  Unknown  
+  [Step] <color:white>Poll plain
+  c02-poll3                                    http Unknown  
+  c02-when                                     http Action   
+  c02-when                                     msg  Action   
+  c02-poll3                                    msg  Unknown  
+  [Step] <color:white>Poll plain
+  c02-poll4                                    http Unknown  
+  c02-poll4                                    msg  Unknown  
+  [Step] <color:white>Poll plain
+  c02-poll5                                    http Unknown  
+  c02-poll5                                    msg  Unknown  
+  c02-then                                     http Action   
+  c02-poll6                                    http Unknown  
+  c02-then                                     msg  Action   
+  c02-poll6                                    msg  Unknown  
+  [Step] <color:white>Poll plain
+  c02-poll7                                    http Unknown  
+  c02-poll7                                    msg  Unknown  
+  steps:
+    (none) Poll plain  [Passed]
+    (none) Poll plain  [Passed]
+      Given Async  [Passed]
+    (none) Poll plain  [Passed]
+    (none) Poll plain  [Passed]
+      When Async  [Passed]
+    (none) Poll plain  [Passed]
+    (none) Poll plain  [Passed]
+      Then Async  [Passed]
+      (none) Poll plain  [Passed]
+    (none) Poll plain  [Passed]
+
+## PhaseProbe.Rev3.C_Background.C03_a_loop_of_keyword_free_steps_started_in_a_Given
+  [Step] <color:white>Given A plain poller
+  [Step] <color:white>Poll plain
+  c03-poll0                                    http Setup    IGNORED
+  c03-when                                     http Action   
+  c03-poll0                                    msg  Setup    
+  c03-when                                     msg  Action   
+  [Step] <color:white>Poll plain
+  c03-poll1                                    http Setup    IGNORED
+  c03-poll1                                    msg  Setup    
+  steps:
+    Given A plain poller  [Passed]
+    (none) Poll plain  [Passed]
+      When Async  [Passed]
+    (none) Poll plain  [Passed]
+
+## PhaseProbe.Rev3.C_Background.C04_a_background_Given_step_while_the_test_is_in_Action
+  [Step] <color:white>Given Async
+  c04-given                                    http Setup    
+  c04-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  c04-when                                     http Action   
+  c04-when                                     msg  Action   
+  [Step] <color:white>Given Poll given
+  c04-bg-given                                 http Setup    
+  c04-bg-given                                 msg  Setup    
+  [Step] <color:white>Plain async
+  c04-plain-after                              http Action   
+  c04-plain-after                              msg  Action   
+  c04-raw-after                                http Action   
+  c04-raw-after                                msg  Action   
+  [Step] <color:white>Plain async
+  c04-plain-in-run                             http Action   
+  c04-plain-in-run                             msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+    Given Poll given  [Passed]
+    (none) Plain async  [Passed]
+    (none) Plain async  [Passed]
+
+## PhaseProbe.Rev3.C_Background.C05_a_When_on_a_detached_flow_with_an_explicit_identity
+  [Step] <color:white>Given Async
+  c05-given                                    http Setup    
+  c05-given                                    msg  Setup    
+  [Step] <color:white>When Poll when
+  c05-detached-when                            http Action   
+  c05-detached-when                            msg  Action   
+  [Step] <color:white>Given Async
+  c05-second-given                             http Setup    
+  c05-second-given                             msg  Setup    
+  [Step] <color:white>When Async
+  c05-when                                     http Action   
+  c05-when                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Poll when  [Passed]
+    Given Async  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.D_CtorGiven.D20_a_Given_in_the_constructor_then_keyword_free_steps_on_a_TrackDuringSetup_false_client
+  [Step] <color:white>Given Seed sync
+  d20-ctor-seed                                http Setup    
+  d20-ctor-seed                                msg  Setup    
+  d20-raw-before                               http Setup    IGNORED
+  d20-raw-before                               msg  Setup    
+  [Step] <color:white>Ns plain async
+  d20-plain-1                                  http Setup    IGNORED
+  d20-plain-1                                  msg  Setup    
+  d20-raw-after                                http Setup    IGNORED
+  d20-raw-after                                msg  Setup    
+  steps:
+    Given Seed sync  [Passed]
+    (none) Ns plain async  [Passed]
+
+## PhaseProbe.Rev3.D_DisposeStep.D30_a_keyword_free_step_in_DisposeAsync_after_a_When
+  [Step] <color:white>Given Async
+  d30-given                                    http Setup    
+  d30-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  d30-when                                     http Action   
+  d30-when                                     msg  Action   
+  [Step] <color:white>Cleanup async
+  d30-cleanup                                  http Unknown  
+  d30-cleanup                                  msg  Unknown  
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+    (none) Cleanup async  [Passed]
+
+## PhaseProbe.Rev3.D_Fill.D01_reset_with_TestPhaseContext_Unknown_as_the_wiki_does_then_a_keyword_free_step
+  [Step] <color:white>Given Async
+  d01-given                                    http Setup    
+  d01-given                                    msg  Setup    
+  d01-raw-after-reset                          http Unknown  
+  d01-raw-after-reset                          msg  Unknown  
+  [Step] <color:white>Ns plain async
+  d01-plain-after-reset                        http Unknown  
+  d01-plain-after-reset                        msg  Unknown  
+  d01-raw-after-plain                          http Unknown  
+  d01-raw-after-plain                          msg  Unknown  
+  steps:
+    Given Async  [Passed]
+    (none) Ns plain async  [Passed]
+
+## PhaseProbe.Rev3.D_Fill.D02_reset_with_Reset_after_a_When_then_a_keyword_free_step
+  [Step] <color:white>Given Async
+  d02-given                                    http Setup    
+  d02-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  d02-when                                     http Action   
+  d02-when                                     msg  Action   
+  d02-raw-after-reset                          http Unknown  
+  d02-raw-after-reset                          msg  Unknown  
+  [Step] <color:white>Plain async
+  d02-plain-after-reset                        http Unknown  
+  d02-plain-after-reset                        msg  Unknown  
+  d02-raw-after-plain                          http Unknown  
+  d02-raw-after-plain                          msg  Unknown  
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+    (none) Plain async  [Passed]
+
+## PhaseProbe.Rev3.D_Fill.D03_a_phase_set_directly_is_kept_by_a_keyword_free_step
+  [Step] <color:white>Given Async
+  d03-given                                    http Setup    
+  d03-given                                    msg  Setup    
+  [Step] <color:white>Plain async
+  d03-plain                                    http Action   
+  d03-plain                                    msg  Action   
+  d03-raw                                      http Action   
+  d03-raw                                      msg  Action   
+  steps:
+    Given Async  [Passed]
+    (none) Plain async  [Passed]
+
+## PhaseProbe.Rev3.D_Fill.D04_StartSetup_after_a_When_then_a_step_in_a_flow_without_a_phase
+  [Step] <color:white>Given Async
+  d04-given                                    http Setup    
+  d04-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  d04-when                                     http Action   
+  d04-when                                     msg  Action   
+  d04-raw-in-setup                             http Setup    
+  d04-raw-in-setup                             msg  Setup    
+  [Step] <color:white>Plain async
+  d04-plain-in-a-flow-with-no-phase            http Unknown  
+  d04-plain-in-a-flow-with-no-phase            msg  Unknown  
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+    (none) Plain async  [Passed]
+
+## PhaseProbe.Rev3.D_FixtureGiven.D10_a_Given_in_InitializeAsync_then_keyword_free_steps_on_a_TrackDuringSetup_false_client
+  [Step] <color:white>Given Seed async
+  d10-seed                                     http Setup    
+  d10-seed                                     msg  Setup    
+  d10-raw-before                               http Unknown  
+  d10-raw-before                               msg  Unknown  
+  [Step] <color:white>Ns plain async
+  d10-plain-1                                  http Unknown  
+  d10-plain-1                                  msg  Unknown  
+  d10-raw-after                                http Unknown  
+  d10-raw-after                                msg  Unknown  
+  [Step] <color:white>Ns plain sync
+  d10-plain-2                                  http Unknown  
+  d10-plain-2                                  msg  Unknown  
+  d10-raw-last                                 http Unknown  
+  d10-raw-last                                 msg  Unknown  
+  steps:
+    Given Seed async  [Passed]
+    (none) Ns plain async  [Passed]
+    (none) Ns plain sync  [Passed]
+
+## PhaseProbe.Rev3.D_FixtureGiven.D11_a_Given_in_InitializeAsync_then_When_then_keyword_free
+  [Step] <color:white>Given Seed async
+  d10-seed                                     http Setup    
+  d10-seed                                     msg  Setup    
+  [Step] <color:white>When Ns when async
+  d11-when                                     http Action   
+  d11-when                                     msg  Action   
+  [Step] <color:white>Ns plain async
+  d11-plain                                    http Action   
+  d11-plain                                    msg  Action   
+  steps:
+    Given Seed async  [Passed]
+    When Ns when async  [Passed]
+    (none) Ns plain async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E01_Given_with_no_tracked_calls_then_When
+  [Step] <color:white>Given No call
+  [Step] <color:white>When Async
+  e01-when                                     http Action   
+  e01-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  e01-then                                     http Action   
+  e01-then                                     msg  Action   
+  steps:
+    Given No call  [Passed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E02_Given_with_only_dropped_calls_then_When
+  [Step] <color:white>Given Ns given async
+  e02-given-dropped                            http Setup    IGNORED
+  e02-given-dropped                            msg  Setup    
+  [Step] <color:white>When Async
+  e02-when                                     http Action   
+  e02-when                                     msg  Action   
+  steps:
+    Given Ns given async  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E03_Given_with_calls_then_When
+  [Step] <color:white>Given Async
+  e03-given                                    http Setup    
+  e03-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  e03-when                                     http Action   
+  e03-when                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E04_explicit_StartAction_later_than_the_When_bar
+  [Step] <color:white>Given No call
+  [Step] <color:white>When With arrange then explicit boundary
+  e04-arrange-inside-when                      http Action   
+  e04-arrange-inside-when                      msg  Action   
+  --- ACTION START MARKER ---
+  e04-act                                      http Action   
+  e04-act                                      msg  Action   
+  steps:
+    Given No call  [Passed]
+    When With arrange then explicit boundary  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E05_When_then_Given_then_When_a_second_act
+  [Step] <color:white>When Async
+  e05-first-when                               http Action   
+  e05-first-when                               msg  Action   
+  [Step] <color:white>Then Async
+  e05-first-then                               http Action   
+  e05-first-then                               msg  Action   
+  [Step] <color:white>Given Async
+  e05-given                                    http Setup    
+  e05-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  e05-second-when                              http Action   
+  e05-second-when                              msg  Action   
+  [Step] <color:white>Then Async
+  e05-second-then                              http Action   
+  e05-second-then                              msg  Action   
+  steps:
+    When Async  [Passed]
+    Then Async  [Passed]
+    Given Async  [Passed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E06_test_body_calls_then_Given_no_call_then_When
+  e06-raw-before-any-step                      http Unknown  
+  e06-raw-before-any-step                      msg  Unknown  
+  [Step] <color:white>Given No call
+  [Step] <color:white>When Async
+  e06-when                                     http Action   
+  e06-when                                     msg  Action   
+  steps:
+    Given No call  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E07_StartSetup_then_When_step_no_StartAction
+  e07-setup-call                               http Setup    
+  e07-setup-call                               msg  Setup    
+  [Step] <color:white>When Async
+  e07-when                                     http Action   
+  e07-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  e07-then                                     http Action   
+  e07-then                                     msg  Action   
+  steps:
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E08_no_calls_at_all_with_delimiters_off
+  steps:
+    Given No call  [Passed]
+    When No call  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E09_no_calls_at_all_with_delimiters_on
+  [Step] <color:white>Given No call
+  [Step] <color:white>When No call
+  steps:
+    Given No call  [Passed]
+    When No call  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E10_identical_calls_across_the_boundary_with_delimiters_off
+  e10-same                                     http Setup    
+  e10-same                                     msg  Setup    
+  e10-same                                     http Action   
+  e10-same                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E11_delimiters_off_Given_no_call_then_When_first_log_is_the_marker
+  e11-when                                     http Action   
+  e11-when                                     msg  Action   
+  steps:
+    Given No call  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E12_a_custom_fragment_in_setup
+  [Step] <color:white>Given Arrange with custom note
+  e12                                          http Setup    
+  e12                                          msg  Setup    
+  [Custom] custom
+  e12-2                                        http Setup    
+  e12-2                                        msg  Setup    
+  [Step] <color:white>When Async
+  e12-when                                     http Action   
+  e12-when                                     msg  Action   
+  steps:
+    Given Arrange with custom note  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E13_wrapper_top_level_bar
+  [Step] <color:white>Wrapper
+  e13-given                                    http Setup    
+  e13-given                                    msg  Setup    
+  e13-when                                     http Action   
+  e13-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  e13-then                                     http Action   
+  e13-then                                     msg  Action   
+  steps:
+    (none) Wrapper  [Passed]
+      Given Async  [Passed]
+      When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E14_WhenTriggersAction_false
+  [Step] <color:white>Given Async
+  e14-given                                    http Unknown  
+  e14-given                                    msg  Unknown  
+  [Step] <color:white>When Async
+  e14-when                                     http Unknown  
+  e14-when                                     msg  Unknown  
+  [Step] <color:white>Plain async
+  e14-plain                                    http Unknown  
+  e14-plain                                    msg  Unknown  
+  --- ACTION START MARKER ---
+  [Step] <color:white>Plain async
+  e14-plain-after-startaction                  http Action   
+  e14-plain-after-startaction                  msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+    (none) Plain async  [Passed]
+    (none) Plain async  [Passed]
+
+## PhaseProbe.Rev3.E_Marker.E90_Given_whose_only_call_is_dropped_then_When
+  [Step] <color:white>Given Only a dropped call
+  e90-given-dropped                            http Setup    IGNORED
+  [Step] <color:white>When Async
+  e90-when                                     http Action   
+  e90-when                                     msg  Action   
+  steps:
+    Given Only a dropped call  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.F_Concurrency.F01_WhenAll_of_two_Whens_the_first_ends_first_the_second_nests_a_Given
+  [Step] <color:white>Given Async
+  f01-given                                    http Setup    
+  f01-given                                    msg  Setup    
+  [Step] <color:white>When A wait
+  f01-when-a                                   http Action   
+  f01-when-a                                   msg  Action   
+  f01-when-b-before-nested                     http Action   
+  f01-when-b-before-nested                     msg  Action   
+  f01-when-b-nested-given                      http Setup    
+  f01-when-b-nested-given                      msg  Setup    
+  f01-when-b-after-nested                      http Setup    
+  f01-when-b-after-nested                      msg  Setup    
+  f01-after                                    http Action   
+  f01-after                                    msg  Action   
+  [Step] <color:white>Plain async
+  f01-plain                                    http Action   
+  f01-plain                                    msg  Action   
+  steps:
+    Given Async  [Passed]
+    When A wait  [Passed]
+      When B with nested given  [Passed]
+      Given Async  [Passed]
+    (none) Plain async  [Passed]
+
+## PhaseProbe.Rev3.F_Concurrency.F02_a_When_holding_a_WhenAll_of_Given_sub_steps_out_of_order
+  [Step] <color:white>Given Async
+  f02-given                                    http Setup    
+  f02-given                                    msg  Setup    
+  [Step] <color:white>When Holding when all
+  f02-sub-fast                                 http Setup    
+  f02-sub-fast                                 msg  Setup    
+  f02-sub-slow                                 http Setup    
+  f02-sub-slow                                 msg  Setup    
+  f02-after-subs                               http Setup    
+  f02-after-subs                               msg  Setup    
+  [Step] <color:white>Then Async
+  f02-then                                     http Action   
+  f02-then                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Holding when all  [Passed]
+      Given Sub given  [Passed]
+        Given Sub given  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.F_Concurrency.F03_a_Given_holding_a_WhenAll_of_When_sub_steps_out_of_order
+  [Step] <color:white>Given Holding when all of when
+  f03-sub-fast                                 http Action   
+  f03-sub-fast                                 msg  Action   
+  f03-sub-slow                                 http Action   
+  f03-sub-slow                                 msg  Action   
+  f03-after-subs                               http Action   
+  f03-after-subs                               msg  Action   
+  [Step] <color:white>When Async
+  f03-when                                     http Action   
+  f03-when                                     msg  Action   
+  steps:
+    Given Holding when all of when  [Passed]
+      When Sub when  [Passed]
+        When Sub when  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps
+  [Step] <color:white>Given Parallel invoke
+  f04-p1                                       http Action   
+  f04-p3                                       http Action   
+  f04-p2                                       http Action   
+  f04-p2                                       msg  Action   
+  f04-p3                                       msg  Action   
+  f04-p1                                       msg  Action   
+  f04-after-parallel                           http Setup    
+  f04-after-parallel                           msg  Setup    
+  f04-raw                                      http Setup    
+  f04-raw                                      msg  Setup    
+  [Step] <color:white>When Async
+  f04-when                                     http Action   
+  f04-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  f04-then                                     http Action   
+  f04-then                                     msg  Action   
+  steps:
+    Given Parallel invoke  [Passed]
+      When Sync when sleep  [Passed]
+        When Sync when sleep  [Passed]
+          When Sync when sleep  [Passed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.F_Concurrency.F05_a_When_on_a_new_thread_joined_then_a_call
+  [Step] <color:white>Given Async
+  f05-given                                    http Setup    
+  f05-given                                    msg  Setup    
+  [Step] <color:white>When Sync
+  f05-when-on-thread                           http Action   
+  f05-when-on-thread                           msg  Action   
+  f05-raw-after-join                           http Setup    
+  f05-raw-after-join                           msg  Setup    
+  [Step] <color:white>Plain async
+  f05-plain-after-join                         http Setup    
+  f05-plain-after-join                         msg  Setup    
+  f05-raw-after-plain                          http Setup    
+  f05-raw-after-plain                          msg  Setup    
+  [Step] <color:white>Then Async
+  f05-then                                     http Action   
+  f05-then                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Sync  [Passed]
+    (none) Plain async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.F_Concurrency.F06_exceptions_caught_by_the_test
+  [Step] <color:white>Given Throws sync
+  f06-g1                                       http Setup    
+  f06-g1                                       msg  Setup    
+  f06-raw-1                                    http Setup    
+  f06-raw-1                                    msg  Setup    
+  [Step] <color:white>And Throws async
+  f06-g2                                       http Setup    
+  f06-g2                                       msg  Setup    
+  f06-raw-2                                    http Setup    
+  f06-raw-2                                    msg  Setup    
+  [Step] <color:white>When Throws sync
+  f06-w                                        http Action   
+  f06-w                                        msg  Action   
+  f06-raw-3                                    http Action   
+  f06-raw-3                                    msg  Action   
+  [Step] <color:white>Plain async
+  f06-plain                                    http Action   
+  f06-plain                                    msg  Action   
+  [Step] <color:white>Then Async
+  f06-then                                     http Action   
+  f06-then                                     msg  Action   
+  steps:
+    Given Throws sync  [Failed]
+    And Throws async  [Failed]
+    When Throws sync  [Failed]
+    (none) Plain async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.F_Concurrency.F07_WhenAll_with_a_failing_sub_step_caught_in_a_Given
+  [Step] <color:white>Given Catching when all
+  f07-bad                                      http Setup    
+  f07-bad                                      msg  Setup    
+  f07-ok                                       http Setup    
+  f07-ok                                       msg  Setup    
+  f07-after                                    http Setup    
+  f07-after                                    msg  Setup    
+  [Step] <color:white>When Async
+  f07-when                                     http Action   
+  f07-when                                     msg  Action   
+  [Step] <color:white>Then Async
+  f07-then                                     http Action   
+  f07-then                                     msg  Action   
+  steps:
+    Given Catching when all  [Passed]
+      Given Sub given wait  [Passed]
+        Given Throws async  [Failed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G01_a_skipped_When_then_a_Given_and_a_real_When
+  [Step] <color:white>Given Async
+  g01-first-given                              http Setup    
+  g01-first-given                              msg  Setup    
+  [Step] <color:white>When Skipped async
+  [Step] <color:white>Given Async
+  g01-second-given                             http Setup    
+  g01-second-given                             msg  Setup    
+  [Step] <color:white>When Async
+  g01-when                                     http Action   
+  g01-when                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Skipped async  [Bypassed]
+    Given Async  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G02_a_manual_keyworded_start_never_completed_then_When
+  [Step] <color:white>Given g02-manual-given
+  g02-in-manual                                http Setup    
+  g02-in-manual                                msg  Setup    
+  g02-when                                     http Action   
+  g02-when                                     msg  Action   
+  g02-nosetup                                  http Action   
+  g02-nosetup                                  msg  Action   
+  g02-then                                     http Action   
+  g02-then                                     msg  Action   
+  steps:
+    !!! A STEP IS STILL OPEN AT THE END OF THE RUN
+
+## PhaseProbe.Rev3.G_More.G03_manual_lower_case_and_setup_keywords
+  [Step] <color:white>given g03-lower-given
+  g03-after-lower-given                        http Unknown  
+  g03-after-lower-given                        msg  Unknown  
+  [Step] <color:white>Setup g03-setup
+  g03-after-setup                              http Unknown  
+  g03-after-setup                              msg  Unknown  
+  [Step] <color:white>WHEN g03-upper-when
+  g03-after-upper-when                         http Unknown  
+  g03-after-upper-when                         msg  Unknown  
+  steps:
+    given g03-lower-given  [Passed]
+    Setup g03-setup  [Passed]
+    WHEN g03-upper-when  [Passed]
+
+## PhaseProbe.Rev3.G_More.G04_manual_And_after_a_phase_set_directly
+  [Step] <color:white>Given Async
+  g04-given                                    http Setup    
+  g04-given                                    msg  Setup    
+  [Step] <color:white>And g04-and
+  g04-in-and-nosetup                           http Action   
+  g04-in-and-nosetup                           msg  Action   
+  steps:
+    Given Async  [Passed]
+    And g04-and  [Passed]
+
+## PhaseProbe.Rev3.G_More.G05_manual_And_after_a_background_Given
+  [Step] <color:white>When Async
+  g05-when                                     http Action   
+  g05-when                                     msg  Action   
+  [Step] <color:white>Given Async
+  g05-bg-given                                 http Setup    
+  g05-bg-given                                 msg  Setup    
+  [Step] <color:white>And g05-and
+  g05-in-and-nosetup                           http Action   
+  g05-in-and-nosetup                           msg  Action   
+  steps:
+    When Async  [Passed]
+    Given Async  [Passed]
+    And g05-and  [Passed]
+
+## PhaseProbe.Rev3.G_More.G06_the_only_Given_on_a_child_flow_then_keyword_free_on_the_main_flow
+  [Step] <color:white>Given Ns given async
+  g06-given-in-run                             http Setup    IGNORED
+  g06-given-in-run                             msg  Setup    
+  [Step] <color:white>Ns plain async
+  g06-plain-in-main                            http Unknown  
+  g06-plain-in-main                            msg  Unknown  
+  g06-raw-in-main                              http Unknown  
+  g06-raw-in-main                              msg  Unknown  
+  steps:
+    Given Ns given async  [Passed]
+    (none) Ns plain async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G07_an_async_wrapper_holding_a_Given_then_keyword_free
+  [Step] <color:white>Wrapper holding given
+  g07-wrapped-given                            http Setup    IGNORED
+  g07-wrapped-given                            msg  Setup    
+  g07-raw-after-wrapper                        http Unknown  
+  g07-raw-after-wrapper                        msg  Unknown  
+  [Step] <color:white>Ns plain async
+  g07-plain                                    http Unknown  
+  g07-plain                                    msg  Unknown  
+  g07-raw-after-plain                          http Unknown  
+  g07-raw-after-plain                          msg  Unknown  
+  steps:
+    (none) Wrapper holding given  [Passed]
+      Given Ns given async  [Passed]
+    (none) Ns plain async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G08_a_recursive_Given_then_When
+  [Step] <color:white>Given Recursive
+  g08-d2                                       http Setup    
+  g08-d2                                       msg  Setup    
+  g08-d1                                       http Setup    
+  g08-d1                                       msg  Setup    
+  g08-d0                                       http Setup    
+  g08-d0                                       msg  Setup    
+  g08-d0-after                                 http Setup    
+  g08-d0-after                                 msg  Setup    
+  g08-d1-after                                 http Setup    
+  g08-d1-after                                 msg  Setup    
+  g08-d2-after                                 http Setup    
+  g08-d2-after                                 msg  Setup    
+  [Step] <color:white>When Async
+  g08-when                                     http Action   
+  g08-when                                     msg  Action   
+  steps:
+    Given Recursive  [Passed]
+      Given Recursive  [Passed]
+        Given Recursive  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G09_a_sync_Given_blocks_on_an_async_Given_then_When
+  [Step] <color:white>Given Blocks
+  g09-sub                                      http Setup    
+  g09-sub                                      msg  Setup    
+  g09-after                                    http Setup    
+  g09-after                                    msg  Setup    
+  [Step] <color:white>When Async
+  g09-when                                     http Action   
+  g09-when                                     msg  Action   
+  steps:
+    Given Blocks  [Passed]
+      Given Async  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G10_ConfigureAwait_false
+  [Step] <color:white>Given Async
+  g10-given                                    http Setup    
+  g10-given                                    msg  Setup    
+  [Step] <color:white>When Async
+  g10-when                                     http Action   
+  g10-when                                     msg  Action   
+  [Step] <color:white>Then With sub
+  g10-then                                     http Action   
+  g10-then                                     msg  Action   
+  g10-then-sub                                 http Action   
+  g10-then-sub                                 msg  Action   
+  g10-then-after                               http Action   
+  g10-then-after                               msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+    Then With sub  [Passed]
+      (none) Plain async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G11_StartAction_on_a_child_flow_then_When
+  [Step] <color:white>Given Async
+  g11-given                                    http Setup    
+  g11-given                                    msg  Setup    
+  --- ACTION START MARKER ---
+  g11-raw-after                                http Setup    
+  g11-raw-after                                msg  Setup    
+  [Step] <color:white>When Async
+  g11-when                                     http Action   
+  g11-when                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G12_a_scope_for_another_identity_inside_a_test
+  [Step] <color:white>Given Async
+  g12-given                                    http Setup    
+  g12-given                                    msg  Setup    
+  g12-in-scope                                 http Setup    
+  g12-in-scope                                 msg  Setup    
+  [Step] <color:white>When Async
+  g12-when-in-scope                            http Action   
+  g12-when-in-scope                            msg  Action   
+  g12-after-scope                              http Action   
+  g12-after-scope                              msg  Action   
+  [Step] <color:white>Then Async
+  g12-then                                     http Action   
+  g12-then                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+    Then Async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G13_a_When_on_a_detached_thread_with_no_identity
+  [Step] <color:white>Given Async
+  g13-given                                    http Setup    
+  g13-given                                    msg  Setup    
+  g13-raw-after                                http Setup    
+  g13-raw-after                                msg  Setup    
+  [Step] <color:white>When Async
+  g13-when                                     http Action   
+  g13-when                                     msg  Action   
+  steps:
+    Given Async  [Passed]
+    When Async  [Passed]
+
+## PhaseProbe.Rev3.G_More.G14_a_Given_whose_SkipIf_getter_throws_is_caught_then_When
+  [Step] <color:white>Given Skipif throws
+  g14-when                                     http Action   
+  g14-when                                     msg  Action   
+  g14-nosetup                                  http Action   
+  g14-nosetup                                  msg  Action   
+  g14-then                                     http Action   
+  g14-then                                     msg  Action   
+  steps:
+    !!! A STEP IS STILL OPEN AT THE END OF THE RUN
+

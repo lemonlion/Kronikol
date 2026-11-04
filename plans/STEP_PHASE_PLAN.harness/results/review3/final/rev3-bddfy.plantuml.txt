@@ -1,0 +1,221 @@
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z01_sync_Given_leaves_a_worker_running (TestName field: a0e539bf8547fa4ed90f418fbd10be6fa56bcdd94377c55fb989a11b68748549)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a sync step leaves a worker running z01
+  end
+  shop -[#438DD5]-> probe: OK
+  shop -[#438DD5]-> probe: OK
+  z01When -[#9B59B6]-> probe: Responded
+  z01WorkerStart -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z01Then -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z01WorkerEnd -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z02_async_Given_leaves_a_worker_running (TestName field: 268cdfc1d5329664ebc6a38b2198b53519231170278c1347f232687126457ee3)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given an async step leaves a worker running z02
+  shop -[#438DD5]-> probe: OK
+  z02GivenCall -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z02WorkerStart -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  z02When -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z02Then -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z02WorkerEnd -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z03_async_Given_with_woven_sub_steps (TestName field: 6e8d93baf30bff0bca9c1e8c5b08d20f66673732f61823d74c5ee53e77f26c69)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given async with substeps z03
+  shop -[#438DD5]-> probe: OK
+  z03PlainSub -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z03WhenSub -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z03After -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When a call z03-when
+  shop -[#438DD5]-> probe: OK
+  z03When -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z04_async_step_fails_scenario_reports_it (TestName field: 30dc562c8eb0aacc3c9876de0a6a0a08dec74cdff2094a86b90f640b3e4e0e66)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call z04-given
+  shop -[#438DD5]-> probe: OK
+  z04Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When async fails z04-when
+  shop -[#438DD5]-> probe: OK
+  z04When -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z05_sync_step_fails_scenario_reports_it (TestName field: 9fa9683f9792fef0ec029af8164de307eb960d825b7f30a5df44648325868195)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call z05-given
+  shop -[#438DD5]-> probe: OK
+  z05Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When sync fails z05-when
+  shop -[#438DD5]-> probe: OK
+  z05When -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z06_a_Task_of_T_step (TestName field: 7265bbc9e895bf607fed5a4aebd19c02bd9dd566866a6405363e30c6a35fa0ea)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call z06-given
+  shop -[#438DD5]-> probe: OK
+  z06Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When async of T z06-when
+  shop -[#438DD5]-> probe: OK
+  z06When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call z06-then
+  shop -[#438DD5]-> probe: OK
+  z06Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z07_an_async_void_step (TestName field: a39410c792412a0726bb01b08e86b71c510eee8f9d8abd1d449329860e85cb97)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call z07-given
+  shop -[#438DD5]-> probe: OK
+  z07Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When async void z07-when
+  shop -[#438DD5]-> probe: OK
+  z07When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call z07-then
+  shop -[#438DD5]-> probe: OK
+  z07Then -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z08_a_skipped_sub_step_in_an_async_Given (TestName field: 0341000daacf71cce5ab4929f30507e48fc163807dc5ee58eeac7ada37342ab6)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given async with a skipped sub step z08-given
+  shop -[#438DD5]-> probe: OK
+  z08Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When a call z08-when
+  shop -[#438DD5]-> probe: OK
+  z08When -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z09_two_examples_in_one_test (TestName field: 88393d94e045660cc218600a37fb6a822e081bf81ec225e880a1e26f15546b82)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call z09-given
+  shop -[#438DD5]-> probe: OK
+  z09Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When a call z09-when
+  shop -[#438DD5]-> probe: OK
+  z09When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call z09-given
+  shop -[#438DD5]-> probe: OK
+  z09Given -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>When a call z09-when
+  shop -[#438DD5]-> probe: OK
+  z09When -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z10_Given_with_no_calls_then_When (TestName field: 69647e602c3158e450a39c882c914996ec5eb288f48ffaf9e161f8320b5a0a00)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>Given nothing
+  hnote across <<stepDelimiter>> #black:<color:white>When a call z10-when
+  shop -[#438DD5]-> probe: OK
+  z10When -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z11_nonasync_task_steps (TestName field: 20b9b9da5b30dbb14395c9e3baa56480f288b4b6734c9d3ace59bbc4134bf524)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call z11-given
+  shop -[#438DD5]-> probe: OK
+  z11Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When nonasync task returns completed z11-when
+  hnote across <<stepDelimiter>> #black:<color:white>And And when nonasync task throws z11-when2
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z12_a_failing_sync_scenario_in_a_woven_parent (TestName field: de0be4add95833fe837bcfc8c41a43fd9d88da40f3fe968a0d38a280d4aad7b2)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Scenario inside a step
+  shop -[#438DD5]-> probe: OK
+  z12Given -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  z12When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Plain woven
+  shop -[#438DD5]-> probe: OK
+  z12After -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z13_a_failing_async_scenario_in_a_woven_parent (TestName field: 1996f297d1e944fabf05205bb84525b9c94a718f86803ee71b01dcccb1538202)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Async scenario inside a step
+  shop -[#438DD5]-> probe: OK
+  z13Given -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  z13When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Plain woven
+  shop -[#438DD5]-> probe: OK
+  z13After -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z14_woven_step_and_call_after_the_scenario_in_the_test (TestName field: 2cc4e956caee165dbdefd14e81756fae2c7432d77c0dde321035f157614b6130)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call z14-given
+  shop -[#438DD5]-> probe: OK
+  z14Given -[#9B59B6]-> probe: Responded
+  end
+  hnote across <<stepDelimiter>> #black:<color:white>When async z14-when
+  shop -[#438DD5]-> probe: OK
+  z14When -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>A teardown z14-teardown
+  shop -[#438DD5]-> probe: OK
+  z14Teardown -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z14RawAfterBddfy -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Plain woven
+  shop -[#438DD5]-> probe: OK
+  z14WovenAfterBddfy -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z14RawAfterWoven -[#9B59B6]-> probe: Responded
+  @enduml
+
+## PhaseProbe.Rev3.Bddfy.Scenarios.Z15_a_failing_sync_scenario_with_a_teardown_in_a_woven_Given_then_a_When (TestName field: b8ef4c4dc506d062dd4b1677f3823bf4077ecf0055f244ac348ff119a8250934)
+  @startuml
+  partition #F6F6F6 Setup
+  hnote across <<stepDelimiter>> #black:<color:white>Given Arrange with a failing scenario
+  shop -[#438DD5]-> probe: OK
+  z15InnerGiven -[#9B59B6]-> probe: Responded
+  end
+  shop -[#438DD5]-> probe: OK
+  z15InnerWhen -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z15InnerTeardown -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z15AfterInner -[#9B59B6]-> probe: Responded
+  shop -[#438DD5]-> probe: OK
+  z15SubAfterInner -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>When Woven when
+  shop -[#438DD5]-> probe: OK
+  z15When -[#9B59B6]-> probe: Responded
+  @enduml
+

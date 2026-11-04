@@ -1,0 +1,50 @@
+== 5.28.3-r1 reqnroll-xunit2
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r1
+  MOVED 2ec2b7b1aef8ac81: calls 7 -> 9; set b45a6dd1 -> eb44f1da
+21 of 22 scenarios keep their fingerprints
+== 5.28.3-r1 xunit3-plain
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r1
+  MOVED 1902e2c6a8618ea0: calls 6 -> 6; set 383d8cb2 -> 383d8cb2
+  MOVED 536bc5bc143891ea: calls 10 -> 10; set 71ea4cb3 -> 71ea4cb3
+34 of 36 scenarios keep their fingerprints
+== 5.28.3-r1 lightbdd-xunit2
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r1
+  MOVED b2e8bd8c0e27af6e: calls 4 -> 3; set a4dc033f -> 4e0e4c05
+15 of 16 scenarios keep their fingerprints
+== 5.28.3-r1 bddfy-xunit3
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r1
+  MOVED 9688a45afdfe4123: calls 5 -> 6; set 89ea79eb -> 0db4363a
+10 of 11 scenarios keep their fingerprints
+== 5.28.3-r2 reqnroll-xunit2
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r2
+  MOVED 2ec2b7b1aef8ac81: calls 7 -> 9; set b45a6dd1 -> eb44f1da
+21 of 22 scenarios keep their fingerprints
+== 5.28.3-r2 xunit3-plain
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r2
+  MOVED 1902e2c6a8618ea0: calls 6 -> 6; set 383d8cb2 -> 383d8cb2
+  MOVED 51d1090b7a798759: calls 4 -> 4; set c51d663d -> c51d663d
+  MOVED f97db3c0a212188e: calls 6 -> 6; set 1ff332b0 -> 1ff332b0
+33 of 36 scenarios keep their fingerprints
+== 5.28.3-r2 lightbdd-xunit2
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r2
+  MOVED b2e8bd8c0e27af6e: calls 4 -> 3; set a4dc033f -> 4e0e4c05
+15 of 16 scenarios keep their fingerprints
+== 5.28.3-r2 bddfy-xunit3
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r2
+  MOVED 9688a45afdfe4123: calls 5 -> 6; set 89ea79eb -> 0db4363a
+10 of 11 scenarios keep their fingerprints
+== 5.28.3-r3 reqnroll-xunit2
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r3
+  MOVED 2ec2b7b1aef8ac81: calls 7 -> 9; set b45a6dd1 -> eb44f1da
+21 of 22 scenarios keep their fingerprints
+== 5.28.3-r3 xunit3-plain
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r3
+36 of 36 scenarios keep their fingerprints
+== 5.28.3-r3 lightbdd-xunit2
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r3
+  MOVED b2e8bd8c0e27af6e: calls 4 -> 3; set a4dc033f -> 4e0e4c05
+15 of 16 scenarios keep their fingerprints
+== 5.28.3-r3 bddfy-xunit3
+shapeVersion 11 -> 11, generators 5.28.2 -> 5.28.3-r3
+  MOVED 9688a45afdfe4123: calls 5 -> 6; set 89ea79eb -> 0db4363a
+10 of 11 scenarios keep their fingerprints

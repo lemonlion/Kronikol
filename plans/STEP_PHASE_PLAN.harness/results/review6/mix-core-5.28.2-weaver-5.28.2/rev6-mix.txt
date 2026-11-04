@@ -1,0 +1,493 @@
+## M01_SkipIf_getter_throws_async_then_When_Then
+  [Step] <color:white>Given Skip throws
+  
+  Request  m01-after                      phase=Setup   src=TestContext
+  Response m01-after                      phase=Setup   src=TestContext
+  Request  m01-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m01-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m01-after-noaction             phase=Setup   src=TestContext
+  Response m01-after-noaction             phase=Setup   src=TestContext
+  Request  m01-act                        phase=Action  src=TestContext
+  Response m01-act                        phase=Action  src=TestContext
+  Request  m01-after-act                  phase=Action  src=TestContext
+  Response m01-after-act                  phase=Action  src=TestContext
+  Request  m01-after-act-nosetup          phase=Action  src=TestContext
+  Response m01-after-act-nosetup          phase=Action  src=TestContext
+  Request  m01-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m01-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Request  m01-then                       phase=Action  src=TestContext
+  Response m01-then                       phase=Action  src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Skip throws
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M02_SkipIf_getter_throws_sync_then_When_Then
+  [Step] <color:white>Given Skip throws sync
+  
+  Request  m02-after                      phase=Setup   src=TestContext
+  Response m02-after                      phase=Setup   src=TestContext
+  Request  m02-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m02-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m02-after-noaction             phase=Setup   src=TestContext
+  Response m02-after-noaction             phase=Setup   src=TestContext
+  Request  m02-act                        phase=Action  src=TestContext
+  Response m02-act                        phase=Action  src=TestContext
+  Request  m02-after-act                  phase=Action  src=TestContext
+  Response m02-after-act                  phase=Action  src=TestContext
+  Request  m02-after-act-nosetup          phase=Action  src=TestContext
+  Response m02-after-act-nosetup          phase=Action  src=TestContext
+  Request  m02-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m02-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Request  m02-then                       phase=Action  src=TestContext
+  Response m02-then                       phase=Action  src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Skip throws sync
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M03_A_Task_Given_throws_before_its_task_then_When_Then
+  [Step] <color:white>Given Throws before task
+  
+  Request  m03-after                      phase=Unknown src=TestContext
+  Response m03-after                      phase=Unknown src=TestContext
+  Request  m03-after-nosetup              phase=Unknown src=TestContext
+  Response m03-after-nosetup              phase=Unknown src=TestContext
+  Request  m03-after-noaction             phase=Unknown src=TestContext
+  Response m03-after-noaction             phase=Unknown src=TestContext
+  Request  m03-act                        phase=Action  src=TestContext
+  Response m03-act                        phase=Action  src=TestContext
+  Request  m03-after-act                  phase=Action  src=TestContext
+  Response m03-after-act                  phase=Action  src=TestContext
+  Request  m03-after-act-nosetup          phase=Action  src=TestContext
+  Response m03-after-act-nosetup          phase=Action  src=TestContext
+  Request  m03-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m03-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Request  m03-then                       phase=Action  src=TestContext
+  Response m03-then                       phase=Action  src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Throws before task
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M04_A_sync_skip_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m04-seed                       phase=Setup   src=TestContext
+  Response m04-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Skip sync
+  
+  Request  m04-before                     phase=Action  src=TestContext
+  Response m04-before                     phase=Action  src=TestContext
+  Request  m04-after                      phase=Setup   src=TestContext
+  Response m04-after                      phase=Setup   src=TestContext
+  Request  m04-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m04-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m04-after-noaction             phase=Setup   src=TestContext
+  Response m04-after-noaction             phase=Setup   src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  m04-sub                        phase=Setup   src=TestContext
+  Response m04-sub                        phase=Setup   src=TestContext
+  Request  m04-after-sub                  phase=Setup   src=TestContext
+  Response m04-after-sub                  phase=Setup   src=TestContext
+  Request  m04-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m04-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m04-after-sub-noaction         phase=Setup   src=TestContext
+  Response m04-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m04-after-when                 phase=Action  src=TestContext
+  Response m04-after-when                 phase=Action  src=TestContext
+  Request  m04-after-when-nosetup         phase=Action  src=TestContext
+  Response m04-after-when-nosetup         phase=Action  src=TestContext
+  Request  m04-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m04-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m04-then                       phase=Action  src=TestContext
+  Response m04-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Skip sync [Passed]
+      Given Skip sync [Bypassed]
+    Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Skip sync
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M05_An_async_skip_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m05-seed                       phase=Setup   src=TestContext
+  Response m05-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Skip async
+  
+  Request  m05-before                     phase=Action  src=TestContext
+  Response m05-before                     phase=Action  src=TestContext
+  Request  m05-after                      phase=Setup   src=TestContext
+  Response m05-after                      phase=Setup   src=TestContext
+  Request  m05-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m05-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m05-after-noaction             phase=Setup   src=TestContext
+  Response m05-after-noaction             phase=Setup   src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  m05-sub                        phase=Setup   src=TestContext
+  Response m05-sub                        phase=Setup   src=TestContext
+  Request  m05-after-sub                  phase=Setup   src=TestContext
+  Response m05-after-sub                  phase=Setup   src=TestContext
+  Request  m05-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m05-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m05-after-sub-noaction         phase=Setup   src=TestContext
+  Response m05-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m05-after-when                 phase=Action  src=TestContext
+  Response m05-after-when                 phase=Action  src=TestContext
+  Request  m05-after-when-nosetup         phase=Action  src=TestContext
+  Response m05-after-when-nosetup         phase=Action  src=TestContext
+  Request  m05-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m05-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m05-then                       phase=Action  src=TestContext
+  Response m05-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Skip async [Passed]
+      Given Skip async [Bypassed]
+    Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Skip async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M06_A_Task_skip_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m06-seed                       phase=Setup   src=TestContext
+  Response m06-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Skip task
+  
+  Request  m06-before                     phase=Action  src=TestContext
+  Response m06-before                     phase=Action  src=TestContext
+  Request  m06-after                      phase=Setup   src=TestContext
+  Response m06-after                      phase=Setup   src=TestContext
+  Request  m06-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m06-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m06-after-noaction             phase=Setup   src=TestContext
+  Response m06-after-noaction             phase=Setup   src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  m06-sub                        phase=Setup   src=TestContext
+  Response m06-sub                        phase=Setup   src=TestContext
+  Request  m06-after-sub                  phase=Setup   src=TestContext
+  Response m06-after-sub                  phase=Setup   src=TestContext
+  Request  m06-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m06-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m06-after-sub-noaction         phase=Setup   src=TestContext
+  Response m06-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m06-after-when                 phase=Action  src=TestContext
+  Response m06-after-when                 phase=Action  src=TestContext
+  Request  m06-after-when-nosetup         phase=Action  src=TestContext
+  Response m06-after-when-nosetup         phase=Action  src=TestContext
+  Request  m06-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m06-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m06-then                       phase=Action  src=TestContext
+  Response m06-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Skip task [Passed]
+      Given Skip task [Bypassed]
+    Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Skip task
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M07_A_skip_last_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m07-seed                       phase=Setup   src=TestContext
+  Response m07-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Last skip
+  
+  Request  m07-before                     phase=Action  src=TestContext
+  Response m07-before                     phase=Action  src=TestContext
+  Request  m07-after-when                 phase=Action  src=TestContext
+  Response m07-after-when                 phase=Action  src=TestContext
+  Request  m07-after-when-nosetup         phase=Action  src=TestContext
+  Response m07-after-when-nosetup         phase=Action  src=TestContext
+  Request  m07-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m07-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m07-then                       phase=Action  src=TestContext
+  Response m07-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Last skip [Passed]
+      Given Skip async [Bypassed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Last skip
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M08_The_issue_shape
+  [Step] <color:white>Given Async
+  
+  Request  m08-seed                       phase=Setup   src=TestContext
+  Response m08-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Sub
+  
+  Request  m08-before                     phase=Action  src=TestContext
+  Response m08-before                     phase=Action  src=TestContext
+  Request  m08-sub                        phase=Setup   src=TestContext
+  Response m08-sub                        phase=Setup   src=TestContext
+  Request  m08-after-sub                  phase=Setup   src=TestContext
+  Response m08-after-sub                  phase=Setup   src=TestContext
+  Request  m08-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m08-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m08-after-sub-noaction         phase=Setup   src=TestContext
+  Response m08-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m08-after-when                 phase=Action  src=TestContext
+  Response m08-after-when                 phase=Action  src=TestContext
+  Request  m08-after-when-nosetup         phase=Action  src=TestContext
+  Response m08-after-when-nosetup         phase=Action  src=TestContext
+  Request  m08-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m08-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m08-then                       phase=Action  src=TestContext
+  Response m08-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Sub [Passed]
+      Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Sub
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M09_A_top_level_skip_then_a_real_When
+  [Step] <color:white>Given Skip async
+  
+  Request  m09-after-skip                 phase=Setup   src=TestContext
+  Response m09-after-skip                 phase=Setup   src=TestContext
+  Request  m09-after-skip-nosetup         phase=Setup   src=TestContext IGNORED
+  Response m09-after-skip-nosetup         phase=Setup   src=TestContext IGNORED
+  Request  m09-after-skip-noaction        phase=Setup   src=TestContext
+  Response m09-after-skip-noaction        phase=Setup   src=TestContext
+  [Step] <color:white>When Async
+  
+  Request  m09-act                        phase=Action  src=TestContext
+  Response m09-act                        phase=Action  src=TestContext
+  Request  m09-after-act                  phase=Action  src=TestContext
+  Response m09-after-act                  phase=Action  src=TestContext
+  Request  m09-after-act-nosetup          phase=Action  src=TestContext
+  Response m09-after-act-nosetup          phase=Action  src=TestContext
+  Request  m09-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m09-after-act-noaction         phase=Action  src=TestContext IGNORED
+  steps:
+    Given Skip async [Bypassed]
+    When Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Skip async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M10_A_Task_Given_throws_before_its_task_caught_in_the_test_then_When_Then
+  [Step] <color:white>Given Throws before task
+  
+  Request  m10-after                      phase=Setup   src=TestContext
+  Response m10-after                      phase=Setup   src=TestContext
+  Request  m10-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m10-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m10-after-noaction             phase=Setup   src=TestContext
+  Response m10-after-noaction             phase=Setup   src=TestContext
+  Request  m10-act                        phase=Action  src=TestContext
+  Response m10-act                        phase=Action  src=TestContext
+  Request  m10-after-act                  phase=Action  src=TestContext
+  Response m10-after-act                  phase=Action  src=TestContext
+  Request  m10-after-act-nosetup          phase=Action  src=TestContext
+  Response m10-after-act-nosetup          phase=Action  src=TestContext
+  Request  m10-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m10-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Request  m10-then                       phase=Action  src=TestContext
+  Response m10-then                       phase=Action  src=TestContext
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Throws before task
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## M11_An_async_void_skip_under_a_When
+  [Step] <color:white>Given Async
+  
+  Request  m11-seed                       phase=Setup   src=TestContext
+  Response m11-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When Skip void
+  
+  Request  m11-before                     phase=Action  src=TestContext
+  Response m11-before                     phase=Action  src=TestContext
+  Request  m11-after                      phase=Setup   src=TestContext
+  Response m11-after                      phase=Setup   src=TestContext
+  Request  m11-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m11-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m11-after-noaction             phase=Setup   src=TestContext
+  Response m11-after-noaction             phase=Setup   src=TestContext
+  [Step] <color:white>Given Async
+  
+  Request  m11-sub                        phase=Setup   src=TestContext
+  Response m11-sub                        phase=Setup   src=TestContext
+  Request  m11-after-sub                  phase=Setup   src=TestContext
+  Response m11-after-sub                  phase=Setup   src=TestContext
+  Request  m11-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Response m11-after-sub-nosetup          phase=Setup   src=TestContext IGNORED
+  Request  m11-after-sub-noaction         phase=Setup   src=TestContext
+  Response m11-after-sub-noaction         phase=Setup   src=TestContext
+  Request  m11-after-when                 phase=Action  src=TestContext
+  Response m11-after-when                 phase=Action  src=TestContext
+  Request  m11-after-when-nosetup         phase=Action  src=TestContext
+  Response m11-after-when-nosetup         phase=Action  src=TestContext
+  Request  m11-after-when-noaction        phase=Action  src=TestContext IGNORED
+  Response m11-after-when-noaction        phase=Action  src=TestContext IGNORED
+  [Step] <color:white>Then Async
+  
+  Request  m11-then                       phase=Action  src=TestContext
+  Response m11-then                       phase=Action  src=TestContext
+  steps:
+    Given Async [Passed]
+    When Skip void [Passed]
+      Given Skip void [Bypassed]
+    Given Async [Passed]
+    Then Async [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When Skip void
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given Async
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then Async
+      shop -[#438DD5]-> probe: OK
+
+## M12_A_getter_false_Task_stub_throws_caught_then_When
+  [Step] <color:white>Given No skip throws
+  
+  Request  m12-after                      phase=Setup   src=TestContext
+  Response m12-after                      phase=Setup   src=TestContext
+  Request  m12-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Response m12-after-nosetup              phase=Setup   src=TestContext IGNORED
+  Request  m12-after-noaction             phase=Setup   src=TestContext
+  Response m12-after-noaction             phase=Setup   src=TestContext
+  Request  m12-act                        phase=Action  src=TestContext
+  Response m12-act                        phase=Action  src=TestContext
+  Request  m12-after-act                  phase=Action  src=TestContext
+  Response m12-after-act                  phase=Action  src=TestContext
+  Request  m12-after-act-nosetup          phase=Action  src=TestContext
+  Response m12-after-act-nosetup          phase=Action  src=TestContext
+  Request  m12-after-act-noaction         phase=Action  src=TestContext IGNORED
+  Response m12-after-act-noaction         phase=Action  src=TestContext IGNORED
+  steps:
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given No skip throws
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+

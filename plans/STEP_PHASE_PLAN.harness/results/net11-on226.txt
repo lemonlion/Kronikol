@@ -1,0 +1,28 @@
+=================== on226-final, default, Debug
+Passed!  - Failed:     0, Passed:    20, Skipped:     0, Total:    20 - net11.dll (net11.0)
+An_async_task: impl IL, state machine True, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Action (Setup before it)
+after an async [WhenStep], the caller's phase: Action (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)
+=================== on226-final, default, Release
+Passed!  - Failed:     0, Passed:    20, Skipped:     0, Total:    20 - net11.dll (net11.0)
+An_async_task: impl IL, state machine True, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Action (Setup before it)
+after an async [WhenStep], the caller's phase: Action (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)
+=================== on226-final, runtime-async, Debug
+Passed!  - Failed:     0, Passed:    20, Skipped:     0, Total:    20 - net11.dll (net11.0)
+An_async_task: impl Async, state machine False, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Setup (Setup before it)
+after an async [WhenStep], the caller's phase: Setup (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)
+=================== on226-final, runtime-async, Release
+Passed!  - Failed:     0, Passed:    20, Skipped:     0, Total:    20 - net11.dll (net11.0)
+An_async_task: impl Async, state machine False, runtime 11.0.0
+after a sync [WhenStep], the caller's phase: Action (Setup before it)
+after an async [WhenStep] that never suspends, the caller's phase: Setup (Setup before it)
+after an async [WhenStep], the caller's phase: Setup (Setup before it)
+inside an async [WhenStep], after its await: Action (Setup before it)

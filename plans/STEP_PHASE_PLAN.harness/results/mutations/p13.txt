@@ -1,0 +1,46 @@
+ORDER-ONLY solid=0 order=1 racing-new=3 racing-seen=2
+first: (order) rev5/rev5-a: L03_WhenAll_of_a_Given_and_a_When_at_the_top: + Response l03-given phase=Setup src=TestContext - Response l03-given phase=Setup src=TestContext
+
+[rev5/adapter-nunit4] nunit4.txt: RACING-NEW E06_Parallel_ForEach_of_sync_Givens_inside_a_When (known to race)
+    e06-b: Action Action > Action Action; e06-c: Action Action > Action Action
+      +e06-c Action Action
+      +e06-b Action Action
+      -e06-b Action Action
+      -e06-c Action Action
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L02_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: ORDER L03_WhenAll_of_a_Given_and_a_When_at_the_top
+      + Response l03-given phase=Setup src=TestContext
+      - Response l03-given phase=Setup src=TestContext
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L04_Parallel_ForEach_of_sync_Givens_at_the_top_then_When_with_nested_Given
+[rev5/rev5-bddfy] rev5-bddfy.txt: RACING-NEW B05_Parallel_stories_in_one_test (baseline variants 3, 2 shapes)
+    Request: b05b-given2 phase=Setup src=TestContext > b05b-given2 phase=Setup src=TestContext; Response: b05a-given2 phase=Setup src=TestContext > b05a-given2 phase=Setup src=TestContext; Response: b05a-when1 phase=Action src=TestContext > b05a-when1 phase=Action src=TestContext; Response: b05a-when2 phase=Action src=TestContext > b05a-when2 phase=Action src=TestContext; Request: b05a-then1 phase
+      - Request b05b-given2 phase=Setup src=TestContext
+      + Request b05b-given2 phase=Setup src=TestContext
+      + Response b05a-given2 phase=Setup src=TestContext
+      - Response b05a-given2 phase=Setup src=TestContext
+      + Response b05a-when1 phase=Action src=TestContext
+      - Response b05a-when1 phase=Action src=TestContext
+      + Response b05a-when2 phase=Action src=TestContext
+      + Request b05a-then1 phase=Action src=TestContext
+      - Response b05a-when2 phase=Action src=TestContext
+      - Request b05a-then1 phase=Action src=TestContext
+      + Response b05b-then1 phase=Action src=TestContext
+      - Response b05b-then1 phase=Action src=TestContext
+      + Request b05b-then2 phase=Action src=TestContext
+      - Request b05b-then2 phase=Action src=TestContext
+      + Response b05b-then2 phase=Action src=TestContext
+      - Response b05b-then2 phase=Action src=TestContext
+[rev6/rev6-a] rev6-a.txt: RACING-NEW B06_A_Parallel_For_of_skipped_and_real_inside_a_When (baseline variants 3, 2 shapes)
+    Request: b06-real3 phase=Action src=TestContext > b06-real5 phase=Action src=TestContext; Request: b06-real5 phase=Action src=TestContext > b06-real3 phase=Action src=TestContext; Response: b06-real1 phase=Action src=TestContext > b06-real1 phase=Action src=TestContext; Request: b06-real7 phase=Action src=TestContext > b06-real7 phase=Action src=TestContext; Response: b06-real7 phase=Action sr
+      + Request b06-real5 phase=Action src=TestContext
+      + Request b06-real3 phase=Action src=TestContext
+      - Request b06-real3 phase=Action src=TestContext
+      - Request b06-real5 phase=Action src=TestContext
+      + Request b06-real7 phase=Action src=TestContext
+      + Response b06-real1 phase=Action src=TestContext
+      + Response b06-real7 phase=Action src=TestContext
+      - Response b06-real1 phase=Action src=TestContext
+      - Request b06-real7 phase=Action src=TestContext
+      - Response b06-real7 phase=Action src=TestContext
+      + Given Skip sync [Bypassed]
+      - Given Skip sync [Bypassed]

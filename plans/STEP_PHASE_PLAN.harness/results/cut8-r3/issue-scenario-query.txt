@@ -1,0 +1,10 @@
+step  phase   method  path                   calls errors   median      max bodies     bytes
+0     Setup   GET     /r00-given                 1      0    13 ms    13 ms      1       2 B
+0     Setup   bus     /r00-given                 1      0     0 ms     0 ms      1       2 B
+1     Action  GET     /r00-discounts-SAVE10      1      0     9 ms     9 ms      1       2 B
+1     Action  bus     /r00-discounts-SAVE10      1      0     0 ms     0 ms      1       2 B
+1     Action  GET     /r00-orders                1      0    14 ms    14 ms      1       2 B
+1     Action  bus     /r00-orders                1      0     0 ms     0 ms      1       2 B
+2     Action  GET     /r00-then                  1      0    17 ms    17 ms      1       2 B
+2     Action  bus     /r00-then                  1      0     0 ms     0 ms      1       2 B
+8 buckets

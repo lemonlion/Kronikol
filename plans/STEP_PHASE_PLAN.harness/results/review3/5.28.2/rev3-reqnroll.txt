@@ -1,0 +1,219 @@
+## Q01 a sync Given binding leaves a woven worker step running
+  [Step] <color:white>Given a sync binding leaves a worker running as q01
+  q01-worker-start                             http Setup    
+  --- ACTION START MARKER ---
+  q01-when                                     http Action   
+  q01-when                                     msg  Action   
+  q01-worker-start                             msg  Setup    
+  q01-when-and                                 http Setup    
+  q01-when-and                                 msg  Setup    
+  q01-then                                     http Action   
+  q01-then                                     msg  Action   
+  q01-worker-end                               http Setup    
+  q01-worker-end                               msg  Setup    
+  steps:
+    Given a sync binding leaves a worker running as q01  [Passed]
+      (none) Worker step  [Passed]
+      When a call named q01-when  [Passed]
+      And a call named q01-when-and  [Passed]
+      Then a call named q01-then  [Passed]
+      And the worker is released  [Passed]
+
+## Q02 an async Given binding leaves a woven worker step running
+  [Step] <color:white>Given an async binding leaves a worker running as q02
+  q02-worker-start                             http Setup    
+  q02-given-call                               http Setup    
+  q02-worker-start                             msg  Setup    
+  q02-given-call                               msg  Setup    
+  --- ACTION START MARKER ---
+  q02-when                                     http Action   
+  q02-when                                     msg  Action   
+  q02-then                                     http Action   
+  q02-then                                     msg  Action   
+  q02-worker-end                               http Setup    
+  q02-worker-end                               msg  Setup    
+  steps:
+    Given an async binding leaves a worker running as q02  [Passed]
+      (none) Worker step  [Passed]
+      When a call named q02-when  [Passed]
+      Then a call named q02-then  [Passed]
+      And the worker is released  [Passed]
+
+## Q03 a sync Given binding leaves a worker running with TrackDuringSetup false
+  [Step] <color:white>Given a sync binding leaves a worker running as q03
+  q03-worker-start                             http Setup    IGNORED
+  --- ACTION START MARKER ---
+  q03-when                                     http Action   
+  q03-when                                     msg  Action   
+  q03-worker-start                             msg  Setup    
+  q03-then                                     http Action   
+  q03-then                                     msg  Action   
+  q03-worker-end                               http Setup    IGNORED
+  q03-worker-end                               msg  Setup    
+  steps:
+    Given a sync binding leaves a worker running as q03  [Passed]
+      (none) Worker step  [Passed]
+      When a call named q03-when  [Passed]
+      Then a call named q03-then  [Passed]
+      And the worker is released  [Passed]
+
+## Q04 a Given binding starts a background loop of keyword-free steps
+  [Step] <color:white>Given a binding starts a keyword free loop as q04
+  [Step] <color:white>When a call named q04-when
+  q04-when                                     http Action   
+  q04-poll0                                    http Setup    
+  q04-when                                     msg  Action   
+  --- ACTION START MARKER ---
+  q04-then                                     http Action   
+  q04-then                                     msg  Action   
+  q04-poll0                                    msg  Setup    
+  steps:
+    Given a binding starts a keyword free loop as q04  [Passed]
+    When a call named q04-when  [Passed]
+      (none) Poll plain  [Passed]
+      Then a call named q04-then  [Passed]
+      And the loop is stopped  [Passed]
+
+## Q05 a Given binding starts a background loop of Then steps
+  [Step] <color:white>Given a binding starts a Then loop as q05
+  q05-poll0                                    http Action   
+  q05-poll0                                    msg  Action   
+  q05-poll1                                    http Action   
+  q05-poll1                                    msg  Action   
+  q05-poll2                                    http Action   
+  q05-poll2                                    msg  Action   
+  [Step] <color:white>And a call named q05-given-and
+  q05-given-and                                http Setup    
+  q05-given-and                                msg  Setup    
+  q05-poll3                                    http Action   
+  --- ACTION START MARKER ---
+  q05-when                                     http Action   
+  q05-when                                     msg  Action   
+  q05-poll3                                    msg  Action   
+  [Step] <color:white>Then a call named q05-then
+  q05-then                                     http Action   
+  q05-then                                     msg  Action   
+  q05-poll4                                    http Action   
+  q05-poll4                                    msg  Action   
+  steps:
+    Given a binding starts a Then loop as q05  [Passed]
+      Then Poll then  [Passed]
+      Then Poll then  [Passed]
+      Then Poll then  [Passed]
+    And a call named q05-given-and  [Passed]
+      Then Poll then  [Passed]
+      When a call named q05-when  [Passed]
+    Then a call named q05-then  [Passed]
+      Then Poll then  [Passed]
+      And the loop is stopped  [Passed]
+
+## Q06 a woven Given in a BeforeScenario hook then a When
+  [Step] <color:white>Given Seed given
+  hook-seed                                    http Setup    
+  hook-seed                                    msg  Setup    
+  [Step] <color:white>When a call named q06-when
+  q06-when                                     http Action   
+  q06-when                                     msg  Action   
+  [Step] <color:white>Then a call named q06-then
+  q06-then                                     http Action   
+  q06-then                                     msg  Action   
+  steps:
+    Given Seed given  [Passed]
+    When a call named q06-when  [Passed]
+    Then a call named q06-then  [Passed]
+
+## Q07 a keyword-free woven step in an AfterScenario hook
+  [Step] <color:white>Given a call named q07-given
+  q07-given                                    http Setup    
+  q07-given                                    msg  Setup    
+  [Step] <color:white>When a call named q07-when
+  --- ACTION START MARKER ---
+  q07-when                                     http Action   
+  q07-when                                     msg  Action   
+  [Step] <color:white>Cleanup plain
+  hook-cleanup                                 http Action   
+  hook-cleanup                                 msg  Action   
+  steps:
+    Given a call named q07-given  [Passed]
+    When a call named q07-when  [Passed]
+    (none) Cleanup plain  [Passed]
+
+## Q08 a woven Given in a BeforeScenario hook then a Then with TrackDuringSetup false
+  [Step] <color:white>Given Seed given
+  hook-seed                                    http Setup    IGNORED
+  hook-seed                                    msg  Setup    
+  [Step] <color:white>Then a call named q08-then
+  q08-then                                     http Action   
+  q08-then                                     msg  Action   
+  steps:
+    Given Seed given  [Passed]
+    Then a call named q08-then  [Passed]
+
+## Q09 a binding with a manual bypassed sub-step
+  [Step] <color:white>Given a binding bypasses a manual sub-step as q09
+  q09-given                                    http Setup    
+  q09-given                                    msg  Setup    
+  [Step] <color:white>When a call named q09-when
+  --- ACTION START MARKER ---
+  q09-when                                     http Action   
+  q09-when                                     msg  Action   
+  [Step] <color:white>Then a call named q09-then
+  q09-then                                     http Action   
+  q09-then                                     msg  Action   
+  steps:
+    Given a binding bypasses a manual sub-step as q09  [Passed]
+      (none) q09-manual  [Bypassed]
+    When a call named q09-when  [Passed]
+    Then a call named q09-then  [Passed]
+
+## Q10 a binding fails and is the last step
+  [Step] <color:white>Given a call named q10-given
+  q10-given                                    http Setup    
+  q10-given                                    msg  Setup    
+  [Step] <color:white>When a call named q10-when
+  --- ACTION START MARKER ---
+  q10-when                                     http Action   
+  q10-when                                     msg  Action   
+  [Step] <color:white>Then a call named q10-then
+  q10-then                                     http Action   
+  q10-then                                     msg  Action   
+  steps:
+    Given a call named q10-given  [Passed]
+    When a call named q10-when  [Passed]
+    Then a call named q10-then  [Passed]
+
+## Q11 a Given with no calls then a When that draws its own boundary after a call
+  [Step] <color:white>Given nothing happens
+  [Step] <color:white>When a binding calls then marks the boundary as q11
+  q11-arrange                                  http Action   
+  q11-arrange                                  msg  Action   
+  --- ACTION START MARKER ---
+  q11-act                                      http Action   
+  q11-act                                      msg  Action   
+  [Step] <color:white>Then a call named q11-then
+  q11-then                                     http Action   
+  q11-then                                     msg  Action   
+  steps:
+    Given nothing happens  [Passed]
+    When a binding calls then marks the boundary as q11  [Passed]
+    Then a call named q11-then  [Passed]
+
+## Q12 a Given with a call then a When that draws its own boundary after a call
+  [Step] <color:white>Given a call named q12-given
+  q12-given                                    http Setup    
+  q12-given                                    msg  Setup    
+  [Step] <color:white>When a binding calls then marks the boundary as q12
+  --- ACTION START MARKER ---
+  q12-arrange                                  http Action   
+  q12-arrange                                  msg  Action   
+  --- ACTION START MARKER ---
+  q12-act                                      http Action   
+  q12-act                                      msg  Action   
+  [Step] <color:white>Then a call named q12-then
+  q12-then                                     http Action   
+  q12-then                                     msg  Action   
+  steps:
+    Given a call named q12-given  [Passed]
+    When a binding calls then marks the boundary as q12  [Passed]
+    Then a call named q12-then  [Passed]
+

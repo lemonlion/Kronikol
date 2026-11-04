@@ -1,0 +1,745 @@
+## R01 a Then binding that marks the boundary, with a When before it
+  [Step] <color:white>Given a call named r01-seed
+  
+  Request  r01-seed                       phase=Setup   src=TestContext
+  Response r01-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r01-act
+  
+  --- MARKER ---
+  Request  r01-act                        phase=Action  src=TestContext
+  Response r01-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then a marking check named r01-then
+  
+  --- MARKER ---
+  Request  r01-then                       phase=Action  src=TestContext
+  Response r01-then                       phase=Action  src=TestContext
+  Request  r01-after-scenario             phase=Action  src=TestContext
+  Response r01-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r01-seed [Passed]
+    When a call named r01-act [Passed]
+    Then a marking check named r01-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r01-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r01-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a marking check named r01-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R02 a second When binding marks, the first does not
+  [Step] <color:white>Given a call named r02-seed
+  
+  Request  r02-seed                       phase=Setup   src=TestContext
+  Response r02-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r02-act1
+  
+  --- MARKER ---
+  Request  r02-act1                       phase=Action  src=TestContext
+  Response r02-act1                       phase=Action  src=TestContext
+  [Step] <color:white>And a marking act named r02-act2
+  
+  --- MARKER ---
+  Request  r02-act2                       phase=Action  src=TestContext
+  Response r02-act2                       phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r02-then
+  
+  Request  r02-then                       phase=Action  src=TestContext
+  Response r02-then                       phase=Action  src=TestContext
+  Request  r02-after-scenario             phase=Action  src=TestContext
+  Response r02-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r02-seed [Passed]
+    When a call named r02-act1 [Passed]
+    And a marking act named r02-act2 [Passed]
+    Then a call named r02-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r02-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r02-act1
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a marking act named r02-act2
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r02-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R03 an after-scenario hook marks before its clean-up
+  [Step] <color:white>Given a call named r03-seed
+  
+  Request  r03-seed                       phase=Setup   src=TestContext
+  Response r03-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r03-act
+  
+  --- MARKER ---
+  Request  r03-act                        phase=Action  src=TestContext
+  Response r03-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r03-then
+  
+  Request  r03-then                       phase=Action  src=TestContext
+  Response r03-then                       phase=Action  src=TestContext
+  --- MARKER ---
+  Request  hook-cleanup                   phase=Action  src=TestContext
+  Response hook-cleanup                   phase=Action  src=TestContext
+  Request  r03-after-scenario             phase=Action  src=TestContext
+  Response r03-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r03-seed [Passed]
+    When a call named r03-act [Passed]
+    Then a call named r03-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r03-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r03-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r03-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R04 a before-scenario hook runs a woven Then, a health check
+  [Step] <color:white>Then Health check is green
+  
+  Request  hook-health                    phase=Action  src=TestContext
+  Response hook-health                    phase=Action  src=TestContext
+  [Step] <color:white>Given a call named r04-seed
+  
+  Request  r04-seed                       phase=Setup   src=TestContext
+  Response r04-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r04-act
+  
+  --- MARKER ---
+  Request  r04-act                        phase=Action  src=TestContext
+  Response r04-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r04-then
+  
+  Request  r04-then                       phase=Action  src=TestContext
+  Response r04-then                       phase=Action  src=TestContext
+  Request  r04-after-scenario             phase=Action  src=TestContext
+  Response r04-after-scenario             phase=Action  src=TestContext
+  steps:
+    Then Health check is green [Passed]
+    Given a call named r04-seed [Passed]
+    When a call named r04-act [Passed]
+    Then a call named r04-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Then Health check is green
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r04-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r04-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r04-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R05 a before-scenario hook runs a woven When, a log-in
+  [Step] <color:white>When Log in
+  
+  Request  hook-login                     phase=Action  src=TestContext
+  Response hook-login                     phase=Action  src=TestContext
+  [Step] <color:white>Given a call named r05-seed
+  
+  Request  r05-seed                       phase=Setup   src=TestContext
+  Response r05-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r05-act
+  
+  --- MARKER ---
+  Request  r05-act                        phase=Action  src=TestContext
+  Response r05-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r05-then
+  
+  Request  r05-then                       phase=Action  src=TestContext
+  Response r05-then                       phase=Action  src=TestContext
+  Request  r05-after-scenario             phase=Action  src=TestContext
+  Response r05-after-scenario             phase=Action  src=TestContext
+  steps:
+    When Log in [Passed]
+    Given a call named r05-seed [Passed]
+    When a call named r05-act [Passed]
+    Then a call named r05-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>When Log in
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r05-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r05-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r05-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R06 a hook forks a poller of woven Thens that fires during the Given
+  [Step] <color:white>Given a poll-releasing call named r06-seed
+  
+  Request  r06-seed                       phase=Setup   src=TestContext
+  Response r06-seed                       phase=Setup   src=TestContext
+  Request  hook-poll                      phase=Action  src=TestContext
+  Response hook-poll                      phase=Action  src=TestContext
+  [Step] <color:white>And a call named r06-seed2
+  
+  Request  r06-seed2                      phase=Setup   src=TestContext
+  Response r06-seed2                      phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r06-act
+  
+  --- MARKER ---
+  Request  r06-act                        phase=Action  src=TestContext
+  Response r06-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r06-then
+  
+  Request  r06-then                       phase=Action  src=TestContext
+  Response r06-then                       phase=Action  src=TestContext
+  Request  r06-after-scenario             phase=Action  src=TestContext
+  Response r06-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a poll-releasing call named r06-seed [Passed]
+      Then Poll once [Passed]
+    And a call named r06-seed2 [Passed]
+    When a call named r06-act [Passed]
+    Then a call named r06-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a poll-releasing call named r06-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named r06-seed2
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r06-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r06-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R07 a before-scenario hook runs a woven Given, the scenario starts at its When
+  [Step] <color:white>Given Seed in hook
+  
+  Request  hook-seed                      phase=Setup   src=TestContext
+  Response hook-seed                      phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r07-act
+  
+  Request  r07-act                        phase=Action  src=TestContext
+  Response r07-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r07-then
+  
+  Request  r07-then                       phase=Action  src=TestContext
+  Response r07-then                       phase=Action  src=TestContext
+  Request  r07-after-scenario             phase=Action  src=TestContext
+  Response r07-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given Seed in hook [Passed]
+    When a call named r07-act [Passed]
+    Then a call named r07-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given Seed in hook
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r07-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r07-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R09 a hand step closed on another flow in a Given binding
+  [Step] <color:white>Given a hand step closed on another flow named r09-seed
+  
+  Request  r09-seed                       phase=Setup   src=TestContext
+  Response r09-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r09-act
+  
+  --- MARKER ---
+  Request  r09-act                        phase=Action  src=TestContext
+  Response r09-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r09-then
+  
+  Request  r09-then                       phase=Action  src=TestContext
+  Response r09-then                       phase=Action  src=TestContext
+  Request  r09-after-scenario             phase=Action  src=TestContext
+  Response r09-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a hand step closed on another flow named r09-seed [Passed]
+      Given r09-seed-hand [Passed]
+    When a call named r09-act [Passed]
+    Then a call named r09-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a hand step closed on another flow named r09-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r09-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r09-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R09b a hand step closed on another flow in a sync Given binding
+  [Step] <color:white>Given a hand step closed on another flow in a sync binding named r09b-seed
+  
+  Request  r09b-seed                      phase=Setup   src=TestContext
+  Response r09b-seed                      phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r09b-act
+  
+  --- MARKER ---
+  Request  r09b-act                       phase=Action  src=TestContext
+  Response r09b-act                       phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r09b-then
+  
+  Request  r09b-then                      phase=Action  src=TestContext
+  Response r09b-then                      phase=Action  src=TestContext
+  Request  r09-after-scenario             phase=Action  src=TestContext
+  Response r09-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a hand step closed on another flow in a sync binding named r09b-seed [Passed]
+      Given r09b-seed-hand [Passed]
+    When a call named r09b-act [Passed]
+    Then a call named r09b-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a hand step closed on another flow in a sync binding 
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r09b-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r09b-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R11 an after-step hook runs a woven Then
+  [Step] <color:white>Given a call named r11-seed
+  
+  Request  r11-seed                       phase=Setup   src=TestContext
+  Response r11-seed                       phase=Setup   src=TestContext
+  Request  hook-after-step                phase=Action  src=TestContext
+  Response hook-after-step                phase=Action  src=TestContext
+  [Step] <color:white>And a call named r11-seed2
+  
+  Request  r11-seed2                      phase=Setup   src=TestContext
+  Response r11-seed2                      phase=Setup   src=TestContext
+  Request  hook-after-step                phase=Action  src=TestContext
+  Response hook-after-step                phase=Action  src=TestContext
+  [Step] <color:white>When a call named r11-act
+  
+  --- MARKER ---
+  Request  r11-act                        phase=Action  src=TestContext
+  Response r11-act                        phase=Action  src=TestContext
+  Request  hook-after-step                phase=Action  src=TestContext
+  Response hook-after-step                phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r11-then
+  
+  Request  r11-then                       phase=Action  src=TestContext
+  Response r11-then                       phase=Action  src=TestContext
+  Request  hook-after-step                phase=Action  src=TestContext
+  Response hook-after-step                phase=Action  src=TestContext
+  Request  r11-after-scenario             phase=Action  src=TestContext
+  Response r11-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r11-seed [Passed]
+      Then Nothing went wrong [Passed]
+    And a call named r11-seed2 [Passed]
+      Then Nothing went wrong [Passed]
+    When a call named r11-act [Passed]
+      Then Nothing went wrong [Passed]
+    Then a call named r11-then [Passed]
+      Then Nothing went wrong [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r11-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>And a call named r11-seed2
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r11-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r11-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R14 a When binding marks setup for a part of itself
+  [Step] <color:white>Given a call named r14-seed
+  
+  Request  r14-seed                       phase=Setup   src=TestContext
+  Response r14-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a binding that goes back to setup named r14-act
+  
+  --- MARKER ---
+  Request  r14-act-before                 phase=Action  src=TestContext
+  Response r14-act-before                 phase=Action  src=TestContext
+  Request  r14-act-in-setup               phase=Setup   src=TestContext
+  Response r14-act-in-setup               phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named r14-then
+  
+  Request  r14-then                       phase=Action  src=TestContext
+  Response r14-then                       phase=Action  src=TestContext
+  Request  r14-after-scenario             phase=Action  src=TestContext
+  Response r14-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r14-seed [Passed]
+    When a binding that goes back to setup named r14-act [Passed]
+    Then a call named r14-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r14-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding that goes back to setup named r14-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r14-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R15 a Given with a call, the first When has no call, a Then has one
+  [Step] <color:white>Given a call named r15-seed
+  
+  Request  r15-seed                       phase=Setup   src=TestContext
+  Response r15-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When nothing is called
+  
+  [Step] <color:white>Then a call named r15-then
+  
+  --- MARKER ---
+  Request  r15-then                       phase=Action  src=TestContext
+  Response r15-then                       phase=Action  src=TestContext
+  Request  r15-after-scenario             phase=Action  src=TestContext
+  Response r15-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r15-seed [Passed]
+    When nothing is called [Passed]
+    Then a call named r15-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r15-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When nothing is called
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r15-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R16 two scenarios share a handler, first
+  [Step] <color:white>Given a shared call named r16-seed
+  
+  Request  r16-seed                       phase=Setup   src=TestContext
+  Response r16-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a shared call named r16-act
+  
+  Request  r16-act                        phase=Action  src=TestContext
+  Response r16-act                        phase=Action  src=TestContext
+  Request  r16-after-scenario             phase=Action  src=TestContext
+  Response r16-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a shared call named r16-seed [Passed]
+    When a shared call named r16-act [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a shared call named r16-seed
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a shared call named r16-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R17 two scenarios share a handler, second
+  [Step] <color:white>Given a shared call named r17-seed
+  
+  Request  r17-seed                       phase=Setup   src=TestContext
+  Response r17-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a shared call named r17-act
+  
+  --- MARKER ---
+  Request  r17-act                        phase=Action  src=TestContext
+  Response r17-act                        phase=Action  src=TestContext
+  Request  r17-after-scenario             phase=Action  src=TestContext
+  Response r17-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a shared call named r17-seed [Passed]
+    When a shared call named r17-act [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a shared call named r17-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a shared call named r17-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R18 an act then a Given then a When, first act with a call
+  [Step] <color:white>When a call named r18-act1
+  
+  Request  r18-act1                       phase=Action  src=TestContext
+  Response r18-act1                       phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r18-check
+  
+  Request  r18-check                      phase=Action  src=TestContext
+  Response r18-check                      phase=Action  src=TestContext
+  [Step] <color:white>Given a call named r18-seed
+  
+  Request  r18-seed                       phase=Setup   src=TestContext
+  Response r18-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r18-act2
+  
+  --- MARKER ---
+  Request  r18-act2                       phase=Action  src=TestContext
+  Response r18-act2                       phase=Action  src=TestContext
+  Request  r18-after-scenario             phase=Action  src=TestContext
+  Response r18-after-scenario             phase=Action  src=TestContext
+  steps:
+    When a call named r18-act1 [Passed]
+    Then a call named r18-check [Passed]
+    Given a call named r18-seed [Passed]
+    When a call named r18-act2 [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r18-act1
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r18-check
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r18-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r18-act2
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R19 a first When with no call then a Given with a call then a When with a call
+  [Step] <color:white>When nothing is called
+  
+  [Step] <color:white>Given a call named r19-seed
+  
+  Request  r19-seed                       phase=Setup   src=TestContext
+  Response r19-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r19-act
+  
+  --- MARKER ---
+  Request  r19-act                        phase=Action  src=TestContext
+  Response r19-act                        phase=Action  src=TestContext
+  Request  r19-after-scenario             phase=Action  src=TestContext
+  Response r19-after-scenario             phase=Action  src=TestContext
+  steps:
+    When nothing is called [Passed]
+    Given a call named r19-seed [Passed]
+    When a call named r19-act [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>When nothing is called
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r19-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r19-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R20 a failing Given, an after-scenario hook with a call
+  [Step] <color:white>Given a failing step named r20-seed
+  
+  Request  r20-seed                       phase=Setup   src=TestContext
+  Response r20-seed                       phase=Setup   src=TestContext
+  Request  r20-after-scenario             phase=Setup   src=TestContext
+  Response r20-after-scenario             phase=Setup   src=TestContext
+  steps:
+    Given a failing step named r20-seed [Failed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a failing step named r20-seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R21 a failing nested Gherkin step inside a When
+  [Step] <color:white>Given a call named r21-seed
+  
+  Request  r21-seed                       phase=Setup   src=TestContext
+  Response r21-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a binding runs a failing nested Given named r21-nested
+  
+  --- MARKER ---
+  Request  r21-nested-before              phase=Action  src=TestContext
+  Response r21-nested-before              phase=Action  src=TestContext
+  Request  r21-nested-in                  phase=Setup   src=TestContext
+  Response r21-nested-in                  phase=Setup   src=TestContext
+  Request  r21-nested-after               phase=Action  src=TestContext
+  Response r21-nested-after               phase=Action  src=TestContext
+  Request  r21-after-scenario             phase=Setup   src=TestContext
+  Response r21-after-scenario             phase=Setup   src=TestContext
+  steps:
+    Given a call named r21-seed [Passed]
+    When a binding runs a failing nested Given named r21-nested [Passed]
+      Given a failing step named r21-nested-in [Failed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r21-seed
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding runs a failing nested Given named r21-nested
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R22 a nested Gherkin When inside a Given, then a real When
+  [Step] <color:white>Given a binding runs a nested When named r22-nested
+  
+  Request  r22-nested-before              phase=Setup   src=TestContext
+  Response r22-nested-before              phase=Setup   src=TestContext
+  --- MARKER ---
+  Request  r22-nested-in                  phase=Action  src=TestContext
+  Response r22-nested-in                  phase=Action  src=TestContext
+  Request  r22-nested-after               phase=Setup   src=TestContext
+  Response r22-nested-after               phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r22-act
+  
+  Request  r22-act                        phase=Action  src=TestContext
+  Response r22-act                        phase=Action  src=TestContext
+  [Step] <color:white>Then a call named r22-then
+  
+  Request  r22-then                       phase=Action  src=TestContext
+  Response r22-then                       phase=Action  src=TestContext
+  Request  r22-after-scenario             phase=Action  src=TestContext
+  Response r22-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a binding runs a nested When named r22-nested [Passed]
+      When a call named r22-nested-in [Passed]
+    When a call named r22-act [Passed]
+    Then a call named r22-then [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a binding runs a nested When named r22-nested
+      shop -[#438DD5]-> probe: OK
+      end
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r22-act
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r22-then
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R23 an outline with a nested woven Given
+  [Step] <color:white>Given a call named r23-seed-a
+  
+  Request  r23-seed-a                     phase=Setup   src=TestContext
+  Response r23-seed-a                     phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named r23-a
+  
+  --- MARKER ---
+  Request  r23-a-before                   phase=Action  src=TestContext
+  Response r23-a-before                   phase=Action  src=TestContext
+  Request  r23-a-sub                      phase=Setup   src=TestContext
+  Response r23-a-sub                      phase=Setup   src=TestContext
+  Request  r23-a-after                    phase=Setup   src=TestContext
+  Response r23-a-after                    phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named r23-then-a
+  
+  Request  r23-then-a                     phase=Action  src=TestContext
+  Response r23-then-a                     phase=Action  src=TestContext
+  Request  r23-after-scenario             phase=Action  src=TestContext
+  Response r23-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r23-seed-a [Passed]
+    When a binding calls a woven Given named r23-a [Passed]
+      Given Sub [Passed]
+    Then a call named r23-then-a [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r23-seed-a
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named r23-a
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r23-then-a
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R23 an outline with a nested woven Given
+  [Step] <color:white>Given a call named r23-seed-b
+  
+  Request  r23-seed-b                     phase=Setup   src=TestContext
+  Response r23-seed-b                     phase=Setup   src=TestContext
+  [Step] <color:white>When a binding calls a woven Given named r23-b
+  
+  --- MARKER ---
+  Request  r23-b-before                   phase=Action  src=TestContext
+  Response r23-b-before                   phase=Action  src=TestContext
+  Request  r23-b-sub                      phase=Setup   src=TestContext
+  Response r23-b-sub                      phase=Setup   src=TestContext
+  Request  r23-b-after                    phase=Setup   src=TestContext
+  Response r23-b-after                    phase=Setup   src=TestContext
+  [Step] <color:white>Then a call named r23-then-b
+  
+  Request  r23-then-b                     phase=Action  src=TestContext
+  Response r23-then-b                     phase=Action  src=TestContext
+  Request  r23-after-scenario             phase=Action  src=TestContext
+  Response r23-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a call named r23-seed-b [Passed]
+    When a binding calls a woven Given named r23-b [Passed]
+      Given Sub [Passed]
+    Then a call named r23-then-b [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given a call named r23-seed-b
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When a binding calls a woven Given named r23-b
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then a call named r23-then-b
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+
+## R24 a message only Given, an HTTP When
+  [Step] <color:white>Given a tracked event named r24-seed
+  
+  Request  r24-seed                       phase=Setup   src=TestContext
+  Response r24-seed                       phase=Setup   src=TestContext
+  [Step] <color:white>When a call named r24-act
+  
+  Request  r24-act                        phase=Action  src=TestContext
+  Response r24-act                        phase=Action  src=TestContext
+  Request  r24-after-scenario             phase=Action  src=TestContext
+  Response r24-after-scenario             phase=Action  src=TestContext
+  steps:
+    Given a tracked event named r24-seed [Passed]
+    When a call named r24-act [Passed]
+  diagram separateSetup:
+    diagram 1:
+      hnote across <<stepDelimiter>> #black:<color:white>Given a tracked event named r24-seed
+      r24Seed -[#9B59B6]-> probe: Responded
+      hnote across <<stepDelimiter>> #black:<color:white>When a call named r24-act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+

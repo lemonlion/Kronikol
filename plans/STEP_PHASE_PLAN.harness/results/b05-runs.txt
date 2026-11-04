@@ -1,0 +1,4 @@
+5.28.2 bars of steps, per run: 3/6 (3 nested), 3/6 (3 nested), 5/6 (1 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested) ; distinct phase readings: 1
+5.28.3-rev11r1 bars of steps, per run: 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 4/6 (2 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested) ; distinct phase readings: 1
+5.28.3-rev11r2 bars of steps, per run: 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested) ; distinct phase readings: 1
+5.28.3-rev11 bars of steps, per run: 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested), 3/6 (3 nested) ; distinct phase readings: 1

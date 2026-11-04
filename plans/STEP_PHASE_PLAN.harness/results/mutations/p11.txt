@@ -1,0 +1,30 @@
+ORDER-ONLY solid=0 order=2 racing-new=1 racing-seen=15
+first: (order) rev5/rev5-a: L03_WhenAll_of_a_Given_and_a_When_at_the_top: + Response l03-given phase=Setup src=TestContext - Response l03-given phase=Setup src=TestContext
+
+[rev5/adapter-nunit4] nunit4.txt: RACING-NEW E06_Parallel_ForEach_of_sync_Givens_inside_a_When (known to race)
+    e06-b: Action Action > Action Action
+      +e06-b Action Action
+      -e06-b Action Action
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L01_WhenAll_of_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L02_Parallel_ForEach_of_sync_Givens_inside_a_When
+[rev5/rev5-a] rev5-a.txt: ORDER L03_WhenAll_of_a_Given_and_a_When_at_the_top
+      + Response l03-given phase=Setup src=TestContext
+      - Response l03-given phase=Setup src=TestContext
+[rev5/rev5-a] rev5-a.txt: racing, shape seen L04_Parallel_ForEach_of_sync_Givens_at_the_top_then_When_with_nested_Given
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev5/rev5-bddfy] rev5-bddfy.txt: ORDER B06_Async_void_support_off_with_a_nested_Given_and_a_failing_step
+      + Response b06-given phase=Setup src=TestContext
+      - Response b06-given phase=Setup src=TestContext
+      + shop -[#438DD5]-> probe: OK
+      - shop -[#438DD5]-> probe: OK
+[rev6/rev6-a] rev6-a.txt: racing, shape seen B06_A_Parallel_For_of_skipped_and_real_inside_a_When
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.B_LeftRunning.B01_sync_Given_leaves_a_worker_step_running_then_When_Then
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.B_LeftRunning.B06_sync_Given_with_a_Task_Run_worker_step_then_When
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.plantuml.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.B_LeftRunning.B01_sync_Given_leaves_a_worker_step_running_then_When_Then
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.B_LeftRunning.B06_sync_Given_with_a_Task_Run_worker_step_then_When
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C01_a_Given_starts_a_loop_of_Then_steps_then_more_setup_then_
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C02_a_loop_of_keyword_free_steps_started_before_any_step
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.C_Background.C03_a_loop_of_keyword_free_steps_started_in_a_Given
+[review/rev3-plain] rev3-plain.txt: racing, shape seen PhaseProbe.Rev3.F_Concurrency.F04_a_Given_with_Parallel_Invoke_of_When_sub_steps

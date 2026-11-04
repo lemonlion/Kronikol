@@ -1,0 +1,19 @@
+## Q13 When Then Given When Then (TestName field: b39db235-e9de-44dc-b016-527023e19362)
+  @startuml
+  hnote across <<stepDelimiter>> #black:<color:white>When a call named q13-first-when
+  shop -[#438DD5]-> probe: OK
+  q13FirstWhen -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call named q13-first-then
+  shop -[#438DD5]-> probe: OK
+  q13FirstThen -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Given a call named q13-given
+  shop -[#438DD5]-> probe: OK
+  q13Given -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>When a call named q13-second-when
+  shop -[#438DD5]-> probe: OK
+  q13SecondWhen -[#9B59B6]-> probe: Responded
+  hnote across <<stepDelimiter>> #black:<color:white>Then a call named q13-second-then
+  shop -[#438DD5]-> probe: OK
+  q13SecondThen -[#9B59B6]-> probe: Responded
+  @enduml
+

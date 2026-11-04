@@ -1,0 +1,14 @@
+## M1 an And first then a When
+call                               http     message  ignored
+[bar] <color:white>AND a call named [label: "m1-and"]
+m1-and                             Setup    Unknown  
+[bar] <color:white>WHEN a call named [label: "m1-when"]
+--- ACTION START MARKER ---
+m1-when                            Action   Unknown  
+[bar] <color:white>THEN a call named [label: "m1-then"]
+m1-then                            Unknown  Unknown  
+steps:
+  AND a call named [label: "m1-and"]  [Passed]
+  WHEN a call named [label: "m1-when"]  [Passed]
+  THEN a call named [label: "m1-then"]  [Passed]
+

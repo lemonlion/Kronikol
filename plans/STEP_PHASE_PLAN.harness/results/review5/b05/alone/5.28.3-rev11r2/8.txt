@@ -1,0 +1,62 @@
+## B05_Parallel_stories_in_one_test
+  [Step] <color:white>Given seed
+  
+  Request  b05a-given1                    phase=Setup   src=TestContext
+  Request  b05b-given1                    phase=Setup   src=TestContext
+  Response b05b-given1                    phase=Setup   src=TestContext
+  Response b05a-given1                    phase=Setup   src=TestContext
+  Request  b05a-given2                    phase=Setup   src=TestContext
+  Request  b05b-given2                    phase=Setup   src=TestContext
+  Response b05b-given2                    phase=Setup   src=TestContext
+  Response b05a-given2                    phase=Setup   src=TestContext
+  [Step] <color:white>When act
+  
+  --- MARKER ---
+  Request  b05b-when1                     phase=Action  src=TestContext
+  Request  b05a-when1                     phase=Action  src=TestContext
+  Response b05b-when1                     phase=Action  src=TestContext
+  Response b05a-when1                     phase=Action  src=TestContext
+  Request  b05b-when2                     phase=Action  src=TestContext
+  Request  b05a-when2                     phase=Action  src=TestContext
+  Response b05b-when2                     phase=Action  src=TestContext
+  Response b05a-when2                     phase=Action  src=TestContext
+  [Step] <color:white>Then check
+  
+  Request  b05a-then1                     phase=Action  src=TestContext
+  Request  b05b-then1                     phase=Action  src=TestContext
+  Response b05a-then1                     phase=Action  src=TestContext
+  Response b05b-then1                     phase=Action  src=TestContext
+  Request  b05b-then2                     phase=Action  src=TestContext
+  Request  b05a-then2                     phase=Action  src=TestContext
+  Response b05b-then2                     phase=Action  src=TestContext
+  Response b05a-then2                     phase=Action  src=TestContext
+  Request  b05-after                      phase=Unknown src=TestContext
+  Response b05-after                      phase=Unknown src=TestContext
+  steps:
+    Given seed [Passed]
+      Given seed [Passed]
+    When act [Passed]
+      When act [Passed]
+    Then check [Passed]
+      Then check [Passed]
+  diagram separateSetup:
+    diagram 1:
+      partition Setup
+      hnote across <<stepDelimiter>> #black:<color:white>Given seed
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      end
+      hnote across <<stepDelimiter>> #black:<color:white>When act
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      hnote across <<stepDelimiter>> #black:<color:white>Then check
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+      shop -[#438DD5]-> probe: OK
+

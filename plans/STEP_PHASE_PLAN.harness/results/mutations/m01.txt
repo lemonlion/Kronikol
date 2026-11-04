@@ -1,0 +1,175 @@
+KILLED solid=26 order=1 racing-new=0 racing-seen=0
+first: main/bddfy-xunit3: B02_a_When_step_calls_a_woven_Given: b02-in-sub: Action Action > Setup Setup; b02-after-sub: Action Action > Setup Setup
+
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B02_a_When_step_calls_a_woven_Given
+    b02-in-sub: Action Action > Setup Setup; b02-after-sub: Action Action > Setup Setup
+      -b02-in-sub Action Action
+      -b02-after-sub Action Action
+      +b02-in-sub Setup Setup
+      +b02-after-sub Setup Setup
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B03_a_Given_step_calls_a_woven_When
+    b03-in-sub: Setup Setup > Action Action; b03-after-sub: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -b03-in-sub Setup Setup
+      -b03-after-sub Setup Setup
+      +--- ACTION START MARKER ---
+      +b03-in-sub Action Action
+      +b03-after-sub Action Action
+      ---- ACTION START MARKER ---
+[main/bddfy-xunit3] bddfy-xunit3.txt: SOLID PhaseProbe.Bddfy.Scenarios.B04_an_async_When_step_calls_a_woven_Given
+    b04-in-sub: Action Action > Setup Setup; b04-after-sub: Action Action > Setup Setup
+      -b04-in-sub Action Action
+      -b04-after-sub Action Action
+      +b04-in-sub Setup Setup
+      +b04-after-sub Setup Setup
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L02 When composite with a Given sub step
+    l02-given-sub: Action Action > Setup Setup
+      -l02-given-sub Action Action
+      +l02-given-sub Setup Setup
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L03 Given composite with a When sub step
+    l03-when-sub: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -l03-when-sub Setup Setup
+      +--- ACTION START MARKER ---
+      +l03-when-sub Action Action
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L04 a LightBDD When calls a woven Given
+    l04-in-sub: Action Action > Setup Setup; l04-after-sub: Action Action > Setup Setup
+      -l04-in-sub Action Action
+      -l04-after-sub Action Action
+      +l04-in-sub Setup Setup
+      +l04-after-sub Setup Setup
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L05 a LightBDD Given calls a woven When
+    l05-in-sub: Setup Setup > Action Action; l05-after-sub: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -l05-in-sub Setup Setup
+      -l05-after-sub Setup Setup
+      +--- ACTION START MARKER ---
+      +l05-in-sub Action Action
+      +l05-after-sub Action Action
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L14 a bypassed sub step in a Given composite
+    l14-when-sub: Setup Setup > Action Action; l14-and: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -l14-when-sub Setup Setup
+      +--- ACTION START MARKER ---
+      +l14-when-sub Action Action
+      -l14-and Setup Setup
+      +l14-and Action Action
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R00 the issue's own scenario
+    r00-discounts-SAVE10: Action Action > Setup Setup; r00-orders: Action Action > Setup Setup
+      -r00-discounts-SAVE10 Action Action
+      -r00-orders Action Action
+      +r00-discounts-SAVE10 Setup Setup
+      +r00-orders Setup Setup
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R01 async Given sub-step in a When step (the issue)
+    r01-in-sub: Action Action > Setup Setup; r01-after-sub: Action Action > Setup Setup
+      -r01-in-sub Action Action
+      -r01-after-sub Action Action
+      +r01-in-sub Setup Setup
+      +r01-after-sub Setup Setup
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R02 sync Given sub-step in a When step
+    r02-in-sub: Action Action > Setup Setup; r02-after-sub: Action Action > Setup Setup
+      -r02-in-sub Action Action
+      -r02-after-sub Action Action
+      +r02-in-sub Setup Setup
+      +r02-after-sub Setup Setup
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R03 async When sub-step in a Given step
+    r03-in-sub: Setup Setup > Action Action; r03-after-sub: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -r03-in-sub Setup Setup
+      -r03-after-sub Setup Setup
+      +--- ACTION START MARKER ---
+      +r03-in-sub Action Action
+      +r03-after-sub Action Action
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R04 async Then sub-step in a Given step
+    r04-in-sub: Setup Setup > Action Action; r04-after-sub: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -r04-in-sub Setup Setup
+      -r04-after-sub Setup Setup
+      +--- ACTION START MARKER ---
+      +r04-in-sub Action Action
+      +r04-after-sub Action Action
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R08 TrackDuringSetup false
+    r08-in-sub: Action Action > Setup Setup IGNORED; r08-after-sub: Action Action > Setup Setup IGNORED
+      -r08-in-sub Action Action
+      -r08-after-sub Action Action
+      +r08-in-sub Setup Setup IGNORED
+      +r08-after-sub Setup Setup IGNORED
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R09 a When binding woven as a GivenStep
+    r09-in-binding: Action Action > Setup Setup
+      -r09-in-binding Action Action
+      +r09-in-binding Setup Setup
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R10 ButWhen sub-step in a Given step
+    r10-in-sub: Setup Setup > Action Action; r10-after-sub: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -r10-in-sub Setup Setup
+      -r10-after-sub Setup Setup
+      +--- ACTION START MARKER ---
+      +r10-in-sub Action Action
+      +r10-after-sub Action Action
+      ---- ACTION START MARKER ---
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R14 caught failure of a Given sub-step in a When step
+    r14-in-sub: Action Action > Setup Setup; r14-after-sub: Action Action > Setup Setup
+      -r14-in-sub Action Action
+      -r14-after-sub Action Action
+      +r14-in-sub Setup Setup
+      +r14-after-sub Setup Setup
+[main/reqnroll-xunit2] reqnroll-xunit2.txt: SOLID R16 a When sub-step in a keyword-free sub-step in a Given step
+    r16-in-sub-inner-when: Setup Setup > Action Action; r16-in-sub-after-inner-when: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -r16-in-sub-inner-when Setup Setup
+      -r16-in-sub-after-inner-when Setup Setup
+      +--- ACTION START MARKER ---
+      +r16-in-sub-inner-when Action Action
+      +r16-in-sub-after-inner-when Action Action
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X01_When_with_nested_Given_async
+    x01-in-sub: Action Action > Setup Setup; x01-after-sub: Action Action > Setup Setup
+      -x01-in-sub Action Action
+      -x01-after-sub Action Action
+      +x01-in-sub Setup Setup
+      +x01-after-sub Setup Setup
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X02_Given_with_nested_When_async
+    x02-in-sub: Setup Setup > Action Action; x02-after-sub: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -x02-in-sub Setup Setup
+      -x02-after-sub Setup Setup
+      +--- ACTION START MARKER ---
+      +x02-in-sub Action Action
+      +x02-after-sub Action Action
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X03_When_with_nested_Given_sync
+    x03-in-sub: Action Action > Setup Setup; x03-after-sub: Action Action > Setup Setup; x03-after-when-step: Action Action > Setup Setup
+      -x03-in-sub Action Action
+      -x03-after-sub Action Action
+      -x03-after-when-step Action Action
+      +x03-in-sub Setup Setup
+      +x03-after-sub Setup Setup
+      +x03-after-when-step Setup Setup
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X13_caught_failure_of_a_nested_Given
+    x13-in-sub: Action Action > Setup Setup; x13-after-sub: Action Action > Setup Setup
+      -x13-in-sub Action Action
+      -x13-after-sub Action Action
+      +x13-in-sub Setup Setup
+      +x13-after-sub Setup Setup
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X17_explicit_StartSetup_after_a_nested_When
+    x17-in-sub: Setup Setup > Action Action; new: --- ACTION START MARKER ---
+      -x17-in-sub Setup Setup
+      +--- ACTION START MARKER ---
+      +x17-in-sub Action Action
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X30_a_skipped_sub_step_then_a_real_one_in_a_When
+    x30-real-sub: Action Action > Setup Setup; x30-after: Action Action > Setup Setup
+      -x30-real-sub Action Action
+      -x30-after Action Action
+      +x30-real-sub Setup Setup
+      +x30-after Setup Setup
+[main/xunit3-plain] xunit3-plain.txt: ORDER PhaseProbe.Plain.Shapes.X31_a_skipped_step_in_a_wrapper_in_a_Given_then_a_When
+      +--- ACTION START MARKER ---
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X36_a_sync_parent_whose_last_act_is_a_skipped_sub_step
+    x36-after-parent: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -x36-after-parent Setup Setup
+      +--- ACTION START MARKER ---
+      +x36-after-parent Action Action
+      ---- ACTION START MARKER ---
+[main/xunit3-plain] xunit3-plain.txt: SOLID PhaseProbe.Plain.Shapes.X37_a_Task_parent_not_async_whose_last_act_is_a_skipped_sub_step
+    x37-after-parent: Setup Setup > Action Action; ---: ACTION START MARKER --- > ACTION START MARKER ---
+      -x37-after-parent Setup Setup
+      +--- ACTION START MARKER ---
+      +x37-after-parent Action Action
+      ---- ACTION START MARKER ---

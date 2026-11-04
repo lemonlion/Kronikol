@@ -1,0 +1,15 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=0
+first: main/lightbdd-xunit2: L15 an And first over a Given sub step: l15-body: Setup Unknown > Unknown Unknown; l15-given-sub: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---
+
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L15 an And first over a Given sub step
+    l15-body: Setup Unknown > Unknown Unknown; l15-given-sub: Setup Setup > Unknown Unknown; gone: --- ACTION START MARKER ---
+      -l15-body Setup Unknown
+      -l15-given-sub Setup Setup
+      +l15-body Unknown Unknown
+      +l15-given-sub Unknown Unknown
+      ---- ACTION START MARKER ---
+[main/lightbdd-xunit2] lightbdd-xunit2.txt: SOLID L16 an And first then a When
+    l16-and: Setup Unknown > Unknown Unknown; gone: --- ACTION START MARKER ---
+      -l16-and Setup Unknown
+      +l16-and Unknown Unknown
+      ---- ACTION START MARKER ---

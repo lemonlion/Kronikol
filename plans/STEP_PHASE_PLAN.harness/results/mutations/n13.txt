@@ -1,0 +1,23 @@
+KILLED solid=2 order=0 racing-new=0 racing-seen=2
+first: rev5/rev5-bddfy: (whole file): in: Given: Setup, in When: Action > Given: Unknown, in When: Unknown
+
+[main/xunit3-plain] xunit3-plain.txt: racing, shape seen PhaseProbe.Plain.Shapes.X09_a_step_left_open_then_a_When
+[rev5/rev5-bddfy] rev5-bddfy-fixture.txt: SOLID (whole file)
+    in: Given: Setup, in When: Action > Given: Unknown, in When: Unknown
+      -in Given: Setup, in When: Action
+      +in Given: Unknown, in When: Unknown
+[rev5/rev5-bddfy] rev5-bddfy.txt: racing, shape seen B05_Parallel_stories_in_one_test
+[rev5/rev5-bddfy] rev5-bddfy.txt: SOLID F01 fixture story
+    Request: f01-seed-nosetup phase=Setup src=Scope IGNORED > f01-seed-nosetup phase=Unknown src=Scope; Response: f01-seed-nosetup phase=Setup src=Scope IGNORED > f01-seed-nosetup phase=Unknown src=Scope; Request: f01-warm-noaction phase=Action src=Scope IGNORED > f01-warm-noaction phase=Unknown src=Scope; Response: f01-warm-noaction phase=Action src=Scope IGNORED > f01-warm-noaction phase=Unknown
+      - Request f01-seed-nosetup phase=Setup src=Scope IGNORED
+      - Response f01-seed-nosetup phase=Setup src=Scope IGNORED
+      - Request f01-warm-noaction phase=Action src=Scope IGNORED
+      - Response f01-warm-noaction phase=Action src=Scope IGNORED
+      + Request f01-seed-nosetup phase=Unknown src=Scope
+      + Response f01-seed-nosetup phase=Unknown src=Scope
+      + Request f01-warm-noaction phase=Unknown src=Scope
+      + Response f01-warm-noaction phase=Unknown src=Scope
+      - (no result)
+      + diagram 1:
+      + shop -[#438DD5]-> probe: OK
+      + shop -[#438DD5]-> probe: OK
