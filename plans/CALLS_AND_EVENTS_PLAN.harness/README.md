@@ -62,6 +62,7 @@ say so: `<scratch>` in a probe or a result stands for the folder that held the t
 | `probes/proxy_stress.py` | F27: a built `Kronikol.Tests.ProxyTap` under a chosen pressure, copies at once, busy loops, programs churning ports, keeping each failure's message. `<built> <label> <instances> <rounds> <out> [--cpu N] [--churn N] [--filter]`. It runs a built tree, not the published packages | `results/f27-proxytap.txt` |
 | `probes/mutations_r4.py`, `-r4b.py`, `-r4c.py`, `-r4d.py`, `probes/mutations_f27-all.txt` | R4's and F27's mutations: a change to the source each, and the facts that must fail | `results/r4-mutations.txt`, `results/f27-mutations.txt` |
 | `probes/linux-dual-mode.cs` | What Linux does to a socket's dual mode at the bind, which is why a fact of 5.28.2 failed there. Run in the SDK's container, as `::` raises a firewall prompt on Windows | `results/r4-linux-dual-mode.txt` |
+| The leftovers on the published 5.28.2 | F18, F21, F22 and F26 measured again before their issues were filed, with `probes/ci-run-ids*.sh`, `failed-sends.cs` and `merge-round-trip-*.{cs,py}` pinned to 5.28.2 in a scratch copy | `results/ci-run-ids-5.28.2.txt`, `results/failed-sends-5.28.2.txt`, `results/merge-round-trip-cases-5.28.2.txt`, `results/e2e-r16-5.28.2.txt` |
 | The proofs on each published release | R1 on 5.27.14, R3 on 5.28.0, R2 on 5.28.1, from nuget.org, with the probes above | `results/r1-proof-*.txt`, `results/r3-proof-5.28.0.txt`, `results/r2-proof-5.28.1.txt` |
 
 No probe of their own, as they are `kronikol` commands over a file:

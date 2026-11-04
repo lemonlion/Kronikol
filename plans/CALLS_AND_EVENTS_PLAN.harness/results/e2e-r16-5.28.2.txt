@@ -1,0 +1,36 @@
+BackForwardRestoreTests.R16, its three engines, each line one run alone, on clean 9d994a4b (5.28.2), Debug, Windows, 2026-11-04.
+
+== No load of ours
+run 1: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 30 s - Kr
+run 2: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 28 s - Kr
+run 3: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 25 s - Kr
+run 4: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 27 s - Kr
+run 5: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 26 s - Kr
+run 6: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 23 s - Kr
+run 7: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 20 s - Kr
+run 8: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 29 s - Kr
+run 9: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 34 s - Kr
+run 10: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 29 s - Kr
+run 11: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 28 s - Kr
+run 12: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 30 s - Kr
+run 13: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 23 s - Kr
+run 14: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 27 s - Kr
+run 15: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 24 s - Kr
+run 16: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 21 s - Kr
+run 17: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 23 s - Kr
+run 18: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 22 s - Kr
+run 19: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 24 s - Kr
+run 20: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 21 s - Kr
+done
+
+== Under busy loops on half of the 20 logical processors
+busy loops: 10
+run 1: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 31 s - Kr
+run 2: Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 33 s - Kr
+run 3: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 1 m 6 s -
+run 4: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 1 m 7 s -
+run 5: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 1 m 5 s -
+run 6: Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 45 s - Kr
+done
+
+The failure under load, engine webkit: Assert.InRange() Failure: Value not in range. Range: (-2 - 2). Actual: 128.5. The chromium and firefox rows passed.

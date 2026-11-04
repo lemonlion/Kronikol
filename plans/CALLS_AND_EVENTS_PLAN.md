@@ -1,7 +1,7 @@
 # Calls and events plan: #220
 
 **Written:** 2026-11-02, at 5.27.13 (`v5.27.13`, `c58d98c0`; main at `27cc0e46`). **Status: executed.** Released as 5.27.14 (R1), 5.28.0 (R3), 5.28.1 (R2) and
-5.28.2 (R4), and #220 is closed; four questions that only file an issue stay open (§10). The owner answered on 2026-11-02: all three
+5.28.2 (R4), and #220 is closed; what it left is filed as #230 to #235 and `lemonlion/Kronikol4J#2` (§10, §11). The owner answered on 2026-11-02: all three
 releases, R1 as one patch, and a closing comment that says why the fix went further (Q1, Q2, Q8 in §10). The same day they asked for the
 plan to be made complete and accurate, with any deep dive that could change it, and §12 records what that second pass changed. Then they
 wrote "I want it fixed". They meant the ProxyTap failure, F27, and it was taken as the word to build this plan, so R1 and R3 were published
@@ -161,6 +161,7 @@ The report's scripts never read the field (READ: no `metaType` in any `.js`). Th
 | F25 | **A record with a relative URI costs part of the report,** with a warning: "... not supported for a relative URI". It always loses the scenario's diagram. With internal flow on, its default, it also loses `TestRunReport.html` and `Specifications.html`. With `GenerateMergeableData` on as well, it also loses `TestRunReport.krkl` and `service.json`. With flow off, only the diagram is lost. Not about kind | RUN | `relative-address-report`, `merge-round-trip-*` |
 | F26 | **A browser test is flaky, with or without these changes.** `BackForwardRestoreTests.R16_Back_lands_on_the_same_scenario_after_the_features_above_it_were_drawn`, run alone, fails 2 of 10 on clean `27cc0e46` and 2 of 10 with all three patches. The one failure in the full suite was its WebKit row. Not about kind | RUN | `e2e-r16-control` |
 | F27 | **`Kronikol.Tests.ProxyTap` fails now and then, and the cause is not shown.** 3 of 31 whole-project runs on all three patches have one failure, a different fact each time; 0 of 30 on clean `27cc0e46`, which is too few to tell apart. None came back once the messages were being kept. Each of the three facts takes a port from `StubUpstream.FreePort`, which lets it go and listens on it later. `LoopbackPort` guards that within a process and not against another process, and other sessions' suites shared the machine. No patch touches the package, so a port race is the likely cause (INFERRED). **Found in R4: a port race, a fact racing a limit, and a real race in the tap on Windows (§12)** | RUN | `test-runs-all-three`, `f27-proxytap` |
+| F28 | **A timing fact failed CI on a commit with no code change.** `LinedUpPartsTests`' five percent toggle budget failed `E2E (Remainder)` on `9d994a4b`, which changes only plans and a date in the changelog, and passed on `c394d17f` with the same code: 6117 ms lined up against 5573 ms without, budget 5966 ms, stretch 3.35. One kind of toggle ranged from 2,077 to 3,610 ms in the run. Not about kind | RUN | CI run 41561127296 |
 
 ### 3.1 Every finding and where it goes
 
@@ -176,14 +177,15 @@ The report's scripts never read the field (READ: no `metaType` in any `.js`). Th
 | F10, F11, F15 | R3 | §6.8 |
 | F19 | R3 removes `http.request.method`. The span name stays flattened through NDJSON (F16, Q9) | §6.8 |
 | F17 | R3 | §6.8 |
-| F13 | Kronikol4J's own issue (Q7), and its ledger row in each release | The ledger |
+| F13 | `lemonlion/Kronikol4J#2` (Q7), and its ledger row in each release | The ledger |
 | F16 | Left (Q9). Its harms are F19, half fixed by R3's gate, and F2's on an ingest. Q9 (a) accepts them | |
-| F18 | Own issue (Q11). R1 corrects the wiki's false sentence | §8 |
+| F18 | #230 (Q11). R1 corrects the wiki's false sentence | §8 |
 | F20, F21's path ending in `%20` and rows that look alike | R4, not R1 | R1's facts name what they do not cover (§6.2) |
-| The rest of F21 | Own issue (Q13) | |
+| The rest of F21 | #231 and #233 (Q13) | |
 | F24, F25 | R4 | |
-| F22, F26 | Own issues (Q14) | |
+| F22, F26 | #232 and #235 (Q14) | |
 | F27 | R4 | §12 |
+| F28 | #234 | |
 
 ## 4. The underlying problem
 
@@ -664,7 +666,7 @@ and `MassTransitTracker`; `src/Kronikol/Reports/WarmUpCalls.cs:46,155` and a com
 
 **Taken at their recommendations, 2026-11-02, on "I want it fixed", which meant F27 (the status at the top says how):** Q3 (a), Q4 (a), Q5 (b), Q6 (b), Q9 (a), Q10 (b), Q12 (a) and Q15 (a). The owner did not answer each one, and can overturn any of them; the text of each stays below, with what it costs.
 
-**Still open, as each only files an issue:** Q7, Q11, Q13 and Q14. "Filed only at your word" stands: nothing has been filed.
+**Answered yes on 2026-11-04, each after being measured again on the published 5.28.2 (§12):** Q7, as `lemonlion/Kronikol4J#2`; Q11, as #230; Q13, as #231 and #233, F20 having been fixed in R4; Q14, as #232 and #235. The same read of CI found F28, filed as #234.
 
 **R4, added on the same word.** `CLAUDE.md` says to fix the bugs found along the way, so F20, F21's path ending in `%20` and rows that look alike, F24 and F25 ship as a fourth release, a patch, after R2. Q13 and Q14 now ask only about what stays: the rest of F21, F22 and F26. F27 was fixed in R4, at the owner's asking. A candidate F21 item, `ResultDefaulted`, is left out, as only an ingest report reaches it and a merge refuses those.
 
@@ -676,21 +678,21 @@ and `MassTransitTracker`; `src/Kronikol/Reports/WarmUpCalls.cs:46,155` and a com
   **Recommended: (a).** They record that a send, publish or consume failed, and the table's comment says "a fault is no message". On a working send the event card holds the message; under (b) the only card on a failed send would hold the exception's text in that slot, and "`Neither` is `Default`" would be false on three operations. (a) means a failed MassTransit send leaves no event, where Kafka's and Service Bus's keep one, as those log the call (§5.4). The best argument for (b) is that a consume fault did deliver its message (`CallGraphBuilder.cs:107`), yet `kind` shows no event; the record still holds no message. They give no warm-up mark either way (RUN).
 - **Q5. Warm-up in R2,** reversed since the first draft, which said a direction signal does not exist. `MessageTable.Read` gives it. (a) Leave warm-up's test: R2 loses a test's own publish marks on four packages. (b) One condition: an `Event` is skipped unless the table reads `Publishes`, which keeps those marks except at `Raw`, adds Kafka's, Service Bus's, Pub/Sub's and Event Hubs', and adds a clause to the class's exception, as `warmup.py` needs no port (§5.4). **Recommended: (b), in R2.** Without it R2 regresses a behaviour consumers have.
 - **Q6. A publish's span kind** (R3): (a) `PRODUCER` for all, as the wiki says today, (b) `CLIENT` except Kafka's produce, which is OTel's letter. **Recommended: (b).** Only Kafka's tracker injects a context. No Collector edge is lost, and the sends of Pub/Sub, Service Bus, Event Hubs, MassTransit and `MessageTracker` gain one, where (a) with R2 takes SQS's away. What it costs, measured (`r3-option-send-is-client`): between (a) and (b), 86 of 194 rows move from `PRODUCER` to `CLIENT`. Against what an exporter writes today, 105 of the 143 `PRODUCER` rows go to `CLIENT`, 35 to `CONSUMER` and 3 stay, so a dashboard that filters on `PRODUCER` needs to filter on `messaging.operation.type` being present, as `send` alone drops 53 of the 143; a real `PRODUCER` span through a tap and out again comes back `CLIENT` on 3 of 6 real rows, and 11 of 17 shapes leave with another kind; and two Kafka routes that inject nothing still read `PRODUCER`. The first patch held (a). (b) was a small change to one source file and 42 test cases (`prototype/r3-option-send-is-client.patch`), and the release holds it.
-- **Q7. Kronikol4J:** file an issue for F13 when R1 ships, as `lemonlion/Kronikol4J#1` was for the service card? **Recommended: yes.**
+- **Q7. Kronikol4J:** file an issue for F13 when R1 ships, as `lemonlion/Kronikol4J#1` was for the service card? **Recommended: yes.** Filed as `lemonlion/Kronikol4J#2`.
 - **Q9. An ingest's labels (F16):** (a) leave them, (b) keep a mixed-case label as written. **Recommended: (a).** External capturers
   do send `get`, which should read as a verb, and it raises no false alarm. R3 removes half of F19, the `http.request.method`. The span name stays `DELETE` through NDJSON, and F2's harms on an ingest stay (its labels, `query`, `service.json`, a Storage Queues `DELETE` as a message row): (a) accepts them.
 - **Q10. OTel's database names (F17),** reversed since the first draft: (a) an issue of its own, (b) into R3. **Recommended: (b).** No measured backend keys on the value for a Kronikol span: `peer.service` outranks it on the Collector, and Tempo and Jaeger do not read it. Only a user's own dashboard could care (INFERRED). The spec says MUST, it is one table in the same file, and R3's changelog already warns backends. Cost: a pin flips, and the way back gives `gcp-spanner://`. Not in the first cut.
-- **Q11. A merge counting its own run (F18):** (a) an issue of its own, (b) into R1. **Recommended: (a).** Actions and Azure DevOps are clear (simulated), and it is not about kind. R1 corrects the wiki's false sentence regardless. Filed only at your word.
-- **Q13. F20 and F21:** (a) two issues of their own, (b) into R1. **Recommended: (a).** F20 reaches beyond merges, since a sharded run's line reads `partial` under the history action's flow and nothing is then reported absent, so it deserves its own look. A candidate fix exists (`Fragment()` writes only the host's `HistoryPartialRun`) and closes C1 and C2 in a copy, not run against the suite. F21 needs `merge --history` and rare inputs. Filed only at your word.
+- **Q11. A merge counting its own run (F18):** (a) an issue of its own, (b) into R1. **Recommended: (a).** Actions and Azure DevOps are clear (simulated), and it is not about kind. R1 corrects the wiki's false sentence regardless. Filed as #230.
+- **Q13. F20 and F21:** (a) two issues of their own, (b) into R1. **Recommended: (a).** F20 reaches beyond merges, since a sharded run's line reads `partial` under the history action's flow and nothing is then reported absent, so it deserves its own look. A candidate fix exists (`Fragment()` writes only the host's `HistoryPartialRun`) and closes C1 and C2 in a copy, not run against the suite. F21 needs `merge --history` and rare inputs. F20 was fixed in R4. F21's rest is filed as #231 and #233.
 - **Q15. R3's version:** (a) a minor, (b) hold it for the next major, as it changes a documented span kind that a dashboard can filter on. **Recommended: (a).** The change follows OTel's table, it adds no option and moves no default, and the changelog gives the edge table.
-- **Q14. F22 and F26:** an issue each? **Recommended: yes.** F24, F25 and F27 were fixed in R4, so they need none. Filed only at your word.
+- **Q14. F22 and F26:** an issue each? **Recommended: yes.** F24, F25 and F27 were fixed in R4, so they need none. Filed as #232 and #235.
 
 ## 11. What it leaves
 
 - Reports already written keep what they say (§5.6).
 - `BigQueryTracker` stays, with no caller in its package: removing a public type would be a major. Bigtable keeps no automatic route (F4).
 - An ingest's labels (Q9).
-- A merge counting its own run (F18, Q11), the rest of a merge's other differences (F21, Q13), and F22, F26 (Q14). Of F21's rest, `query`, `--group-by path`, `diff --body`, the `Failures.md` Call column and ingest still read `/foo` for `/foo%20`, as `Uri` trims it, and none of them raises a false alarm.
+- A merge counting its own run (F18, #230), the rest of a merge's other differences (F21, #231), and F22 (#232), F26 (#235) and F28 (#234). Of F21's rest, `query`, `--group-by path` and the `Failures.md` Call column read `/foo` for `/foo%20` on 5.28.2, as `Uri` trims it, and `diff --body` does from reading its code (#233). None of them raises a false alarm. This line named ingest too, which was not measured and whose input is not the data file's text, so #233 says that.
 - MediatR's `Publish` stays `Default` under the rule: it is in process, with no broker (READ).
 - A consumer who logs `Event` by hand on a database call keeps it. The guard reads Kronikol's own packages.
 - From R3's look at OTLP, each small and none about kind: `Neither` lumps settlement with management, so `messaging.operation.type=settle` waits for a split; `error.type` is not written, and span names are not per semconv; a `ConsumeFault` keeps `service.name=MassTransit`; a real SDK's SNS URI is `sns:///`, so its topic is lost (`SnsOperationClassifier.cs:13-17` parses JSON only); a `CLIENT` with `rpc.system`, the AWS shape, takes the RPC path and is dropped unless RPC capture is on; a tap's `CONSUMER` is drawn consumer to broker; spans under one Activity share an id.
@@ -772,6 +774,12 @@ On the published 5.28.1 (`results/r2-proof-5.28.1.txt`): `kinds-by-tracker` at e
 **CI failed one lane on the tag's commit, on a fact of this release.** `ATapOnEveryInterfaceAsksForOneDualModeSocket` says "on every machine" and had run only on Windows. Bound to one IPv6 address, Linux makes a socket IPv6-only whatever it asked for, so the fact's loopback stand-in read false after the bind (`results/r4-linux-dual-mode.txt`). The tap was right, so the packages stand. `c394d17f` fixes the fact, with no bump. That lane stops at its first red project, so the projects after it first ran on that commit. On that commit CI passes, 33 of 33 lanes (run 41558786754), and so does CodeQL.
 
 **2026-11-03, R1's proofs on the published 5.27.14.** Both proofs of §6.6 pass, from nuget.org, with 5.27.13 as the control (`results/r1-proof-*.txt`). `merge-labels`: 0 rows differ, against 9. `history-across-merge`: ten `stable`, against six changed, and the ledger's bytes do not move. `history-routes`: 15 of 15 stable, against 8 changed, and R1's tool over a 5.27.13 shard says 2, the verbs built by hand. `card-queue`: a merge equals its shard. A real report's merge: no call line changes. BreakfastProvider's six in-memory lanes on 5.27.14, its pins moved in a scratch clone and nothing pushed: 0 failures, `Spanner Default 12` against `Spanner Event 12`, and all 12 Spanner notes painted on the plain fill in both themes. Not run on the release: its 12 docker and external-SUT lanes, `merge --history` over a real lane, and Linux.
+
+**2026-11-04, the issues, at the owner's yes.** Each item was measured again on the published 5.28.2 before it was filed, with the probes above pinned to 5.28.2 in a scratch copy (`results/failed-sends-5.28.2.txt`, `results/ci-run-ids-5.28.2.txt`, `results/merge-round-trip-cases-5.28.2.txt`, `results/e2e-r16-5.28.2.txt`). F18 holds, with `1 still failing` now alone, as R1 removed the `1 behaviour changed` beside it. F22 holds. Of F21's 61 cases, ten still give a different verdict (#231), among them the five options a merge never reads. F26 passes 20 of 20 on a quiet machine and failed under load, in WebKit: Back landed 128.5 px off. Its issue gives the message this plan never had. F13's list grew, as the 5.28.1 row of the ledger leaves out Storage Queues, EventBridge and the event bus's faults (`lemonlion/Kronikol4J#2`).
+
+**"CI on main passes" was said of the wrong commit.** The closing report gave 33 of 33 lanes, which is `c394d17f`. The commit after it, `9d994a4b`, is the one that recorded that sentence, and its own run failed one lane, F28, which nobody read until this pass. A claim about main's CI is a claim about its tip.
+
+**Done at the owner's yes, the same day:** the repository secret `NUGET_API_KEY`, unused since publishing moved to Trusted Publishing, is deleted. Of the 116 firewall rules, the 112 that had lost both their program and their folder are deleted. The other 4 stay, as they are `C:\Code\Kronikol-192`'s, whose programs are still on disk on code from before the fix, so that worktree would prompt again.
 
 ## Appendix A. The comment closing #220 (Q8), to post when R1 is published
 
