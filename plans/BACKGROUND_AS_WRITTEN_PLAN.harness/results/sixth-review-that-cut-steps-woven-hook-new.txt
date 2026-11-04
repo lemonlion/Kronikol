@@ -1,0 +1,28 @@
+--- s0
+s0  R11 A woven step in a BeforeScenario hook, composites after it › R11 one  [Passed]  0.1s
+at Features/R6/R11_WovenInAHook.feature:4
+  0     Given an r composite runs an r step "x"  0.03s
+  1     Then an r step "y"
+    1.0   Ran for
+        · who
+        · R11 one composite
+    1.1   Given an r step "x"
+      1.1.0 Ran for
+          · who
+          · R11 one x
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+--- s1
+s1  R19 A woven step in a BeforeScenario hook, plain steps after it › R19 one  [Passed]  0.1s
+at Features/R6/R19_WovenInAHookPlain.feature:4
+  0     Given an r step "x"  0.01s
+  1     When an r step "y"  0s
+    1.0   Ran for
+        · who
+        · R19 one x
+  2     Then an r step "z"  0s
+    2.0   Ran for
+        · who
+        · R19 one y
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s1 · flow s1

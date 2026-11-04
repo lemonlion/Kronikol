@@ -1,0 +1,38 @@
+
+## Deep: a word only in a closed, held composite of row f (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+   same search "second f leaf 5": r0 background=- cb.0~=- steps=O [active 0] scenario open
+ 5.28.2 all: r0(background=- steps=O) r1(background=- failure-result=O) r2(background=- steps=O) r3(background=- failure-result=O) r4(background=- steps=O) r5(background=- steps=O)
+  patch all: r0(background=- steps=O) r1(background=O failure-result=O) r2(background=- steps=O) r3(background=O failure-result=O) r4(background=- steps=O) r5(background=- steps=O)
+   same eval:(function(){var r=[...document.querySelectorAll('.step')].filter(function(s){return s.textContent.indexOf('second f leaf 5')>=0&&!s.querySelector('.step');});return r.length+' drawn, boxes '+r.filter(function(s){return s.getClientRects().length>0;}).length;})(): 0 drawn, boxes 0
+   same search "": r0 background=- cb.0~=- steps=O [active 0] scenario open
+ 5.28.2 all: r0(background=- steps=O) r1(background=- failure-result=O) r2(background=- steps=O) r3(background=- failure-result=O) r4(background=- steps=O) r5(background=- steps=O)
+  patch all: r0(background=- steps=O) r1(background=O failure-result=O) r2(background=- steps=O) r3(background=O failure-result=O) r4(background=- steps=O) r5(background=- steps=O)
+
+## Search: a second search while the first row chosen is left (rows.html)
+   same start: r0 background=- steps=O
+   same search "zebraword": r1 background=O steps=O [active 1] scenario open
+   same s:scenario-background: r1 background=- steps=O
+   same search "zebraword x": r1 background=- steps=O [active ] scenario open
+ 5.28.2 search "zebraword": r1 background=- steps=O [active 1] scenario open
+  patch search "zebraword": r1 background=O steps=O [active 1] scenario open
+ 5.28.2 read: r1 background=- steps=O
+  patch read: r1 background=O steps=O
+ 5.28.2 search "": r0 background=- steps=O [active 0] scenario open
+  patch search "": r0 background=O steps=O [active 0] scenario open
+ 5.28.2 read: r0 background=- steps=O
+  patch read: r0 background=O steps=O
+
+## Search: reader closes Steps on the chosen row, retypes the same word (rows.html)
+   same start: r0 background=- steps=O
+   same search "zebraword": r1 background=O steps=O [active 1] scenario open
+   same s:scenario-steps: r1 background=O steps=-
+   same read: r1 background=O steps=-
+ 5.28.2 search "zebrawor": r1 background=O steps=- [active 1] scenario open
+  patch search "zebrawor": r1 background=O steps=O [active 1] scenario open
+ 5.28.2 read: r1 background=O steps=-
+  patch read: r1 background=O steps=O
+ 5.28.2 search "zebraword": r1 background=O steps=- [active 1] scenario open
+  patch search "zebraword": r1 background=O steps=O [active 1] scenario open
+ 5.28.2 read: r1 background=O steps=-
+  patch read: r1 background=O steps=O

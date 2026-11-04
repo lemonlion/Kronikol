@@ -1,0 +1,70 @@
+# One page, two answers: s9's own diagram against its step list
+
+# the step list says
+10:      · APPLE
+14:        · customer-2
+19:        · APPLE
+
+# Specifications.yml of the green shapes run: feature 04 and 05, a Background nobody wrote
+ Feature: 04 No background, shared Given and When
+    Scenarios:
+      - Scenario: 04 one
+        IsHappyPath: false
+        BackgroundSteps:
+          - Step: Given the basket holds
+            SubSteps:
+              - Ran for
+          - Step: When the customer acts "the same"
+            SubSteps:
+              - Ran for
+        Steps:
+          - Step: Then the outcome is "one"
+            SubSteps:
+              - Ran for
+
+      - Scenario: 04 two
+        IsHappyPath: false
+        BackgroundSteps:
+          - Step: Given the basket holds
+            SubSteps:
+              - Ran for
+          - Step: When the customer acts "the same"
+            SubSteps:
+              - Ran for
+        Steps:
+          - Step: Then the outcome is "two"
+            SubS
+....
+ Feature: 05 No background, outline with placeholders in a table
+    Scenarios:
+      - Scenario: 05 row APPLE
+        IsHappyPath: false
+        BackgroundSteps:
+          - Step: Given the basket holds
+            SubSteps:
+              - Ran for
+          - Step: When the customer acts "the same"
+            SubSteps:
+              - Ran for
+          - Step: Then the outcome is "the same"
+            SubSteps:
+              - Ran for
+
+      - Scenario: 05 row BANANA
+        IsHappyPath: false
+        BackgroundSteps:
+          - Step: Given the basket holds
+            SubSteps:
+              - Ran for
+          - Step: When the customer acts "the same"
+            SubSteps:
+              - Ran for
+          - Step: Then the outcome is "the same"
+        
+....
+
+# s9's diagram (query diagram <reports> s9/d0 --out F), how many lines hold each value
+customer-10: 3
+customer-2: 0
+BANANA: 3
+APPLE: 0

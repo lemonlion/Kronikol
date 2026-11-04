@@ -1,0 +1,249 @@
+
+## Deep: no reader, each row (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+ 5.28.2 row 1: r1 background=- cb.0!=- cb.0.0!=O cb.0.1~=- failure=O
+  patch row 1: r1 background*=O cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+   same row 2: r2 background=- cb.0~=- steps=O
+ 5.28.2 row 3: r3 background=- cb.0!~=- failure=O
+  patch row 3: r3 background*=O cb.0!=O cb.0.0~=- cb.0.1~=- failure=O
+   same row 4: r4 background=- steps=O
+   same row 5: r5 background=- cb.0~=- steps=O
+   same row 0: r0 background=- cb.0~=- steps=O
+
+## Deep: reader opens bg and the composites on a, on through the rows (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+   same s:scenario-background: r0 background=O cb.0~=- steps=O
+   same c:b.0: r0 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+   same c:b.0.0: r0 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+   same row 2: r2 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+ 5.28.2 row 1: r1 background=O cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+  patch row 1: r1 background*=O cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+   same row 5: r5 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+   same row 0: r0 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+
+## Deep: reader opens the outer on a, passes the row without it, then f (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+   same s:scenario-background: r0 background=O cb.0~=- steps=O
+   same c:b.0: r0 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+   same row 4: r4 background=O steps=O
+ 5.28.2 row 5: r5 background=O cb.0~=- steps=O
+  patch row 5: r5 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+
+## Deep: reader closes the held inner on b, on to c, back to b (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+ 5.28.2 row 1: r1 background=- cb.0!=- cb.0.0!=O cb.0.1~=- failure=O
+  patch row 1: r1 background*=O cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+ 5.28.2 c:b.0.0: r1 background=- cb.0!=- cb.0.0!=- cb.0.1~=- failure=O
+  patch c:b.0.0: r1 background*=O cb.0!=O cb.0.0!=- cb.0.1~=- failure=O
+   same row 2: r2 background=- cb.0~=- steps=O
+ 5.28.2 row 1: r1 background=- cb.0!=- cb.0.0!=- cb.0.1~=- failure=O
+  patch row 1: r1 background*=O cb.0!=O cb.0.0!=- cb.0.1~=- failure=O
+
+## Deep: reader closes the held outer on b, then c, then d (another failure), back to b (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+ 5.28.2 row 1: r1 background=- cb.0!=- cb.0.0!=O cb.0.1~=- failure=O
+  patch row 1: r1 background*=O cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+ 5.28.2 c:b.0: r1 background=- cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+  patch c:b.0: r1 background*=O cb.0!=- cb.0.0!=O cb.0.1~=- failure=O
+ 5.28.2 row 2: r2 background=- cb.0=O cb.0.0=O cb.0.1=- steps=O
+  patch row 2: r2 background=- cb.0~=- steps=O
+ 5.28.2 row 3: r3 background=- cb.0!=O cb.0.0=O cb.0.1=- failure=O
+  patch row 3: r3 background*=O cb.0!=O cb.0.0~=- cb.0.1~=- failure=O
+ 5.28.2 row 1: r1 background=- cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+  patch row 1: r1 background*=O cb.0!=- cb.0.0!=O cb.0.1~=- failure=O
+
+## Deep: on b the reader opens the passing second inner, on to c and opens the outer there (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+ 5.28.2 row 1: r1 background=- cb.0!=- cb.0.0!=O cb.0.1~=- failure=O
+  patch row 1: r1 background*=O cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+ 5.28.2 c:b.0.1: r1 background=- cb.0!=- cb.0.0!=O cb.0.1=O failure=O
+  patch c:b.0.1: r1 background*=O cb.0!=O cb.0.0!=O cb.0.1=O failure=O
+   same row 2: r2 background=- cb.0~=- steps=O
+   same s:scenario-background: r2 background=O cb.0~=- steps=O
+ 5.28.2 c:b.0: r2 background=O cb.0=O cb.0.0=O cb.0.1=O steps=O
+  patch c:b.0: r2 background=O cb.0=O cb.0.0=- cb.0.1=O steps=O
+
+## Deep: on d the reader closes the second-level, on to a (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+ 5.28.2 row 3: r3 background=- cb.0!~=- failure=O
+  patch row 3: r3 background*=O cb.0!=O cb.0.0~=- cb.0.1~=- failure=O
+ 5.28.2 no c:b.0.0
+  patch c:b.0.0: r3 background*=O cb.0!=O cb.0.0=O cb.0.1~=- failure=O
+ 5.28.2 no c:b.0.1
+  patch c:b.0.1: r3 background*=O cb.0!=O cb.0.0=O cb.0.1=O failure=O
+   same row 0: r0 background=- cb.0~=- steps=O
+   same s:scenario-background: r0 background=O cb.0~=- steps=O
+ 5.28.2 c:b.0: r0 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+  patch c:b.0: r0 background=O cb.0=O cb.0.0=O cb.0.1=O steps=O
+
+## Deep: reader opens outer on a, comes to b, then closes the Background section on b, then c (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+   same s:scenario-background: r0 background=O cb.0~=- steps=O
+   same c:b.0: r0 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+ 5.28.2 row 1: r1 background=O cb.0!=O cb.0.0!=- cb.0.1~=- failure=O
+  patch row 1: r1 background*=O cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+ 5.28.2 s:scenario-background: r1 background=- cb.0!=O cb.0.0!=- cb.0.1~=- failure=O
+  patch s:scenario-background: r1 background*=- cb.0!=O cb.0.0!=O cb.0.1~=- failure=O
+ 5.28.2 row 2: r2 background=- cb.0=O cb.0.0=- cb.0.1=- steps=O
+  patch row 2: r2 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+
+## Deep: reader opens outer on a, inner too; on c closes inner; on f, then a (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+   same s:scenario-background: r0 background=O cb.0~=- steps=O
+   same c:b.0: r0 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+   same c:b.0.0: r0 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+   same row 2: r2 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+   same c:b.0.0: r2 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+   same row 5: r5 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+   same row 0: r0 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+
+## Deep: click the same row twice, then open a composite that draws (rows.html)
+   same start: r0 background=- cb.0~=- steps=O
+   same s:scenario-background: r0 background=O cb.0~=- steps=O
+   same c:b.0: r0 background=O cb.0=O cb.0.0=- cb.0.1=- steps=O
+   same c:b.0.0: r0 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+   same row 2: r2 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+   same row 2: r2 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+   same c:b.0: r2 background=O cb.0=- cb.0.0=O cb.0.1=- steps=O
+   same c:b.0: r2 background=O cb.0=O cb.0.0=O cb.0.1=- steps=O
+
+## Own: reader opens on a, through b to c (rows.html)
+   same start: r0 steps=O c0~=-
+   same c:0: r0 steps=O c0=O c0.0=- c0.1=-
+   same c:0.0: r0 steps=O c0=O c0.0=O c0.1=-
+   same row 1: r1 steps=O c0!=O c0.0!=O c0.1~=- failure=O
+   same row 2: r2 steps=O c0=O c0.0=O c0.1=-
+   same row 0: r0 steps=O c0=O c0.0=O c0.1=-
+
+## Own: reader closes Steps on a, through the failure (rows.html)
+   same start: r0 steps=O c0~=-
+   same s:scenario-steps: r0 steps=- c0~=-
+ 5.28.2 row 1: r1 steps=- c0!=- c0.0!=O c0.1~=- failure=O
+  patch row 1: r1 steps=- c0!=O c0.0!=O c0.1~=- failure=O
+   same row 2: r2 steps=- c0~=-
+
+## Own: reader closes Steps on b, Failure Result, to c, back (rows.html)
+   same start: r0 steps=O c0~=-
+ 5.28.2 row 1: r1 steps=O c0!=- c0.0!=O c0.1~=- failure=O
+  patch row 1: r1 steps=O c0!=O c0.0!=O c0.1~=- failure=O
+ 5.28.2 s:scenario-steps: r1 steps=- c0!=- c0.0!=O c0.1~=- failure=O
+  patch s:scenario-steps: r1 steps=- c0!=O c0.0!=O c0.1~=- failure=O
+ 5.28.2 s:failure-result: r1 steps=- c0!=- c0.0!=O c0.1~=- failure=-
+  patch s:failure-result: r1 steps=- c0!=O c0.0!=O c0.1~=- failure=-
+   same row 2: r2 steps=- c0~=-
+ 5.28.2 row 1: r1 steps=- c0!=- c0.0!=O c0.1~=- failure=-
+  patch row 1: r1 steps=- c0!=O c0.0!=O c0.1~=- failure=-
+
+## Blocks: each row (rows.html)
+   same start: r0 background=- steps=O
+ 5.28.2 row 1: r1 background=- failure=O
+  patch row 1: r1 background*=O failure=O
+   same row 2: r2 background=- steps=O
+   same row 3: r3 background=- steps=O
+   same row 0: r0 background=- steps=O
+
+## Blocks: reader opens Background on a, through the failure, across the block (rows.html)
+   same start: r0 background=- steps=O
+   same s:scenario-background: r0 background=O steps=O
+ 5.28.2 row 1: r1 background=O failure=O
+  patch row 1: r1 background*=O failure=O
+   same row 2: r2 background=O steps=O
+   same row 3: r3 background=O steps=O
+
+## Blocks: reader closes Steps in the first block, to the second block (rows.html)
+   same start: r0 background=- steps=O
+   same s:scenario-steps: r0 background=- steps=-
+   same row 2: r2 background=- steps=-
+   same read: r2 background=- steps=-
+   same row 3: r3 background=- steps=-
+
+## Blocks: all panels after a tour (rows.html)
+   same start: r0 background=- steps=O
+   same s:scenario-background: r0 background=O steps=O
+   same row 2: r2 background=O steps=O
+ 5.28.2 all: r0(background=O steps=O) r1(background=- failure-result=O) r2(background=O steps=O) r3(background=- steps=O)
+  patch all: r0(background=O steps=O) r1(background=O failure-result=O) r2(background=O steps=O) r3(background=- steps=O)
+ 5.28.2 row 1: r1 background=O failure=O
+  patch row 1: r1 background*=O failure=O
+   same all: r0(background=O steps=O) r1(background=O failure-result=O) r2(background=O steps=O) r3(background=- steps=O)
+   same row 3: r3 background=O steps=O
+   same all: r0(background=O steps=O) r1(background=O failure-result=O) r2(background=O steps=O) r3(background=O steps=O)
+
+## Search: word in row b with a first, emptied (rows.html)
+   same start: r0 background=- steps=O
+   same search "zebraword": r1 background=O steps=O [active 1] scenario open
+ 5.28.2 all: r0(background=O steps=O) r1(background=O steps=O) r2(background=- steps=O)
+  patch all: r0(background=O steps=O) r1(background=O steps=O) r2(background=O steps=O)
+   same search "": r0 background=O steps=O [active 0] scenario open
+ 5.28.2 all: r0(background=O steps=O) r1(background=O steps=O) r2(background=- steps=O)
+  patch all: r0(background=O steps=O) r1(background=O steps=O) r2(background=O steps=O)
+   same read: r0 background=O steps=O
+
+## Search: on row c the reader leaves Background closed; a search; emptied (rows.html)
+   same start: r0 background=- steps=O
+   same row 2: r2 background=- steps=O
+ 5.28.2 search "zebraword": r1 background=- steps=O [active 1] scenario open
+  patch search "zebraword": r1 background=O steps=O [active 1] scenario open
+ 5.28.2 all: r0(background=O steps=O) r1(background=- steps=O) r2(background=- steps=O)
+  patch all: r0(background=O steps=O) r1(background=O steps=O) r2(background=O steps=O)
+ 5.28.2 search "": r2 background=- steps=O [active 2] scenario open
+  patch search "": r2 background=O steps=O [active 2] scenario open
+ 5.28.2 all: r0(background=O steps=O) r1(background=- steps=O) r2(background=- steps=O)
+  patch all: r0(background=O steps=O) r1(background=O steps=O) r2(background=O steps=O)
+ 5.28.2 read: r2 background=- steps=O
+  patch read: r2 background=O steps=O
+
+## Search: on row c the reader closes Steps, a search, emptied, then row a (rows.html)
+   same start: r0 background=- steps=O
+   same row 2: r2 background=- steps=O
+   same s:scenario-steps: r2 background=- steps=-
+ 5.28.2 search "zebraword": r1 background=- steps=- [active 1] scenario open
+  patch search "zebraword": r1 background=O steps=O [active 1] scenario open
+ 5.28.2 all: r0(background=O steps=O) r1(background=- steps=-) r2(background=- steps=-)
+  patch all: r0(background=O steps=O) r1(background=O steps=O) r2(background=O steps=O)
+ 5.28.2 search "": r2 background=- steps=- [active 2] scenario open
+  patch search "": r2 background=O steps=O [active 2] scenario open
+ 5.28.2 all: r0(background=O steps=O) r1(background=- steps=-) r2(background=- steps=-)
+  patch all: r0(background=O steps=O) r1(background=O steps=O) r2(background=O steps=O)
+ 5.28.2 read: r2 background=- steps=-
+  patch read: r2 background=O steps=O
+ 5.28.2 row 0: r0 background=- steps=-
+  patch row 0: r0 background=O steps=O
+
+## Search: reader closes Background and Steps on chosen row, empties (rows.html)
+   same start: r0 background=- steps=O
+   same search "zebraword": r1 background=O steps=O [active 1] scenario open
+   same s:scenario-background: r1 background=- steps=O
+   same s:scenario-steps: r1 background=- steps=-
+   same search "": r0 background=- steps=- [active 0] scenario open
+   same read: r0 background=- steps=-
+
+## TwoA: word in two scenarios, no reveal; emptied (rows.html)
+   same start: r0 background=- steps=O
+   same search "lynxword": r1 background=- steps=O [active 1] scenario open
+   same all: r0(background=- steps=O) r1(background=- steps=O)
+   same search "": r0 background=- steps=O [active 0] scenario open
+   same all: r0(background=- steps=O) r1(background=- steps=O)
+
+## TwoA: narrowed to one, widened, emptied (rows.html)
+   same start: r0 background=- steps=O
+   same search "lynxword twoa": r1 background=O steps=O [active 1] scenario open
+   same all: r0(background=O steps=O) r1(background=O steps=O)
+   same search "lynxword": r1 background=O steps=O [active 1] scenario open
+   same all: r0(background=O steps=O) r1(background=O steps=O)
+   same search "": r0 background=O steps=O [active 0] scenario open
+   same all: r0(background=O steps=O) r1(background=O steps=O)
+
+## AllFail: every row holds: reader closes on a; b; back (rows.html)
+ 5.28.2 start: r0 background=- failure=O
+  patch start: r0 background*=O failure=O
+ 5.28.2 s:scenario-background: r0 background=O failure=O
+  patch s:scenario-background: r0 background*=- failure=O
+ 5.28.2 row 1: r1 background=O failure=O
+  patch row 1: r1 background*=O failure=O
+ 5.28.2 row 0: r0 background=O failure=O
+  patch row 0: r0 background*=- failure=O
+
+## Plain fails: a plain scenario (rows.html)
+   same start: no panel
+   same read: no panel

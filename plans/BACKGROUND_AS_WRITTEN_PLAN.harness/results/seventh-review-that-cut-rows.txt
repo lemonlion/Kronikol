@@ -1,0 +1,469 @@
+
+## Move: progressive to one row, backspaced to empty (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alph": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alph" addr=#q=alph
+  patch search "alph": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alph" addr=#q=alph
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "alph": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alph" addr=#q=alph
+  patch search "alph": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alph" addr=#q=alph
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: one word, emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: match moves b to c, emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "betaword": OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=2 bar="betaword" addr=#q=betaword
+  patch search "betaword": OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=3 bar="betaword" addr=#q=betaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: match moves b to c to b, emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "betaword": OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=2 bar="betaword" addr=#q=betaword
+  patch search "betaword": OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=3 bar="betaword" addr=#q=betaword
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: match moves b to a, the row it started on, emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "firstword": OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=2 bar="firstword" addr=#q=firstword
+  patch search "firstword": OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=3 bar="firstword" addr=#q=firstword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: after b to c and emptied, the reader tours the rows (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "betaword": OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=2 bar="betaword" addr=#q=betaword
+  patch search "betaword": OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=3 bar="betaword" addr=#q=betaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same row 1: shut (feature shut) r0[bg+ st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=1 | tracked=0 bar="" addr=
+   same row 2: shut (feature shut) r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 | tracked=0 bar="" addr=
+   same row 3: shut (feature shut) r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] *r3[bg+ st+] active=3 | tracked=0 bar="" addr=
+   same row 0: shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg+ st+] active=0 | tracked=0 bar="" addr=
+
+## Move: reader closes Steps on a; b; c; emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader toggles scenario-steps: OPEN *r0[bg- st-] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=0 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st-] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "betaword": OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=0 bar="betaword" addr=#q=betaword
+  patch search "betaword": OPEN r0[bg- st-] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=2 bar="betaword" addr=#q=betaword
+ 5.28.2 search "": OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": OPEN *r0[bg+ st+] r1[bg- st-] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: reader opens Background on a; b; emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader toggles scenario-background: OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=0 bar="alphaword" addr=#q=alphaword
+   same search "": OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: reader leaves row c, opens nothing; b; emptied, then a (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same row 2: OPEN r0[bg- st+] r1[bg- st+] *r2[bg- st+] r3[bg- st+] active=2 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=0 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=1 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": OPEN r0[bg+ st+] r1[bg- st+] *r2[bg- st+] r3[bg- st+] active=2 | tracked=0 bar="" addr=
+  patch search "": OPEN r0[bg- st+] r1[bg- st+] *r2[bg- st+] r3[bg- st+] active=2 | tracked=0 bar="" addr=
+   same row 0: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: search chooses b; reader picks c; emptied; b; a (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 row 2: OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch row 2: OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": shut (feature shut) r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) r0[bg- st+] r1[bg- st+] *r2[bg+ st+] r3[bg- st+] active=2 | tracked=0 bar="" addr=
+ 5.28.2 row 1: shut (feature shut) r0[bg+ st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=1 | tracked=0 bar="" addr=
+  patch row 1: shut (feature shut) r0[bg- st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=1 | tracked=0 bar="" addr=
+   same row 0: shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: search chooses b; reader picks a; emptied; b (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 row 0: OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch row 0: OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same row 1: shut (feature shut) r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 | tracked=0 bar="" addr=
+
+## Move: reader closes Background on the row chosen; next keystroke; emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphawor": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphawor" addr=#q=alphawor
+  patch search "alphawor": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphawor" addr=#q=alphawor
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphawor" addr=#q=alphawor
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphawor" addr=#q=alphawor
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=4 bar="alphaword" addr=#q=alphaword
+   same search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: reader closes both on the row chosen; emptied; then that row (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 reader toggles scenario-steps: OPEN r0[bg+ st+] *r1[bg- st-] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch reader toggles scenario-steps: OPEN r0[bg- st+] *r1[bg- st-] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+   same search "": shut (feature shut) *r0[bg- st-] r1[bg- st-] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+   same row 1: shut (feature shut) r0[bg- st-] *r1[bg- st-] r2[bg- st+] r3[bg- st+] active=1 | tracked=0 bar="" addr=
+
+## Move: reader closes Background on the first row, the match; next keystroke (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "firstwor": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=2 bar="firstwor" addr=#q=firstwor
+  patch search "firstwor": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=3 bar="firstwor" addr=#q=firstwor
+ 5.28.2 reader toggles scenario-background: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=2 bar="firstwor" addr=#q=firstwor
+  patch reader toggles scenario-background: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=3 bar="firstwor" addr=#q=firstwor
+ 5.28.2 search "firstword": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=2 bar="firstword" addr=#q=firstword
+  patch search "firstword": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=4 bar="firstword" addr=#q=firstword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: reader closes, reopens Background on the row chosen; emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Zanzibar: word in the name alone, no reader (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "zanzibar": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=2 bar="zanzibar" addr=#q=zanzibar
+  patch search "zanzibar": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=3 bar="zanzibar" addr=#q=zanzibar
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Zanzibar: word in the name alone, reader on row b (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+   same row 1: OPEN r0[bg- st+] *r1[bg- st+] active=1 | tracked=0 bar="" addr=
+ 5.28.2 search "zanzibar": OPEN *r0[bg- st+] r1[bg- st+] active=0 marked=0,1 | tracked=0 bar="zanzibar" addr=#q=zanzibar
+  patch search "zanzibar": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=1 bar="zanzibar" addr=#q=zanzibar
+   same search "": OPEN r0[bg- st+] *r1[bg- st+] active=1 | tracked=0 bar="" addr=
+   same row 0: OPEN *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Zanzibar: reader on row b closes Background during the search; next keystroke (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+   same row 1: OPEN r0[bg- st+] *r1[bg- st+] active=1 | tracked=0 bar="" addr=
+ 5.28.2 search "zanziba": OPEN *r0[bg- st+] r1[bg- st+] active=0 marked=0,1 | tracked=0 bar="zanziba" addr=#q=zanziba
+  patch search "zanziba": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=1 bar="zanziba" addr=#q=zanziba
+ 5.28.2 reader toggles scenario-background: OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=0 bar="zanziba" addr=#q=zanziba
+  patch reader toggles scenario-background: OPEN *r0[bg- st+] r1[bg- st+] active=0 marked=0,1 | tracked=1 bar="zanziba" addr=#q=zanziba
+ 5.28.2 search "zanzibar": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=0 bar="zanzibar" addr=#q=zanzibar
+  patch search "zanzibar": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=2 bar="zanzibar" addr=#q=zanzibar
+ 5.28.2 search "": OPEN r0[bg+ st+] *r1[bg+ st+] active=1 | tracked=0 bar="" addr=
+  patch search "": OPEN r0[bg- st+] *r1[bg- st+] active=1 | tracked=0 bar="" addr=
+
+## Zanzibar: reader switches row during the search; next keystroke (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "zanziba": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=2 bar="zanziba" addr=#q=zanziba
+  patch search "zanziba": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=3 bar="zanziba" addr=#q=zanziba
+ 5.28.2 row 1: OPEN r0[bg+ st+] *r1[bg+ st+] active=1 marked=0,1 | tracked=2 bar="zanziba" addr=#q=zanziba
+  patch row 1: OPEN r0[bg+ st+] *r1[bg+ st+] active=1 marked=0,1 | tracked=3 bar="zanziba" addr=#q=zanziba
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg- st+] active=1 marked=0,1 | tracked=2 bar="zanziba" addr=#q=zanziba
+  patch reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg- st+] active=1 marked=0,1 | tracked=3 bar="zanziba" addr=#q=zanziba
+ 5.28.2 row 0: OPEN *r0[bg- st+] r1[bg- st+] active=0 marked=0,1 | tracked=2 bar="zanziba" addr=#q=zanziba
+  patch row 0: OPEN *r0[bg- st+] r1[bg- st+] active=0 marked=0,1 | tracked=3 bar="zanziba" addr=#q=zanziba
+ 5.28.2 search "zanzibar": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=2 bar="zanzibar" addr=#q=zanzibar
+  patch search "zanzibar": OPEN *r0[bg+ st+] r1[bg- st+] active=0 marked=0,1 | tracked=4 bar="zanzibar" addr=#q=zanzibar
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Plain: plain, emptied (rows.html)
+   same start: shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+ 5.28.2 search "plainword": OPEN [bg+ st+] | tracked=2 bar="plainword" addr=#q=plainword
+  patch search "plainword": OPEN [bg+ st+] | tracked=3 bar="plainword" addr=#q=plainword
+ 5.28.2 search "": shut (feature shut) [bg+ st+] | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+
+## Plain: plain, reader closed Steps first (rows.html)
+   same start: shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+   same reader opens scenario: OPEN [bg- st+] | tracked=0 bar="" addr=
+   same reader toggles scenario-steps: OPEN [bg- st-] | tracked=0 bar="" addr=
+ 5.28.2 search "plainword": OPEN [bg+ st+] | tracked=0 bar="plainword" addr=#q=plainword
+  patch search "plainword": OPEN [bg+ st+] | tracked=2 bar="plainword" addr=#q=plainword
+ 5.28.2 search "": OPEN [bg+ st+] | tracked=0 bar="" addr=
+  patch search "": OPEN [bg- st-] | tracked=0 bar="" addr=
+
+## Plain: plain, reader closes during, next keystroke (rows.html)
+   same start: shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+ 5.28.2 search "plainwor": OPEN [bg+ st+] | tracked=2 bar="plainwor" addr=#q=plainwor
+  patch search "plainwor": OPEN [bg+ st+] | tracked=3 bar="plainwor" addr=#q=plainwor
+ 5.28.2 reader toggles scenario-background: OPEN [bg- st+] | tracked=2 bar="plainwor" addr=#q=plainwor
+  patch reader toggles scenario-background: OPEN [bg- st+] | tracked=3 bar="plainwor" addr=#q=plainwor
+ 5.28.2 search "plainword": OPEN [bg+ st+] | tracked=2 bar="plainword" addr=#q=plainword
+  patch search "plainword": OPEN [bg+ st+] | tracked=4 bar="plainword" addr=#q=plainword
+ 5.28.2 search "": shut (feature shut) [bg+ st+] | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+
+## Plain: match moves to Plain2, emptied (rows.html)
+   same start: shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+ 5.28.2 search "plainword": OPEN [bg+ st+] | tracked=2 bar="plainword" addr=#q=plainword
+  patch search "plainword": OPEN [bg+ st+] | tracked=3 bar="plainword" addr=#q=plainword
+ 5.28.2 read Plain2: shut [bg- st+] | tracked=2 bar="plainword" addr=#q=plainword HIDDEN
+  patch read Plain2: shut [bg- st+] | tracked=3 bar="plainword" addr=#q=plainword HIDDEN
+ 5.28.2 search "plaintwoword": OPEN [bg+ st+] | tracked=3 bar="plaintwoword" addr=#q=plaintwoword HIDDEN
+  patch search "plaintwoword": OPEN [bg+ st+] | tracked=5 bar="plaintwoword" addr=#q=plaintwoword HIDDEN
+ 5.28.2 read: OPEN [bg+ st+] | tracked=3 bar="plaintwoword" addr=#q=plaintwoword HIDDEN
+  patch read: OPEN [bg+ st+] | tracked=5 bar="plaintwoword" addr=#q=plaintwoword HIDDEN
+ 5.28.2 read Plain2: OPEN [bg+ st+] | tracked=3 bar="plaintwoword" addr=#q=plaintwoword
+  patch read Plain2: OPEN [bg+ st+] | tracked=5 bar="plaintwoword" addr=#q=plaintwoword
+ 5.28.2 search "": shut (feature shut) [bg+ st+] | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+ 5.28.2 read: shut (feature shut) [bg+ st+] | tracked=0 bar="" addr=
+  patch read: shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+ 5.28.2 read Plain2: shut (feature shut) [bg+ st+] | tracked=0 bar="" addr=
+  patch read Plain2: shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+
+## PlainHeld: plain with a held failure (rows.html)
+ 5.28.2 start: shut (feature shut) [bg- fr+] | tracked=0 bar="" addr=
+  patch start: shut (feature shut) [bg*+ fr+] | tracked=0 bar="" addr=
+ 5.28.2 search "solofailterm": OPEN [bg+ fr+] | tracked=2 bar="solofailterm" addr=#q=solofailterm
+  patch search "solofailterm": OPEN [bg*+ fr+] | tracked=2 bar="solofailterm" addr=#q=solofailterm
+ 5.28.2 search "": shut (feature shut) [bg+ fr+] | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) [bg*+ fr+] | tracked=0 bar="" addr=
+
+## PlainHeld: plain with a held failure, reader closed it, search, emptied (rows.html)
+ 5.28.2 start: shut (feature shut) [bg- fr+] | tracked=0 bar="" addr=
+  patch start: shut (feature shut) [bg*+ fr+] | tracked=0 bar="" addr=
+ 5.28.2 reader opens scenario: OPEN [bg- fr+] | tracked=0 bar="" addr=
+  patch reader opens scenario: OPEN [bg*+ fr+] | tracked=0 bar="" addr=
+ 5.28.2 reader toggles scenario-background: OPEN [bg+ fr+] | tracked=0 bar="" addr=
+  patch reader toggles scenario-background: OPEN [bg*- fr+] | tracked=0 bar="" addr=
+ 5.28.2 search "solofailterm": OPEN [bg+ fr+] | tracked=0 bar="solofailterm" addr=#q=solofailterm
+  patch search "solofailterm": OPEN [bg*+ fr+] | tracked=1 bar="solofailterm" addr=#q=solofailterm
+ 5.28.2 search "": OPEN [bg+ fr+] | tracked=0 bar="" addr=
+  patch search "": OPEN [bg*- fr+] | tracked=0 bar="" addr=
+
+## TwoA: one, several, one, emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "lynxword onlytwoaword": OPEN r0[bg+ st+] *r1[bg+ st+] active=1 marked=1 | tracked=2 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword
+  patch search "lynxword onlytwoaword": OPEN r0[bg- st+] *r1[bg+ st+] active=1 marked=1 | tracked=3 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword
+ 5.28.2 read TwoB: shut *r0[bg- st+] r1[bg- st+] active=0 | tracked=2 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword HIDDEN
+  patch read TwoB: shut *r0[bg- st+] r1[bg- st+] active=0 | tracked=3 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword HIDDEN
+ 5.28.2 search "lynxword": OPEN r0[bg+ st+] *r1[bg+ st+] active=1 marked=1 | tracked=2 bar="lynxword" addr=#q=lynxword
+  patch search "lynxword": OPEN r0[bg- st+] *r1[bg+ st+] active=1 marked=1 | tracked=3 bar="lynxword" addr=#q=lynxword
+ 5.28.2 read TwoB: shut r0[bg- st+] *r1[bg- st+] active=1 marked=1 | tracked=2 bar="lynxword" addr=#q=lynxword
+  patch read TwoB: shut r0[bg- st+] *r1[bg- st+] active=1 marked=1 | tracked=3 bar="lynxword" addr=#q=lynxword
+ 5.28.2 search "lynxword onlytwoaword": OPEN r0[bg+ st+] *r1[bg+ st+] active=1 marked=1 | tracked=2 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword
+  patch search "lynxword onlytwoaword": OPEN r0[bg- st+] *r1[bg+ st+] active=1 marked=1 | tracked=3 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+   same read TwoB: shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## TwoB: several, then one in the other, emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+   same search "lynxword": shut (feature shut) r0[bg- st+] *r1[bg- st+] active=1 marked=1 | tracked=0 bar="lynxword" addr=#q=lynxword
+   same read TwoA: shut (feature shut) r0[bg- st+] *r1[bg- st+] active=1 marked=1 | tracked=0 bar="lynxword" addr=#q=lynxword
+ 5.28.2 search "lynxword onlytwoaword": shut r0[bg- st+] *r1[bg- st+] active=1 marked=1 | tracked=2 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword HIDDEN
+  patch search "lynxword onlytwoaword": shut r0[bg- st+] *r1[bg- st+] active=1 marked=1 | tracked=3 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword HIDDEN
+ 5.28.2 read TwoA: OPEN r0[bg+ st+] *r1[bg- st+] active=1 marked=1 | tracked=2 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword
+  patch read TwoA: OPEN r0[bg- st+] *r1[bg+ st+] active=1 marked=1 | tracked=3 bar="lynxword onlytwoaword" addr=#q=lynxword%20onlytwoaword
+   same search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+   same read TwoA: shut (feature shut) *r0[bg- st+] r1[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: typed, Back, Forward, emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 back: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="" addr=
+  patch back: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="" addr=
+ 5.28.2 forward: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch forward: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: typed, emptied, Back, Forward (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 back: shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch back: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 forward: shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch forward: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: typed, Back, emptied via a new search (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 back: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="" addr=
+  patch back: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="" addr=
+ 5.28.2 search "betaword": OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=2 bar="betaword" addr=#q=betaword
+  patch search "betaword": OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=3 bar="betaword" addr=#q=betaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: load with the row b word (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 load #q=alphaword: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch load #q=alphaword: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: load with the first row word (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 load #q=firstword: OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=2 bar="firstword" addr=#q=firstword
+  patch load #q=firstword: OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 marked=0 | tracked=3 bar="firstword" addr=#q=firstword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: typed, reload, emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 reload: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch reload: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Plain: load with the word (rows.html)
+   same start: shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+ 5.28.2 load #q=plainword: OPEN [bg+ st+] | tracked=2 bar="plainword" addr=#q=plainword
+  patch load #q=plainword: OPEN [bg+ st+] | tracked=3 bar="plainword" addr=#q=plainword
+ 5.28.2 search "": shut (feature shut) [bg+ st+] | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) [bg- st+] | tracked=0 bar="" addr=
+
+## Move: load, then Back to a blank page is no entry; b, c via address (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 load #q=alphaword: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch load #q=alphaword: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 search "betaword": OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=2 bar="betaword" addr=#q=betaword
+  patch search "betaword": OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=3 bar="betaword" addr=#q=betaword
+ 5.28.2 back: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch back: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 forward: OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=2 bar="betaword" addr=#q=betaword
+  patch forward: OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=3 bar="betaword" addr=#q=betaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## Move: typed, Clear All, then a new search emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="alphaword" addr=#q=alphaword
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="alphaword" addr=#q=alphaword
+ 5.28.2 Clear All: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=2 bar="" addr=
+  patch Clear All: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] active=1 marked=1 | tracked=3 bar="" addr=
+ 5.28.2 search "betaword": OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=2 bar="betaword" addr=#q=betaword
+  patch search "betaword": OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] active=2 marked=2 | tracked=3 bar="betaword" addr=#q=betaword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg+ st+] r3[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## HoldA: first row holds, word in b, emptied, b (rows.html)
+ 5.28.2 start: shut (feature shut) *r0[bg- fr+] r1[bg- st+] r2[bg- fr+] active=0 | tracked=0 bar="" addr=
+  patch start: shut (feature shut) *r0[bg*+ fr+] r1[bg- st+] r2[bg*+ fr+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "holdword": OPEN r0[bg+ fr+] *r1[bg+ st+] r2[bg- fr+] active=1 marked=1 | tracked=2 bar="holdword" addr=#q=holdword
+  patch search "holdword": OPEN r0[bg*+ fr+] *r1[bg+ st+] r2[bg*+ fr+] active=1 marked=1 | tracked=3 bar="holdword" addr=#q=holdword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ fr+] r1[bg+ st+] r2[bg- fr+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg*+ fr+] r1[bg- st+] r2[bg*+ fr+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 row 1: shut (feature shut) r0[bg+ fr+] *r1[bg+ st+] r2[bg- fr+] active=1 | tracked=0 bar="" addr=
+  patch row 1: shut (feature shut) r0[bg*+ fr+] *r1[bg- st+] r2[bg*+ fr+] active=1 | tracked=0 bar="" addr=
+
+## HoldB: word in the row that holds, emptied (rows.html)
+ 5.28.2 start: shut (feature shut) *r0[bg- st+] r1[bg- fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg*+ fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "heldword": OPEN r0[bg+ st+] *r1[bg+ fr+] r2[bg- st+] active=1 marked=1 | tracked=2 bar="heldword" addr=#q=heldword
+  patch search "heldword": OPEN r0[bg- st+] *r1[bg*+ fr+] r2[bg- st+] active=1 marked=1 | tracked=2 bar="heldword" addr=#q=heldword
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg*+ fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 row 1: shut (feature shut) r0[bg+ st+] *r1[bg+ fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+  patch row 1: shut (feature shut) r0[bg- st+] *r1[bg*+ fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+
+## HoldB: reader closed the held section; search; emptied; that row (rows.html)
+ 5.28.2 start: shut (feature shut) *r0[bg- st+] r1[bg- fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg*+ fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 reader opens scenario: OPEN *r0[bg- st+] r1[bg- fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch reader opens scenario: OPEN *r0[bg- st+] r1[bg*+ fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 row 1: OPEN r0[bg- st+] *r1[bg- fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+  patch row 1: OPEN r0[bg- st+] *r1[bg*+ fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg+ fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg*- fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+ 5.28.2 row 0: OPEN *r0[bg+ st+] r1[bg+ fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch row 0: OPEN *r0[bg- st+] r1[bg*- fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "heldword": OPEN r0[bg+ st+] *r1[bg+ fr+] r2[bg- st+] active=1 marked=1 | tracked=0 bar="heldword" addr=#q=heldword
+  patch search "heldword": OPEN r0[bg- st+] *r1[bg*+ fr+] r2[bg- st+] active=1 marked=1 | tracked=1 bar="heldword" addr=#q=heldword
+ 5.28.2 search "": OPEN *r0[bg+ st+] r1[bg+ fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": OPEN *r0[bg- st+] r1[bg*- fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 row 1: OPEN r0[bg+ st+] *r1[bg+ fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+  patch row 1: OPEN r0[bg- st+] *r1[bg*- fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+
+## HoldB: reader closes the held section on the match; next keystroke; emptied (rows.html)
+ 5.28.2 start: shut (feature shut) *r0[bg- st+] r1[bg- fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg*+ fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "heldwor": OPEN r0[bg+ st+] *r1[bg+ fr+] r2[bg- st+] active=1 marked=1 | tracked=2 bar="heldwor" addr=#q=heldwor
+  patch search "heldwor": OPEN r0[bg- st+] *r1[bg*+ fr+] r2[bg- st+] active=1 marked=1 | tracked=2 bar="heldwor" addr=#q=heldwor
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg- fr+] r2[bg- st+] active=1 marked=1 | tracked=2 bar="heldwor" addr=#q=heldwor
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg*- fr+] r2[bg- st+] active=1 marked=1 | tracked=2 bar="heldwor" addr=#q=heldwor
+ 5.28.2 search "heldword": OPEN r0[bg+ st+] *r1[bg- fr+] r2[bg- st+] active=1 marked=1 | tracked=2 bar="heldword" addr=#q=heldword
+  patch search "heldword": OPEN r0[bg- st+] *r1[bg*+ fr+] r2[bg- st+] active=1 marked=1 | tracked=3 bar="heldword" addr=#q=heldword
+ 5.28.2 search "": shut (feature shut) *r0[bg- st+] r1[bg- fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg*- fr+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 row 1: shut (feature shut) r0[bg- st+] *r1[bg- fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+  patch row 1: shut (feature shut) r0[bg- st+] *r1[bg*- fr+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+
+## InFeature: word in the feature name; reader on row b (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+   same row 1: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+ 5.28.2 search "zebrafeature": OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=0 bar="zebrafeature" addr=#q=zebrafeature
+  patch search "zebrafeature": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=1 bar="zebrafeature" addr=#q=zebrafeature
+   same search "": OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+   same row 0: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## InFeature: word in the feature name; reader on row b closes during; next keystroke (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+   same row 1: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+ 5.28.2 search "zebrafeatur": OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=0 bar="zebrafeatur" addr=#q=zebrafeatur
+  patch search "zebrafeatur": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=1 bar="zebrafeatur" addr=#q=zebrafeatur
+ 5.28.2 reader toggles scenario-background: OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=0 bar="zebrafeatur" addr=#q=zebrafeatur
+  patch reader toggles scenario-background: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=1 bar="zebrafeatur" addr=#q=zebrafeatur
+ 5.28.2 search "zebrafeature": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=0 bar="zebrafeature" addr=#q=zebrafeature
+  patch search "zebrafeature": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=2 bar="zebrafeature" addr=#q=zebrafeature
+ 5.28.2 search "": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+  patch search "": OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] active=1 | tracked=0 bar="" addr=
+ 5.28.2 row 0: OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch row 0: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+
+## InFeature: word in the feature name; no reader (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "zebrafeature": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=2 bar="zebrafeature" addr=#q=zebrafeature
+  patch search "zebrafeature": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=3 bar="zebrafeature" addr=#q=zebrafeature
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+page.evaluate: TypeError: Cannot read properties of undefined (reading 'read')
+    at eval (eval at evaluate (:303:30), <anonymous>:1:17)
+    at UtilityScript.evaluate (<anonymous>:305:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at read (C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-7\drive7.js:42:29)
+    at run (C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-7\drive7.js:80:42)
+    at async C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-7\drive7.js:110:19 {
+  log: []
+}

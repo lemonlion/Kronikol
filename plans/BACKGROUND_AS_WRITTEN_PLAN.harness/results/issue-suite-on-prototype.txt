@@ -1,0 +1,70 @@
+# s9 (the issue's second scenario) on the prototype
+s9  Shared prefix › The second scenario's payment is declined  [Failed]  0s
+stableId d1a3b65632e63092
+at Features/SharedPrefix.feature:12
+open: TestRunReport.html#sid-d1a3b65632e63092
+
+  0     Given the basket holds  [i0-i4] 3 calls
+      · table
+      · sku
+      · qty
+      · BANANA
+      · 2
+    0.0   A customer is registered
+        · name
+        · customer-9
+      0.0.0 Their address is verified
+      · 0.0.0.0 Response is success status code should be true
+    0.1   An item is added
+        · sku
+        · BANANA
+        · qty
+        · 2
+✗ 1     When the customer places the order  [i6]
+  ✗ 1.0   The payment is authorised
+        response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired
+        · amount
+        · 99.99
+        · card
+        · declined
+    ✗ 1.0.0 Response status code should be OK
+          response.StatusCode should be HttpStatusCode.OK but was HttpStatusCode.PaymentRequired   at ShopDriver.cs:51
+4 calls · interactions s9 · flow s9
+
+# s3 (the issue's BANANA row) on the prototype
+s3  Outline table › An order line for BANANA  [Passed]  0s
+stableId 4f8f8e4fc2c7c52e
+at Features/OutlineTable.feature:3
+open: TestRunReport.html#sid-4f8f8e4fc2c7c52e
+example: Holds=sku: BANANA, qty: 2
+
+  0     Given the basket holds  [i0-i4] 3 calls
+      · table
+      · sku
+      · qty
+      · BANANA
+      · 2
+    0.0   A customer is registered
+        · name
+        · customer-8
+      0.0.0 Their address is verified
+      · 0.0.0.0 Response is success status code should be true
+    0.1   An item is added
+        · sku
+        · BANANA
+        · qty
+        · 2
+  1     When the customer places the order  [i6-i8] 2 calls
+    1.0   The payment is authorised
+        · amount
+        · 99.99
+        · card
+        · 4111
+    · 1.0.0 Response status code should be OK
+    1.1   The order is submitted
+  2     Then the order is confirmed
+  · 2.0   Shop order status should be "Confirmed"
+5 calls · interactions s3 · flow s3
+
+# Failures.jsonl for s9
+{"kind":"failure","address":"s9","id":"8bde579d-231a-40fb-b2a1-7da2886778e3","stableId":"d1a3b65632e63092","feature":"Shared prefix","scenario":"The second scenario\u0027s payment is declined","exampleValues":null,"durationSeconds":0.0019366,"errorMessage":"response.StatusCode\r\n    should be\r\nHttpStatusCode.OK\r\n    but was\r\nHttpStatusCode.PaymentRequired","expected":"HttpStatusCode.OK","actual":"HttpStatusCode.PaymentRequired","cluster":"response.StatusCode should be","deepLink":"TestRunReport.html#sid-d1a3b65632e63092","sourceFile":"Features/SharedPrefix.feature","sourceLine":12,"thrownAt":{"method":"Spike.Substeps.Steps.ShopDriver.The_payment_is_authorised(Decimal amount, String card)","file":"C:\\Code\\Kronikol-222m\\issue-suite\\Steps\\ShopDriver.cs","line":51},"testName":"Spike.Substeps.Steps.ShopDriver.The_payment_is_authorised","rerun":"dotnet test --filter \u0022FullyQualifiedName~Spike.Substeps.Steps.ShopDriver.The_payment_is_authorised\u0022","failingSteps":[{"path":"s9/1","text":"When the customer places the order","message":null,"sourceFile":null,"sourceLine":null},{"path":"s9/1.0","text":"The payment is authorised","message":"response.StatusCode\r\n    should be\r\nHttpStatusCode.OK\r\n    but was\r\nHttpStatusCode.PaymentRequired","sourceFile":null,"sourceLine":null},{"path":"s9/1.0.0","text":"Response status code should be OK","message":"response.StatusCode\r\n    should be\r\nHttpStatusCode.OK\r\n    but was\r\nHttpStatusCode.PaymentRequired","sourceFile":"ShopDriver.cs","sourceLine":51}],"stepsBefore":[{"path":"s9/0.0.0","text":"Their address is verified","status":"Passed"},{"path":"s9/0.0.0.0","text":"Response is success status code should be true","status":"Passed"},{"path":"s9/0.1","text":"An item is added","status":"Passed"}],"stepsBeforeTotal":5,"calls":[{"address":"s9/i6","service":"Shop API","summary":"POST /payments","status":"PaymentRequired","durationMs":0.0065}],"callsScope":"failingStep","callsTotal":1,"attachments":[],"truncated":false}

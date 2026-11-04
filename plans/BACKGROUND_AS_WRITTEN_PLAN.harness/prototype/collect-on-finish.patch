@@ -1,0 +1,53 @@
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+index c340e385..64bab824 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+@@ -15,6 +15,7 @@ public class ReqNRollTrackingHooks
+     private readonly ScenarioContext _scenarioContext;
+     private readonly FeatureContext _featureContext;
+     private Stopwatch? _stopwatch;
++    private bool _collected;
+ 
+     // Track which event publishers we've already subscribed to, so we only subscribe
+     // once per test-thread publisher. Without this, BeforeScenario would add a new
+@@ -76,6 +77,24 @@ public void BeforeScenario()
+                     if (testId is not null)
+                         StepCollector.AddAttachment(testId, evt.FilePath, name: null);
+                 });
++                // A suite's AfterScenario hook that throws stops ours, and Reqnroll 3.0.1 runs none for a scenario ignored at
++                // run time, but this is published either way. Reqnroll runs it inline, so a throw would replace the test's failure.
++                eventPublisher.AddHandler<ScenarioFinishedEvent>(evt =>
++                {
++                    if (evt.ScenarioContext is ScenarioContext scenario
++                        && scenario.TryGetValue(ReqNRollConstants.OwnerHooksKey, out object? owner)
++                        && owner is ReqNRollTrackingHooks hooks)
++                    {
++                        try
++                        {
++                            hooks.CollectScenario();
++                        }
++                        catch
++                        {
++                            // The scenario is lost from the report, as it was before this handler.
++                        }
++                    }
++                });
+             }
+         }
+         catch
+@@ -166,6 +185,15 @@ public void AfterScenario()
+         if (!IsOwner)
+             return;
+ 
++        CollectScenario();
++    }
++
++    private void CollectScenario()
++    {
++        if (_collected)
++            return;
++        _collected = true;
++
+         _stopwatch?.Stop();
+         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+         var steps = (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey];

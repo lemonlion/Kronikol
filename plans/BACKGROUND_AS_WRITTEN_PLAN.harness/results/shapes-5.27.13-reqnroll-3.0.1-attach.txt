@@ -1,0 +1,7 @@
+dotnet test exit code: 1
+[xUnit.net 00:00:01.89]     [Test Assembly Cleanup Failure (Shapes.Suite.dll)] System.Collections.Generic.KeyNotFoundException
+[xUnit.net 00:00:01.89]       System.Collections.Generic.KeyNotFoundException : The given key 'FileAttachment { Name = 18-one.txt, RelativePath = attachments/18-one.txt, MediaType = , IsInlineImage = 
+Total tests: 41
+     Passed: 41
+Report files: 0 of TestRunReport.html and .krkl
+attachment copied: 18-one.txt

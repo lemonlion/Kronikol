@@ -1,0 +1,2 @@
+{"report":"out-storm-old/TestRunReport.html","loadMs":568,"openAllMs":162,"loadRuns":[568,669,362],"elements":8675,"openComposites":0,"heldHolders":300,"heapMB":17}
+{"report":"out-storm-new/TestRunReport.html","loadMs":852,"openAllMs":141,"loadRuns":[1049,852,845],"elements":98674,"openComposites":300,"heldHolders":0,"heapMB":10}

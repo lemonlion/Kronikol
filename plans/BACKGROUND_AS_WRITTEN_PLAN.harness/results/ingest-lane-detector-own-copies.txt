@@ -1,0 +1,21 @@
+# the same tests NDJSON with the detector giving each scenario its own steps
+s0  Orders › The order goes through  [Passed]  4s
+stableId a972ccb4c3efb37c
+open: TestRunReport.html#sid-a972ccb4c3efb37c
+
+  b0    Given the basket holds apple
+      """apple"""
+  b1    When the customer places the order
+  0     Then the order is confirmed
+0 calls · interactions s0 · flow s0
+
+s1  Orders › The payment is declined  [Failed]  3s
+stableId 01182602dc5ef74f
+open: TestRunReport.html#sid-01182602dc5ef74f
+
+  b0    Given the basket holds apple
+      """banana"""
+✗ b1    When the customer places the order
+      402 card declined
+0 calls · interactions s1 · flow s1
+

@@ -1,0 +1,26 @@
+# kronikol ingest of a tests NDJSON at 5.27.13: no background field anywhere, keyworded steps
+s0    pass      4s     0 calls  The order goes through
+s1    FAIL      3s     0 calls  The payment is declined
+        402 card declined
+2 scenarios
+
+s0  Orders › The order goes through  [Passed]  4s
+stableId a972ccb4c3efb37c
+open: TestRunReport.html#sid-a972ccb4c3efb37c
+
+  b0    Given the basket holds apple
+      """apple"""
+  b1    When the customer places the order
+  0     Then the order is confirmed
+0 calls · interactions s0 · flow s0
+
+s1  Orders › The payment is declined  [Failed]  3s
+stableId 01182602dc5ef74f
+open: TestRunReport.html#sid-01182602dc5ef74f
+
+  b0    Given the basket holds apple
+      """apple"""
+  b1    When the customer places the order
+0 calls · interactions s1 · flow s1
+
+Failures.jsonl The payment is declined failingSteps= [] stepsBeforeTotal= 0

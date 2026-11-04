@@ -1,0 +1,12 @@
+# 5.27.13
+kronikol ingest exit code, as Git Bash reports it: 127
+Unhandled exception. System.Collections.Generic.KeyNotFoundException: The given key 'FileAttachment { Name = a.txt, Rela
+Report files: 0 of TestRunReport.html and .krkl
+attachment copied: a.txt
+kronikol ingest exit code, as PowerShell reports it: 0xE0434352 (-532462766)
+
+# The prototype's own tool
+kronikol ingest exit code, as Git Bash reports it: 0
+Report files: 2 of TestRunReport.html and .krkl
+attachment copied: a.txt
+attachment copied: b.txt

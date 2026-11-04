@@ -1,0 +1,20 @@
+    5  features
+   15  scenarios (rows counted)
+    1  features writing a Background
+    2  scenarios whose steps a report replaces with the first's
+
+First step a scenario writes after a feature-level Background:
+    2  When
+
+The detector against what is written, every scenario passing:
+   11  right: none written, none marked
+    2  WRONG COUNT
+    2  INVENTED: marked, none written
+
+WRONG COUNT, first 12:
+  Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\Features\CakeQuality.feature: The baked cake contains the requested milk (written 1, marked 2)
+  Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\Features\CakeQuality.feature: The baked cake contains the requested flour (written 1, marked 2)
+
+INVENTED: marked, none written, first 12:
+  Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\Features\PartyMuffins.feature: A batch of apple cinnamon muffins is baked for <occasion> (written 0, marked 3)
+  Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.xUnit3\Features\PartyMuffins.feature: A batch of apple cinnamon muffins is baked for <occasion> (written 0, marked 3)

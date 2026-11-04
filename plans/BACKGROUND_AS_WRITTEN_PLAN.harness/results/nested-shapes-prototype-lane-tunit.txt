@@ -1,0 +1,86 @@
+Build succeeded.
+  duration: 3s 083ms
+--- pass, 21 one
+s41  21 A background step that runs steps with arguments › 21 one  [Passed]  0.02s
+
+  b0    Given a composite step passes arguments  0.02s  [i0-i4] 3 calls
+    b0.0  Ran for
+        · who
+        · 21 one
+    b0.1  Given the basket is listed  0s
+        · table
+        · sku
+        · count
+        · APPLE
+        · 3
+      b0.1.0 Ran for
+          · who
+          · 21 one rows:1
+    b0.2  Given the note "kept" says  0s
+        """a doc string"""
+      b0.2.0 Ran for
+          · who
+          · 21 one kept:a doc string
+  0     When the customer acts "one"  [i6]
+    0.0   Ran for
+        · who
+        · 21 one
+  1     Then the outcome is "one"  [i8]
+    1.0   Ran for
+        · who
+        · 21 one
+5 calls · interactions s41 · flow s41
+--- pass, 23 gherkin from a hook
+s44  23 A hook that runs a step, beside a background › 23 gherkin from a hook  [Passed]  0s
+
+  0     Given the hook prepares  0s  [i0]
+    0.0   Ran for
+        · who
+        · 23 gherkin from a hook
+  1     Given a logged in customer  [i2]
+    1.0   Ran for
+        · who
+        · 23 gherkin from a hook
+  2     When the customer acts "gherkin"  [i4]
+    2.0   Ran for
+        · who
+        · 23 gherkin from a hook
+  3     Then the outcome is "gherkin"  [i6]
+    3.0   Ran for
+        · who
+        · 23 gherkin from a hook
+4 calls · interactions s44 · flow s44
+--- pass, 23 woven from a hook
+s45  23 A hook that runs a step, beside a background › 23 woven from a hook  [Passed]  0.01s
+
+  b0    Given a logged in customer
+  0     When the customer acts "woven"
+    0.0   Ran for
+        · who
+        · 23 woven from a hook
+  1     Then the outcome is "woven"
+    1.0   Ran for
+        · who
+        · 23 woven from a hook
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s45 · flow s45
+  duration: 1s 083ms
+--- fail-nested, 22 breaks
+s43  22 A background step whose inner step fails › 22 breaks  [Failed]  0.02s
+
+✗ b0    Given a composite step runs two steps  0.01s  [i0-i2] 2 calls
+    b0.0  Ran for
+        · who
+        · 22 breaks
+  ✗ b0.1  Given the first inner step  0s
+      b0.1.0 Ran for
+          · who
+          · 22 breaks
+2 calls · interactions s43 · flow s43
+--- fail-nested, the digest
+# Failures — 1 of 46 scenarios
+## Failures
+### 1. 22 A background step whose inner step fails › 22 breaks
+**Failing step** — `s43/b0` Given a composite step runs two steps
+**Failing step** — `s43/b0.1` Given the first inner step
+failingSteps: [{"path": "s43/b0", "text": "Given a composite step runs two steps", "message": null, "sourceFile": null, "sourceLine": null}, {"path": "s43/b0.1", "text": "Given the first inner step", "message": null, "sourceFile": null, "sourceLine": null}]

@@ -1,0 +1,33 @@
+plugin at $(ReqnrollVersion)
+Build succeeded.
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 255 ms - 
+
+s0  E50 External data under a Background › E50 from a file alone  [Passed]  0s
+  b0    Given the basket holds "from the background"  [i0]
+  0     When the customer acts "x"  [i2]
+  1     Then the outcome is "x"  [i4]
+
+s1  E50 External data under a Background › E50 from a file alone  [Passed]  0s
+  b0    Given the basket holds "from the background"  [i0]
+  0     When the customer acts "y"  [i2]
+  1     Then the outcome is "y"  [i4]
+
+s2  E50 External data under a Background › E50 from a file and written  [Passed]  0.01s
+  b0    Given the basket holds "from the background"  0.01s  [i0]
+  0     When the customer acts "written"  [i2]
+  1     Then the outcome is "written"  [i4]
+
+s3  E50 External data under a Background › E50 from a file and written  [Passed]  0.23s
+  b0    Given the basket holds "from the background"  0.03s  [i0]
+  0     When the customer acts "x"  0s  [i2]
+  1     Then the outcome is "x"  0s  [i4]
+
+s4  E50 External data under a Background › E50 from a file and written  [Passed]  0s
+  b0    Given the basket holds "from the background"  [i0]
+  0     When the customer acts "y"  [i2]
+  1     Then the outcome is "y"  [i4]
+
+s5  E50 External data under a Background › E50 no file  [Passed]  0s
+  b0    Given the basket holds "from the background"  [i0]
+  0     When the customer acts "no file"  [i2]
+  1     Then the outcome is "no file"  [i4]

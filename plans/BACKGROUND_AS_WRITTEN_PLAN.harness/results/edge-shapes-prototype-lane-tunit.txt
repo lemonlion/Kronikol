@@ -1,0 +1,380 @@
+Build succeeded.
+dotnet test exit code: 2
+report files: 2
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s41  E24 An undefined step in a Background › E24 one  [Skipped]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E24 one
+1 calls · interactions s41 · flow s41
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s42  E25 A pending step in a Background › E25 one  [Skipped]  0.11s
+  b0    Given a pending step  0.02s
+0 calls · interactions s42 · flow s42
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s43  E26 An undefined step in a scenario › E26 one  [Skipped]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E26 one
+1 calls · interactions s43 · flow s43
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s44  E27 Ignored at run time in a Background › E27 one  [Skipped]  0.11s
+  b0    Given a step ignores the test at run time  0.02s
+0 calls · interactions s44 · flow s44
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s45  E28 An outline in a rule › E28 bare c  [Passed]  0.27s
+example: row=c
+  b0    Given an edge step "feature background"  [i0]
+    b0.0  Ran for
+        · who
+        · E28 bare <row> feature background
+  0     When an edge step "c"  [i2]
+    0.0   Ran for
+        · who
+        · E28 bare <row> c
+2 calls · interactions s45 · flow s45
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s46  E28 An outline in a rule › E28 ruled a  [Passed]  0.27s
+example: row=a
+  b0    Given an edge step "feature background"  0s  [i0]
+    b0.0  Ran for
+        · who
+        · E28 ruled <row> feature background
+  b1    Given an edge step "rule background"  [i2]
+    b1.0  Ran for
+        · who
+        · E28 ruled <row> rule background
+  0     When an edge step "a"  [i4]
+    0.0   Ran for
+        · who
+        · E28 ruled <row> a
+  1     Then an edge step  [i6]
+    1.0   Ran for
+        · who
+        · E28 ruled <row>
+4 calls · interactions s46 · flow s46
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s47  E28 An outline in a rule › E28 ruled b  [Passed]  0.27s
+example: row=b
+  b0    Given an edge step "feature background"  0s  [i0]
+    b0.0  Ran for
+        · who
+        · E28 ruled <row> feature background
+  b1    Given an edge step "rule background"  [i2]
+    b1.0  Ran for
+        · who
+        · E28 ruled <row> rule background
+  0     When an edge step "b"  [i4]
+    0.0   Ran for
+        · who
+        · E28 ruled <row> b
+  1     Then an edge step  [i6]
+    1.0   Ran for
+        · who
+        · E28 ruled <row>
+4 calls · interactions s47 · flow s47
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s48  E29 Awkward step text › E29 one  [Passed]  0.11s
+  b0    Given an awkward step with "quotes" and a \ backslash  0.06s
+    b0.0  Ran for  0.05s
+        · who
+        · E29 one
+  b1    And an awkward step with ünïcödé and two spaces  [i2]
+    b1.0  Ran for
+        · who
+        · E29 one
+  b2    And an awkward step ending in a colon:  [i4]
+    b2.0  Ran for
+        · who
+        · E29 one
+  b3    And an awkward step with <angle> brackets, a # hash and a {brace}  [i6]
+    b3.0  Ran for
+        · who
+        · E29 one
+  0     When an edge step "mine"  [i8]
+    0.0   Ran for
+        · who
+        · E29 one mine
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s48 · flow s48
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s49  E30 A scenario repeats its Background › E30 one  [Passed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E30 one
+  0     Given an edge step  [i2]
+    0.0   Ran for
+        · who
+        · E30 one
+  1     When an edge step "mine"  [i4]
+    1.0   Ran for
+        · who
+        · E30 one mine
+3 calls · interactions s49 · flow s49
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s50  E31 An inner step is undefined › E31 one  [Skipped]  0.11s
+  b0    Given a composite step runs an undefined step  0.08s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E31 one
+1 calls · interactions s50 · flow s50
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s51  E32 An inner step is pending › E32 one  [Skipped]  0.11s
+  b0    Given a composite step runs a pending step  0.06s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E32 one
+    b0.1  Given a pending step
+1 calls · interactions s51 · flow s51
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s52  E33 An ignored scenario beside one that runs › E33 runs  [Passed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E33 runs
+  0     When an edge step "mine"  [i2]
+    0.0   Ran for
+        · who
+        · E33 runs mine
+2 calls · interactions s52 · flow s52
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s53  E34 A BeforeStep hook fails in a Background › E34 one  [Failed]  0.11s
+✗ b0    Given the hook fails before this step  0.02s
+0 calls · interactions s53 · flow s53
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s54  E35 An AfterStep hook fails in a Background › E35 one  [Failed]  0.11s
+✗ b0    Given the hook fails after this step  0.07s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E35 one
+1 calls · interactions s54 · flow s54
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s55  E36 A BeforeStep hook ahead of the adapter's fails › E36 one  [Failed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E36 one
+✗ b1    And the hook fails before this step
+1 calls · interactions s55 · flow s55
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s56  E37 An AfterScenario hook runs a Gherkin step › E37 one  [Passed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E37 one
+  0     When an edge step "mine"  [i2]
+    0.0   Ran for
+        · who
+        · E37 one mine
+  1     Then an edge step "from an AfterScenario hook"  0s  [i4]
+    1.0   Ran for
+        · who
+        · E37 one from an AfterScenario hook
+3 calls · interactions s56 · flow s56
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s57  E38 An inner step fails and the outer carries on › E38 one  [Failed]  0.11s
+✗ b0    Given a composite step runs a step that fails and carries on  0.06s  [i0-i2] 2 calls
+    b0.0  Ran for  0.05s
+        · who
+        · E38 one
+  ✗ b0.1  Given an inner step that fails
+    b0.2  Ran for
+        · who
+        · E38 one after the inner step
+2 calls · interactions s57 · flow s57
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s58  E39 A BeforeStep hook ahead of the adapter's fails on an inner step › E39 one  [Failed]  0.11s
+✗ b0    Given a composite step runs the step a hook stops  0.06s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E39 one
+  ✗ b0.1  Given the hook fails before this step
+1 calls · interactions s58 · flow s58
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s59  E40 An AfterStep hook fails on an inner step › E40 one  [Failed]  0.11s
+✗ b0    Given a composite step runs the step whose hook fails after it  0.06s  [i0-i2] 2 calls
+    b0.0  Ran for  0.04s
+        · who
+        · E40 one
+  ✗ b0.1  Given the hook fails after this step  0s
+      b0.1.0 Ran for
+          · who
+          · E40 one
+2 calls · interactions s59 · flow s59
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s60  E41 An AfterStep hook fails on a scenario's own step › E41 one  [Failed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E41 one
+✗ 0     When the hook fails after this step  0.01s  [i2]
+    0.0   Ran for
+        · who
+        · E41 one
+2 calls · interactions s60 · flow s60
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s61  E42 A woven helper between a step and the steps it runs › E42 one  [Passed]  0.11s
+  b0    Given a composite step runs a woven helper  0.06s  [i0-i2] 2 calls
+    b0.0  A woven helper  0.04s
+      b0.0.0 Given an edge table is listed  0.01s
+          · table
+          · sku
+          · count
+          · APPLE
+          · 3
+        b0.0.0.0 Ran for  0s
+            · who
+            · E42 one rows:1
+    b0.1  Given an edge note says  0s
+        """a doc string"""
+      b0.1.0 Ran for
+          · who
+          · E42 one note:a doc string
+  0     When an edge step "mine"  0s  [i4]
+    0.0   Ran for
+        · who
+        · E42 one mine
+3 calls · interactions s61 · flow s61
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s62  E43 An inner step's argument does not convert › E43 one  [Failed]  0.11s
+✗ b0    Given a composite step runs a step whose argument does not convert  0.07s  [i0]
+    b0.0  Ran for  0.05s
+        · who
+        · E43 one
+1 calls · interactions s62 · flow s62
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s63  E44 A row fails in its Background › E44 row a  [Passed]  0.27s
+example: row=a
+  b0    Given a background step fails for row b
+  0     When an edge step "a"  [i0]
+    0.0   Ran for
+        · who
+        · E44 row <row> a
+1 calls · interactions s63 · flow s63
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s64  E44 A row fails in its Background › E44 row b  [Failed]  0.27s
+example: row=b
+✗ b0    Given a background step fails for row b
+0 calls · interactions s64 · flow s64
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s65  E45 An AfterStep hook fails on the second inner step › E45 one  [Failed]  0.07s
+✗ b0    Given a composite step runs a passing step and one whose hook fails  0.05s  [i0-i2] 2 calls
+    b0.0  Given an edge step  0.02s
+      b0.0.0 Ran for  0.02s
+          · who
+          · E45 one
+  ✗ b0.1  Given the hook fails after this step
+      b0.1.0 Ran for
+          · who
+          · E45 one
+2 calls · interactions s65 · flow s65
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s66  E46 A step text holding a backslash › E46 one  [Passed]  0s
+  0     Given an awkward step with a \ backslash alone
+    0.0   Ran for
+        · who
+        · E46 one
+  1     When an awkward step with "quotes" alone  [i2]
+    1.0   Ran for
+        · who
+        · E46 one
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s66 · flow s66
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s67  E46 A step text holding a backslash › E46 two  [Passed]  0s
+  0     Given an awkward step with <$sprite> markup alone
+    0.0   Ran for
+        · who
+        · E46 two
+  1     When an awkward step with "quotes" alone  0s  [i2]
+    1.0   Ran for
+        · who
+        · E46 two
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s67 · flow s67
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s68  E48 A step text the bar wraps › E48 one  [Passed]  0.01s
+  0     Given an awkward step with a text long enough for the bar to wrap it onto a second line an…  0s
+    0.0   Ran for
+        · who
+        · E48 one
+  1     When an awkward step with "quotes" alone  [i2]
+    1.0   Ran for
+        · who
+        · E48 one
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s68 · flow s68
+
+! 2 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 tes
+s69  E49 A block hook fails › E49 one  [Failed]  0.01s
+  b0    Given an edge step  [i0]
+    b0.0  Ran for
+        · who
+        · E49 one
+1 calls · interactions s69 · flow s69
+
+=== query failures, only Background steps listed and none failed (E49): the failure, and the hint under it
+s69  E49 A block hook fails › E49 one
+  at Features/E49_BlockHookFails.feature:7
+  thrown at Shapes.Suite.Features.E49ABlockHookFailsFeature.E49One() — <scratch>\edge-lane-tunit\Features\E49_BlockHookFails.f
+  rerun: dotnet test --filter "FullyQualifiedName~Shapes.Suite.Features.E49ABlockHookFailsFeature.E49One"
+  (no step is marked failed — the failure was outside a tracked step)
+
+=== a suite's AfterScenario hook that throws (E47): rows in the report, then whether dotnet test saw it fail
+0
+failed E47 one (4ms)
+
+=== the digest: scenario, failingSteps, callsScope
+E34 one                            failing: [('s53/b0', 'Given the hook fails before this step')] scope: none
+E35 one                            failing: [('s54/b0', 'Given the hook fails after this step')] scope: failingStep
+E36 one                            failing: [('s55/b1', 'And the hook fails before this step')] scope: scenario
+E38 one                            failing: [('s57/b0', 'Given a composite step runs a step that fails and carries on'), ('s57/b0.1', 'Given an inner step that fails')] scope: failingStep
+E39 one                            failing: [('s58/b0', 'Given a composite step runs the step a hook stops'), ('s58/b0.1', 'Given the hook fails before this step')] scope: failingStep
+E40 one                            failing: [('s59/b0', 'Given a composite step runs the step whose hook fails after it'), ('s59/b0.1', 'Given the hook fails after this step')] scope: failingStep
+E41 one                            failing: [('s60/0', 'When the hook fails after this step')] scope: failingStep
+E43 one                            failing: [('s62/b0', 'Given a composite step runs a step whose argument does not convert')] scope: failingStep
+E44 row b                          failing: [('s64/b0', 'Given a background step fails for row b')] scope: none
+E45 one                            failing: [('s65/b0', 'Given a composite step runs a passing step and one whose hook fails'), ('s65/b0.1', 'Given the hook fails after this step')] scope: failingStep
+E49 one                            failing: [] scope: scenario
+
+=== the whole suite with stopAtFirstError on
+  duration: 1s 140ms
+stopAtFirstError fail-and: rows=82 MISSED=0 INVENTED=0 BORROWED=0 
+  duration: 1s 144ms
+stopAtFirstError fail-when: rows=82 MISSED=0 INVENTED=0 BORROWED=0 
+  duration: 1s 114ms
+stopAtFirstError fail-bg: rows=82 MISSED=0 INVENTED=0 BORROWED=0 
+  duration: 1s 126ms
+stopAtFirstError fail-bg2: rows=82 MISSED=0 INVENTED=0 BORROWED=0 
+FINISHED

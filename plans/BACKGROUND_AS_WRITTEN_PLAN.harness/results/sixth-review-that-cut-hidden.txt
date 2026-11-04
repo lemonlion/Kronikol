@@ -1,0 +1,25 @@
+
+## Hidden: a single match in a closed composite of row b (rows.html)
+ 5.28.2 start: r0 background=- failure=O
+  patch start: r0 background*=O failure=O
+   same search "pumaword": r1 background=O cb.0=- steps=O [active 1] scenario open
+   same read: r1 background=O cb.0=- steps=O
+   same eval:(function(){var r=[...document.querySelectorAll('.step')].filter(function(s){return s.textContent.indexOf('pumaword')>=0&&!s.querySelector('.step');});return r.length+' drawn step(s) hold the word, with a box: '+r.filter(function(s){return s.getClientRects().length>0;}).length;})(): 1 drawn step(s) hold the word, with a box: 1
+ 5.28.2 search "": r0 background=O failure=O [active 0] scenario open
+  patch search "": r0 background*=O failure=O [active 0] scenario open
+ 5.28.2 read: r0 background=O failure=O
+  patch read: r0 background*=O failure=O
+
+## Hidden: the reader went to row c first (rows.html)
+ 5.28.2 start: r0 background=- failure=O
+  patch start: r0 background*=O failure=O
+   same row 2: r2 background=- steps=O
+ 5.28.2 row 0: r0 background=- failure=O
+  patch row 0: r0 background*=O failure=O
+   same search "pumaword": r1 background=O cb.0=- steps=O [active 1] scenario open
+   same read: r1 background=O cb.0=- steps=O
+   same eval:(function(){var r=[...document.querySelectorAll('.step')].filter(function(s){return s.textContent.indexOf('pumaword')>=0&&!s.querySelector('.step');});return r.length+' drawn step(s) hold the word, with a box: '+r.filter(function(s){return s.getClientRects().length>0;}).length;})(): 1 drawn step(s) hold the word, with a box: 1
+ 5.28.2 search "": r0 background=O failure=O [active 0] scenario open
+  patch search "": r0 background*=O failure=O [active 0] scenario open
+ 5.28.2 read: r0 background=O failure=O
+  patch read: r0 background*=O failure=O

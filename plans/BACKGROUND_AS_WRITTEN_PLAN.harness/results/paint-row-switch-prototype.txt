@@ -1,0 +1,16 @@
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 240 ms - Shapes.Sui
+{
+ "rows": 2,
+ "firstRowSelected": {
+  "open": false,
+  "holdsFailedStep": false
+ },
+ "failingRowAfterTheClick": {
+  "open": true,
+  "holdsFailedStep": true
+ },
+ "backOnTheFirstRow": {
+  "open": false,
+  "holdsFailedStep": false
+ }
+}

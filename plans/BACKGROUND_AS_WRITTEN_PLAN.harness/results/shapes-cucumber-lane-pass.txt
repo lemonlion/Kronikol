@@ -1,0 +1,244 @@
+# The same run through the Cucumber lane (kronikol ingest --cucumber-messages, Reqnroll's own message formatter), which reads Background from AST ids
+written = leading steps the feature file's Background gives this scenario; marked = steps the report addresses b0, b1, ...; borrowed = steps whose sub-step names another scenario
+
+scenario                    result written marked steps borrowed verdict
+01 one                      pass   1       1      3     0        ok
+01 two                      pass   1       1      3     0        ok
+02 one                      pass   1       1      4     0        ok
+02 two                      pass   1       1      4     0        ok
+03 one                      pass   1       1      2     0        ok
+03 two                      pass   1       1      2     0        ok
+04 one                      pass   0       0      3     0        ok
+04 two                      pass   0       0      3     0        ok
+05 row APPLE                pass   0       0      3     0        ok
+05 row BANANA               pass   0       0      3     0        ok
+06 only                     pass   1       1      2     0        ok
+07 a one                    pass   2       2      4     0        ok
+07 a two                    pass   2       2      4     0        ok
+07 b one                    pass   1       1      3     0        ok
+07 b two                    pass   1       1      3     0        ok
+08 breaks                   pass   1       1      3     0        ok
+08 holds                    pass   1       1      3     0        ok
+09 one                      pass   0       0      4     0        ok
+09 two                      pass   0       0      4     0        ok
+10 row x                    pass   1       1      3     0        ok
+10 row y                    pass   1       1      3     0        ok
+11 one                      skip   1       2      3     0        INVENTED
+11 two                      skip   1       2      3     0        INVENTED
+12 eins                     pass   1       1      3     0        ok
+12 zwei                     pass   1       1      3     0        ok
+13 one                      pass   1       1      3     0        ok
+13 two                      pass   1       1      3     0        ok
+14 one                      pass   0       0      2     0        ok
+14 two                      pass   0       0      2     0        ok
+15 empty                    skip   1       0      0     0        MISSED
+15 full                     pass   1       1      3     0        ok
+16 from file a              pass   1       1      2     0        ok
+16 from file b              pass   0       0      2     0        ok
+17 breaks                   pass   1       1      2     0        ok
+17 holds                    pass   1       1      2     0        ok
+18 one                      pass   0       0      2     0        ok
+18 two                      pass   0       0      2     0        ok
+19 one                      pass   1       1      3     0        ok
+19 two                      pass   1       1      3     0        ok
+20 row x                    pass   1       1      3     0        ok
+20 row y                    pass   1       1      3     0        ok
+
+The steps:
+
+01 one [pass]
+    b0   Given a logged in customer  <- None
+    0    When the customer acts "one"  <- None
+    1    Then the outcome is "one"  <- None
+
+01 two [pass]
+    b0   Given a logged in customer  <- None
+    0    When the customer acts "two"  <- None
+    1    Then the outcome is "two"  <- None
+
+02 one [pass]
+    b0   Given a logged in customer  <- None
+    0    Given the basket holds "apple"  <- None
+    1    When the customer acts "one"  <- None
+    2    Then the outcome is "one"  <- None
+
+02 two [pass]
+    b0   Given a logged in customer  <- None
+    0    Given the basket holds "pear"  <- None
+    1    When the customer acts "two"  <- None
+    2    Then the outcome is "two"  <- None
+
+03 one [pass]
+    b0   Given a logged in customer  <- None
+    0    Then the outcome is "one"  <- None
+
+03 two [pass]
+    b0   Given a logged in customer  <- None
+    0    Then the outcome is "two"  <- None
+
+04 one [pass]
+    0    Given the basket holds  <- None
+    1    When the customer acts "the same"  <- None
+    2    Then the outcome is "one"  <- None
+
+04 two [pass]
+    0    Given the basket holds  <- None
+    1    When the customer acts "the same"  <- None
+    2    Then the outcome is "two"  <- None
+
+05 row APPLE [pass]
+    0    Given the basket holds  <- None
+    1    When the customer acts "the same"  <- None
+    2    Then the outcome is "the same"  <- None
+
+05 row BANANA [pass]
+    0    Given the basket holds  <- None
+    1    When the customer acts "the same"  <- None
+    2    Then the outcome is "the same"  <- None
+
+06 only [pass]
+    b0   Given a logged in customer  <- None
+    0    Then the outcome is "only"  <- None
+
+07 a one [pass]
+    b0   Given a logged in customer  <- None
+    b1   Given the address is checked  <- None
+    0    When the customer acts "a one"  <- None
+    1    Then the outcome is "a one"  <- None
+
+07 a two [pass]
+    b0   Given a logged in customer  <- None
+    b1   Given the address is checked  <- None
+    0    When the customer acts "a two"  <- None
+    1    Then the outcome is "a two"  <- None
+
+07 b one [pass]
+    b0   Given a logged in customer  <- None
+    0    When the customer acts "b one"  <- None
+    1    Then the outcome is "b one"  <- None
+
+07 b two [pass]
+    b0   Given a logged in customer  <- None
+    0    When the customer acts "b two"  <- None
+    1    Then the outcome is "b two"  <- None
+
+08 breaks [pass]
+    b0   Given a logged in customer  <- None
+    0    When the customer acts "breaks"  <- None
+    1    Then the outcome is "breaks"  <- None
+
+08 holds [pass]
+    b0   Given a logged in customer  <- None
+    0    When the customer acts "holds"  <- None
+    1    Then the outcome is "holds"  <- None
+
+09 one [pass]
+    0    Given a logged in customer  <- None
+    1    And the address is checked  <- None
+    2    When the customer acts "the same"  <- None
+    3    Then the outcome is "one"  <- None
+
+09 two [pass]
+    0    Given a logged in customer  <- None
+    1    And the address is checked  <- None
+    2    When the customer acts "the same"  <- None
+    3    Then the outcome is "two"  <- None
+
+10 row x [pass]
+    b0   Given a logged in customer  <- None
+    0    When the customer acts "x"  <- None
+    1    Then the outcome is "x"  <- None
+
+10 row y [pass]
+    b0   Given a logged in customer  <- None
+    0    When the customer acts "y"  <- None
+    1    Then the outcome is "y"  <- None
+
+11 one [skip]
+    b0   Given a composite step calls another  <- None
+    b1   Given a composite step calls another  <- None
+    0    Then the outcome is "one"  <- None
+
+11 two [skip]
+    b0   Given a composite step calls another  <- None
+    b1   Given a composite step calls another  <- None
+    0    Then the outcome is "two"  <- None
+
+12 eins [pass]
+    b0   Angenommen a logged in customer  <- None
+    0    Wenn the customer acts "eins"  <- None
+    1    Dann the outcome is "eins"  <- None
+
+12 zwei [pass]
+    b0   Angenommen a logged in customer  <- None
+    0    Wenn the customer acts "zwei"  <- None
+    1    Dann the outcome is "zwei"  <- None
+
+13 one [pass]
+    b0   * a logged in customer  <- None
+    0    * the basket holds "apple"  <- None
+    1    Then the outcome is "one"  <- None
+
+13 two [pass]
+    b0   * a logged in customer  <- None
+    0    * the basket holds "pear"  <- None
+    1    Then the outcome is "two"  <- None
+
+14 one [pass]
+    0    Given a note says  <- None
+    1    Then the outcome is "one"  <- None
+
+14 two [pass]
+    0    Given a note says  <- None
+    1    Then the outcome is "two"  <- None
+
+15 empty [skip]
+
+15 full [pass]
+    b0   Given a logged in customer  <- None
+    0    When the customer acts "full"  <- None
+    1    Then the outcome is "full"  <- None
+
+16 from file a [pass]
+    b0   Given a logged in customer  <- None
+    0    Then the outcome is "a"  <- None
+
+16 from file b [pass]
+    0    Given a logged in customer  <- None
+    1    Then the outcome is "b"  <- None
+
+17 breaks [pass]
+    b0   Given a logged in customer  <- None
+    0    Then the outcome is "breaks"  <- None
+
+17 holds [pass]
+    b0   Given a logged in customer  <- None
+    0    Then the outcome is "holds"  <- None
+
+18 one [pass]
+    0    Given a screenshot is attached  <- None
+    1    Then the outcome is "one"  <- None
+
+18 two [pass]
+    0    Given a screenshot is attached  <- None
+    1    Then the outcome is "two"  <- None
+
+19 one [pass]
+    b0   Given the basket holds  <- None
+    0    When the customer acts "one"  <- None
+    1    Then the outcome is "one"  <- None
+
+19 two [pass]
+    b0   Given the basket holds  <- None
+    0    When the customer acts "two"  <- None
+    1    Then the outcome is "two"  <- None
+
+20 row x [pass]
+    b0   Given the basket holds "<what>"  <- None
+    0    When the customer acts "x"  <- None
+    1    Then the outcome is "x"  <- None
+
+20 row y [pass]
+    b0   Given the basket holds "<what>"  <- None
+    0    When the customer acts "y"  <- None
+    1    Then the outcome is "y"  <- None

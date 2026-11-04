@@ -1,0 +1,105 @@
+
+## Pay: no reader
+start row 0: background=shut steps=open
+click row 1 -> row 1: background*=open failure=open
+click row 0 -> row 0: background=shut steps=open
+click row 2 -> row 2: background=shut steps=open
+click row 3 -> row 3: background*=open failure=open
+click row 0 -> row 0: background=shut steps=open
+
+## Pay: reader opens a, goes through the failed row to c and back
+start row 0: background=shut steps=open
+reader x:scenario-background -> row 0: background=open steps=open
+click row 1 -> row 1: background*=open failure=open
+click row 2 -> row 2: background=shut steps=open
+click row 0 -> row 0: background=shut steps=open
+
+## Pay: reader opens a, straight to c
+start row 0: background=shut steps=open
+reader x:scenario-background -> row 0: background=open steps=open
+click row 2 -> row 2: background=open steps=open
+click row 0 -> row 0: background=open steps=open
+
+## Pay: reader closes b, on to d, a, back to b
+start row 0: background=shut steps=open
+click row 1 -> row 1: background*=open failure=open
+reader x:scenario-background -> row 1: background*=shut failure=open
+click row 3 -> row 3: background*=open failure=open
+click row 0 -> row 0: background=shut steps=open
+click row 1 -> row 1: background*=shut failure=open
+
+## Pay: reader closes Steps on a, through the failed row
+start row 0: background=shut steps=open
+reader x:scenario-steps -> row 0: background=shut steps=shut
+click row 1 -> row 1: background*=open failure=open
+click row 2 -> row 2: background=shut steps=open
+
+## Pay: reader opens c, closes c, to b, back to c
+start row 0: background=shut steps=open
+click row 2 -> row 2: background=shut steps=open
+reader x:scenario-background -> row 2: background=open steps=open
+reader x:scenario-background -> row 2: background=shut steps=open
+click row 1 -> row 1: background*=open failure=open
+click row 2 -> row 2: background=shut steps=open
+
+## Mixed: each row in order
+start row 0: background=shut steps=open
+click row 1 -> row 1: steps=open failure=open
+click row 2 -> row 2: failure=open
+click row 3 -> row 3: background=shut steps=open failure=open
+click row 4 -> row 4: background*=open failure=open
+click row 5 -> row 5: background=shut steps=open
+click row 0 -> row 0: background=shut steps=open
+
+## Mixed: reader closes a Failure Result
+start row 0: background=shut steps=open
+click row 1 -> row 1: steps=open failure=open
+reader x:failure-result -> row 1: steps=open failure=shut
+click row 2 -> row 2: failure=shut
+click row 3 -> row 3: background=shut steps=open failure=shut
+click row 4 -> row 4: background*=open failure=shut
+click row 5 -> row 5: background=shut steps=open
+click row 0 -> row 0: background=shut steps=open
+
+## Mixed: reader closes Steps on a
+start row 0: background=shut steps=open
+reader x:scenario-steps -> row 0: background=shut steps=shut
+click row 1 -> row 1: steps=shut failure=open
+click row 2 -> row 2: failure=open
+click row 3 -> row 3: background=shut steps=open failure=open
+click row 4 -> row 4: background*=open failure=open
+click row 5 -> row 5: background=shut steps=open
+
+## Mixed: reader opens the Background on a
+start row 0: background=shut steps=open
+reader x:scenario-background -> row 0: background=open steps=open
+click row 1 -> row 1: steps=open failure=open
+click row 2 -> row 2: failure=open
+click row 3 -> row 3: background=shut steps=open failure=open
+click row 4 -> row 4: background*=open failure=open
+click row 5 -> row 5: background=shut steps=open
+
+## Composite: each row
+start row 0: background=shut bgComposite=shut steps=open
+click row 1 -> row 1: background*=open bgComposite=shut failure=open
+click row 2 -> row 2: background*=open bgComposite=shut failure=open
+click row 3 -> row 3: background=shut bgComposite=shut steps=open
+click row 0 -> row 0: background=shut bgComposite=shut steps=open
+
+## Composite: reader opens a composite on a
+start row 0: background=shut bgComposite=shut steps=open
+reader c:0 -> row 0: background=shut bgComposite=open steps=open
+click row 1 -> row 1: background*=open bgComposite=open failure=open
+click row 2 -> row 2: background*=open bgComposite=open failure=open
+click row 3 -> row 3: background=shut bgComposite=open steps=open
+
+## InARule: a to b and back
+start row 0: background=shut steps=open
+click row 1 -> row 1: background*=open failure=open
+click row 0 -> row 0: background=shut steps=open
+
+## FirstFails: the first row fails in a composite by itself
+start row 0: background*=open bgComposite=open failure=open
+click row 1 -> row 1: background=shut bgComposite=open steps=open
+click row 2 -> row 2: background=shut bgComposite=open steps=open
+click row 0 -> row 0: background*=open bgComposite=open failure=open

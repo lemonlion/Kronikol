@@ -1,0 +1,24 @@
+
+## CallRows: G2 reader closes the diagrams section, next keystroke, emptied (callsclosed.html)
+ 5.28.2 start: shut (feature shut) *r0[st+] r1[st+] r2[st+] row=0 diag=- | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=0 kept=
+ 5.28.2 search "alphawor": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "alphawor": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=1 kept=
+ 5.28.2 reader toggles example-diagrams: OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=- | searchSections=? kept=
+  patch reader toggles example-diagrams: OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=1 kept=
+ 5.28.2 search "alphaword": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "alphaword": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=1 kept=
+ 5.28.2 search "": shut (feature shut) *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=0 kept=
+
+## CallPlain: G3 plain: reader closes the diagrams section, next keystroke, emptied (callsclosed.html)
+ 5.28.2 start: shut (feature shut) [st+] diag=- | searchSections=? kept=
+  patch start: shut (feature shut) [bg- st+] diag=- | searchSections=0 kept=
+ 5.28.2 search "plainwor": OPEN [st+] diag=+ | searchSections=? kept=
+  patch search "plainwor": OPEN [bg+ st+] diag=+ | searchSections=1 kept=
+ 5.28.2 reader toggles example-diagrams: OPEN [st+] diag=- | searchSections=? kept=
+  patch reader toggles example-diagrams: OPEN [bg+ st+] diag=- | searchSections=1 kept=
+ 5.28.2 search "plainword": OPEN [st+] diag=+ | searchSections=? kept=
+  patch search "plainword": OPEN [bg+ st+] diag=+ | searchSections=1 kept=
+ 5.28.2 search "": shut (feature shut) [st+] diag=+ | searchSections=? kept=
+  patch search "": shut (feature shut) [bg- st+] diag=- | searchSections=0 kept=

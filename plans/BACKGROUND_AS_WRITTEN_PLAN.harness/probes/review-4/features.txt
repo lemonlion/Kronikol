@@ -1,0 +1,341 @@
+#file R01_HookRunsAStepFirst.feature
+@hook-runs-a-step-first
+Feature: R01 A BeforeScenario hook runs a step ahead of the Background
+
+Background:
+  Given an r step "bg one"
+  And an r step "bg two"
+
+Scenario: R01 one
+  When an r step "own one"
+
+Scenario: R01 two
+  When an r step "own two"
+
+#file R02_WovenNamesake.feature
+Feature: R02 A woven step reads like the step that runs after it
+
+Background:
+  Given an r composite runs a woven namesake and then the step
+
+Scenario: R02 one
+  When an r step "own"
+
+#file R03_WovenInHook.feature
+@woven-hook
+Feature: R03 A woven step in a BeforeScenario hook, outside any Gherkin step
+
+Background:
+  Given an r composite runs an r step "inner"
+
+Scenario: R03 one
+  When an r step "own"
+  Then an r step "last"
+
+#file R04_FailedCompositeWovenPassed.feature
+Feature: R04 A failing Background with a composite whose woven sub-step passed
+
+Background:
+  Given an r step that calls a woven step and then fails
+
+Scenario: R04 one
+  When an r step "own"
+
+#file R05_OutlineFailsInBackground.feature
+Feature: R05 An outline, one row fails in the Background
+
+Background:
+  Given an r step that fails for row b
+  And an r step "second background"
+
+Scenario Outline: R05 row <row>
+  When an r step "<row>"
+  Then an r step "<row> then"
+
+Examples:
+  | row |
+  | a   |
+  | b   |
+  | c   |
+
+#file R06_OutlineHookFailsForARow.feature
+@hook-fails-for-row-b
+Feature: R06 An outline, a BeforeScenario hook fails for one row
+
+Background:
+  Given an r step "first background"
+
+Scenario Outline: R06 row <row>
+  When an r step "<row>"
+
+Examples:
+  | row |
+  | a   |
+  | b   |
+
+#file R07_AfterScenarioHookRunsAStepThatFails.feature
+@after-scenario-step-fails
+Feature: R07 An AfterScenario hook runs a step that fails
+
+Background:
+  Given an r step "bg"
+
+Scenario: R07 one
+  When an r step "own"
+
+#file R08_NestedFromWovenHook.feature
+@woven-hook-runs-a-step
+Feature: R08 A woven hook runs a Gherkin step
+
+Background:
+  Given an r step "bg"
+
+Scenario: R08 one
+  When an r step "own"
+
+#file R09_SameStepTwiceNested.feature
+Feature: R09 A step runs the same step twice with different arguments, and the second fails
+
+Background:
+  Given an r composite runs the same step twice
+
+Scenario: R09 one
+  When an r step "own"
+
+#file R10_InnerAttachesFile.feature
+Feature: R10 A nested step attaches a file, the outer attaches after it
+
+Background:
+  Given an r composite attaches around a nested step
+
+Scenario: R10 one
+  When an r step "own"
+
+#file R11_BlockHookStep.feature
+@block-hook-runs-a-step
+Feature: R11 A BeforeScenarioBlock hook runs a step ahead of each block
+
+Background:
+  Given an r step "bg"
+
+Scenario: R11 one
+  When an r step "own"
+
+#file R12_AllPass.feature
+Feature: R12 All pass with a Background and a table
+
+Background:
+  Given an r step "bg one"
+  And an r table step
+    | sku   | count |
+    | APPLE | 3     |
+
+Scenario: R12 one
+  When an r step "own"
+  Then an r step "then"
+
+Scenario: R12 two
+  When an r step "own two"
+
+#file R20_HookStepThenFirstOwnThen.feature
+@hook-runs-a-step-first
+Feature: R20 A BeforeScenario hook runs a step, and the scenarios' own steps open with Then
+
+Background:
+  Given an r step "bg one"
+  And an r step "bg two"
+
+Scenario: R20 one
+  Then an r step "own one"
+
+Scenario: R20 two
+  Then an r step "own two"
+
+#file R21_InnerUndefined.feature
+Feature: R21 A composite runs an undefined step in a scenario's own step
+
+Scenario: R21 one
+  Given an r composite runs an r undefined step
+  Then an r step "not reached"
+
+#file R22_InnerPassesOuterFails.feature
+Feature: R22 Inner passes, outer fails afterwards
+
+Scenario: R22 one
+  Given an r composite runs an inner step and then throws
+
+#file R23_OutlineHookFailsThreeRows.feature
+@hook-fails-for-row-b
+Feature: R23 An outline of three rows, a BeforeScenario hook fails for the second
+
+Background:
+  Given an r step "first background"
+
+Scenario Outline: R23 row <row>
+  Then an r step "<row>"
+
+Examples:
+  | row |
+  | a   |
+  | b   |
+  | c   |
+
+#file R40_AfterScenarioThrows.feature
+@after-scenario-throws
+Feature: R40 A suite's AfterScenario hook throws
+
+Background:
+  Given an r step "bg"
+
+Scenario: R40 one
+  When an r step "own"
+
+#file R41_IgnoredAtRunTime.feature
+Feature: R41 A step ignores the test at run time
+
+Background:
+  Given an r step "bg"
+
+Scenario: R41 one
+  When an r step ignores the test
+  Then an r step "not reached"
+
+#file R42_InnerIgnored.feature
+Feature: R42 A nested step ignores the test at run time
+
+Background:
+  Given an r composite runs a step that ignores the test
+
+Scenario: R42 one
+  When an r step "not reached"
+
+#file R43_BeforeScenarioThrowsOnRunTimeIgnore.feature
+@hook-ignores
+Feature: R43 A BeforeScenario hook ignores the test at run time
+
+Background:
+  Given an r step "bg"
+
+Scenario: R43 one
+  When an r step "not reached"
+
+#file R50_BeforeStepHookRunsAStep.feature
+@before-step-runs-a-step
+Feature: R50 A suite's BeforeStep hook, after the adapter's, runs a step
+
+Background:
+  Given the hook runs a step before this
+
+Scenario: R50 one
+  When an r step "own"
+
+#file R51_AfterStepHookRunsAStep.feature
+@after-step-runs-a-step
+Feature: R51 A suite's AfterStep hook runs a step
+
+Background:
+  Given the hook runs a step after this
+
+Scenario: R51 one
+  When an r step "own"
+
+#file R52_AfterStepHookRunsAFailingStep.feature
+@after-step-runs-a-failing-step
+Feature: R52 A suite's AfterStep hook runs a step that fails
+
+Background:
+  Given the hook runs a failing step after this
+  And an r step "not reached"
+
+Scenario: R52 one
+  When an r step "not reached"
+
+#file R53_FirstBeforeStepHookRunsAStep.feature
+@first-before-step-runs-a-step
+Feature: R53 A BeforeStep hook ahead of the adapter's runs a step
+
+Background:
+  Given the hook runs a step before this
+
+Scenario: R53 one
+  Then an r step "own"
+
+Scenario: R53 two
+  Then an r step "own two"
+
+#file R54_Retry.feature
+Feature: R54 A scenario retried by a plugin
+
+Background:
+  Given an r step that fails on the first attempt
+
+@retry(2)
+Scenario: R54 one
+  When an r step "own"
+
+#file R60_WovenHookPlainSteps.feature
+@woven-hook
+Feature: R60 A woven step in a BeforeScenario hook, and plain steps
+
+Background:
+  Given an r step "bg"
+
+Scenario: R60 one
+  When an r step "own"
+  Then an r step "last"
+
+#file R61_DeepNesting.feature
+Feature: R61 Three levels with woven steps between, the deepest fails
+
+Background:
+  Given an r deep step 1
+
+Scenario: R61 one
+  When an r step "not reached"
+
+#file R62_RuleBackgroundPlaceholder.feature
+Feature: R62 A placeholder in a rule's Background
+
+Background:
+  Given an r step "feature <row>"
+
+Rule: R62 rule
+  Background:
+    Given an r step "rule <row>"
+
+  Scenario Outline: R62 row <row>
+    When an r step "own <row>"
+
+    Examples:
+      | row |
+      | a   |
+
+  Scenario: R62 plain in the rule
+    When an r step "own plain"
+
+  Scenario: R62 only the backgrounds
+
+#file R63_OutlineCompositeFailsInBackground.feature
+Feature: R63 An outline, a composite in the Background fails for one row
+
+Background:
+  Given an r composite whose woven sub-step fails for row b
+
+Scenario Outline: R63 row <row>
+  When an r step "<row>"
+
+Examples:
+  | row |
+  | a   |
+  | b   |
+
+#file R70_HookStepReadsLikeTheBackground.feature
+@hook-runs-the-background-step
+Feature: R70 A BeforeScenario hook runs a step that reads like the Background's first
+
+Background:
+  Given an r step "bg one"
+  And an r step "bg two"
+
+Scenario: R70 one
+  Then an r step "own"

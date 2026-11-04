@@ -1,0 +1,656 @@
+--- s41
+s41  Q01 A keyword woven step reads like the nested step after it › Q01 one  [Passed]  0.01s
+at Features/Q5/Q01_KeywordNamesake.feature:6
+  b0    Given q composite runs a keyword woven namesake and then the step  0.01s  [i0-i2] 2 calls
+    b0.0  Given the q namesake step
+        · table
+        · sku
+        · APPLE
+        """the doc string of the namesake"""
+      b0.0.0 Ran for
+          · who
+          · Q01 one woven
+    b0.1  Given the q namesake step  0s
+      b0.1.0 Ran for
+          · who
+          · Q01 one defined the doc string of the namesake1
+  0     When an r step "own"  [i4]
+    0.0   Ran for
+        · who
+        · Q01 one own
+3 calls · interactions s41 · flow s41
+--- s42
+s42  Q02 A keyword woven step reads like the nested step after it, and the nested step fails › Q02 one  [Failed]  0.07s
+at Features/Q5/Q02_KeywordNamesakeFails.feature:3
+✗ 0     Given q composite runs a keyword woven namesake and then a failing step  0s  [i0]
+  ✗ 0.0   Given the q failing namesake step
+      0.0.0 Ran for
+          · who
+          · Q02 one woven
+  ✗ 0.1   Given the q failing namesake step  0s
+1 calls · interactions s42 · flow s42
+--- s43
+s43  Q03 A keyword woven step fails, a nested step of the same text never runs › Q03 one  [Failed]  0.01s
+at Features/Q5/Q03_WovenFailsFirst.feature:3
+✗ 0     Given q composite whose keyword woven step of the same text fails first  0s
+0 calls · interactions s43 · flow s43
+--- s44
+s44  Q04 A composite catches a nested step's failure and runs another › Q04 one  [Failed]  0.01s
+at Features/Q5/Q04_CatchesNested.feature:3
+✗ 0     Given q composite catches a failing nested step and runs another  0s
+  ✗ 0.0   Given q nested step that throws  0s
+0 calls · interactions s44 · flow s44
+--- s45
+s45  Q05 An outline, a big Background composite fails by itself for one row › Q05 row a  [Passed]  0s
+at Features/Q5/Q05_Big.feature:6
+example: row=a
+  b0    Given q big composite fails by itself for row b
+    b0.0  Woven
+        · number
+        · 0
+    b0.1  Woven
+        · number
+        · 1
+    b0.2  Woven
+        · number
+        · 2
+    b0.3  Woven
+        · number
+        · 3
+    b0.4  Woven
+        · number
+        · 4
+    b0.5  Woven
+        · number
+        · 5
+    b0.6  Woven
+        · number
+        · 6
+    b0.7  Woven
+        · number
+        · 7
+    b0.8  Woven
+        · number
+        · 8
+    b0.9  Woven
+        · number
+        · 9
+    b0.10 Woven
+        · number
+        · 10
+    b0.11 Woven
+        · number
+        · 11
+    b0.12 Woven
+        · number
+        · 12
+    b0.13 Woven
+        · number
+        · 13
+    b0.14 Woven
+        · number
+        · 14
+    b0.15 Woven
+        · number
+        · 15
+    b0.16 Woven
+        · number
+        · 16
+    b0.17 Woven
+        · number
+        · 17
+    b0.18 Woven
+        · number
+        · 18
+    b0.19 Woven
+        · number
+        · 19
+    b0.20 Woven
+        · number
+        · 20
+    b0.21 Woven
+        · number
+        · 21
+    b0.22 Woven
+        · number
+        · 22
+    b0.23 Woven
+        · number
+        · 23
+    b0.24 Woven
+        · number
+        · 24
+    b0.25 Woven
+        · number
+        · 25
+    b0.26 Woven
+        · number
+        · 26
+    b0.27 Woven
+        · number
+        · 27
+    b0.28 Woven
+        · number
+        · 28
+    b0.29 Woven
+        · number
+        · 29
+    b0.30 Woven
+        · number
+        · 30
+    b0.31 Woven
+        · number
+        · 31
+    b0.32 Woven
+        · number
+        · 32
+    b0.33 Woven
+        · number
+        · 33
+    b0.34 Woven
+        · number
+        · 34
+    b0.35 Woven
+        · number
+        · 35
+    b0.36 Woven
+        · number
+        · 36
+    b0.37 Woven
+        · number
+        · 37
+    b0.38 Woven
+        · number
+        · 38
+    b0.39 Woven
+        · number
+        · 39
+  0     When an r step "a"  [i0]
+    0.0   Ran for
+        · who
+        · Q05 row <row> a
+1 calls · interactions s45 · flow s45
+--- s46
+s46  Q05 An outline, a big Background composite fails by itself for one row › Q05 row b  [Failed]  0s
+at Features/Q5/Q05_Big.feature:6
+example: row=b
+✗ b0    Given q big composite fails by itself for row b
+    b0.0  Woven
+        · number
+        · 0
+    b0.1  Woven
+        · number
+        · 1
+    b0.2  Woven
+        · number
+        · 2
+    b0.3  Woven
+        · number
+        · 3
+    b0.4  Woven
+        · number
+        · 4
+    b0.5  Woven
+        · number
+        · 5
+    b0.6  Woven
+        · number
+        · 6
+    b0.7  Woven
+        · number
+        · 7
+    b0.8  Woven
+        · number
+        · 8
+    b0.9  Woven
+        · number
+        · 9
+    b0.10 Woven
+        · number
+        · 10
+    b0.11 Woven
+        · number
+        · 11
+    b0.12 Woven
+        · number
+        · 12
+    b0.13 Woven
+        · number
+        · 13
+    b0.14 Woven
+        · number
+        · 14
+    b0.15 Woven
+        · number
+        · 15
+    b0.16 Woven
+        · number
+        · 16
+    b0.17 Woven
+        · number
+        · 17
+    b0.18 Woven
+        · number
+        · 18
+    b0.19 Woven
+        · number
+        · 19
+    b0.20 Woven
+        · number
+        · 20
+    b0.21 Woven
+        · number
+        · 21
+    b0.22 Woven
+        · number
+        · 22
+    b0.23 Woven
+        · number
+        · 23
+    b0.24 Woven
+        · number
+        · 24
+    b0.25 Woven
+        · number
+        · 25
+    b0.26 Woven
+        · number
+        · 26
+    b0.27 Woven
+        · number
+        · 27
+    b0.28 Woven
+        · number
+        · 28
+    b0.29 Woven
+        · number
+        · 29
+    b0.30 Woven
+        · number
+        · 30
+    b0.31 Woven
+        · number
+        · 31
+    b0.32 Woven
+        · number
+        · 32
+    b0.33 Woven
+        · number
+        · 33
+    b0.34 Woven
+        · number
+        · 34
+    b0.35 Woven
+        · number
+        · 35
+    b0.36 Woven
+        · number
+        · 36
+    b0.37 Woven
+        · number
+        · 37
+    b0.38 Woven
+        · number
+        · 38
+    b0.39 Woven
+        · number
+        · 39
+0 calls · interactions s46 · flow s46
+--- s47
+s47  Q05 An outline, a big Background composite fails by itself for one row › Q05 row c  [Passed]  0.01s
+at Features/Q5/Q05_Big.feature:6
+example: row=c
+  b0    Given q big composite fails by itself for row b  0s
+    b0.0  Woven
+        · number
+        · 0
+    b0.1  Woven
+        · number
+        · 1
+    b0.2  Woven
+        · number
+        · 2
+    b0.3  Woven
+        · number
+        · 3
+    b0.4  Woven
+        · number
+        · 4
+    b0.5  Woven
+        · number
+        · 5
+    b0.6  Woven
+        · number
+        · 6
+    b0.7  Woven
+        · number
+        · 7
+    b0.8  Woven
+        · number
+        · 8
+    b0.9  Woven
+        · number
+        · 9
+    b0.10 Woven
+        · number
+        · 10
+    b0.11 Woven
+        · number
+        · 11
+    b0.12 Woven
+        · number
+        · 12
+    b0.13 Woven
+        · number
+        · 13
+    b0.14 Woven
+        · number
+        · 14
+    b0.15 Woven
+        · number
+        · 15
+    b0.16 Woven
+        · number
+        · 16
+    b0.17 Woven
+        · number
+        · 17
+    b0.18 Woven
+        · number
+        · 18
+    b0.19 Woven
+        · number
+        · 19
+    b0.20 Woven
+        · number
+        · 20
+    b0.21 Woven
+        · number
+        · 21
+    b0.22 Woven
+        · number
+        · 22
+    b0.23 Woven
+        · number
+        · 23
+    b0.24 Woven
+        · number
+        · 24
+    b0.25 Woven
+        · number
+        · 25
+    b0.26 Woven
+        · number
+        · 26
+    b0.27 Woven
+        · number
+        · 27
+    b0.28 Woven
+        · number
+        · 28
+    b0.29 Woven
+        · number
+        · 29
+    b0.30 Woven
+        · number
+        · 30
+    b0.31 Woven
+        · number
+        · 31
+    b0.32 Woven
+        · number
+        · 32
+    b0.33 Woven
+        · number
+        · 33
+    b0.34 Woven
+        · number
+        · 34
+    b0.35 Woven
+        · number
+        · 35
+    b0.36 Woven
+        · number
+        · 36
+    b0.37 Woven
+        · number
+        · 37
+    b0.38 Woven
+        · number
+        · 38
+    b0.39 Woven
+        · number
+        · 39
+  0     When an r step "c"  [i0]
+    0.0   Ran for
+        · who
+        · Q05 row <row> c
+1 calls · interactions s47 · flow s47
+--- s48
+s48  Q06 An outline whose first row fails in its Background, each row's nested step names it › Q06 row a  [Failed]  0s
+at Features/Q5/Q06_FirstRowFails.feature:7
+example: row=a
+  b0    Given q composite names its row
+    b0.0  Given q step with the word rowaword
+✗ b1    And q step fails for row a
+0 calls · interactions s48 · flow s48
+--- s49
+s49  Q06 An outline whose first row fails in its Background, each row's nested step names it › Q06 row b  [Passed]  0.01s
+at Features/Q5/Q06_FirstRowFails.feature:7
+example: row=b
+  b0    Given q composite names its row  0s
+    b0.0  Given q step with the word rowbword
+  b1    And q step fails for row a  0s
+  0     When an r step "b"  [i0]
+    0.0   Ran for
+        · who
+        · Q06 row <row> b
+1 calls · interactions s49 · flow s49
+--- s50
+s50  Q06 An outline whose first row fails in its Background, each row's nested step names it › Q06 row c  [Passed]  0.05s
+at Features/Q5/Q06_FirstRowFails.feature:7
+example: row=c
+  b0    Given q composite names its row  0.04s
+    b0.0  Given q step with the word rowcword
+  b1    And q step fails for row a
+  0     When an r step "c"  [i0]
+    0.0   Ran for
+        · who
+        · Q06 row <row> c
+1 calls · interactions s50 · flow s50
+--- s51
+s51  Q07 A Background step nobody defined › Q07 row a  [Skipped]  0s
+at Features/Q5/Q07_UndefinedInBackground.feature:6
+example: row=a
+0 calls · interactions s51 · flow s51
+--- s52
+s52  Q07 A Background step nobody defined › Q07 row b  [Skipped]  0.01s
+at Features/Q5/Q07_UndefinedInBackground.feature:6
+example: row=b
+0 calls · interactions s52 · flow s52
+--- s53
+s53  Q08 A nested step whose text has spaces around it › Q08 one  [Skipped]  0.1s
+at Features/Q5/Q08_Spaces.feature:3
+  0     Given q composite runs a step with spaces around its text  0.04s
+0 calls · interactions s53 · flow s53
+--- s54
+s54  Q09 The same nested text twice around a keyword woven namesake › Q09 one  [Passed]  0.05s
+at Features/Q5/Q09_TwiceAround.feature:3
+  0     Given q composite runs the same text twice around a woven namesake  0.04s  [i0]
+    0.0   Given q table step  0s
+        · table
+        · n
+        · first
+    0.1   When q table step
+        · table
+        · n
+        · second
+      0.1.0 Ran for
+          · who
+          · Q09 one woven
+    0.2   Given q table step
+1 calls · interactions s54 · flow s54
+--- s55
+s55  Q10 A nested step that is itself a keyword woven method › Q10 one  [Passed]  0.01s
+at Features/Q5/Q10_WovenAndDefined.feature:3
+  0     Given q composite runs a step woven and defined  0s
+    0.0   Given q step woven and defined  0s
+      0.0.0 Given q step woven and defined
+0 calls · interactions s55 · flow s55
+--- s56
+s56  Q11 Two outlines and a rule, several on one page › Q11 first row a  [Passed]  0s
+at Features/Q5/Q11_TwoOutlines.feature:6
+example: row=a
+  b0    Given an r step that fails for row b  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 first row <row>
+  0     When an r step "a"  [i2]
+    0.0   Ran for
+        · who
+        · Q11 first row <row> a
+2 calls · interactions s56 · flow s56
+--- s57
+s57  Q11 Two outlines and a rule, several on one page › Q11 first row b  [Failed]  0s
+at Features/Q5/Q11_TwoOutlines.feature:6
+example: row=b
+✗ b0    Given an r step that fails for row b  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 first row <row>
+1 calls · interactions s57 · flow s57
+--- s58
+s58  Q11 Two outlines and a rule, several on one page › Q11 ruled row a  [Passed]  0s
+at Features/Q5/Q11_TwoOutlines.feature:26
+example: row=a
+  b0    Given an r step that fails for row b  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 ruled row <row>
+  b1    Given an r step "in the rule"  [i2]
+    b1.0  Ran for
+        · who
+        · Q11 ruled row <row> in the rule
+  0     When an r step "a"  [i4]
+    0.0   Ran for
+        · who
+        · Q11 ruled row <row> a
+3 calls · interactions s58 · flow s58
+--- s59
+s59  Q11 Two outlines and a rule, several on one page › Q11 ruled row b  [Failed]  0.41s
+at Features/Q5/Q11_TwoOutlines.feature:26
+example: row=b
+✗ b0    Given an r step that fails for row b  0s  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 ruled row <row>
+1 calls · interactions s59 · flow s59
+--- s60
+s60  Q11 Two outlines and a rule, several on one page › Q11 second row a  [Passed]  0s
+at Features/Q5/Q11_TwoOutlines.feature:14
+example: row=a
+  b0    Given an r step that fails for row b  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 second row <row>
+  0     When an r step "a"  [i2]
+    0.0   Ran for
+        · who
+        · Q11 second row <row> a
+2 calls · interactions s60 · flow s60
+--- s61
+s61  Q11 Two outlines and a rule, several on one page › Q11 second row b  [Failed]  0.04s
+at Features/Q5/Q11_TwoOutlines.feature:14
+example: row=b
+✗ b0    Given an r step that fails for row b  0.04s  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 second row <row>
+1 calls · interactions s61 · flow s61
+--- s62
+s62  Q13 A BeforeStep hook ahead of ours stops a nested step, and the composite runs a woven step after it › Q13 one  [Failed]  0.08s
+at Features/Q5/Q13_HookStopsThenWoven.feature:4
+✗ 0     Given q composite runs a stopped step and then a woven step  0.03s
+    0.0   Woven  0s
+        · number
+        · 1
+  ✗ 0.1   Given q step the hook stops
+0 calls · interactions s62 · flow s62
+--- s63
+s63  Q13 A BeforeStep hook ahead of ours stops a nested step, and the composite runs a woven step after it › Q13 two, a nested step before it  [Fail
+at Features/Q5/Q13_HookStopsThenWoven.feature:7
+✗ 0     Given q composite runs a step, a stopped step and then a woven step  0s
+    0.0   Given q step with the word first
+    0.1   Woven
+        · number
+        · 2
+  ✗ 0.2   Given q step the hook stops
+0 calls · interactions s63 · flow s63
+--- s64
+s64  Q14 Two Examples blocks, a Background step attaches a file, a row fails in its Background › Q14 row a  [Passed]  0.06s
+at Features/Q5/Q14_TwoBlocksAttaches.feature:7
+example: row=a
+attachments: 1 on its steps · attachments s64
+  b0    Given q step attaches a file for its row  0.01s
+      attachment: row-a.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-5\runs\
+  b1    And q step fails for row b
+  0     When an r step "a"  0s  [i0]
+    0.0   Ran for
+        · who
+        · Q14 row <row> a
+1 calls · interactions s64 · flow s64
+--- s65
+s65  Q14 Two Examples blocks, a Background step attaches a file, a row fails in its Background › Q14 row b  [Failed]  0s
+at Features/Q5/Q14_TwoBlocksAttaches.feature:7
+example: row=b
+attachments: 1 on its steps · attachments s65
+  b0    Given q step attaches a file for its row
+      attachment: row-b.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-5\runs\
+✗ b1    And q step fails for row b
+0 calls · interactions s65 · flow s65
+--- s66
+s66  Q14 Two Examples blocks, a Background step attaches a file, a row fails in its Background › Q14 row c  [Passed]  0s
+at Features/Q5/Q14_TwoBlocksAttaches.feature:7
+example: row=c
+attachments: 1 on its steps · attachments s66
+  b0    Given q step attaches a file for its row  0s
+      attachment: row-c.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-5\runs\
+  b1    And q step fails for row b
+  0     When an r step "c"  [i0]
+    0.0   Ran for
+        · who
+        · Q14 row <row> c
+1 calls · interactions s66 · flow s66
+--- s67
+s67  Q14 Two Examples blocks, a Background step attaches a file, a row fails in its Background › Q14 row d  [Passed]  0s
+at Features/Q5/Q14_TwoBlocksAttaches.feature:7
+example: row=d
+attachments: 1 on its steps · attachments s67
+  b0    Given q step attaches a file for its row
+      attachment: row-d.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-5\runs\
+  b1    And q step fails for row b
+  0     When an r step "d"  [i0]
+    0.0   Ran for
+        · who
+        · Q14 row <row> d
+1 calls · interactions s67 · flow s67
+--- s68
+s68  Q15 A keyword woven step fails and is caught, then a nested step of the same text passes › Q15 one  [Passed]  0.15s
+at Features/Q5/Q15_WovenFailureCaught.feature:3
+  0     Given q composite catches a keyword woven failure then runs the same text  0.11s
+    0.0   Given the q caught namesake step  0.02s
+        the woven step failed
+    0.1   Given the q caught namesake step  0s
+0 calls · interactions s68 · flow s68
+--- s69
+s69  Q16 A keyword woven step reads like a nested step that itself runs a step › Q16 one  [Passed]  0.11s
+at Features/Q5/Q16_PhantomUnderWoven.feature:3
+  0     Given q composite runs a keyword woven namesake and then a step that runs a step  0.06s  [i0]
+    0.0   Given the q outer namesake step  0.05s
+      0.0.0 Ran for  0.05s
+          · who
+          · Q16 one woven
+      0.0.1 Given q step with the word inner
+    0.1   Given the q outer namesake step  0s
+      0.1.0 Given q step with the word inner  0s
+1 calls · interactions s69 · flow s69

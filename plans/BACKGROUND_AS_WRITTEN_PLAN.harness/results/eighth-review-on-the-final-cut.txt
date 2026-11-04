@@ -1,0 +1,198 @@
+Build succeeded.
+
+## Move: F1a search chooses b, reader clicks c, emptied, reader clicks b then a (rows.html)
+   both start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept={}
+ 5.28.2 reader clicks row 2: OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] row=2 | searchSections=? kept=
+  patch reader clicks row 2: OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] row=2 | searchSections=? kept={background:true,steps:true}
+ 5.28.2 search "": shut (feature shut) r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] row=2 | searchSections=? kept=
+  patch search "": shut (feature shut) r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] row=2 | searchSections=? kept={background:true,steps:true}
+ 5.28.2 reader clicks row 1: shut (feature shut) r0[bg+ st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch reader clicks row 1: shut (feature shut) r0[bg- st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=1 | searchSections=? kept={background:true,steps:true}
+ 5.28.2 reader clicks row 0: shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch reader clicks row 0: shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=0 | searchSections=? kept={background:true,steps:true}
+
+## Move: F1b search chooses b, reader clicks c, next keystroke chooses b again, emptied (rows.html)
+   both start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+ 5.28.2 search "alphawor": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch search "alphawor": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept={}
+ 5.28.2 reader clicks row 2: OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] row=2 | searchSections=? kept=
+  patch reader clicks row 2: OPEN r0[bg- st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] row=2 | searchSections=? kept={background:true,steps:true}
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=1 | searchSections=? kept={background:true,steps:true}
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=0 | searchSections=? kept={background:true,steps:true}
+
+## Move: F1c reader closes Steps on a, match on a, reader clicks b, emptied, reader back on a (rows.html)
+   both start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+   both reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+   both reader toggles scenario-steps: OPEN *r0[bg- st-] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+   both search "firstword": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+ 5.28.2 reader clicks row 1: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch reader clicks row 1: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept={background:true,steps:true}
+ 5.28.2 search "": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch search "": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept={background:true,steps:true}
+ 5.28.2 reader clicks row 0: OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch reader clicks row 0: OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept={background:true,steps:true}
+
+## Plain: F2a plain: reader closes Background, opens it again, emptied (rows.html)
+   both start: shut (feature shut) [bg- st+] | searchSections=? kept=
+   both search "plainword": OPEN [bg+ st+] | searchSections=? kept=
+   both reader toggles scenario-background: OPEN [bg- st+] | searchSections=? kept=
+   both reader toggles scenario-background: OPEN [bg+ st+] | searchSections=? kept=
+   both search "": shut (feature shut) [bg+ st+] | searchSections=? kept=
+
+## Move: F2b row: reader closes Background, opens it again, emptied (rows.html)
+   both start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+ 5.28.2 search "alphaword": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch search "alphaword": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept={}
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept={}
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept={}
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept={}
+
+## PairA: F3a one match on PairA, widened so PairB chooses a row: PairA stays on its row (rows.html)
+   both start: shut (feature shut) *r0[bg- st+] r1[bg- st+] row=0 | searchSections=? kept=
+ 5.28.2 search "pairword onlya": OPEN r0[bg+ st+] *r1[bg+ st+] row=1 | searchSections=? kept=
+  patch search "pairword onlya": OPEN r0[bg- st+] *r1[bg+ st+] row=1 | searchSections=? kept={}
+ 5.28.2 search "pairword": OPEN r0[bg+ st+] *r1[bg+ st+] row=1 | searchSections=? kept=
+  patch search "pairword": OPEN r0[bg- st+] *r1[bg+ st+] row=1 | searchSections=? kept={}{}
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] row=0 | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg+ st+] row=0 | searchSections=? kept={}{}
+
+## PairA: F3b reader closes Background on PairA, widened, narrowed (rows.html)
+   both start: shut (feature shut) *r0[bg- st+] r1[bg- st+] row=0 | searchSections=? kept=
+ 5.28.2 search "pairword onlya": OPEN r0[bg+ st+] *r1[bg+ st+] row=1 | searchSections=? kept=
+  patch search "pairword onlya": OPEN r0[bg- st+] *r1[bg+ st+] row=1 | searchSections=? kept={}
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg- st+] row=1 | searchSections=? kept=
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg- st+] row=1 | searchSections=? kept={}
+ 5.28.2 search "pairword": OPEN r0[bg+ st+] *r1[bg- st+] row=1 | searchSections=? kept=
+  patch search "pairword": OPEN r0[bg- st+] *r1[bg- st+] row=1 | searchSections=? kept={}{}
+ 5.28.2 search "pairword onlya": OPEN r0[bg+ st+] *r1[bg- st+] row=1 | searchSections=? kept=
+  patch search "pairword onlya": OPEN r0[bg- st+] *r1[bg- st+] row=1 | searchSections=? kept={}{}
+ 5.28.2 search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] row=0 | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] row=0 | searchSections=? kept={}{}
+
+## Plain: F3 control: widened with no row chosen, the section stays (rows.html)
+   both start: shut (feature shut) [bg- st+] | searchSections=? kept=
+   both search "plainword": OPEN [bg+ st+] | searchSections=? kept=
+   both search "plain": OPEN [bg+ st+] | searchSections=? kept=
+   both search "": shut (feature shut) [bg+ st+] | searchSections=? kept=
+
+## Plain: F3 control: reader closes, widened, narrowed, stays closed (rows.html)
+   both start: shut (feature shut) [bg- st+] | searchSections=? kept=
+   both search "plainword": OPEN [bg+ st+] | searchSections=? kept=
+   both reader toggles scenario-background: OPEN [bg- st+] | searchSections=? kept=
+   both search "plain": OPEN [bg- st+] | searchSections=? kept=
+ 5.28.2 search "plainword": OPEN [bg+ st+] | searchSections=? kept=
+  patch search "plainword": OPEN [bg- st+] | searchSections=? kept=
+ 5.28.2 search "": shut (feature shut) [bg+ st+] | searchSections=? kept=
+  patch search "": shut (feature shut) [bg- st+] | searchSections=? kept=
+
+## Narrow: F4a reader closes on b, match moves to c and back to b (rows.html)
+   both start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 | searchSections=? kept=
+ 5.28.2 search "sku12": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] row=1 | searchSections=? kept=
+  patch search "sku12": OPEN r0[bg- st+] *r1[bg+ st+] r2[bg- st+] row=1 | searchSections=? kept={}
+ 5.28.2 reader toggles scenario-background: OPEN r0[bg+ st+] *r1[bg- st+] r2[bg- st+] row=1 | searchSections=? kept=
+  patch reader toggles scenario-background: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] row=1 | searchSections=? kept={}
+ 5.28.2 search "sku123": OPEN r0[bg+ st+] r1[bg- st+] *r2[bg- st+] row=2 | searchSections=? kept=
+  patch search "sku123": OPEN r0[bg- st+] r1[bg- st+] *r2[bg+ st+] row=2 | searchSections=? kept={}
+ 5.28.2 search "sku12": OPEN r0[bg+ st+] *r1[bg- st+] r2[bg- st+] row=1 | searchSections=? kept=
+  patch search "sku12": OPEN r0[bg- st+] *r1[bg- st+] r2[bg+ st+] row=1 | searchSections=? kept={}
+ 5.28.2 search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg+ st+] row=0 | searchSections=? kept={}
+
+## Plain: F4b plain: reader closes, match moves to Plain2 and back (rows.html)
+   both start: shut (feature shut) [bg- st+] | searchSections=? kept=
+   both search "plainword": OPEN [bg+ st+] | searchSections=? kept=
+   both reader toggles scenario-background: OPEN [bg- st+] | searchSections=? kept=
+   both search "plaintwoword": OPEN (hidden) [bg- st+] | searchSections=? kept=
+ 5.28.2 search "plainword": OPEN [bg+ st+] | searchSections=? kept=
+  patch search "plainword": OPEN [bg- st+] | searchSections=? kept=
+ 5.28.2 search "": shut (feature shut) [bg+ st+] | searchSections=? kept=
+  patch search "": shut (feature shut) [bg- st+] | searchSections=? kept=
+
+## CallRows: G1 diagrams: search, emptied (callsclosed.html)
+ 5.28.2 start: shut (feature shut) *r0[st+] r1[st+] r2[st+] row=0 diag=- | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+ 5.28.2 search "alphaword": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "alphaword": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=? kept=
+ 5.28.2 search "": shut (feature shut) *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=? kept=
+
+## CallRows: G2 reader closes the diagrams section, next keystroke, emptied (callsclosed.html)
+ 5.28.2 start: shut (feature shut) *r0[st+] r1[st+] r2[st+] row=0 diag=- | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+ 5.28.2 search "alphawor": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "alphawor": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=? kept=
+ 5.28.2 reader toggles example-diagrams: OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=- | searchSections=? kept=
+  patch reader toggles example-diagrams: OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+ 5.28.2 search "alphaword": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "alphaword": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+ 5.28.2 search "": shut (feature shut) *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+
+## CallPlain: G3 plain: reader closes the diagrams section, next keystroke, emptied (callsclosed.html)
+ 5.28.2 start: shut (feature shut) [st+] diag=- | searchSections=? kept=
+  patch start: shut (feature shut) [bg- st+] diag=- | searchSections=? kept=
+ 5.28.2 search "plainwor": OPEN [st+] diag=+ | searchSections=? kept=
+  patch search "plainwor": OPEN [bg+ st+] diag=+ | searchSections=? kept=
+ 5.28.2 reader toggles example-diagrams: OPEN [st+] diag=- | searchSections=? kept=
+  patch reader toggles example-diagrams: OPEN [bg+ st+] diag=- | searchSections=? kept=
+ 5.28.2 search "plainword": OPEN [st+] diag=+ | searchSections=? kept=
+  patch search "plainword": OPEN [bg+ st+] diag=- | searchSections=? kept=
+ 5.28.2 search "": shut (feature shut) [st+] diag=+ | searchSections=? kept=
+  patch search "": shut (feature shut) [bg+ st+] diag=- | searchSections=? kept=
+
+## CallPlain: G4 plain: reader closes then opens the diagrams section, emptied (callsclosed.html)
+ 5.28.2 start: shut (feature shut) [st+] diag=- | searchSections=? kept=
+  patch start: shut (feature shut) [bg- st+] diag=- | searchSections=? kept=
+ 5.28.2 search "plainword": OPEN [st+] diag=+ | searchSections=? kept=
+  patch search "plainword": OPEN [bg+ st+] diag=+ | searchSections=? kept=
+ 5.28.2 reader toggles example-diagrams: OPEN [st+] diag=- | searchSections=? kept=
+  patch reader toggles example-diagrams: OPEN [bg+ st+] diag=- | searchSections=? kept=
+ 5.28.2 reader toggles example-diagrams: OPEN [st+] diag=+ | searchSections=? kept=
+  patch reader toggles example-diagrams: OPEN [bg+ st+] diag=+ | searchSections=? kept=
+ 5.28.2 search "": shut (feature shut) [st+] diag=+ | searchSections=? kept=
+  patch search "": shut (feature shut) [bg+ st+] diag=+ | searchSections=? kept=
+
+## CallRows: G5 reader has the diagrams section open by hand, search, emptied (callsclosed.html)
+ 5.28.2 start: shut (feature shut) *r0[st+] r1[st+] r2[st+] row=0 diag=- | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+ 5.28.2 reader opens scenario: OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=- | searchSections=? kept=
+  patch reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+ 5.28.2 reader toggles example-diagrams: OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch reader toggles example-diagrams: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=? kept=
+ 5.28.2 search "alphaword": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "alphaword": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=? kept=
+ 5.28.2 search "": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=? kept=
+
+## CallRows: G6 reader closes Background, next keystroke; reader closes diagrams, next keystroke (callsclosed.html)
+ 5.28.2 start: shut (feature shut) *r0[st+] r1[st+] r2[st+] row=0 diag=- | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+ 5.28.2 search "alphawo": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "alphawo": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=? kept=
+ 5.28.2 no scenario-background on the row shown
+  patch reader toggles scenario-background: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=? kept=
+ 5.28.2 search "alphawor": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "alphawor": OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=? kept=
+ 5.28.2 reader toggles example-diagrams: OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=- | searchSections=? kept=
+  patch reader toggles example-diagrams: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+ 5.28.2 search "alphaword": OPEN *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "alphaword": OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+ 5.28.2 search "": shut (feature shut) *r0[st+] r1[st+] r2[st+] row=0 diag=+ | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=? kept=
+hooks on 3.3.4: === hooks-3.3.4: reqnroll 3.3.4, one, dlls=<scratch>/final-dlls exit 1
+--- s23 FAIL      0s     0 calls  H23 a step run by AfterScenario leaves itself open, hook catches
+s23  R8 hooks › H23 a step run by AfterScenario leaves itself open, hook catches  [Failed]  0s
+at Features/Hooks.feature:89
+  0     Given r8 one
+hooks on 3.0.1: === hooks-3.0.1: reqnroll 3.0.1, one, dlls=<scratch>/final-dlls exit 1
+--- s23 FAIL      0s     0 calls  H23 a step run by AfterScenario leaves itself open, hook catches
+s23  R8 hooks › H23 a step run by AfterScenario leaves itself open, hook catches  [Failed]  0s
+at Features/Hooks.feature:89
+  0     Given r8 one

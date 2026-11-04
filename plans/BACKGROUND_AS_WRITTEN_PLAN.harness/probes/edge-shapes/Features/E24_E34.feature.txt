@@ -1,0 +1,282 @@
+#file E24_UndefinedInBackground.feature
+Feature: E24 An undefined step in a Background
+
+Background:
+  Given an edge step
+  And nobody defined this step
+
+Scenario: E24 one
+  When an edge step "mine"
+  Then an edge step
+
+#file E25_PendingInBackground.feature
+Feature: E25 A pending step in a Background
+
+Background:
+  Given a pending step
+  And an edge step
+
+Scenario: E25 one
+  When an edge step "mine"
+
+#file E26_UndefinedInScenario.feature
+Feature: E26 An undefined step in a scenario
+
+Background:
+  Given an edge step
+
+Scenario: E26 one
+  When nobody defined this step
+  Then an edge step
+
+#file E27_IgnoredAtRunTime.feature
+Feature: E27 Ignored at run time in a Background
+
+Background:
+  Given a step ignores the test at run time
+  And an edge step
+
+Scenario: E27 one
+  When an edge step "mine"
+
+#file E28_OutlineInARule.feature
+Feature: E28 An outline in a rule
+
+Background:
+  Given an edge step "feature background"
+
+Rule: E28 with a background
+  Background:
+    Given an edge step "rule background"
+
+  Scenario Outline: E28 ruled <row>
+    When an edge step "<row>"
+    Then an edge step
+
+    Examples:
+      | row |
+      | a   |
+      | b   |
+
+Rule: E28 without a background
+  Scenario Outline: E28 bare <row>
+    When an edge step "<row>"
+
+    Examples:
+      | row |
+      | c   |
+
+#file E29_AwkwardText.feature
+Feature: E29 Awkward step text
+
+Background:
+  Given an awkward step with "quotes" and a \ backslash
+  And an awkward step with ünïcödé  and two spaces
+  And an awkward step ending in a colon:
+  And an awkward step with <angle> brackets, a # hash and a {brace}
+
+Scenario: E29 one
+  When an edge step "mine"
+
+#file E30_ScenarioRepeatsItsBackground.feature
+Feature: E30 A scenario repeats its Background
+
+Background:
+  Given an edge step
+
+Scenario: E30 one
+  Given an edge step
+  When an edge step "mine"
+
+#file E31_InnerUndefined.feature
+Feature: E31 An inner step is undefined
+
+Background:
+  Given a composite step runs an undefined step
+
+Scenario: E31 one
+  When an edge step "mine"
+
+#file E32_InnerPending.feature
+Feature: E32 An inner step is pending
+
+Background:
+  Given a composite step runs a pending step
+
+Scenario: E32 one
+  When an edge step "mine"
+
+#file E33_IgnoredBesideARun.feature
+Feature: E33 An ignored scenario beside one that runs
+
+Background:
+  Given an edge step
+
+@ignore
+Scenario: E33 ignored
+  When an edge step "mine"
+
+Scenario: E33 runs
+  When an edge step "mine"
+
+#file E34_BeforeStepHookFails.feature
+@before-step-fails
+Feature: E34 A BeforeStep hook fails in a Background
+
+Background:
+  Given the hook fails before this step
+  And an edge step
+
+Scenario: E34 one
+  When an edge step "mine"
+
+#file E35_AfterStepHookFails.feature
+@after-step-fails
+Feature: E35 An AfterStep hook fails in a Background
+
+Background:
+  Given the hook fails after this step
+  And an edge step
+
+Scenario: E35 one
+  When an edge step "mine"
+
+#file E36_FirstBeforeStepHookFails.feature
+@first-before-step-fails
+Feature: E36 A BeforeStep hook ahead of the adapter's fails
+
+Background:
+  Given an edge step
+  And the hook fails before this step
+
+Scenario: E36 one
+  When an edge step "mine"
+
+#file E37_AfterScenarioHookRunsAStep.feature
+@runs-a-step-after
+Feature: E37 An AfterScenario hook runs a Gherkin step
+
+Background:
+  Given an edge step
+
+Scenario: E37 one
+  When an edge step "mine"
+
+#file E38_InnerFailsOuterCarriesOn.feature
+Feature: E38 An inner step fails and the outer carries on
+
+Background:
+  Given a composite step runs a step that fails and carries on
+
+Scenario: E38 one
+  When an edge step "mine"
+
+#file E39_FirstBeforeStepHookFailsInner.feature
+@first-before-step-fails
+Feature: E39 A BeforeStep hook ahead of the adapter's fails on an inner step
+
+Background:
+  Given a composite step runs the step a hook stops
+
+Scenario: E39 one
+  When an edge step "mine"
+
+#file E40_AfterStepHookFailsInner.feature
+@after-step-fails
+Feature: E40 An AfterStep hook fails on an inner step
+
+Background:
+  Given a composite step runs the step whose hook fails after it
+
+Scenario: E40 one
+  When an edge step "mine"
+
+#file E41_AfterStepHookFailsOwnStep.feature
+@after-step-fails
+Feature: E41 An AfterStep hook fails on a scenario's own step
+
+Background:
+  Given an edge step
+
+Scenario: E41 one
+  When the hook fails after this step
+
+#file E42_WovenHelperBetween.feature
+Feature: E42 A woven helper between a step and the steps it runs
+
+Background:
+  Given a composite step runs a woven helper
+
+Scenario: E42 one
+  When an edge step "mine"
+
+#file E43_InnerArgumentDoesNotConvert.feature
+Feature: E43 An inner step's argument does not convert
+
+Background:
+  Given a composite step runs a step whose argument does not convert
+
+Scenario: E43 one
+  When an edge step "mine"
+
+#file E44_ARowFailsInItsBackground.feature
+Feature: E44 A row fails in its Background
+
+Background:
+  Given a background step fails for row b
+
+Scenario Outline: E44 row <row>
+  When an edge step "<row>"
+
+  Examples:
+    | row |
+    | a   |
+    | b   |
+
+#file E45_AfterStepHookFailsSecondInner.feature
+@after-step-fails
+Feature: E45 An AfterStep hook fails on the second inner step
+
+Background:
+  Given a composite step runs a passing step and one whose hook fails
+
+Scenario: E45 one
+  When an edge step "mine"
+
+#file E46_BackslashAlone.feature
+Feature: E46 A step text holding a backslash
+
+Scenario: E46 one
+  Given an awkward step with a \ backslash alone
+  When an awkward step with "quotes" alone
+
+Scenario: E46 two
+  Given an awkward step with <$sprite> markup alone
+  When an awkward step with "quotes" alone
+
+#file E47_AfterScenarioHookFails.feature
+@after-scenario-fails
+Feature: E47 An AfterScenario hook fails
+
+Background:
+  Given an edge step
+
+Scenario: E47 one
+  When an edge step "mine"
+
+#file E48_LongStepText.feature
+Feature: E48 A step text the bar wraps
+
+Scenario: E48 one
+  Given an awkward step with a text long enough for the bar to wrap it onto a second line and then onto a third line as well, which is about as much as anybody writes in one step
+  When an awkward step with "quotes" alone
+
+#file E49_BlockHookFails.feature
+@block-hook-fails
+Feature: E49 A block hook fails
+
+Background:
+  Given an edge step
+
+Scenario: E49 one
+  When an edge step "mine"

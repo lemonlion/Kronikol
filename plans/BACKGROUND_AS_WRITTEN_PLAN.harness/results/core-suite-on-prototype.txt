@@ -1,0 +1,8 @@
+main at 9d994a4b with r1-first-cut.patch
+  Skipped Kronikol.Tests.Tool.QueryStreamingTests.A_hundred_megabyte_report_answers_from_the_index_without_being_read_into_memory [1 ms]
+  Skipped Kronikol.Tests.Reports.RunRotationTests.A_read_only_previous_report_this_process_can_write_is_kept_like_any_other [1 ms]
+Passed!  - Failed:     0, Passed: 11870, Skipped:     2, Total: 11872, Duration: 4 m 13 s - Kronikol.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:   787, Skipped:     0, Total:   787, Duration: 7 s - Kronikol.Tests.SearchEngine.dll (net10.0)
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 6 s - Kronikol.Tests.StepTracking.dll (net10.0)
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 5 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 4 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)

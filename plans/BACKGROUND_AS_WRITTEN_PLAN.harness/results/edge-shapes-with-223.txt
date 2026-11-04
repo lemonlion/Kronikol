@@ -1,0 +1,384 @@
+Build succeeded.
+dotnet test exit code: 1
+Total tests: 31
+report files: 2
+
+s0  E24 An undefined step in a Background › E24 one  [Skipped]  0.13s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E24 one
+- b1    And nobody defined this step
+- 0     When an edge step "mine"
+- 1     Then an edge step
+1 calls · interactions s0 · flow s0
+
+s1  E25 A pending step in a Background › E25 one  [Skipped]  0.1s
+- b0    Given a pending step  0.02s
+- b1    And an edge step
+- 0     When an edge step "mine"
+0 calls · interactions s1 · flow s1
+
+s2  E26 An undefined step in a scenario › E26 one  [Skipped]  0.01s
+  b0    Given an edge step  [i0]
+    b0.0  Ran for
+        · who
+        · E26 one
+- 0     When nobody defined this step
+- 1     Then an edge step
+1 calls · interactions s2 · flow s2
+
+s3  E27 Ignored at run time in a Background › E27 one  [Skipped]  0.1s
+- b0    Given a step ignores the test at run time  0.02s
+- b1    And an edge step
+- 0     When an edge step "mine"
+0 calls · interactions s3 · flow s3
+
+s4  E28 An outline in a rule › E28 bare c  [Passed]  0.28s
+example: row=c
+  b0    Given an edge step "feature background"  0s  [i0]
+    b0.0  Ran for
+        · who
+        · E28 bare <row> feature background
+  0     When an edge step "c"  [i2]
+    0.0   Ran for
+        · who
+        · E28 bare <row> c
+2 calls · interactions s4 · flow s4
+
+s5  E28 An outline in a rule › E28 ruled a  [Passed]  0s
+example: row=a
+  b0    Given an edge step "feature background"  [i0]
+    b0.0  Ran for
+        · who
+        · E28 ruled <row> feature background
+  b1    Given an edge step "rule background"  [i2]
+    b1.0  Ran for
+        · who
+        · E28 ruled <row> rule background
+  0     When an edge step "a"  [i4]
+    0.0   Ran for
+        · who
+        · E28 ruled <row> a
+  1     Then an edge step  0s  [i6]
+    1.0   Ran for
+        · who
+        · E28 ruled <row>
+4 calls · interactions s5 · flow s5
+
+s6  E28 An outline in a rule › E28 ruled b  [Passed]  0s
+example: row=b
+  b0    Given an edge step "feature background"  [i0]
+    b0.0  Ran for
+        · who
+        · E28 ruled <row> feature background
+  b1    Given an edge step "rule background"  [i2]
+    b1.0  Ran for
+        · who
+        · E28 ruled <row> rule background
+  0     When an edge step "b"  [i4]
+    0.0   Ran for
+        · who
+        · E28 ruled <row> b
+  1     Then an edge step  [i6]
+    1.0   Ran for
+        · who
+        · E28 ruled <row>
+4 calls · interactions s6 · flow s6
+
+s7  E29 Awkward step text › E29 one  [Passed]  0.01s
+  b0    Given an awkward step with "quotes" and a \ backslash  [i0]
+    b0.0  Ran for
+        · who
+        · E29 one
+  b1    And an awkward step with ünïcödé and two spaces  [i2]
+    b1.0  Ran for
+        · who
+        · E29 one
+  b2    And an awkward step ending in a colon:  [i4]
+    b2.0  Ran for
+        · who
+        · E29 one
+  b3    And an awkward step with <angle> brackets, a # hash and a {brace}  [i6]
+    b3.0  Ran for
+        · who
+        · E29 one
+  0     When an edge step "mine"  [i8]
+    0.0   Ran for
+        · who
+        · E29 one mine
+5 calls · interactions s7 · flow s7
+
+s8  E30 A scenario repeats its Background › E30 one  [Passed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E30 one
+  0     Given an edge step  [i2]
+    0.0   Ran for
+        · who
+        · E30 one
+  1     When an edge step "mine"  0s  [i4]
+    1.0   Ran for
+        · who
+        · E30 one mine
+3 calls · interactions s8 · flow s8
+
+s9  E31 An inner step is undefined › E31 one  [Skipped]  0.01s
+- b0    Given a composite step runs an undefined step  0s  [i0]
+    b0.0  Ran for
+        · who
+        · E31 one
+  - b0.1  Given nobody defined this inner step
+- 0     When an edge step "mine"
+1 calls · interactions s9 · flow s9
+
+s10  E32 An inner step is pending › E32 one  [Skipped]  0.11s
+- b0    Given a composite step runs a pending step  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E32 one
+  - b0.1  Given a pending step
+- 0     When an edge step "mine"
+1 calls · interactions s10 · flow s10
+
+s11  E33 An ignored scenario beside one that runs › E33 runs  [Passed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E33 runs
+  0     When an edge step "mine"  0s  [i2]
+    0.0   Ran for
+        · who
+        · E33 runs mine
+2 calls · interactions s11 · flow s11
+
+s12  E34 A BeforeStep hook fails in a Background › E34 one  [Failed]  0.1s
+✗ b0    Given the hook fails before this step  0.02s
+- b1    And an edge step
+- 0     When an edge step "mine"
+0 calls · interactions s12 · flow s12
+
+s13  E35 An AfterStep hook fails in a Background › E35 one  [Failed]  0.11s
+✗ b0    Given the hook fails after this step  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E35 one
+1 calls · interactions s13 · flow s13
+
+s14  E36 A BeforeStep hook ahead of the adapter's fails › E36 one  [Failed]  0.01s
+  b0    Given an edge step  [i0]
+    b0.0  Ran for
+        · who
+        · E36 one
+✗ b1    And the hook fails before this step
+- 0     When an edge step "mine"
+1 calls · interactions s14 · flow s14
+
+s15  E37 An AfterScenario hook runs a Gherkin step › E37 one  [Passed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E37 one
+  0     When an edge step "mine"  0s  [i2]
+    0.0   Ran for
+        · who
+        · E37 one mine
+  1     Then an edge step "from an AfterScenario hook"  0s  [i4]
+    1.0   Ran for
+        · who
+        · E37 one from an AfterScenario hook
+3 calls · interactions s15 · flow s15
+
+s16  E38 An inner step fails and the outer carries on › E38 one  [Failed]  0.11s
+✗ b0    Given a composite step runs a step that fails and carries on  0.06s  [i0-i2] 2 calls
+    b0.0  Ran for  0.04s
+        · who
+        · E38 one
+  ✗ b0.1  Given an inner step that fails  0s
+    b0.2  Ran for
+        · who
+        · E38 one after the inner step
+- 0     When an edge step "mine"
+2 calls · interactions s16 · flow s16
+
+s17  E39 A BeforeStep hook ahead of the adapter's fails on an inner step › E39 one  [Failed]  0.01s
+✗ b0    Given a composite step runs the step a hook stops  0s  [i0]
+    b0.0  Ran for
+        · who
+        · E39 one
+  ✗ b0.1  Given the hook fails before this step
+- 0     When an edge step "mine"
+1 calls · interactions s17 · flow s17
+
+s18  E40 An AfterStep hook fails on an inner step › E40 one  [Failed]  0.01s
+✗ b0    Given a composite step runs the step whose hook fails after it  0s  [i0-i2] 2 calls
+    b0.0  Ran for
+        · who
+        · E40 one
+  ✗ b0.1  Given the hook fails after this step  0s
+      b0.1.0 Ran for
+          · who
+          · E40 one
+- 0     When an edge step "mine"
+2 calls · interactions s18 · flow s18
+
+s19  E41 An AfterStep hook fails on a scenario's own step › E41 one  [Failed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E41 one
+✗ 0     When the hook fails after this step  [i2]
+    0.0   Ran for
+        · who
+        · E41 one
+2 calls · interactions s19 · flow s19
+
+s20  E42 A woven helper between a step and the steps it runs › E42 one  [Passed]  0.11s
+  b0    Given a composite step runs a woven helper  0.06s  [i0-i2] 2 calls
+    b0.0  A woven helper  0.04s
+      b0.0.0 Given an edge table is listed  0.01s
+          · table
+          · sku
+          · count
+          · APPLE
+          · 3
+        b0.0.0.0 Ran for
+            · who
+            · E42 one rows:1
+    b0.1  Given an edge note says  0s
+        """a doc string"""
+      b0.1.0 Ran for
+          · who
+          · E42 one note:a doc string
+  0     When an edge step "mine"  [i4]
+    0.0   Ran for
+        · who
+        · E42 one mine
+3 calls · interactions s20 · flow s20
+
+s21  E43 An inner step's argument does not convert › E43 one  [Failed]  0.11s
+✗ b0    Given a composite step runs a step whose argument does not convert  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E43 one
+  ✗ b0.1  Given an edge number "not a number"
+- 0     When an edge step "mine"
+1 calls · interactions s21 · flow s21
+
+s22  E44 A row fails in its Background › E44 row a  [Passed]  0s
+example: row=a
+  b0    Given a background step fails for row b
+  0     When an edge step "a"  [i0]
+    0.0   Ran for
+        · who
+        · E44 row <row> a
+1 calls · interactions s22 · flow s22
+
+s23  E44 A row fails in its Background › E44 row b  [Failed]  0.01s
+example: row=b
+✗ b0    Given a background step fails for row b  0s
+- 0     When an edge step "b"
+0 calls · interactions s23 · flow s23
+
+s24  E45 An AfterStep hook fails on the second inner step › E45 one  [Failed]  0.11s
+✗ b0    Given a composite step runs a passing step and one whose hook fails  0.06s  [i0-i2] 2 calls
+    b0.0  Given an edge step  0.02s
+      b0.0.0 Ran for  0.01s
+          · who
+          · E45 one
+  ✗ b0.1  Given the hook fails after this step
+      b0.1.0 Ran for
+          · who
+          · E45 one
+- 0     When an edge step "mine"
+2 calls · interactions s24 · flow s24
+
+s25  E46 A step text holding a backslash › E46 one  [Passed]  0s
+  0     Given an awkward step with a \ backslash alone  [i0]
+    0.0   Ran for
+        · who
+        · E46 one
+  1     When an awkward step with "quotes" alone  [i2]
+    1.0   Ran for
+        · who
+        · E46 one
+2 calls · interactions s25 · flow s25
+
+s26  E46 A step text holding a backslash › E46 two  [Passed]  0.11s
+  0     Given an awkward step with <$sprite> markup alone  0.06s  [i0]
+    0.0   Ran for  0.04s
+        · who
+        · E46 two
+  1     When an awkward step with "quotes" alone  0s  [i2]
+    1.0   Ran for
+        · who
+        · E46 two
+2 calls · interactions s26 · flow s26
+
+s27  E47 An AfterScenario hook fails › E47 one  [Failed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E47 one
+  0     When an edge step "mine"  0s  [i2]
+    0.0   Ran for
+        · who
+        · E47 one mine
+2 calls · interactions s27 · flow s27
+
+s28  E48 A step text the bar wraps › E48 one  [Passed]  0.01s
+  0     Given an awkward step with a text long enough for the bar to wrap it onto a second line an…  0s  [i0]
+    0.0   Ran for
+        · who
+        · E48 one
+  1     When an awkward step with "quotes" alone  [i2]
+    1.0   Ran for
+        · who
+        · E48 one
+2 calls · interactions s28 · flow s28
+
+s29  E49 A block hook fails › E49 one  [Failed]  0.11s
+  b0    Given an edge step  0.06s  [i0]
+    b0.0  Ran for  0.04s
+        · who
+        · E49 one
+1 calls · interactions s29 · flow s29
+
+=== query failures, only Background steps listed and none failed (E49): the failure, and the hint under it
+s29  E49 A block hook fails › E49 one
+  at Features/E49_BlockHookFails.feature:7
+  thrown at Shapes.Suite.Features.E49ABlockHookFailsFeature.E49One() — <scratch>\edge-with-223\Features\E49_BlockHookFails.fea
+  rerun: dotnet test --filter "FullyQualifiedName~Shapes.Suite.Features.E49ABlockHookFailsFeature.E49One"
+  (no step is marked failed — the failure was outside a tracked step)
+
+=== a suite's AfterScenario hook that throws (E47): rows in the report, then whether dotnet test saw it fail
+1
+[xUnit.net 00:00:03.61]     E47 one [FAIL]
+  Failed E47 one [124 ms]
+    d73e9fae4edb2618  E47 An AfterScenario hook fails > E47 one
+
+=== the digest: scenario, failingSteps, callsScope
+E34 one                            failing: [('s12/b0', 'Given the hook fails before this step')] scope: none
+E35 one                            failing: [('s13/b0', 'Given the hook fails after this step')] scope: failingStep
+E36 one                            failing: [('s14/b1', 'And the hook fails before this step')] scope: scenario
+E38 one                            failing: [('s16/b0', 'Given a composite step runs a step that fails and carries on'), ('s16/b0.1', 'Given an inner step that fails')] scope: failingStep
+E39 one                            failing: [('s17/b0', 'Given a composite step runs the step a hook stops'), ('s17/b0.1', 'Given the hook fails before this step')] scope: failingStep
+E40 one                            failing: [('s18/b0', 'Given a composite step runs the step whose hook fails after it'), ('s18/b0.1', 'Given the hook fails after this step')] scope: failingStep
+E41 one                            failing: [('s19/0', 'When the hook fails after this step')] scope: failingStep
+E43 one                            failing: [('s21/b0', 'Given a composite step runs a step whose argument does not convert'), ('s21/b0.1', 'Given an edge number "not a number"')] scope: failingStep
+E44 row b                          failing: [('s23/b0', 'Given a background step fails for row b')] scope: none
+E45 one                            failing: [('s24/b0', 'Given a composite step runs a passing step and one whose hook fails'), ('s24/b0.1', 'Given the hook fails after this step')] scope: failingStep
+E47 one                            failing: [] scope: scenario
+E49 one                            failing: [] scope: scenario
+
+=== the whole suite with stopAtFirstError on
+ Total time: 1.3671 Seconds
+stopAtFirstError fail-and: rows=82 MISSED=0 INVENTED=0 BORROWED=0 
+ Total time: 1.3797 Seconds
+stopAtFirstError fail-when: rows=82 MISSED=0 INVENTED=0 BORROWED=0 
+ Total time: 1.4009 Seconds
+stopAtFirstError fail-bg: rows=82 MISSED=0 INVENTED=0 BORROWED=0 
+ Total time: 1.3513 Seconds
+stopAtFirstError fail-bg2: rows=82 MISSED=0 INVENTED=0 BORROWED=0 
+FINISHED

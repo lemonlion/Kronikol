@@ -1,0 +1,820 @@
+Build succeeded.
+exit 1
+Total tests: 329
+AGENTS.md CLAUDE.md ComponentDiagram.html Failures.jsonl Failures.md Run.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl attachments query.cs service.json 
+--- s0
+s0  Q01 A keyword woven step reads like the nested step after it › Q01 one  [Passed]  0.09s
+at Features/Q5/Q01_KeywordNamesake.feature:6
+  b0    Given q composite runs a keyword woven namesake and then the step  0.05s  [i0-i2] 2 calls
+    b0.0  Given the q namesake step  0.03s
+      b0.0.0 Ran for  0.03s
+          · who
+          · Q01 one woven
+    b0.1  Given the q namesake step  0s
+        · table
+        · sku
+        · APPLE
+        """the doc string of the namesake"""
+      b0.1.0 Ran for
+          · who
+          · Q01 one defined the doc string of the namesake1
+  0     When an r step "own"  0s  [i4]
+    0.0   Ran for
+        · who
+        · Q01 one own
+3 calls · interactions s0 · flow s0
+--- s1
+s1  Q02 A keyword woven step reads like the nested step after it, and the nested step fails › Q02 one  [Failed]  0.08s
+at Features/Q5/Q02_KeywordNamesakeFails.feature:3
+✗ 0     Given q composite runs a keyword woven namesake and then a failing step  0.05s  [i0]
+    0.0   Given the q failing namesake step  0.03s
+      0.0.0 Ran for  0.03s
+          · who
+          · Q02 one woven
+  ✗ 0.1   Given the q failing namesake step  0s
+1 calls · interactions s1 · flow s1
+--- s2
+s2  Q03 A keyword woven step fails, a nested step of the same text never runs › Q03 one  [Failed]  0.07s
+at Features/Q5/Q03_WovenFailsFirst.feature:3
+✗ 0     Given q composite whose keyword woven step of the same text fails first  0.02s
+0 calls · interactions s2 · flow s2
+--- s3
+s3  Q04 A composite catches a nested step's failure and runs another › Q04 one  [Failed]  0.08s
+at Features/Q5/Q04_CatchesNested.feature:3
+✗ 0     Given q composite catches a failing nested step and runs another  0.04s
+  ✗ 0.0   Given q nested step that throws  0s
+0 calls · interactions s3 · flow s3
+--- s4
+s4  Q05 An outline, a big Background composite fails by itself for one row › Q05 row a  [Passed]  0s
+at Features/Q5/Q05_Big.feature:6
+example: row=a
+  b0    Given q big composite fails by itself for row b
+    b0.0  Woven
+        · number
+        · 0
+    b0.1  Woven
+        · number
+        · 1
+    b0.2  Woven
+        · number
+        · 2
+    b0.3  Woven
+        · number
+        · 3
+    b0.4  Woven
+        · number
+        · 4
+    b0.5  Woven
+        · number
+        · 5
+    b0.6  Woven
+        · number
+        · 6
+    b0.7  Woven
+        · number
+        · 7
+    b0.8  Woven
+        · number
+        · 8
+    b0.9  Woven
+        · number
+        · 9
+    b0.10 Woven
+        · number
+        · 10
+    b0.11 Woven
+        · number
+        · 11
+    b0.12 Woven
+        · number
+        · 12
+    b0.13 Woven
+        · number
+        · 13
+    b0.14 Woven
+        · number
+        · 14
+    b0.15 Woven
+        · number
+        · 15
+    b0.16 Woven
+        · number
+        · 16
+    b0.17 Woven
+        · number
+        · 17
+    b0.18 Woven
+        · number
+        · 18
+    b0.19 Woven
+        · number
+        · 19
+    b0.20 Woven
+        · number
+        · 20
+    b0.21 Woven
+        · number
+        · 21
+    b0.22 Woven
+        · number
+        · 22
+    b0.23 Woven
+        · number
+        · 23
+    b0.24 Woven
+        · number
+        · 24
+    b0.25 Woven
+        · number
+        · 25
+    b0.26 Woven
+        · number
+        · 26
+    b0.27 Woven
+        · number
+        · 27
+    b0.28 Woven
+        · number
+        · 28
+    b0.29 Woven
+        · number
+        · 29
+    b0.30 Woven
+        · number
+        · 30
+    b0.31 Woven
+        · number
+        · 31
+    b0.32 Woven
+        · number
+        · 32
+    b0.33 Woven
+        · number
+        · 33
+    b0.34 Woven
+        · number
+        · 34
+    b0.35 Woven
+        · number
+        · 35
+    b0.36 Woven
+        · number
+        · 36
+    b0.37 Woven
+        · number
+        · 37
+    b0.38 Woven
+        · number
+        · 38
+    b0.39 Woven
+        · number
+        · 39
+  0     When an r step "a"  [i0]
+    0.0   Ran for
+        · who
+        · Q05 row <row> a
+1 calls · interactions s4 · flow s4
+--- s5
+s5  Q05 An outline, a big Background composite fails by itself for one row › Q05 row b  [Failed]  0s
+at Features/Q5/Q05_Big.feature:6
+example: row=b
+✗ b0    Given q big composite fails by itself for row b
+    b0.0  Woven
+        · number
+        · 0
+    b0.1  Woven
+        · number
+        · 1
+    b0.2  Woven
+        · number
+        · 2
+    b0.3  Woven
+        · number
+        · 3
+    b0.4  Woven
+        · number
+        · 4
+    b0.5  Woven
+        · number
+        · 5
+    b0.6  Woven
+        · number
+        · 6
+    b0.7  Woven
+        · number
+        · 7
+    b0.8  Woven
+        · number
+        · 8
+    b0.9  Woven
+        · number
+        · 9
+    b0.10 Woven
+        · number
+        · 10
+    b0.11 Woven
+        · number
+        · 11
+    b0.12 Woven
+        · number
+        · 12
+    b0.13 Woven
+        · number
+        · 13
+    b0.14 Woven
+        · number
+        · 14
+    b0.15 Woven
+        · number
+        · 15
+    b0.16 Woven
+        · number
+        · 16
+    b0.17 Woven
+        · number
+        · 17
+    b0.18 Woven
+        · number
+        · 18
+    b0.19 Woven
+        · number
+        · 19
+    b0.20 Woven
+        · number
+        · 20
+    b0.21 Woven
+        · number
+        · 21
+    b0.22 Woven
+        · number
+        · 22
+    b0.23 Woven
+        · number
+        · 23
+    b0.24 Woven
+        · number
+        · 24
+    b0.25 Woven
+        · number
+        · 25
+    b0.26 Woven
+        · number
+        · 26
+    b0.27 Woven
+        · number
+        · 27
+    b0.28 Woven
+        · number
+        · 28
+    b0.29 Woven
+        · number
+        · 29
+    b0.30 Woven
+        · number
+        · 30
+    b0.31 Woven
+        · number
+        · 31
+    b0.32 Woven
+        · number
+        · 32
+    b0.33 Woven
+        · number
+        · 33
+    b0.34 Woven
+        · number
+        · 34
+    b0.35 Woven
+        · number
+        · 35
+    b0.36 Woven
+        · number
+        · 36
+    b0.37 Woven
+        · number
+        · 37
+    b0.38 Woven
+        · number
+        · 38
+    b0.39 Woven
+        · number
+        · 39
+0 calls · interactions s5 · flow s5
+--- s6
+s6  Q05 An outline, a big Background composite fails by itself for one row › Q05 row c  [Passed]  0.24s
+at Features/Q5/Q05_Big.feature:6
+example: row=c
+  b0    Given q big composite fails by itself for row b  0s
+    b0.0  Woven
+        · number
+        · 0
+    b0.1  Woven
+        · number
+        · 1
+    b0.2  Woven
+        · number
+        · 2
+    b0.3  Woven
+        · number
+        · 3
+    b0.4  Woven
+        · number
+        · 4
+    b0.5  Woven
+        · number
+        · 5
+    b0.6  Woven
+        · number
+        · 6
+    b0.7  Woven
+        · number
+        · 7
+    b0.8  Woven
+        · number
+        · 8
+    b0.9  Woven
+        · number
+        · 9
+    b0.10 Woven
+        · number
+        · 10
+    b0.11 Woven
+        · number
+        · 11
+    b0.12 Woven
+        · number
+        · 12
+    b0.13 Woven
+        · number
+        · 13
+    b0.14 Woven
+        · number
+        · 14
+    b0.15 Woven
+        · number
+        · 15
+    b0.16 Woven
+        · number
+        · 16
+    b0.17 Woven
+        · number
+        · 17
+    b0.18 Woven
+        · number
+        · 18
+    b0.19 Woven
+        · number
+        · 19
+    b0.20 Woven
+        · number
+        · 20
+    b0.21 Woven
+        · number
+        · 21
+    b0.22 Woven
+        · number
+        · 22
+    b0.23 Woven
+        · number
+        · 23
+    b0.24 Woven
+        · number
+        · 24
+    b0.25 Woven
+        · number
+        · 25
+    b0.26 Woven
+        · number
+        · 26
+    b0.27 Woven
+        · number
+        · 27
+    b0.28 Woven
+        · number
+        · 28
+    b0.29 Woven
+        · number
+        · 29
+    b0.30 Woven
+        · number
+        · 30
+    b0.31 Woven
+        · number
+        · 31
+    b0.32 Woven
+        · number
+        · 32
+    b0.33 Woven
+        · number
+        · 33
+    b0.34 Woven
+        · number
+        · 34
+    b0.35 Woven
+        · number
+        · 35
+    b0.36 Woven
+        · number
+        · 36
+    b0.37 Woven
+        · number
+        · 37
+    b0.38 Woven
+        · number
+        · 38
+    b0.39 Woven
+        · number
+        · 39
+  0     When an r step "c"  [i0]
+    0.0   Ran for
+        · who
+        · Q05 row <row> c
+1 calls · interactions s6 · flow s6
+--- s7
+s7  Q06 An outline whose first row fails in its Background, each row's nested step names it › Q06 row a  [Failed]  0s
+at Features/Q5/Q06_FirstRowFails.feature:7
+example: row=a
+  b0    Given q composite names its row
+    b0.0  Given q step with the word rowaword
+✗ b1    And q step fails for row a
+0 calls · interactions s7 · flow s7
+--- s8
+s8  Q06 An outline whose first row fails in its Background, each row's nested step names it › Q06 row b  [Passed]  0.24s
+at Features/Q5/Q06_FirstRowFails.feature:7
+example: row=b
+  b0    Given q composite names its row  0s
+    b0.0  Given q step with the word rowbword
+  b1    And q step fails for row a
+  0     When an r step "b"  [i0]
+    0.0   Ran for
+        · who
+        · Q06 row <row> b
+1 calls · interactions s8 · flow s8
+--- s9
+s9  Q06 An outline whose first row fails in its Background, each row's nested step names it › Q06 row c  [Passed]  0s
+at Features/Q5/Q06_FirstRowFails.feature:7
+example: row=c
+  b0    Given q composite names its row
+    b0.0  Given q step with the word rowcword
+  b1    And q step fails for row a
+  0     When an r step "c"  [i0]
+    0.0   Ran for
+        · who
+        · Q06 row <row> c
+1 calls · interactions s9 · flow s9
+--- s10
+s10  Q07 A Background step nobody defined › Q07 row a  [Skipped]  0s
+at Features/Q5/Q07_UndefinedInBackground.feature:6
+example: row=a
+0 calls · interactions s10 · flow s10
+--- s11
+s11  Q07 A Background step nobody defined › Q07 row b  [Skipped]  0.24s
+at Features/Q5/Q07_UndefinedInBackground.feature:6
+example: row=b
+0 calls · interactions s11 · flow s11
+--- s12
+s12  Q08 A nested step whose text has spaces around it › Q08 one  [Skipped]  0.09s
+at Features/Q5/Q08_Spaces.feature:3
+  0     Given q composite runs a step with spaces around its text  0.05s
+0 calls · interactions s12 · flow s12
+--- s13
+s13  Q09 The same nested text twice around a keyword woven namesake › Q09 one  [Passed]  0.08s
+at Features/Q5/Q09_TwiceAround.feature:3
+  0     Given q composite runs the same text twice around a woven namesake  0.05s  [i0]
+    0.0   Given q table step  0s
+        · table
+        · n
+        · first
+    0.1   When q table step  0s
+      0.1.0 Ran for  0s
+          · who
+          · Q09 one woven
+    0.2   Given q table step
+        · table
+        · n
+        · second
+1 calls · interactions s13 · flow s13
+--- s14
+s14  Q10 A nested step that is itself a keyword woven method › Q10 one  [Passed]  0.07s
+at Features/Q5/Q10_WovenAndDefined.feature:3
+  0     Given q composite runs a step woven and defined  0.04s
+    0.0   Given q step woven and defined  0s
+      0.0.0 Given q step woven and defined
+0 calls · interactions s14 · flow s14
+--- s15
+s15  Q11 Two outlines and a rule, several on one page › Q11 first row a  [Passed]  0s
+at Features/Q5/Q11_TwoOutlines.feature:6
+example: row=a
+  b0    Given an r step that fails for row b  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 first row <row>
+  0     When an r step "a"  [i2]
+    0.0   Ran for
+        · who
+        · Q11 first row <row> a
+2 calls · interactions s15 · flow s15
+--- s16
+s16  Q11 Two outlines and a rule, several on one page › Q11 first row b  [Failed]  0s
+at Features/Q5/Q11_TwoOutlines.feature:6
+example: row=b
+✗ b0    Given an r step that fails for row b  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 first row <row>
+1 calls · interactions s16 · flow s16
+--- s17
+s17  Q11 Two outlines and a rule, several on one page › Q11 ruled row a  [Passed]  0s
+at Features/Q5/Q11_TwoOutlines.feature:26
+example: row=a
+  b0    Given an r step that fails for row b  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 ruled row <row>
+  b1    Given an r step "in the rule"  [i2]
+    b1.0  Ran for
+        · who
+        · Q11 ruled row <row> in the rule
+  0     When an r step "a"  [i4]
+    0.0   Ran for
+        · who
+        · Q11 ruled row <row> a
+3 calls · interactions s17 · flow s17
+--- s18
+s18  Q11 Two outlines and a rule, several on one page › Q11 ruled row b  [Failed]  0.24s
+at Features/Q5/Q11_TwoOutlines.feature:26
+example: row=b
+✗ b0    Given an r step that fails for row b  0s  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 ruled row <row>
+1 calls · interactions s18 · flow s18
+--- s19
+s19  Q11 Two outlines and a rule, several on one page › Q11 second row a  [Passed]  0s
+at Features/Q5/Q11_TwoOutlines.feature:14
+example: row=a
+  b0    Given an r step that fails for row b  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 second row <row>
+  0     When an r step "a"  [i2]
+    0.0   Ran for
+        · who
+        · Q11 second row <row> a
+2 calls · interactions s19 · flow s19
+--- s20
+s20  Q11 Two outlines and a rule, several on one page › Q11 second row b  [Failed]  0.01s
+at Features/Q5/Q11_TwoOutlines.feature:14
+example: row=b
+✗ b0    Given an r step that fails for row b  [i0]
+    b0.0  Ran for
+        · who
+        · Q11 second row <row>
+1 calls · interactions s20 · flow s20
+Build succeeded.
+
+=== what a record does
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of gen.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+⚠ WARNING: 1 attachment(s) are not in the report: 1 not found when the report was drawn: <scratch>\review5-gen-final\pages\rows.html.reports\attachments\log.txt.
+Report diagnostics: 0 log entries across 0 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\review5-gen-final\pages\rows.html.reports  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+  13 failed — kronikol query failures <scratch>\review5-gen-final\pages\rows.html.reports
+    8bb11401599a4403  Orders › Pay
+    c0334e6f3e915dda  Orders › Pay
+    c90f2e1505028d20  Orders › Mixed
+    f14e849d17924ef1  Orders › Mixed
+    d5739b0919c0a22f  Orders › Mixed
+    52484dc7fc910834  Orders › Mixed
+    4024a7c07f835313  Orders › Composite
+    756bcbb4775fab3f  Orders › Composite
+    22ec7c55ce1252f8  Orders › FirstFails
+    dcb15afcc41fbc4c  Orders › SecondFails
+    ce84901be4db5125  Orders › OwnWord
+    6d0b100af30a5fbe  Orders › InARule
+    1c697a262b15e545  Orders › Plain fails
+  agents: read <scratch>\review5-gen-final\pages\rows.html.reports\CLAUDE.md first; never open TestRunReport.krkl
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of gen.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+⚠ WARNING: 1 attachment(s) are not in the report: 1 not found when the report was drawn: <scratch>\review5-gen-final\pages\rows-inline.html.reports\attachments\log.txt.
+Report diagnostics: 0 log entries across 0 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\review5-gen-final\pages\rows-inline.html.reports  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+  13 failed — kronikol query failures <scratch>\review5-gen-final\pages\rows-inline.html.reports
+    8bb11401599a4403  Orders › Pay
+    c0334e6f3e915dda  Orders › Pay
+    c90f2e1505028d20  Orders › Mixed
+    f14e849d17924ef1  Orders › Mixed
+    d5739b0919c0a22f  Orders › Mixed
+    52484dc7fc910834  Orders › Mixed
+    4024a7c07f835313  Orders › Composite
+    756bcbb4775fab3f  Orders › Composite
+    22ec7c55ce1252f8  Orders › FirstFails
+    dcb15afcc41fbc4c  Orders › SecondFails
+    ce84901be4db5125  Orders › OwnWord
+    6d0b100af30a5fbe  Orders › InARule
+    1c697a262b15e545  Orders › Plain fails
+  agents: read <scratch>\review5-gen-final\pages\rows-inline.html.reports\CLAUDE.md first; never open TestRunReport.krkl
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of gen.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+⚠ WARNING: 1 attachment(s) are not in the report: 1 not found when the report was drawn: <scratch>\review5-gen-final\pages\rows-stepsclosed.html.reports\attachments\log.txt.
+Report diagnostics: 0 log entries across 0 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\review5-gen-final\pages\rows-stepsclosed.html.reports  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+  13 failed — kronikol query failures <scratch>\review5-gen-final\pages\rows-stepsclosed.html.reports
+    8bb11401599a4403  Orders › Pay
+    c0334e6f3e915dda  Orders › Pay
+    c90f2e1505028d20  Orders › Mixed
+    f14e849d17924ef1  Orders › Mixed
+    d5739b0919c0a22f  Orders › Mixed
+    52484dc7fc910834  Orders › Mixed
+    4024a7c07f835313  Orders › Composite
+    756bcbb4775fab3f  Orders › Composite
+    22ec7c55ce1252f8  Orders › FirstFails
+    dcb15afcc41fbc4c  Orders › SecondFails
+    ce84901be4db5125  Orders › OwnWord
+    6d0b100af30a5fbe  Orders › InARule
+    1c697a262b15e545  Orders › Plain fails
+  agents: read <scratch>\review5-gen-final\pages\rows-stepsclosed.html.reports\CLAUDE.md first; never open TestRunReport.krkl
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of gen.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+⚠ WARNING: 1 attachment(s) are not in the report: 1 not found when the report was drawn: <scratch>\review5-gen-final\pages\rows-bgclosed.html.reports\attachments\log.txt.
+Report diagnostics: 0 log entries across 0 test(s).
+Warning: InternalFlowSpanStore has 0 spans — activity diagrams will be empty.
+Kronikol: reports written to <scratch>\review5-gen-final\pages\rows-bgclosed.html.reports  (TestRunReport.html · TestRunReport.krkl · Failures.md · TestRunReport.labs.html)
+  13 failed — kronikol query failures <scratch>\review5-gen-final\pages\rows-bgclosed.html.reports
+    8bb11401599a4403  Orders › Pay
+    c0334e6f3e915dda  Orders › Pay
+    c90f2e1505028d20  Orders › Mixed
+    f14e849d17924ef1  Orders › Mixed
+    d5739b0919c0a22f  Orders › Mixed
+    52484dc7fc910834  Orders › Mixed
+    4024a7c07f835313  Orders › Composite
+    756bcbb4775fab3f  Orders › Composite
+    22ec7c55ce1252f8  Orders › FirstFails
+    dcb15afcc41fbc4c  Orders › SecondFails
+    ce84901be4db5125  Orders › OwnWord
+    6d0b100af30a5fbe  Orders › InARule
+    1c697a262b15e545  Orders › Plain fails
+  agents: read <scratch>\review5-gen-final\pages\rows-bgclosed.html.reports\CLAUDE.md first; never open TestRunReport.krkl
+record | flag | == BuiltIn | ToString == BuiltIn's | hash == | section in a failing report
+BuiltIn | - | True | True | True | [] x1
+new() | - | True | True | True | [] x1
+new() { HeadersShown = true } | - | False | False | False | [] x1
+new() { BackgroundStepsOpen = false } | - | True | True | True | [] x1
+new() { BackgroundStepsOpen = true } | - | False | False | False | [open] x1
+BuiltIn with { HeadersShown = true } | - | False | False | False | [] x1
+BuiltIn with { BackgroundStepsOpen = false } | - | True | True | True | [] x1
+BuiltIn with { BackgroundStepsOpen = true } | - | False | False | False | [open] x1
+BuiltIn with { BackgroundStepsOpen = BuiltIn.BackgroundStepsOpen } | - | True | True | True | [] x1
+(BuiltIn with { BackgroundStepsOpen = true }) with { BackgroundStepsOpen = false } | - | True | True | True | [] x1
+Resolve(unset, unset) run | - | True | True | True | [] x1
+Resolve(unset, unset) spec | - | True | True | True | [] x1
+Resolve(false, unset) run | - | True | True | True | [] x1
+Resolve(false, unset) spec | - | True | True | True | [] x1
+Resolve(true, unset) run | - | False | False | False | [open] x1
+Resolve(true, unset) spec | - | False | False | False | [open] x1
+Resolve(unset, false) run | - | True | True | True | [] x1
+Resolve(unset, false) spec | - | True | True | True | [] x1
+Resolve(unset, true) spec | - | False | False | False | [open] x1
+Resolve(true, false) spec | - | True | True | True | [] x1
+Resolve(false, true) spec | - | False | False | False | [open] x1
+Resolve(unset) with { HeadersShown = true } | - | False | False | False | [] x1
+JSON round trip of BuiltIn | - | True | True | True | [] x1
+JSON round trip of Resolve(unset) | - | True | True | True | [] x1
+public properties copied by reflection from BuiltIn | - | True | True | True | [] x1
+toggleDefaults omitted | - | - | - | - | [] x1
+Specifications page, unset | [] x1 | status icon shown: True | failure-result: True
+Specifications page, run false | [] x1 | status icon shown: True | failure-result: True
+Specifications page, spec false | [] x1 | status icon shown: True | failure-result: True
+Specifications page, blank on failure | length 0
+Specifications page, scenario passed with a failed Background step | [] x1
+composite of 3, failed by itself: file 509909 bytes, plain 1298561, <details class="step step-collapsible" open> data-steps:False | passed: file 509669, plain 1298027
+composite of 200, failed by itself: file 512573 bytes, plain 1354743, <details class="step step-collapsible" open> data-steps:False | passed: file 512117, plain 1313342
+composite of 5000, failed by itself: file 530187 bytes, plain 2717525, <details class="step step-collapsible" open> data-steps:False | passed: file 530651, plain 1680137
+storm 500 x 60: file 640124, plain 11843366, data-steps holders 0
+storm 2000 x 20: file 785514, plain 22144022, data-steps holders 0
+
+=== rows: the reader's choices across rows, section by section
+
+## Pay: no reader
+start row 0: background=shut steps=open
+click row 1 -> row 1: background*=open failure=open
+click row 0 -> row 0: background=shut steps=open
+click row 2 -> row 2: background=shut steps=open
+click row 3 -> row 3: background*=open failure=open
+click row 0 -> row 0: background=shut steps=open
+
+## Pay: reader opens a, goes through the failed row to c and back
+start row 0: background=shut steps=open
+reader x:scenario-background -> row 0: background=open steps=open
+click row 1 -> row 1: background*=open failure=open
+click row 2 -> row 2: background=open steps=open
+click row 0 -> row 0: background=open steps=open
+
+## Pay: reader opens a, straight to c
+start row 0: background=shut steps=open
+reader x:scenario-background -> row 0: background=open steps=open
+click row 2 -> row 2: background=open steps=open
+click row 0 -> row 0: background=open steps=open
+
+## Pay: reader closes b, on to d, a, back to b
+start row 0: background=shut steps=open
+click row 1 -> row 1: background*=open failure=open
+reader x:scenario-background -> row 1: background*=shut failure=open
+click row 3 -> row 3: background*=open failure=open
+click row 0 -> row 0: background=shut steps=open
+click row 1 -> row 1: background*=shut failure=open
+
+## Pay: reader closes Steps on a, through the failed row
+start row 0: background=shut steps=open
+reader x:scenario-steps -> row 0: background=shut steps=shut
+click row 1 -> row 1: background*=open failure=open
+click row 2 -> row 2: background=shut steps=shut
+
+## Pay: reader opens c, closes c, to b, back to c
+start row 0: background=shut steps=open
+click row 2 -> row 2: background=shut steps=open
+reader x:scenario-background -> row 2: background=open steps=open
+reader x:scenario-background -> row 2: background=shut steps=open
+click row 1 -> row 1: background*=open failure=open
+click row 2 -> row 2: background=shut steps=open
+
+## Mixed: each row in order
+start row 0: background=shut steps=open
+click row 1 -> row 1: steps=open failure=open
+click row 2 -> row 2: failure=open
+click row 3 -> row 3: background=shut steps=open failure=open
+click row 4 -> row 4: background*=open failure=open
+click row 5 -> row 5: background=shut steps=open
+click row 0 -> row 0: background=shut steps=open
+
+## Mixed: reader closes a Failure Result
+start row 0: background=shut steps=open
+click row 1 -> row 1: steps=open failure=open
+reader x:failure-result -> row 1: steps=open failure=shut
+click row 2 -> row 2: failure=shut
+click row 3 -> row 3: background=shut steps=open failure=shut
+click row 4 -> row 4: background*=open failure=shut
+click row 5 -> row 5: background=shut steps=open
+click row 0 -> row 0: background=shut steps=open
+
+## Mixed: reader closes Steps on a
+start row 0: background=shut steps=open
+reader x:scenario-steps -> row 0: background=shut steps=shut
+click row 1 -> row 1: steps=shut failure=open
+click row 2 -> row 2: failure=open
+click row 3 -> row 3: background=shut steps=shut failure=open
+click row 4 -> row 4: background*=open failure=open
+click row 5 -> row 5: background=shut steps=shut
+
+## Mixed: reader opens the Background on a
+start row 0: background=shut steps=open
+reader x:scenario-background -> row 0: background=open steps=open
+click row 1 -> row 1: steps=open failure=open
+click row 2 -> row 2: failure=open
+click row 3 -> row 3: background=open steps=open failure=open
+click row 4 -> row 4: background*=open failure=open
+click row 5 -> row 5: background=open steps=open
+
+## Composite: each row
+start row 0: background=shut bgComposite=shut steps=open
+click row 1 -> row 1: background*=open bgComposite=open failure=open
+click row 2 -> row 2: background*=open bgComposite=open failure=open
+click row 3 -> row 3: background=shut bgComposite=shut steps=open
+click row 0 -> row 0: background=shut bgComposite=shut steps=open
+
+## Composite: reader opens a composite on a
+start row 0: background=shut bgComposite=shut steps=open
+reader c:0 -> row 0: background=shut bgComposite=open steps=open
+click row 1 -> row 1: background*=open bgComposite=open failure=open
+click row 2 -> row 2: background*=open bgComposite=open failure=open
+click row 3 -> row 3: background=shut bgComposite=open steps=open
+
+## InARule: a to b and back
+start row 0: background=shut steps=open
+click row 1 -> row 1: background*=open failure=open
+click row 0 -> row 0: background=shut steps=open
+
+## FirstFails: the first row fails in a composite by itself
+start row 0: background*=open bgComposite=open failure=open
+click row 1 -> row 1: background=shut bgComposite=shut steps=open
+click row 2 -> row 2: background=shut bgComposite=shut steps=open
+click row 0 -> row 0: background*=open bgComposite=open failure=open
+
+=== rows: the same with steps inline
+## Mixed: reader closes Steps on a
+start row 0: steps=open
+reader x:scenario-steps -> row 0: steps=shut
+click row 1 -> row 1: steps=shut failure=open
+click row 2 -> row 2: failure=open
+click row 3 -> row 3: steps=shut failure=open
+click row 4 -> row 4: steps=shut failure=open
+click row 5 -> row 5: steps=shut
+
+=== filter search: a single match in a later row, the first row holding a failure
+before {"scenarioOpen":false,"shown":"row 0","states":"background*=open bgComposite=open failure-result=open","activeRow":"1aFailed","matchHasBoxes":null,"matchVisible":null}
+searched {"scenarioOpen":true,"shown":"row 1","states":"background=open bgComposite=shut steps=open","activeRow":"2bPassed","matchHasBoxes":true,"matchVisible":true}
+emptied {"scenarioOpen":false,"shown":"row 0","states":"background*=open bgComposite=open failure-result=open","activeRow":"1aFailed","matchHasBoxes":null,"matchVisible":null}
+
+=== a details of the class constructor
+constructor {"before":"row 0","after":"row 2","active":2} no page error
+toString {"before":"row 0","after":"row 2","active":2} no page error
+plain-class {"before":"row 0","after":"row 2","active":2} no page error

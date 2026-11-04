@@ -1,0 +1,7 @@
+Public surface of Kronikol.dll and Kronikol.ReqNRoll.Core.dll, the NuGet cache's published 5.28.2 against each build, by probes/public-api/PublicApi.cs.
+--- r1 against published 5.28.2: 5605 and 5605 lines
+no difference
+--- r1-with-r4 against published 5.28.2: 5605 and 5605 lines
+no difference
+--- r1-with-r2 against published 5.28.2: 5605 and 5605 lines
+no difference

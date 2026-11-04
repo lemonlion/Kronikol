@@ -1,0 +1,13 @@
+
+## CallRows: J1 Specifications page of a green run: search, reader closes Background, next keystroke, hand switch, emptied (Specifications.html)
+   both start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=- | searchSections=0 kept=
+   both search "alphawor": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=1 kept=
+   both reader toggles scenario-background: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=1 kept=
+   both search "alphaword": OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 diag=+ | searchSections=1 kept=
+   both reader clicks row 1: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] row=1 diag=+ | searchSections=1 kept={background:false,steps:true}
+   both search "": shut (feature shut) r0[bg- st+] *r1[bg- st+] r2[bg- st+] row=1 diag=- | searchSections=0 kept={background:false,steps:true}
+
+## CallPlain: J2 Specifications page of a green run: plain (Specifications.html)
+   both start: shut (feature shut) [bg- st+] diag=- | searchSections=0 kept=
+   both search "plainword": OPEN [bg+ st+] diag=+ | searchSections=1 kept=
+   both search "": shut (feature shut) [bg- st+] diag=- | searchSections=0 kept=

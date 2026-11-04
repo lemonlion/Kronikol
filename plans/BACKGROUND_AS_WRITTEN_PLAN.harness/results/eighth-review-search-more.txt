@@ -1,0 +1,65 @@
+
+## Move: A6 reader closes Steps on a, match on a, hand switch, emptied, tour (rows.html)
+ 5.28.2 start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept=
+ 5.28.2 reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept=
+ 5.28.2 reader toggles scenario-steps: OPEN *r0[bg- st-] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch reader toggles scenario-steps: OPEN *r0[bg- st-] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept=
+ 5.28.2 search "firstword": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch search "firstword": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=2 kept=
+ 5.28.2 reader clicks row 1: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch reader clicks row 1: OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=2 kept={background:true,steps:true}
+ 5.28.2 search "": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch search "": OPEN r0[bg- st-] *r1[bg+ st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=0 kept={background:true,steps:true}
+ 5.28.2 reader clicks row 2: OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] row=2 | searchSections=? kept=
+  patch reader clicks row 2: OPEN r0[bg- st-] r1[bg+ st+] *r2[bg+ st+] r3[bg- st+] row=2 | searchSections=0 kept={background:true,steps:true}
+ 5.28.2 reader clicks row 0: OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch reader clicks row 0: OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] r3[bg- st+] row=0 | searchSections=0 kept={background:true,steps:true}
+
+## Narrow: H1 several rows match, reader moves to a later match, next keystroke (rows.html)
+ 5.28.2 start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] row=0 | searchSections=0 kept=
+ 5.28.2 search "sku": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 | searchSections=? kept=
+  patch search "sku": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] row=0 | searchSections=1 kept=
+ 5.28.2 reader clicks row 2: OPEN r0[bg+ st+] r1[bg- st+] *r2[bg+ st+] row=2 | searchSections=? kept=
+  patch reader clicks row 2: OPEN r0[bg+ st+] r1[bg- st+] *r2[bg+ st+] row=2 | searchSections=1 kept={background:true,steps:true}
+ 5.28.2 search "sku1": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg+ st+] row=0 | searchSections=? kept=
+  patch search "sku1": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg+ st+] row=0 | searchSections=0 kept={background:true,steps:true}
+ 5.28.2 search "": shut (feature shut) r0[bg+ st+] r1[bg- st+] *r2[bg+ st+] row=2 | searchSections=? kept=
+  patch search "": shut (feature shut) r0[bg+ st+] r1[bg- st+] *r2[bg+ st+] row=2 | searchSections=0 kept={background:true,steps:true}
+
+## Blocks: I1 word in the second block, emptied (rows.html)
+ 5.28.2 start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept=
+ 5.28.2 search "blockword": OPEN r0[bg+ st+] r1[bg- st+] r2[bg- st+] *r3[bg+ st+] row=3 | searchSections=? kept=
+  patch search "blockword": OPEN r0[bg- st+] r1[bg- st+] r2[bg- st+] *r3[bg+ st+] row=3 | searchSections=1 kept={background:false,steps:true}
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg+ st+] row=0 | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept={background:false,steps:true}
+   both eval:[...document.querySelectorAll("tr.row-active")].map(r=>r.getAttribute("data-row-idx")+":"+r.closest("table").querySelectorAll("tbody tr").length).join(" "): 0:6 0:4 0:3 0:3 0:4 0:3 0:2 0:3 0:2 0:2 0:2 0:3
+
+## Blocks: I2 word in the second block, emptied, reader clicks the first row, same word again (rows.html)
+ 5.28.2 start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept=
+ 5.28.2 search "blockword": OPEN r0[bg+ st+] r1[bg- st+] r2[bg- st+] *r3[bg+ st+] row=3 | searchSections=? kept=
+  patch search "blockword": OPEN r0[bg- st+] r1[bg- st+] r2[bg- st+] *r3[bg+ st+] row=3 | searchSections=1 kept={background:false,steps:true}
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg+ st+] row=0 | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept={background:false,steps:true}
+ 5.28.2 reader clicks row 0: shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg+ st+] row=0 | searchSections=? kept=
+  patch reader clicks row 0: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept={background:false,steps:true}
+ 5.28.2 search "blockword": OPEN r0[bg+ st+] r1[bg- st+] r2[bg- st+] *r3[bg+ st+] row=3 | searchSections=? kept=
+  patch search "blockword": OPEN r0[bg- st+] r1[bg- st+] r2[bg- st+] *r3[bg+ st+] row=3 | searchSections=1 kept={background:false,steps:true}
+ 5.28.2 search "": shut (feature shut) *r0[bg+ st+] r1[bg- st+] r2[bg- st+] r3[bg+ st+] row=0 | searchSections=? kept=
+  patch search "": shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept={background:false,steps:true}
+
+## Blocks: I3 reader on a, word in the second block (rows.html)
+ 5.28.2 start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept=
+ 5.28.2 reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=? kept=
+  patch reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] r3[bg- st+] row=0 | searchSections=0 kept=
+ 5.28.2 reader clicks row 1: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch reader clicks row 1: OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=0 kept={background:false,steps:true}
+ 5.28.2 search "blockword": OPEN r0[bg+ st+] r1[bg- st+] r2[bg- st+] *r3[bg- st+] row=3 | searchSections=? kept=
+  patch search "blockword": OPEN r0[bg- st+] r1[bg- st+] r2[bg- st+] *r3[bg+ st+] row=3 | searchSections=1 kept={background:false,steps:true}
+ 5.28.2 search "": OPEN r0[bg+ st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=? kept=
+  patch search "": OPEN r0[bg- st+] *r1[bg- st+] r2[bg- st+] r3[bg- st+] row=1 | searchSections=0 kept={background:false,steps:true}

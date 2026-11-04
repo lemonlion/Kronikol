@@ -1,0 +1,245 @@
+written = leading steps the feature file's Background gives this scenario; marked = steps the report addresses b0, b1, ...; borrowed = steps whose sub-step names another scenario
+
+scenario                    result written marked steps borrowed verdict
+01 one                      pass   1       0      3     0        MISSED
+01 two                      pass   1       0      3     0        MISSED
+02 one                      pass   1       0      4     0        MISSED
+02 two                      pass   1       0      4     0        MISSED
+03 one                      pass   1       1      2     0        ok
+03 two                      pass   1       1      2     0        ok
+04 one                      pass   0       2      3     0        INVENTED
+04 two                      pass   0       2      3     0        INVENTED
+05 row APPLE                pass   0       3      3     0        INVENTED
+05 row BANANA               pass   0       3      3     0        INVENTED
+06 only                     pass   1       0      2     0        MISSED
+07 a one                    pass   2       0      4     0        MISSED
+07 a two                    pass   2       0      4     0        MISSED
+07 b one                    pass   1       0      3     0        MISSED
+07 b two                    pass   1       0      3     0        MISSED
+08 breaks                   pass   1       0      3     0        MISSED
+08 holds                    pass   1       0      3     0        MISSED
+09 one                      pass   0       3      4     0        INVENTED
+09 two                      pass   0       3      4     0        INVENTED
+10 row x                    pass   1       0      3     0        MISSED
+10 row y                    pass   1       0      3     0        MISSED
+11 one                      pass   1       0      4     0        MISSED
+11 two                      pass   1       0      4     0        MISSED
+12 eins                     pass   1       0      3     0        MISSED
+12 zwei                     pass   1       0      3     0        MISSED
+13 one                      pass   1       0      3     0        MISSED
+13 two                      pass   1       0      3     0        MISSED
+14 one                      pass   0       1      2     0        INVENTED
+14 two                      pass   0       1      2     0        INVENTED
+15 empty                    pass   1       0      1     0        MISSED
+15 full                     pass   1       0      3     0        MISSED
+16 from file a              pass   1       1      2     0        ok
+16 from file b              pass   0       1      2     0        INVENTED
+17 breaks                   FAIL   1       1      1     0        ok
+17 holds                    pass   1       1      2     0        ok
+18 one                      pass   0       1      2     0        INVENTED
+18 two                      pass   0       1      2     0        INVENTED
+19 one                      pass   1       0      3     0        MISSED
+19 two                      pass   1       0      3     0        MISSED
+20 row x                    pass   1       0      3     0        MISSED
+20 row y                    pass   1       0      3     0        MISSED
+
+The steps:
+
+01 one [pass]
+    0    Given a logged in customer  <- 01 one
+    1    When the customer acts "one"  <- 01 one
+    2    Then the outcome is "one"  <- 01 one
+
+01 two [pass]
+    0    Given a logged in customer  <- 01 two
+    1    When the customer acts "two"  <- 01 two
+    2    Then the outcome is "two"  <- 01 two
+
+02 one [pass]
+    0    Given a logged in customer  <- 02 one
+    1    Given the basket holds "apple"  <- 02 one
+    2    When the customer acts "one"  <- 02 one
+    3    Then the outcome is "one"  <- 02 one
+
+02 two [pass]
+    0    Given a logged in customer  <- 02 two
+    1    Given the basket holds "pear"  <- 02 two
+    2    When the customer acts "two"  <- 02 two
+    3    Then the outcome is "two"  <- 02 two
+
+03 one [pass]
+    b0   Given a logged in customer  <- 03 one
+    0    Then the outcome is "one"  <- 03 one
+
+03 two [pass]
+    b0   Given a logged in customer  <- 03 two
+    0    Then the outcome is "two"  <- 03 two
+
+04 one [pass]
+    b0   Given the basket holds  <- 04 one table:APPLE
+    b1   When the customer acts "the same"  <- 04 one
+    0    Then the outcome is "one"  <- 04 one
+
+04 two [pass]
+    b0   Given the basket holds  <- 04 two table:BANANA
+    b1   When the customer acts "the same"  <- 04 two
+    0    Then the outcome is "two"  <- 04 two
+
+05 row APPLE [pass]
+    b0   Given the basket holds  <- 05 row <sku> #APPLE table:APPLE
+    b1   When the customer acts "the same"  <- 05 row <sku> #APPLE
+    b2   Then the outcome is "the same"  <- 05 row <sku> #APPLE
+
+05 row BANANA [pass]
+    b0   Given the basket holds  <- 05 row <sku> #BANANA table:BANANA
+    b1   When the customer acts "the same"  <- 05 row <sku> #BANANA
+    b2   Then the outcome is "the same"  <- 05 row <sku> #BANANA
+
+06 only [pass]
+    0    Given a logged in customer  <- 06 only
+    1    Then the outcome is "only"  <- 06 only
+
+07 a one [pass]
+    0    Given a logged in customer  <- 07 a one
+    1    Given the address is checked  <- 07 a one
+    2    When the customer acts "a one"  <- 07 a one
+    3    Then the outcome is "a one"  <- 07 a one
+
+07 a two [pass]
+    0    Given a logged in customer  <- 07 a two
+    1    Given the address is checked  <- 07 a two
+    2    When the customer acts "a two"  <- 07 a two
+    3    Then the outcome is "a two"  <- 07 a two
+
+07 b one [pass]
+    0    Given a logged in customer  <- 07 b one
+    1    When the customer acts "b one"  <- 07 b one
+    2    Then the outcome is "b one"  <- 07 b one
+
+07 b two [pass]
+    0    Given a logged in customer  <- 07 b two
+    1    When the customer acts "b two"  <- 07 b two
+    2    Then the outcome is "b two"  <- 07 b two
+
+08 breaks [pass]
+    0    Given a logged in customer  <- 08 breaks
+    1    When the customer acts "breaks"  <- 08 breaks
+    2    Then the outcome is "breaks"  <- 08 breaks
+
+08 holds [pass]
+    0    Given a logged in customer  <- 08 holds
+    1    When the customer acts "holds"  <- 08 holds
+    2    Then the outcome is "holds"  <- 08 holds
+
+09 one [pass]
+    b0   Given a logged in customer  <- 09 one
+    b1   And the address is checked  <- 09 one
+    b2   When the customer acts "the same"  <- 09 one
+    0    Then the outcome is "one"  <- 09 one
+
+09 two [pass]
+    b0   Given a logged in customer  <- 09 two
+    b1   And the address is checked  <- 09 two
+    b2   When the customer acts "the same"  <- 09 two
+    0    Then the outcome is "two"  <- 09 two
+
+10 row x [pass]
+    0    Given a logged in customer  <- 10 row <what> #x
+    1    When the customer acts "x"  <- 10 row <what> #x
+    2    Then the outcome is "x"  <- 10 row <what> #x
+
+10 row y [pass]
+    0    Given a logged in customer  <- 10 row <what> #y
+    1    When the customer acts "y"  <- 10 row <what> #y
+    2    Then the outcome is "y"  <- 10 row <what> #y
+
+11 one [pass]
+    0    Given the basket holds "from the composite"  <- 11 one
+    1    Given a composite step calls another  <- 11 one
+    2    When the customer acts "one"  <- 11 one
+    3    Then the outcome is "one"  <- None
+
+11 two [pass]
+    0    Given the basket holds "from the composite"  <- 11 two
+    1    Given a composite step calls another  <- 11 two
+    2    When the customer acts "two"  <- 11 two
+    3    Then the outcome is "two"  <- None
+
+12 eins [pass]
+    0    Given a logged in customer  <- 12 eins
+    1    When the customer acts "eins"  <- 12 eins
+    2    Then the outcome is "eins"  <- 12 eins
+
+12 zwei [pass]
+    0    Given a logged in customer  <- 12 zwei
+    1    When the customer acts "zwei"  <- 12 zwei
+    2    Then the outcome is "zwei"  <- 12 zwei
+
+13 one [pass]
+    0    And a logged in customer  <- 13 one
+    1    And the basket holds "apple"  <- 13 one
+    2    Then the outcome is "one"  <- 13 one
+
+13 two [pass]
+    0    And a logged in customer  <- 13 two
+    1    And the basket holds "pear"  <- 13 two
+    2    Then the outcome is "two"  <- 13 two
+
+14 one [pass]
+    b0   Given a note says  <- 14 one note:apple
+    0    Then the outcome is "one"  <- 14 one
+
+14 two [pass]
+    b0   Given a note says  <- 14 two note:banana
+    0    Then the outcome is "two"  <- 14 two
+
+15 empty [pass]
+    0    Given a logged in customer  <- 15 empty
+
+15 full [pass]
+    0    Given a logged in customer  <- 15 full
+    1    When the customer acts "full"  <- 15 full
+    2    Then the outcome is "full"  <- 15 full
+
+16 from file a [pass]
+    b0   Given a logged in customer  <- 16 from file a
+    0    Then the outcome is "a"  <- 16 from file a
+
+16 from file b [pass]
+    b0   Given a logged in customer  <- 16 from file b
+    0    Then the outcome is "b"  <- 16 from file b
+
+17 breaks [FAIL]
+  ✗ b0   Given a logged in customer  <- 17 breaks
+
+17 holds [pass]
+    b0   Given a logged in customer  <- 17 holds
+    0    Then the outcome is "holds"  <- 17 holds
+
+18 one [pass]
+    b0   Given a screenshot is attached  <- 18 one
+    0    Then the outcome is "one"  <- 18 one
+
+18 two [pass]
+    b0   Given a screenshot is attached  <- 18 two
+    0    Then the outcome is "two"  <- 18 two
+
+19 one [pass]
+    0    Given the basket holds  <- 19 one table:APPLE
+    1    When the customer acts "one"  <- 19 one
+    2    Then the outcome is "one"  <- 19 one
+
+19 two [pass]
+    0    Given the basket holds  <- 19 two table:APPLE
+    1    When the customer acts "two"  <- 19 two
+    2    Then the outcome is "two"  <- 19 two
+
+20 row x [pass]
+    0    Given the basket holds "<what>"  <- 20 row <what> #x
+    1    When the customer acts "x"  <- 20 row <what> #x
+    2    Then the outcome is "x"  <- 20 row <what> #x
+
+20 row y [pass]
+    0    Given the basket holds "<what>"  <- 20 row <what> #y
+    1    When the customer acts "y"  <- 20 row <what> #y
+    2    Then the outcome is "y"  <- 20 row <what> #y

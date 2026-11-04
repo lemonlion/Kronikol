@@ -1,0 +1,8 @@
+merged/rows.html {"failedSteps":2,"whereTheyAre":{"scenario-steps open":2},"backgroundSections":0,"holdsFailure":0} 
+merged/run-report.html {"failedSteps":2,"whereTheyAre":{"scenario-background open held":2},"backgroundSections":3,"holdsFailure":1} 
+page.waitForFunction: Timeout 60000ms exceeded.
+    at C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-6\routes.js:13:20 {
+  log: [],
+  name: 'TimeoutError'
+}
+ingested/TestRunReport.html {"failedSteps":1,"whereTheyAre":{"scenario-steps open":1},"backgroundSections":0,"holdsFailure":0} 

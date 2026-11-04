@@ -1,0 +1,36 @@
+76,78c76,78
+<   1     Given a registered customer
+<   2     When the customer places the order
+<   3     Then the order is confirmed
+---
+> - 1     Given a registered customer
+> - 2     When the customer places the order
+> - 3     Then the order is confirmed
+88,89c88,89
+<   1     When the customer places the order
+<   2     Then the order is confirmed
+---
+> - 1     When the customer places the order
+> - 2     Then the order is confirmed
+96c96
+<   2     Then the order is confirmed
+---
+> - 2     Then the order is confirmed
+165c165
+<   3     Then the order is confirmed
+---
+> - 3     Then the order is confirmed
+220,221c220,221
+<   1     When nobody has written this step
+<   2     Then the order is confirmed
+---
+> - 1     When nobody has written this step
+> - 2     Then the order is confirmed
+316,318c316,318
+<     0.1   Given a registered customer
+<   1     When the customer places the order
+<   2     Then the order is confirmed
+---
+>   - 0.1   Given a registered customer
+> - 1     When the customer places the order
+> - 2     Then the order is confirmed

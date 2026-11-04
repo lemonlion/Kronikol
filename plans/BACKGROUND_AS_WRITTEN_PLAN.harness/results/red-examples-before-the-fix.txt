@@ -1,0 +1,7 @@
+# The example facts on main with do-nothing members standing in, 2026-11-04.
+Failed!  - Failed:     5, Passed:     7, Skipped:     0, Total:    12, Duration: 1 m 12 s - Example.Api.Tests.Integration.dll (net
+Example.Api.Tests.Integration.Tests.ReqNRollDuplicateStepsTests.A_Background_is_what_the_feature_file_writes_and_a_step_a_step_ran_is_no_row(projectName: "Example.Api.Tests.Component.ReqNRoll.xUnit2")
+Example.Api.Tests.Integration.Tests.ReqNRollDuplicateStepsTests.A_Background_is_what_the_feature_file_writes_and_a_step_a_step_ran_is_no_row(projectName: "Example.Api.Tests.Component.ReqNRoll.xUnit3")
+Example.Api.Tests.Integration.Tests.ReqNRollDuplicateStepsTests.A_failure_is_read_on_the_step_that_failed(projectName: "Example.Api.Tests.Component.ReqNRoll.xUnit2")
+Example.Api.Tests.Integration.Tests.ReqNRollDuplicateStepsTests.A_failure_is_read_on_the_step_that_failed(projectName: "Example.Api.Tests.Component.ReqNRoll.xUnit3")
+Example.Api.Tests.Integration.Tests.ReqNRollDuplicateStepsTests.Background_scenarios_record_exactly_the_feature_file_steps(projectName: "Example.Api.Tests.Component.ReqNRoll.xUnit3")

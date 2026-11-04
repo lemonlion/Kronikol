@@ -1,0 +1,11 @@
+prototype R2, the And fails in 09 two: Then and When listed as skipped after failure
+  headings: [["","Scenarios","Steps","Duration"],["Feature","Total","Passed","Failed","Skipped","Total","Passed","Failed","Skipped","Total","Avg","Longest"]]
+  09 Outcome decides the layout | 2 | 1 | 1 | 0 | 14 | 11 | 1 | 2
+
+
+
+
+
+Final prototype with R2 on 5.28.2, 2026-11-04
+prototype-r2
+  09 Outcome decides the layout | 2 | 1 | 1 | 0 | 15 | 13 | 1 | 1

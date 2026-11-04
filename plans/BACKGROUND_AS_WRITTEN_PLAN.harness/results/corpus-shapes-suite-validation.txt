@@ -1,0 +1,29 @@
+   20  features
+   39  scenarios (rows counted)
+   14  features writing a Background
+    8  scenarios whose steps a report replaces with the first's
+
+First step a scenario writes after a feature-level Background:
+   15  When
+    6  Then
+    2  Given
+    2  And
+    1  (none)
+
+The detector against what is written, every scenario passing:
+   23  MISSED: written, not marked
+   11  INVENTED: marked, none written
+    5  right: as written
+
+INVENTED: marked, none written, first 12:
+  Features\04_NoBackgroundSharedGivenWhen.feature: 04 one (written 0, marked 2)
+  Features\04_NoBackgroundSharedGivenWhen.feature: 04 two (written 0, marked 2)
+  Features\05_NoBackgroundOutlineTable.feature: 05 row <sku> (written 0, marked 3)
+  Features\05_NoBackgroundOutlineTable.feature: 05 row <sku> (written 0, marked 3)
+  Features\09_OutcomeFlipsTheLayout.feature: 09 one (written 0, marked 3)
+  Features\09_OutcomeFlipsTheLayout.feature: 09 two (written 0, marked 3)
+  Features\14_DocStringDiffers.feature: 14 one (written 0, marked 1)
+  Features\14_DocStringDiffers.feature: 14 two (written 0, marked 1)
+  Features\18_SharedStepAttaches.feature: 18 one (written 0, marked 1)
+  Features\18_SharedStepAttaches.feature: 18 two (written 0, marked 1)
+  Features\FileA\16_TwoFilesOneTitle.feature + Features\FileB\16_TwoFilesOneTitle.feature: 16 from file b (written 0, marked 1)

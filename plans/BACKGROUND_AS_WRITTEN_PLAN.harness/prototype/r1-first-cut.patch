@@ -1,0 +1,2954 @@
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Features/BackgroundThatFails.feature b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Features/BackgroundThatFails.feature
+new file mode 100644
+index 00000000..a5ff3838
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Features/BackgroundThatFails.feature
+@@ -0,0 +1,8 @@
++Feature: A Background That Fails
++    Its step fails only when the Integration project asks, with KRONIKOL_EXAMPLE_STEP_FAILURES.
++
++Background:
++    Given a Background step that fails when asked
++
++Scenario: The Background step is the one that failed
++    When another step that passes
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Features/StepsAsWritten.feature b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Features/StepsAsWritten.feature
+new file mode 100644
+index 00000000..816179df
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Features/StepsAsWritten.feature
+@@ -0,0 +1,19 @@
++@reads-the-public-list
++Feature: Steps As Written
++    A Background is what this file writes, and a step a step definition runs is that step's sub-step.
++
++Background:
++    Given a step that passes
++    And a step runs a step with a table and a doc string
++
++Scenario: A scenario's own steps come after its Background
++    When another step that passes
++    Then a third step that passes
++
++Rule: A rule's Background follows its feature's
++
++    Background:
++        Given a rule's step that passes
++
++    Scenario: A scenario in a rule runs both Backgrounds
++        When another step that passes
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Features/StepsThatFail.feature b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Features/StepsThatFail.feature
+new file mode 100644
+index 00000000..4c7940fe
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Features/StepsThatFail.feature
+@@ -0,0 +1,31 @@
++Feature: Steps That Fail
++    Each fails only when the Integration project asks, with KRONIKOL_EXAMPLE_STEP_FAILURES, so this project's own run stays green.
++
++Scenario: An inner step fails
++    Given a step runs a step that fails when asked
++    Then a third step that passes
++
++Scenario: An inner argument does not convert
++    Given a step runs a step whose argument does not convert when asked
++
++@first-before-step-fails
++Scenario: A BeforeStep hook ahead of the adapter's fails
++    Given a step that passes
++    And a step a hook stops when asked
++
++@first-before-step-fails
++Scenario: A BeforeStep hook ahead of the adapter's fails on an inner step
++    Given a step runs a step a hook stops when asked
++
++@after-step-fails
++Scenario: An AfterStep hook fails on an inner step
++    Given a step runs a step an AfterStep hook fails when asked
++
++@after-step-fails
++Scenario: An AfterStep hook fails on a scenario's own step
++    Given a step that passes
++    When a step an AfterStep hook fails when asked
++
++@after-scenario-runs-a-step
++Scenario: An AfterScenario hook runs a step an AfterStep hook fails
++    Given a step that passes
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/StepDefinitions/StepsAsWrittenStepDefinitions.cs b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/StepDefinitions/StepsAsWrittenStepDefinitions.cs
+new file mode 100644
+index 00000000..dd496452
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/StepDefinitions/StepsAsWrittenStepDefinitions.cs
+@@ -0,0 +1,133 @@
++using Kronikol.ReqNRoll;
++using Reqnroll;
++
++namespace Example.Api.Tests.Component.ReqNRollTUnit.StepDefinitions;
++
++/// <summary>
++/// What runs the adapter's own hooks for real: a Background as written, a step that runs steps, and a failure in either. A step
++/// that fails does so only when the Integration project's ReqNRollDuplicateStepsTests sets KRONIKOL_EXAMPLE_STEP_FAILURES.
++/// </summary>
++[Binding]
++public class StepsAsWrittenStepDefinitions(ScenarioContext scenario, ITestRunner runner)
++{
++    private static bool AskedToFail => Environment.GetEnvironmentVariable("KRONIKOL_EXAMPLE_STEP_FAILURES") == "true";
++
++    private static void FailIfAsked(string what)
++    {
++        if (AskedToFail)
++            throw new InvalidOperationException(what);
++    }
++
++    [StepDefinition("a step that passes")]
++    [StepDefinition("another step that passes")]
++    [StepDefinition("a third step that passes")]
++    [StepDefinition("a rule's step that passes")]
++    public void AStepThatPasses()
++    {
++    }
++
++    [StepDefinition("a step runs a step with a table and a doc string")]
++    public async Task AStepRunsAStepWithATableAndADocString()
++    {
++        var table = new Table("sku");
++        table.AddRow("APPLE");
++        await runner.GivenAsync("an inner step takes a table", null, table);
++        await runner.GivenAsync("an inner step takes a doc string", "a doc string", null);
++    }
++
++    [StepDefinition("an inner step takes a table")]
++    public void AnInnerStepTakesATable(Table table)
++    {
++    }
++
++    [StepDefinition("an inner step takes a doc string")]
++    public void AnInnerStepTakesADocString(string docString)
++    {
++    }
++
++    [StepDefinition("a Background step that fails when asked")]
++    public void ABackgroundStepThatFails() => FailIfAsked("a Background step failed");
++
++    [StepDefinition("a step runs a step that fails when asked")]
++    public Task AStepRunsAStepThatFails() => runner.GivenAsync("an inner step that fails when asked");
++
++    [StepDefinition("an inner step that fails when asked")]
++    public void AnInnerStepThatFails() => FailIfAsked("an inner step failed");
++
++    [StepDefinition("a step runs a step whose argument does not convert when asked")]
++    public Task AStepRunsAStepWhoseArgumentDoesNotConvert() =>
++        runner.GivenAsync($"a step takes the number \"{(AskedToFail ? "not a number" : "1")}\"");
++
++    [StepDefinition("a step takes the number \"(.*)\"")]
++    public void AStepTakesTheNumber(int number)
++    {
++    }
++
++    [StepDefinition("a step a hook stops when asked")]
++    [StepDefinition("a step an AfterStep hook fails when asked")]
++    public void AStepAHookActsOn()
++    {
++    }
++
++    [StepDefinition("a step runs a step a hook stops when asked")]
++    public Task AStepRunsAStepAHookStops() => runner.GivenAsync("a step a hook stops when asked");
++
++    [StepDefinition("a step runs a step an AfterStep hook fails when asked")]
++    public Task AStepRunsAStepAnAfterStepHookFails() => runner.GivenAsync("a step with a doc string an AfterStep hook fails when asked", "its doc string", null);
++
++    [StepDefinition("a step with a doc string an AfterStep hook fails when asked")]
++    public void AStepWithADocStringAnAfterStepHookFails(string docString)
++    {
++    }
++
++    private string StepText => scenario.StepContext.StepInfo.Text;
++
++    // The one order that can run ahead of the adapter's own BeforeStep, whose Order is int.MinValue.
++    [BeforeStep("first-before-step-fails", Order = int.MinValue)]
++    public void FirstBeforeStepFails()
++    {
++        if (StepText == "a step a hook stops when asked")
++            FailIfAsked("a BeforeStep hook ahead of the adapter's failed");
++    }
++
++    [AfterStep("after-step-fails")]
++    [AfterStep("after-scenario-runs-a-step")]
++    public void AfterStepFails()
++    {
++        if (StepText is "a step an AfterStep hook fails when asked" or "a step with a doc string an AfterStep hook fails when asked")
++            FailIfAsked("an AfterStep hook failed");
++    }
++
++    // The list a suite can read holds every step that ran, a step a step ran among them.
++    // A step an AfterStep hook kept the adapter from closing is closed ahead of this hook, so this hook's time and work are not that step's.
++    [AfterScenario("after-step-fails")]
++    public void FindsTheStepAHookLeftOpen()
++    {
++        var steps = (List<ReqNRollStepInfo>)scenario[ReqNRollConstants.StepsCollectionKey];
++        if (AskedToFail && !steps.Any(step => step.Text is "a step an AfterStep hook fails when asked" or "a step with a doc string an AfterStep hook fails when asked"))
++            throw new InvalidOperationException("The step a hook left open is not in the list.");
++    }
++
++    // A suite's hook can run a step of its own, and an AfterStep hook can stop that one like any other.
++    [AfterScenario("after-scenario-runs-a-step")]
++    public async Task RunsAStepAnAfterStepHookFails()
++    {
++        try
++        {
++            await runner.GivenAsync("a step an AfterStep hook fails when asked");
++        }
++        catch (Exception) when (AskedToFail)
++        {
++        }
++    }
++
++    [AfterScenario("reads-the-public-list")]
++    public void ReadsThePublicList()
++    {
++        var steps = (List<ReqNRollStepInfo>)scenario[ReqNRollConstants.StepsCollectionKey];
++        if (!steps.Any(step => step.Text == "an inner step takes a table"))
++            throw new InvalidOperationException("The steps list lost a step a step ran.");
++        if (scenario[ReqNRollConstants.StepStopwatchKey] is not System.Diagnostics.Stopwatch)
++            throw new InvalidOperationException("The public step stopwatch is gone.");
++    }
++}
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Features/BackgroundThatFails.feature b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Features/BackgroundThatFails.feature
+new file mode 100644
+index 00000000..a5ff3838
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Features/BackgroundThatFails.feature
+@@ -0,0 +1,8 @@
++Feature: A Background That Fails
++    Its step fails only when the Integration project asks, with KRONIKOL_EXAMPLE_STEP_FAILURES.
++
++Background:
++    Given a Background step that fails when asked
++
++Scenario: The Background step is the one that failed
++    When another step that passes
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Features/StepsAsWritten.feature b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Features/StepsAsWritten.feature
+new file mode 100644
+index 00000000..816179df
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Features/StepsAsWritten.feature
+@@ -0,0 +1,19 @@
++@reads-the-public-list
++Feature: Steps As Written
++    A Background is what this file writes, and a step a step definition runs is that step's sub-step.
++
++Background:
++    Given a step that passes
++    And a step runs a step with a table and a doc string
++
++Scenario: A scenario's own steps come after its Background
++    When another step that passes
++    Then a third step that passes
++
++Rule: A rule's Background follows its feature's
++
++    Background:
++        Given a rule's step that passes
++
++    Scenario: A scenario in a rule runs both Backgrounds
++        When another step that passes
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Features/StepsThatFail.feature b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Features/StepsThatFail.feature
+new file mode 100644
+index 00000000..4c7940fe
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Features/StepsThatFail.feature
+@@ -0,0 +1,31 @@
++Feature: Steps That Fail
++    Each fails only when the Integration project asks, with KRONIKOL_EXAMPLE_STEP_FAILURES, so this project's own run stays green.
++
++Scenario: An inner step fails
++    Given a step runs a step that fails when asked
++    Then a third step that passes
++
++Scenario: An inner argument does not convert
++    Given a step runs a step whose argument does not convert when asked
++
++@first-before-step-fails
++Scenario: A BeforeStep hook ahead of the adapter's fails
++    Given a step that passes
++    And a step a hook stops when asked
++
++@first-before-step-fails
++Scenario: A BeforeStep hook ahead of the adapter's fails on an inner step
++    Given a step runs a step a hook stops when asked
++
++@after-step-fails
++Scenario: An AfterStep hook fails on an inner step
++    Given a step runs a step an AfterStep hook fails when asked
++
++@after-step-fails
++Scenario: An AfterStep hook fails on a scenario's own step
++    Given a step that passes
++    When a step an AfterStep hook fails when asked
++
++@after-scenario-runs-a-step
++Scenario: An AfterScenario hook runs a step an AfterStep hook fails
++    Given a step that passes
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/StepDefinitions/StepsAsWrittenStepDefinitions.cs b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/StepDefinitions/StepsAsWrittenStepDefinitions.cs
+new file mode 100644
+index 00000000..93bf03d3
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/StepDefinitions/StepsAsWrittenStepDefinitions.cs
+@@ -0,0 +1,133 @@
++using Kronikol.ReqNRoll;
++using Reqnroll;
++
++namespace Example.Api.Tests.Component.ReqNRoll.xUnit2.StepDefinitions;
++
++/// <summary>
++/// What runs the adapter's own hooks for real: a Background as written, a step that runs steps, and a failure in either. A step
++/// that fails does so only when the Integration project's ReqNRollDuplicateStepsTests sets KRONIKOL_EXAMPLE_STEP_FAILURES.
++/// </summary>
++[Binding]
++public class StepsAsWrittenStepDefinitions(ScenarioContext scenario, ITestRunner runner)
++{
++    private static bool AskedToFail => Environment.GetEnvironmentVariable("KRONIKOL_EXAMPLE_STEP_FAILURES") == "true";
++
++    private static void FailIfAsked(string what)
++    {
++        if (AskedToFail)
++            throw new InvalidOperationException(what);
++    }
++
++    [StepDefinition("a step that passes")]
++    [StepDefinition("another step that passes")]
++    [StepDefinition("a third step that passes")]
++    [StepDefinition("a rule's step that passes")]
++    public void AStepThatPasses()
++    {
++    }
++
++    [StepDefinition("a step runs a step with a table and a doc string")]
++    public async Task AStepRunsAStepWithATableAndADocString()
++    {
++        var table = new Table("sku");
++        table.AddRow("APPLE");
++        await runner.GivenAsync("an inner step takes a table", null, table);
++        await runner.GivenAsync("an inner step takes a doc string", "a doc string", null);
++    }
++
++    [StepDefinition("an inner step takes a table")]
++    public void AnInnerStepTakesATable(Table table)
++    {
++    }
++
++    [StepDefinition("an inner step takes a doc string")]
++    public void AnInnerStepTakesADocString(string docString)
++    {
++    }
++
++    [StepDefinition("a Background step that fails when asked")]
++    public void ABackgroundStepThatFails() => FailIfAsked("a Background step failed");
++
++    [StepDefinition("a step runs a step that fails when asked")]
++    public Task AStepRunsAStepThatFails() => runner.GivenAsync("an inner step that fails when asked");
++
++    [StepDefinition("an inner step that fails when asked")]
++    public void AnInnerStepThatFails() => FailIfAsked("an inner step failed");
++
++    [StepDefinition("a step runs a step whose argument does not convert when asked")]
++    public Task AStepRunsAStepWhoseArgumentDoesNotConvert() =>
++        runner.GivenAsync($"a step takes the number \"{(AskedToFail ? "not a number" : "1")}\"");
++
++    [StepDefinition("a step takes the number \"(.*)\"")]
++    public void AStepTakesTheNumber(int number)
++    {
++    }
++
++    [StepDefinition("a step a hook stops when asked")]
++    [StepDefinition("a step an AfterStep hook fails when asked")]
++    public void AStepAHookActsOn()
++    {
++    }
++
++    [StepDefinition("a step runs a step a hook stops when asked")]
++    public Task AStepRunsAStepAHookStops() => runner.GivenAsync("a step a hook stops when asked");
++
++    [StepDefinition("a step runs a step an AfterStep hook fails when asked")]
++    public Task AStepRunsAStepAnAfterStepHookFails() => runner.GivenAsync("a step with a doc string an AfterStep hook fails when asked", "its doc string", null);
++
++    [StepDefinition("a step with a doc string an AfterStep hook fails when asked")]
++    public void AStepWithADocStringAnAfterStepHookFails(string docString)
++    {
++    }
++
++    private string StepText => scenario.StepContext.StepInfo.Text;
++
++    // The one order that can run ahead of the adapter's own BeforeStep, whose Order is int.MinValue.
++    [BeforeStep("first-before-step-fails", Order = int.MinValue)]
++    public void FirstBeforeStepFails()
++    {
++        if (StepText == "a step a hook stops when asked")
++            FailIfAsked("a BeforeStep hook ahead of the adapter's failed");
++    }
++
++    [AfterStep("after-step-fails")]
++    [AfterStep("after-scenario-runs-a-step")]
++    public void AfterStepFails()
++    {
++        if (StepText is "a step an AfterStep hook fails when asked" or "a step with a doc string an AfterStep hook fails when asked")
++            FailIfAsked("an AfterStep hook failed");
++    }
++
++    // The list a suite can read holds every step that ran, a step a step ran among them.
++    // A step an AfterStep hook kept the adapter from closing is closed ahead of this hook, so this hook's time and work are not that step's.
++    [AfterScenario("after-step-fails")]
++    public void FindsTheStepAHookLeftOpen()
++    {
++        var steps = (List<ReqNRollStepInfo>)scenario[ReqNRollConstants.StepsCollectionKey];
++        if (AskedToFail && !steps.Any(step => step.Text is "a step an AfterStep hook fails when asked" or "a step with a doc string an AfterStep hook fails when asked"))
++            throw new InvalidOperationException("The step a hook left open is not in the list.");
++    }
++
++    // A suite's hook can run a step of its own, and an AfterStep hook can stop that one like any other.
++    [AfterScenario("after-scenario-runs-a-step")]
++    public async Task RunsAStepAnAfterStepHookFails()
++    {
++        try
++        {
++            await runner.GivenAsync("a step an AfterStep hook fails when asked");
++        }
++        catch (Exception) when (AskedToFail)
++        {
++        }
++    }
++
++    [AfterScenario("reads-the-public-list")]
++    public void ReadsThePublicList()
++    {
++        var steps = (List<ReqNRollStepInfo>)scenario[ReqNRollConstants.StepsCollectionKey];
++        if (!steps.Any(step => step.Text == "an inner step takes a table"))
++            throw new InvalidOperationException("The steps list lost a step a step ran.");
++        if (scenario[ReqNRollConstants.StepStopwatchKey] is not System.Diagnostics.Stopwatch)
++            throw new InvalidOperationException("The public step stopwatch is gone.");
++    }
++}
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Features/BackgroundThatFails.feature b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Features/BackgroundThatFails.feature
+new file mode 100644
+index 00000000..a5ff3838
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Features/BackgroundThatFails.feature
+@@ -0,0 +1,8 @@
++Feature: A Background That Fails
++    Its step fails only when the Integration project asks, with KRONIKOL_EXAMPLE_STEP_FAILURES.
++
++Background:
++    Given a Background step that fails when asked
++
++Scenario: The Background step is the one that failed
++    When another step that passes
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Features/StepsAsWritten.feature b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Features/StepsAsWritten.feature
+new file mode 100644
+index 00000000..816179df
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Features/StepsAsWritten.feature
+@@ -0,0 +1,19 @@
++@reads-the-public-list
++Feature: Steps As Written
++    A Background is what this file writes, and a step a step definition runs is that step's sub-step.
++
++Background:
++    Given a step that passes
++    And a step runs a step with a table and a doc string
++
++Scenario: A scenario's own steps come after its Background
++    When another step that passes
++    Then a third step that passes
++
++Rule: A rule's Background follows its feature's
++
++    Background:
++        Given a rule's step that passes
++
++    Scenario: A scenario in a rule runs both Backgrounds
++        When another step that passes
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Features/StepsThatFail.feature b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Features/StepsThatFail.feature
+new file mode 100644
+index 00000000..4c7940fe
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Features/StepsThatFail.feature
+@@ -0,0 +1,31 @@
++Feature: Steps That Fail
++    Each fails only when the Integration project asks, with KRONIKOL_EXAMPLE_STEP_FAILURES, so this project's own run stays green.
++
++Scenario: An inner step fails
++    Given a step runs a step that fails when asked
++    Then a third step that passes
++
++Scenario: An inner argument does not convert
++    Given a step runs a step whose argument does not convert when asked
++
++@first-before-step-fails
++Scenario: A BeforeStep hook ahead of the adapter's fails
++    Given a step that passes
++    And a step a hook stops when asked
++
++@first-before-step-fails
++Scenario: A BeforeStep hook ahead of the adapter's fails on an inner step
++    Given a step runs a step a hook stops when asked
++
++@after-step-fails
++Scenario: An AfterStep hook fails on an inner step
++    Given a step runs a step an AfterStep hook fails when asked
++
++@after-step-fails
++Scenario: An AfterStep hook fails on a scenario's own step
++    Given a step that passes
++    When a step an AfterStep hook fails when asked
++
++@after-scenario-runs-a-step
++Scenario: An AfterScenario hook runs a step an AfterStep hook fails
++    Given a step that passes
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/StepDefinitions/StepsAsWrittenStepDefinitions.cs b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/StepDefinitions/StepsAsWrittenStepDefinitions.cs
+new file mode 100644
+index 00000000..592f6260
+--- /dev/null
++++ b/examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/StepDefinitions/StepsAsWrittenStepDefinitions.cs
+@@ -0,0 +1,133 @@
++using Kronikol.ReqNRoll;
++using Reqnroll;
++
++namespace Example.Api.Tests.Component.ReqNRoll.xUnit3.StepDefinitions;
++
++/// <summary>
++/// What runs the adapter's own hooks for real: a Background as written, a step that runs steps, and a failure in either. A step
++/// that fails does so only when the Integration project's ReqNRollDuplicateStepsTests sets KRONIKOL_EXAMPLE_STEP_FAILURES.
++/// </summary>
++[Binding]
++public class StepsAsWrittenStepDefinitions(ScenarioContext scenario, ITestRunner runner)
++{
++    private static bool AskedToFail => Environment.GetEnvironmentVariable("KRONIKOL_EXAMPLE_STEP_FAILURES") == "true";
++
++    private static void FailIfAsked(string what)
++    {
++        if (AskedToFail)
++            throw new InvalidOperationException(what);
++    }
++
++    [StepDefinition("a step that passes")]
++    [StepDefinition("another step that passes")]
++    [StepDefinition("a third step that passes")]
++    [StepDefinition("a rule's step that passes")]
++    public void AStepThatPasses()
++    {
++    }
++
++    [StepDefinition("a step runs a step with a table and a doc string")]
++    public async Task AStepRunsAStepWithATableAndADocString()
++    {
++        var table = new Table("sku");
++        table.AddRow("APPLE");
++        await runner.GivenAsync("an inner step takes a table", null, table);
++        await runner.GivenAsync("an inner step takes a doc string", "a doc string", null);
++    }
++
++    [StepDefinition("an inner step takes a table")]
++    public void AnInnerStepTakesATable(Table table)
++    {
++    }
++
++    [StepDefinition("an inner step takes a doc string")]
++    public void AnInnerStepTakesADocString(string docString)
++    {
++    }
++
++    [StepDefinition("a Background step that fails when asked")]
++    public void ABackgroundStepThatFails() => FailIfAsked("a Background step failed");
++
++    [StepDefinition("a step runs a step that fails when asked")]
++    public Task AStepRunsAStepThatFails() => runner.GivenAsync("an inner step that fails when asked");
++
++    [StepDefinition("an inner step that fails when asked")]
++    public void AnInnerStepThatFails() => FailIfAsked("an inner step failed");
++
++    [StepDefinition("a step runs a step whose argument does not convert when asked")]
++    public Task AStepRunsAStepWhoseArgumentDoesNotConvert() =>
++        runner.GivenAsync($"a step takes the number \"{(AskedToFail ? "not a number" : "1")}\"");
++
++    [StepDefinition("a step takes the number \"(.*)\"")]
++    public void AStepTakesTheNumber(int number)
++    {
++    }
++
++    [StepDefinition("a step a hook stops when asked")]
++    [StepDefinition("a step an AfterStep hook fails when asked")]
++    public void AStepAHookActsOn()
++    {
++    }
++
++    [StepDefinition("a step runs a step a hook stops when asked")]
++    public Task AStepRunsAStepAHookStops() => runner.GivenAsync("a step a hook stops when asked");
++
++    [StepDefinition("a step runs a step an AfterStep hook fails when asked")]
++    public Task AStepRunsAStepAnAfterStepHookFails() => runner.GivenAsync("a step with a doc string an AfterStep hook fails when asked", "its doc string", null);
++
++    [StepDefinition("a step with a doc string an AfterStep hook fails when asked")]
++    public void AStepWithADocStringAnAfterStepHookFails(string docString)
++    {
++    }
++
++    private string StepText => scenario.StepContext.StepInfo.Text;
++
++    // The one order that can run ahead of the adapter's own BeforeStep, whose Order is int.MinValue.
++    [BeforeStep("first-before-step-fails", Order = int.MinValue)]
++    public void FirstBeforeStepFails()
++    {
++        if (StepText == "a step a hook stops when asked")
++            FailIfAsked("a BeforeStep hook ahead of the adapter's failed");
++    }
++
++    [AfterStep("after-step-fails")]
++    [AfterStep("after-scenario-runs-a-step")]
++    public void AfterStepFails()
++    {
++        if (StepText is "a step an AfterStep hook fails when asked" or "a step with a doc string an AfterStep hook fails when asked")
++            FailIfAsked("an AfterStep hook failed");
++    }
++
++    // The list a suite can read holds every step that ran, a step a step ran among them.
++    // A step an AfterStep hook kept the adapter from closing is closed ahead of this hook, so this hook's time and work are not that step's.
++    [AfterScenario("after-step-fails")]
++    public void FindsTheStepAHookLeftOpen()
++    {
++        var steps = (List<ReqNRollStepInfo>)scenario[ReqNRollConstants.StepsCollectionKey];
++        if (AskedToFail && !steps.Any(step => step.Text is "a step an AfterStep hook fails when asked" or "a step with a doc string an AfterStep hook fails when asked"))
++            throw new InvalidOperationException("The step a hook left open is not in the list.");
++    }
++
++    // A suite's hook can run a step of its own, and an AfterStep hook can stop that one like any other.
++    [AfterScenario("after-scenario-runs-a-step")]
++    public async Task RunsAStepAnAfterStepHookFails()
++    {
++        try
++        {
++            await runner.GivenAsync("a step an AfterStep hook fails when asked");
++        }
++        catch (Exception) when (AskedToFail)
++        {
++        }
++    }
++
++    [AfterScenario("reads-the-public-list")]
++    public void ReadsThePublicList()
++    {
++        var steps = (List<ReqNRollStepInfo>)scenario[ReqNRollConstants.StepsCollectionKey];
++        if (!steps.Any(step => step.Text == "an inner step takes a table"))
++            throw new InvalidOperationException("The steps list lost a step a step ran.");
++        if (scenario[ReqNRollConstants.StepStopwatchKey] is not System.Diagnostics.Stopwatch)
++            throw new InvalidOperationException("The public step stopwatch is gone.");
++    }
++}
+diff --git a/examples/Example.Api/tests/Example.Api.Tests.Integration/Tests/ReqNRollDuplicateStepsTests.cs b/examples/Example.Api/tests/Example.Api.Tests.Integration/Tests/ReqNRollDuplicateStepsTests.cs
+index 15cf125d..a10c22c0 100644
+--- a/examples/Example.Api/tests/Example.Api.Tests.Integration/Tests/ReqNRollDuplicateStepsTests.cs
++++ b/examples/Example.Api/tests/Example.Api.Tests.Integration/Tests/ReqNRollDuplicateStepsTests.cs
+@@ -1,3 +1,4 @@
++using System.Text.Json;
+ using Example.Api.Tests.Integration.Helpers;
+ 
+ namespace Example.Api.Tests.Integration.Tests;
+@@ -88,34 +89,90 @@ public async Task Plain_cake_scenarios_record_exactly_the_feature_file_steps(str
+     // The CI "Integration (ReqNRoll)" filter matches the project-name theory argument
+     // (FullyQualifiedName~Component.ReqNRoll.xUnit3), so even single-project tests take
+     // the project as a theory parameter.
++    [Theory]
++    [MemberData(nameof(ReqNRollProjects))]
++    public async Task A_Background_is_what_the_feature_file_writes_and_a_step_a_step_ran_is_no_row(string projectName)
++    {
++        var scenarios = await RunAndParseScenariosAsync(projectName);
++
++        var own = Assert.Single(scenarios, s => s.Name == "A scenario's own steps come after its Background");
++        Assert.Equal(["Given a step that passes", "And a step runs a step with a table and a doc string"], own.BackgroundSteps);
++        Assert.Equal(["When another step that passes", "Then a third step that passes"], own.Steps);
++
++        var inARule = Assert.Single(scenarios, s => s.Name == "A scenario in a rule runs both Backgrounds");
++        Assert.Equal(["Given a step that passes", "And a step runs a step with a table and a doc string", "Given a rule's step that passes"], inARule.BackgroundSteps);
++        Assert.Equal(["When another step that passes"], inARule.Steps);
++    }
++
++    [Theory]
++    [MemberData(nameof(ReqNRollProjects))]
++    public async Task A_step_a_step_ran_keeps_its_doc_string(string projectName)
++    {
++        var result = await TestProjectRunner.RunAsync(projectName);
++        Assert.True(result.Success, $"{projectName} failed:\n{result.StandardError}\n{result.StandardOutput}");
++
++        var html = Kronikol.Reports.HtmlReportFile.ToPlain(await File.ReadAllTextAsync(ReportParser.GetReportFiles(result.ReportsFolderPath).TestRunReportHtml!));
++
++        Assert.Contains("<pre class=\"step-docstring\"><code>a doc string</code></pre>", html);
++    }
++
++    [Theory]
++    [MemberData(nameof(ReqNRollProjects))]
++    public async Task A_failure_is_read_on_the_step_that_failed(string projectName)
++    {
++        var result = await TestProjectRunner.RunAsync(projectName, new Dictionary<string, string> { ["KRONIKOL_EXAMPLE_STEP_FAILURES"] = "true", ["GITHUB_STEP_SUMMARY"] = "" });
++        Assert.False(result.Success, $"{projectName} was asked to fail and did not:\n{result.StandardOutput}");
++
++        var failing = (await File.ReadAllLinesAsync(Path.Combine(result.ReportsFolderPath, "Failures.jsonl")))
++            .Select(line => JsonDocument.Parse(line).RootElement)
++            .Where(row => row.GetProperty("kind").GetString() == "failure")
++            .ToDictionary(
++                row => row.GetProperty("scenario").GetString()!,
++                row => row.GetProperty("failingSteps").EnumerateArray().Select(step => step.GetProperty("text").GetString()!).ToArray());
++
++        Assert.Equal(8, failing.Count);
++        Assert.Equal(["Given a Background step that fails when asked"], failing["The Background step is the one that failed"]);
++        Assert.Equal(["Given a step runs a step that fails when asked", "Given an inner step that fails when asked"], failing["An inner step fails"]);
++        Assert.Contains("Given a step runs a step whose argument does not convert when asked", failing["An inner argument does not convert"]);
++        Assert.Equal(["And a step a hook stops when asked"], failing["A BeforeStep hook ahead of the adapter's fails"]);
++        Assert.Equal(["Given a step runs a step a hook stops when asked", "Given a step a hook stops when asked"], failing["A BeforeStep hook ahead of the adapter's fails on an inner step"]);
++        Assert.Equal(["Given a step runs a step an AfterStep hook fails when asked", "Given a step with a doc string an AfterStep hook fails when asked"], failing["An AfterStep hook fails on an inner step"]);
++        Assert.Equal(["When a step an AfterStep hook fails when asked"], failing["An AfterStep hook fails on a scenario's own step"]);
++
++        Assert.Equal(["Given a step an AfterStep hook fails when asked"], failing["An AfterScenario hook runs a step an AfterStep hook fails"]);
++
++        // The hook stopped ours from closing that inner step, and it is still described.
++        var html = Kronikol.Reports.HtmlReportFile.ToPlain(await File.ReadAllTextAsync(ReportParser.GetReportFiles(result.ReportsFolderPath).TestRunReportHtml!));
++        Assert.Contains("<pre class=\"step-docstring\"><code>its doc string</code></pre>", html);
++    }
++
+     public static TheoryData<string> XUnit3Only() => new() { TestProjects.ReqNRollXUnit3 };
+ 
+     [Theory]
+     [MemberData(nameof(XUnit3Only))]
+     public async Task Background_scenarios_record_exactly_the_feature_file_steps(string projectName)
+     {
+-        // The Cake Quality feature's scenarios share their Given + When, so
+-        // BackgroundStepsDetector extracts that prefix into BackgroundSteps — doubled
+-        // steps would both double the extracted prefix and corrupt the detection.
++        // The Cake Quality feature writes one Background step: doubled steps would miscount it
++        // and would push the scenario's own steps out of Steps.
+         var scenarios = await RunAndParseScenariosAsync(projectName);
+ 
+         var milk = Assert.Single(scenarios, s => s.Name == "The baked cake contains the requested milk");
++        Assert.Equal(["Given a valid post request for the Cake endpoint"], milk.BackgroundSteps);
+         Assert.Equal(
+             [
+-                "Given a valid post request for the Cake endpoint",
+-                "When the request is sent to the cake post endpoint"
++                "When the request is sent to the cake post endpoint",
++                "Then the cake should contain the requested milk"
+             ],
+-            milk.BackgroundSteps);
+-        Assert.Equal(["Then the cake should contain the requested milk"], milk.Steps);
++            milk.Steps);
+ 
+         var flour = Assert.Single(scenarios, s => s.Name == "The baked cake contains the requested flour");
++        Assert.Equal(["Given a valid post request for the Cake endpoint"], flour.BackgroundSteps);
+         Assert.Equal(
+             [
+-                "Given a valid post request for the Cake endpoint",
+-                "When the request is sent to the cake post endpoint"
++                "When the request is sent to the cake post endpoint",
++                "Then the cake should contain the requested flour"
+             ],
+-            flour.BackgroundSteps);
+-        Assert.Equal(["Then the cake should contain the requested flour"], flour.Steps);
++            flour.Steps);
+     }
+ 
+     [Theory]
+diff --git a/src/Kronikol.ReqNRoll.Core/ExamplesBlockResolver.cs b/src/Kronikol.ReqNRoll.Core/ExamplesBlockResolver.cs
+index a126bf33..53946cc4 100644
+--- a/src/Kronikol.ReqNRoll.Core/ExamplesBlockResolver.cs
++++ b/src/Kronikol.ReqNRoll.Core/ExamplesBlockResolver.cs
+@@ -83,6 +83,34 @@ public static ScenarioSource ResolveSource(FeatureInfo? featureInfo, ScenarioInf
+         }
+     }
+ 
++    /// <summary>
++    /// The texts of the steps the feature's <c>Background:</c> and the scenario's rule's give the running scenario, in the
++    /// order they run, from the Gherkin document Reqnroll embeds (#222). Empty when no Background is written, or when
++    /// Reqnroll's messages are unavailable: every step is then the scenario's own. Same reflection seam, same
++    /// silent-degradation contract as <see cref="Resolve"/>.
++    /// </summary>
++    public static IReadOnlyList<string> ResolveBackgroundSteps(FeatureInfo? featureInfo, ScenarioInfo? scenarioInfo)
++    {
++        if (featureInfo is null || scenarioInfo is null)
++            return [];
++        try
++        {
++            var lookup = LookupCache.GetValue(featureInfo, BuildLookup);
++            if (FindPickle(lookup, scenarioInfo) is { AstNodeIds.Count: > 0 } pickle
++                && lookup.BackgroundByScenarioId.TryGetValue(pickle.AstNodeIds[0], out var byId))
++            {
++                return byId;
++            }
++            return scenarioInfo.Title is { Length: > 0 } title && lookup.BackgroundByScenarioName.TryGetValue(title, out var byName)
++                ? byName
++                : [];
++        }
++        catch
++        {
++            return [];
++        }
++    }
++
+     /// <summary>
+     /// The running row's name as Gherkin names its pickle (#101): the title with each <c>&lt;header&gt;</c> filled from the
+     /// row's <c>Examples:</c> values. The pickle Reqnroll embeds is Gherkin's own answer, taken when it is found, belongs
+@@ -220,6 +248,12 @@ private sealed class FeatureBlockLookup
+         /// outline's title and therefore its declaration line - which is the line we want.
+         /// </summary>
+         public Dictionary<string, int> LinesByScenarioName { get; } = new(StringComparer.Ordinal);
++
++        /// <summary>A scenario's ast id to the texts of the Background steps it runs first: its feature's, then its rule's.</summary>
++        public Dictionary<string, string[]> BackgroundByScenarioId { get; } = new(StringComparer.Ordinal);
++
++        /// <summary>The same by title, for a scenario no pickle is found for: a title two rules share keeps the first.</summary>
++        public Dictionary<string, string[]> BackgroundByScenarioName { get; } = new(StringComparer.Ordinal);
+     }
+ 
+     private static FeatureBlockLookup BuildLookup(FeatureInfo featureInfo)
+@@ -242,6 +276,8 @@ private static FeatureBlockLookup BuildLookup(FeatureInfo featureInfo)
+                     lookup.LinesByScenarioName[scenarioName] = (int)location.Line;
+                 IndexScenario(lookup, scenario);
+             }
++
++            IndexBackgrounds(lookup, messages.GherkinDocument?.Feature);
+         }
+         catch
+         {
+@@ -265,6 +301,37 @@ private static IEnumerable<Scenario> ScenarioNodes(Feature? feature)
+         }
+     }
+ 
++    /// <summary>
++    /// Which Background steps each scenario runs first. Read from the document rather than from its pickle, as Gherkin
++    /// compiles a scenario with no steps of its own to a pickle with none, and Reqnroll still runs the Background for it.
++    /// </summary>
++    private static void IndexBackgrounds(FeatureBlockLookup lookup, Feature? feature)
++    {
++        var featureSteps = (feature?.Children ?? []).Select(c => c.Background).FirstOrDefault(b => b is not null)?.Steps ?? [];
++        foreach (var child in feature?.Children ?? [])
++        {
++            if (child.Scenario is { } scenario)
++                IndexBackground(lookup, scenario, featureSteps);
++            if (child.Rule is not { } rule)
++                continue;
++            var ruleSteps = (rule.Children ?? []).Select(c => c.Background).FirstOrDefault(b => b is not null)?.Steps ?? [];
++            foreach (var ruleChild in rule.Children ?? [])
++            {
++                if (ruleChild.Scenario is { } ruleScenario)
++                    IndexBackground(lookup, ruleScenario, [.. featureSteps, .. ruleSteps]);
++            }
++        }
++    }
++
++    private static void IndexBackground(FeatureBlockLookup lookup, Scenario scenario, IReadOnlyList<Step> steps)
++    {
++        var texts = steps.Select(s => s.Text ?? "").ToArray();
++        if (scenario.Id is { Length: > 0 } id)
++            lookup.BackgroundByScenarioId[id] = texts;
++        if (scenario.Name is { Length: > 0 } name)
++            lookup.BackgroundByScenarioName.TryAdd(name, texts);
++    }
++
+     private static void IndexScenario(FeatureBlockLookup lookup, Scenario scenario)
+     {
+         var blocks = scenario.Examples ?? [];
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs
+index be73aed8..272922bc 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs
+@@ -14,4 +14,7 @@ public static class ReqNRollConstants
+ 
+     /// <summary>The running row's name, as <c>BeforeScenario</c> resolved it (#101).</summary>
+     internal const string RowNameKey = "Kronikol.RowName";
++
++    /// <summary>A step under way: on its own step context, and on the scenario's for the innermost, as a step definition can run a step.</summary>
++    internal const string OpenStepKey = "Kronikol.OpenStep";
+ }
+\ No newline at end of file
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollScenarioInfo.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollScenarioInfo.cs
+index 3b699299..7d77e2b2 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollScenarioInfo.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollScenarioInfo.cs
+@@ -48,4 +48,11 @@ public record ReqNRollScenarioInfo
+     /// hooks did not resolve one, and the title is shown then.
+     /// </summary>
+     internal string? RowName { get; init; }
++
++    /// <summary>
++    /// The texts of the steps a <c>Background:</c> written in the feature or the scenario's rule gives this scenario, in the
++    /// order they run (#222). Empty when none is written and when the Gherkin document is out of reach; null for a scenario
++    /// built by hand, which never had a document to read.
++    /// </summary>
++    internal IReadOnlyList<string>? WrittenBackground { get; init; }
+ }
+\ No newline at end of file
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
+index 886a807b..9e7a0b56 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
+@@ -12,7 +12,15 @@ public record ReqNRollStepInfo(
+     TimeSpan? Duration = null,
+     string? TableText = null,
+     string? DocString = null,
+-    InlineParamCapture[]? InlineParams = null);
++    InlineParamCapture[]? InlineParams = null)
++{
++    /// <summary>The steps this step's definition ran, in the order they finished. Each step that opened a frame has its own list,
++    /// and StepCollector was told that list as what opened the step, which is how the two are paired.</summary>
++    internal IReadOnlyList<ReqNRollStepInfo>? Nested { get; init; }
++
++    /// <summary>A step definition ran this step, which makes it that step's sub-step and not one of the scenario's own rows.</summary>
++    internal bool RanByAStep { get; init; }
++}
+ 
+ /// <summary>
+ /// Captures a single inline parameter's position and value within the step text.
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+index c340e385..ff45fdb7 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+@@ -93,7 +93,14 @@ public void BeforeStep()
+         var stepType = _scenarioContext.StepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString();
+         ReqNRollTestContext.CurrentStepType = stepType;
+         TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
+-        _scenarioContext[ReqNRollConstants.StepStopwatchKey] = Stopwatch.StartNew();
++        _scenarioContext[ReqNRollConstants.StepStopwatchKey] = Open(stepType).Stopwatch;
++    }
++
++    private OpenStep Open(string stepType)
++    {
++        var opened = new OpenStep(Stopwatch.StartNew(), InnermostOpenStep, _scenarioContext.StepContext.StepInfo);
++        _scenarioContext[ReqNRollConstants.OpenStepKey] = opened;
++        _scenarioContext.StepContext[ReqNRollConstants.OpenStepKey] = opened;
+ 
+         // Push a step onto StepCollector so assertion tracking sub-steps attach here. The step's
+         // Gherkin arguments ride along so the delimiter bar can draw them — the table Reqnroll hands
+@@ -101,7 +108,8 @@ public void BeforeStep()
+         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+         var stepInfo = _scenarioContext.StepContext.StepInfo;
+         StepCollector.StartStep(scenarioId, stepType, stepInfo.Text, null, null,
+-            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText);
++            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText, opened.Nested);
++        return opened;
+     }
+ 
+     [AfterStep(Order = int.MaxValue)]
+@@ -110,19 +118,50 @@ public void AfterStep()
+         if (!IsOwner)
+             return;
+ 
+-        var stepStopwatch = (Stopwatch)_scenarioContext[ReqNRollConstants.StepStopwatchKey];
+-        stepStopwatch.Stop();
++        // None when a suite's hook sorted ahead of BeforeStep and threw: Reqnroll still runs this, and the step is still the
++        // one that failed, so it is listed, with no frame of the collector's to close and no time. Under a step that ran it, it
++        // still has its place among the steps that one ran, so it is opened here to close at that place.
+         var stepContext = _scenarioContext.StepContext;
++        stepContext.TryGetValue(ReqNRollConstants.OpenStepKey, out OpenStep? opened);
++        if (opened is null && InnermostOpenStep is not null)
++            opened = Open(stepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString());
++        opened?.Stopwatch.Stop();
+         var steps = (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey];
+-        var tableText = stepContext.StepInfo.Table?.ToString();
+-        var docString = stepContext.StepInfo.MultilineText;
+ 
++        // Pop the StepCollector step so assertion sub-steps are captured
++        var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
++        // Reqnroll opens a step only while the scenario is well, so the scenario failing by now failed in this step. It writes a
++        // failure only to the step that failed, the step that ran it carries on, and a step that never reached a hook
++        // (undefined, ambiguous) has no frame at all.
++        var status = stepContext.Status != ScenarioExecutionStatus.OK ? stepContext.Status : _scenarioContext.ScenarioExecutionStatus;
++        var passed = status == ScenarioExecutionStatus.OK;
++        if (opened is not null)
++        {
++            CloseLeftOpen(opened, scenarioId, steps);
++            StepCollector.CompleteStep(scenarioId, passed);
++        }
++
++        // A step a step definition ran is that step's sub-step, which StepCollector has made it, so it is no row of the
++        // scenario's own, whose list and whose Background count run by the feature file.
++        var parent = opened is not null ? opened.Parent : InnermostOpenStep;
++        var info = Describe(stepContext.StepInfo, status, opened, parent);
++        if (opened is not null && parent is null)
++            _scenarioContext.Remove(ReqNRollConstants.OpenStepKey);
++        else if (opened is not null)
++            _scenarioContext[ReqNRollConstants.OpenStepKey] = parent!;
++
++        parent?.Nested.Add(info);
++        steps.Add(info);
++    }
++
++    private static ReqNRollStepInfo Describe(StepInfo stepInfo, ScenarioExecutionStatus status, OpenStep? opened, OpenStep? parent)
++    {
+         // Capture inline parameter positions from binding match
+         InlineParamCapture[]? inlineParams = null;
+-        var bindingMatch = stepContext.StepInfo.BindingMatch;
++        var bindingMatch = stepInfo.BindingMatch;
+         if (bindingMatch is { Success: true, Arguments.Length: > 0 })
+         {
+-            var stepText = stepContext.StepInfo.Text;
++            var stepText = stepInfo.Text;
+             var captures = new List<InlineParamCapture>();
+             var methodParams = bindingMatch.StepBinding?.Method?.Parameters?.ToArray();
+             for (var i = 0; i < bindingMatch.Arguments.Length; i++)
+@@ -145,19 +184,55 @@ public void AfterStep()
+                 inlineParams = captures.ToArray();
+         }
+ 
+-        // Pop the StepCollector step so assertion sub-steps are captured
+-        var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+-        var passed = stepContext.Status == ScenarioExecutionStatus.OK;
+-        StepCollector.CompleteStep(scenarioId, passed);
+-
+-        steps.Add(new ReqNRollStepInfo(
+-            stepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString(),
+-            stepContext.StepInfo.Text,
+-            stepContext.Status,
+-            stepStopwatch.Elapsed,
+-            tableText,
+-            docString,
+-            inlineParams));
++        return new ReqNRollStepInfo(
++            stepInfo.StepInstance.StepDefinitionKeyword.ToString(),
++            stepInfo.Text,
++            status,
++            opened?.Stopwatch.Elapsed,
++            stepInfo.Table?.ToString(),
++            stepInfo.MultilineText,
++            inlineParams) { Nested = opened?.Nested, RanByAStep = parent is not null };
++    }
++
++    /// <summary>
++    /// A suite's AfterStep hook that threw kept ours from running, as Reqnroll stops a type's hooks at the first throw. Those steps
++    /// are the ones that failed, and nothing else is left to list them. They are closed when the step that ran them closes, or
++    /// as the scenario's AfterScenario hooks begin.
++    /// </summary>
++    private void CloseLeftOpen(OpenStep? upTo, string scenarioId, List<ReqNRollStepInfo> steps)
++    {
++        for (var left = InnermostOpenStep; left is not null && !ReferenceEquals(left, upTo); left = left.Parent)
++        {
++            left.Stopwatch.Stop();
++            StepCollector.CompleteStep(scenarioId, false);
++            var info = Describe(left.StepInfo, _scenarioContext.ScenarioExecutionStatus, left, left.Parent);
++            left.Parent?.Nested.Add(info);
++            steps.Add(info);
++        }
++    }
++
++    private OpenStep? InnermostOpenStep =>
++        _scenarioContext.TryGetValue(ReqNRollConstants.OpenStepKey, out OpenStep? open) ? open : null;
++
++    /// <summary>A step under way. Its definition can run more of them, which finish inside it.</summary>
++    private sealed class OpenStep(Stopwatch stopwatch, OpenStep? parent, StepInfo stepInfo)
++    {
++        public Stopwatch Stopwatch { get; } = stopwatch;
++        public OpenStep? Parent { get; } = parent;
++        public StepInfo StepInfo { get; } = stepInfo;
++        public List<ReqNRollStepInfo> Nested { get; } = [];
++    }
++
++    // Ahead of a suite's own at any later order, so a step left open takes neither their time nor their woven steps, and they
++    // find it in the list. AfterScenario comes back to it for a step one of their hooks ran and left open.
++    [AfterScenario(Order = int.MinValue)]
++    internal void CloseStepsLeftOpen()
++    {
++        if (!IsOwner || InnermostOpenStep is null)
++            return;
++
++        CloseLeftOpen(null, (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey], (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey]);
++        _scenarioContext.Remove(ReqNRollConstants.OpenStepKey);
+     }
+ 
+     [AfterScenario(Order = int.MaxValue)]
+@@ -167,6 +242,7 @@ public void AfterScenario()
+             return;
+ 
+         _stopwatch?.Stop();
++        CloseStepsLeftOpen();
+         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+         var steps = (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey];
+ 
+@@ -221,6 +297,7 @@ public void AfterScenario()
+             ExamplesBlockIndex = examplesBlock.Index,
+             SourceFile = source.File,
+             SourceLine = source.Line,
++            WrittenBackground = ExamplesBlockResolver.ResolveBackgroundSteps(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo),
+             RowName = _scenarioContext.TryGetValue(ReqNRollConstants.RowNameKey, out string? rowName)
+                 ? rowName
+                 : ExamplesBlockResolver.ResolveRowName(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo)
+diff --git a/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs b/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
+index 001e3837..0d378da9 100644
+--- a/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
++++ b/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
+@@ -45,6 +45,11 @@ public static Feature[] ToFeatures(this IEnumerable<ReqNRollScenarioInfo> scenar
+                             // title keys its id and its place on the title, as it did when it was named by it.
+                             var displayName = x.RowName ?? x.ScenarioTitle;
+ 
++                            // Every step is this scenario's own, as it ran; those a Background: gave it come first (#222).
++                            var rows = x.Steps.Where(step => !step.RanByAStep).ToList();
++                            var ran = rows.Count > 0 ? MapSteps(rows, StepCollector.GetSteps(x.ScenarioId)) : [];
++                            var backgroundCount = CountBackgroundSteps(ran, x.WrittenBackground ?? []);
++
+                             return new Scenario
+                             {
+                                 Id = x.ScenarioId,
+@@ -59,9 +64,8 @@ public static Feature[] ToFeatures(this IEnumerable<ReqNRollScenarioInfo> scenar
+                                 ErrorStackTrace = x.TestError?.StackTrace,
+                                 Duration = x.Duration,
+                                 EndedAt = x.EndedAt,
+-                                Steps = x.Steps.Count > 0
+-                                    ? MapSteps(x.Steps, StepCollector.GetSteps(x.ScenarioId))
+-                                    : null,
++                                BackgroundSteps = backgroundCount > 0 ? ran[..backgroundCount] : null,
++                                Steps = ran.Length > backgroundCount ? ran[backgroundCount..] : null,
+                                 Tags = tags.Length > 0 ? tags : null,
+                                 Rule = x.Rule,
+                                 SourceFile = x.SourceFile,
+@@ -77,7 +81,9 @@ public static Feature[] ToFeatures(this IEnumerable<ReqNRollScenarioInfo> scenar
+                             };
+                         }).ToArray();
+ 
+-                BackgroundStepsDetector.DetectAndExtract(scenarios);
++                // Scenarios built by hand have no document to read, so what they share is still only guessed at.
++                if (featureGroup.All(x => x.WrittenBackground is null))
++                    BackgroundStepsDetector.DetectAndExtract(scenarios);
+ 
+                 return new Feature
+                 {
+@@ -113,7 +119,7 @@ private static ScenarioStep[] MapSteps(List<ReqNRollStepInfo> steps, ScenarioSte
+                 Parameters = ParseTableText(steps[i].TableText),
+                 TextSegments = BuildTextSegments(steps[i]),
+                 SubSteps = collectedSteps is not null && i < collectedSteps.Length
+-                    ? collectedSteps[i].SubSteps
++                    ? DescribeNested(collectedSteps[i].SubSteps, steps[i].Nested)
+                     : null,
+                 Attachments = collectedSteps is not null && i < collectedSteps.Length
+                     ? collectedSteps[i].Attachments
+@@ -125,6 +131,50 @@ private static ScenarioStep[] MapSteps(List<ReqNRollStepInfo> steps, ScenarioSte
+         return mapped;
+     }
+ 
++    /// <summary>
++    /// How many rows, from the first, are the Background the document writes: a failed step ends a scenario early, and a
++    /// row that disagrees with the document is never counted as it.
++    /// </summary>
++    internal static int CountBackgroundSteps(IReadOnlyList<ScenarioStep> ran, IReadOnlyList<string> writtenBackground)
++    {
++        var count = 0;
++        while (count < ran.Count && count < writtenBackground.Count
++               && string.Equals(ran[count].Text, writtenBackground[count], StringComparison.Ordinal))
++        {
++            count++;
++        }
++        return count;
++    }
++
++    /// <summary>
++    /// The steps a step definition ran, as the hooks saw them. The collector holds their place among the woven steps, but
++    /// not their table, doc string or inline values. Each is found by what opened it, so a woven step that reads the same stays
++    /// what it was, under any woven step between.
++    /// </summary>
++    private static ScenarioStep[]? DescribeNested(ScenarioStep[]? subSteps, IReadOnlyList<ReqNRollStepInfo>? nested)
++    {
++        if (subSteps is null || nested is not { Count: > 0 })
++            return subSteps;
++
++        foreach (var subStep in subSteps)
++        {
++            var step = subStep.OpenedBy is null ? null : nested.FirstOrDefault(s => ReferenceEquals(s.Nested, subStep.OpenedBy));
++            if (step is null)
++            {
++                DescribeNested(subStep.SubSteps, nested);
++                continue;
++            }
++
++            subStep.Status = step.Status.ToStepResult(false);
++            subStep.DocString = step.DocString;
++            subStep.Parameters = ParseTableText(step.TableText);
++            subStep.TextSegments = BuildTextSegments(step);
++            DescribeNested(subStep.SubSteps, step.Nested);
++        }
++
++        return subSteps;
++    }
++
+     private static StepTextSegment[]? BuildTextSegments(ReqNRollStepInfo step)
+     {
+         if (step.InlineParams is not { Length: > 0 })
+diff --git a/src/Kronikol/Query/QueryCommand.Narrative.cs b/src/Kronikol/Query/QueryCommand.Narrative.cs
+index 5ac82d28..8cffa88a 100644
+--- a/src/Kronikol/Query/QueryCommand.Narrative.cs
++++ b/src/Kronikol/Query/QueryCommand.Narrative.cs
+@@ -158,7 +158,7 @@ string CutEvidence(string? text, int max, string address)
+                 }
+             }
+ 
+-            if (failingSteps.Length == 0 && scenario.Steps.Count > 0)
++            if (failingSteps.Length == 0 && scenario.BackgroundSteps.Count + scenario.Steps.Count > 0)
+                 writer.Line("  (no step is marked failed — the failure was outside a tracked step)");
+ 
+             WriteAttachments(writer, index, scenario.Attachments, "  ", $"attachments {scenario.Address}");
+diff --git a/src/Kronikol/Reports/AttachmentPlacement.cs b/src/Kronikol/Reports/AttachmentPlacement.cs
+index 81643e6f..97700ce6 100644
+--- a/src/Kronikol/Reports/AttachmentPlacement.cs
++++ b/src/Kronikol/Reports/AttachmentPlacement.cs
+@@ -135,8 +135,12 @@ internal static string Printable(string path)
+     /// </summary>
+     internal static void ForEachList(IEnumerable<Scenario> scenarios, Func<FileAttachment[], FileAttachment[]> replace)
+     {
++        // Each scenario and step once, however many lists hold it: a list replaced twice would hand replace the copies it made.
++        var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+         foreach (var scenario in scenarios)
+         {
++            if (!visited.Add(scenario))
++                continue;
+             if (scenario.Attachments is { Length: > 0 } own)
+                 scenario.Attachments = replace(own);
+             Steps(scenario.BackgroundSteps);
+@@ -147,6 +151,8 @@ void Steps(ScenarioStep[]? steps)
+         {
+             foreach (var step in steps ?? [])
+             {
++                if (!visited.Add(step))
++                    continue;
+                 if (step.Attachments is { Length: > 0 } attachments)
+                     step.Attachments = replace(attachments);
+                 Steps(step.SubSteps);
+diff --git a/src/Kronikol/Reports/BackgroundStepsDetector.cs b/src/Kronikol/Reports/BackgroundStepsDetector.cs
+index e8998220..678a6fe8 100644
+--- a/src/Kronikol/Reports/BackgroundStepsDetector.cs
++++ b/src/Kronikol/Reports/BackgroundStepsDetector.cs
+@@ -41,12 +41,10 @@ public static void DetectAndExtract(Scenario[] scenarios)
+                                  s.Steps![commonPrefixLength].Keyword is "Given" or "When"))
+                 continue;
+ 
+-            // Use the first scenario's steps as the background template
+-            var backgroundSteps = members[0].Steps!.Take(commonPrefixLength).ToArray();
+-
++            // Steps that read alike are still each scenario's own: its result, its arguments, its sub-steps (#222).
+             foreach (var scenario in members)
+             {
+-                scenario.BackgroundSteps = backgroundSteps;
++                scenario.BackgroundSteps = scenario.Steps!.Take(commonPrefixLength).ToArray();
+                 scenario.Steps = scenario.Steps!.Skip(commonPrefixLength).ToArray();
+             }
+         }
+diff --git a/src/Kronikol/Reports/ReportGenerator.cs b/src/Kronikol/Reports/ReportGenerator.cs
+index fbe3c755..fc358345 100644
+--- a/src/Kronikol/Reports/ReportGenerator.cs
++++ b/src/Kronikol/Reports/ReportGenerator.cs
+@@ -550,12 +550,12 @@ string BuildFlowScript(InternalFlowTab startTab) =>
+ 
+         if (options.GenerateSpecificationsReport)
+         {
+-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, warmUp: warmUp));
++            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), backgroundOpensOnFailure: ReportToggleDefaultsResolver.BackgroundOpensOnFailure(options, specifications: true), suite: suite, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, warmUp: warmUp));
+         }
+ 
+         if (options.GenerateTestRunReport)
+         {
+-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp, backgroundPaths: backgroundPaths));
++            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), backgroundOpensOnFailure: ReportToggleDefaultsResolver.BackgroundOpensOnFailure(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp, backgroundPaths: backgroundPaths));
+         }
+ 
+         if (options.GenerateSpecificationsData)
+@@ -1488,7 +1488,8 @@ internal static string GenerateHtmlReportCore(DefaultDiagramsFetcher.DiagramAsCo
+         bool showScenarioHistory = false,
+         WarmUpResult? warmUp = null,
+         EmbeddedComponentDiagram? componentDiagram = null,
+-        IReadOnlyDictionary<Guid, string>? backgroundPaths = null)
++        IReadOnlyDictionary<Guid, string>? backgroundPaths = null,
++        bool backgroundOpensOnFailure = false)
+     {
+         // The Specifications page describes the tests, so a scenario that is not a test is not in it.
+         if (!includeTestRunData)
+@@ -2474,6 +2475,7 @@ internal static string GenerateHtmlReportCore(DefaultDiagramsFetcher.DiagramAsCo
+                         searchIndexPieces: searchIndexPieces,
+                         scenarioToolbarControls: scenarioToolbarControls,
+                         toggleDefaults: toggles,
++                        backgroundOpensOnFailure: backgroundOpensOnFailure,
+                         // Without this the flat outline rows compute their ids with no suite while the
+                         // scenario <details> around them computes with one, so one report carries two
+                         // identity schemes and the deep link from a flat row resolves to nothing.
+@@ -2605,7 +2607,7 @@ internal static string GenerateHtmlReportCore(DefaultDiagramsFetcher.DiagramAsCo
+                     body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(scenario.Description)}</div>""");
+ 
+                 RenderScenarioStepSections(body, scenario, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords,
+-                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral);
++                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral, backgroundOpensOnFailure);
+ 
+                 if (scenario.Attachments is { Length: > 0 })
+                 {
+@@ -3551,10 +3553,10 @@ internal static string FormatDuration(TimeSpan duration)
+ 
+     private static bool HasAnyFailed(ScenarioStep step)
+     {
++        if (step.Status == ExecutionResult.Failed) return true;
+         if (step.SubSteps is not { Length: > 0 }) return false;
+         foreach (var sub in step.SubSteps)
+         {
+-            if (sub.Status == ExecutionResult.Failed) return true;
+             if (HasAnyFailed(sub)) return true;
+         }
+         return false;
+@@ -3715,7 +3717,8 @@ private static void RenderParameterizedGroup(
+         HistoryVerdicts? history = null,
+         Dictionary<string, int>? historySlots = null,
+         WarmUpResult? warmUp = null,
+-        StepDeferral? stepDeferral = null)
++        StepDeferral? stepDeferral = null,
++        bool backgroundOpensOnFailure = false)
+     {
+         var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn;
+         var scenarios = group.Scenarios;
+@@ -4093,7 +4096,7 @@ private static void RenderParameterizedGroup(
+                     body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(s.Description)}</div>""");
+ 
+                 RenderScenarioStepSections(body, s, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords,
+-                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral);
++                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral, backgroundOpensOnFailure);
+ 
+                 if (s.Attachments is { Length: > 0 })
+                 {
+@@ -4356,7 +4359,8 @@ private static void RenderScenarioStepSections(
+         bool collapseRepeatedStepKeywords,
+         bool stepsSectionOpen = true,
+         bool backgroundStepsOpen = false,
+-        StepDeferral? deferral = null)
++        StepDeferral? deferral = null,
++        bool backgroundOpensOnFailure = false)
+     {
+         var background = scenario.BackgroundSteps ?? [];
+         var steps = scenario.Steps ?? [];
+@@ -4367,7 +4371,9 @@ private static void RenderScenarioStepSections(
+             {
+                 // Each section collapses independently, so the Steps list still opens with its own primary.
+                 var backgroundKeywords = collapseRepeatedStepKeywords ? StepKeywordCollapser.DisplayKeywords(background) : null;
+-                body.Append($"""<details class="scenario-background"{(backgroundStepsOpen ? " open" : "")}>""");
++                // A section holding a failed step starts open, and stays open as its outline row is selected, unless it was set to stay closed.
++                var holdsFailure = backgroundOpensOnFailure && background.Any(HasAnyFailed);
++                body.Append($"""<details class="scenario-background"{(holdsFailure ? " data-holds-failure" : "")}{(backgroundStepsOpen || holdsFailure ? " open" : "")}>""");
+                 body.Append("""<summary class="h4" title="The steps of the feature's background, which run before this scenario's own">Background Steps</summary>""");
+                 for (var bi = 0; bi < background.Length; bi++)
+                 {
+diff --git a/src/Kronikol/Reports/ReportToggleDefaults.cs b/src/Kronikol/Reports/ReportToggleDefaults.cs
+index 84496734..71453d86 100644
+--- a/src/Kronikol/Reports/ReportToggleDefaults.cs
++++ b/src/Kronikol/Reports/ReportToggleDefaults.cs
+@@ -120,7 +120,8 @@ public record ReportToggleDefaults
+     public bool? RulesOpen { get; set; }
+ 
+     /// <summary>The separate Background Steps disclosure starts open (only emitted with
+-    /// <see cref="ReportConfigurationOptions.SeparateBackgroundSteps"/>). Default: <c>false</c>.</summary>
++    /// <see cref="ReportConfigurationOptions.SeparateBackgroundSteps"/>). Default: closed, but open where it holds a failed
++    /// step; <c>false</c> keeps that one closed too.</summary>
+     public bool? BackgroundStepsOpen { get; set; }
+ 
+     /// <summary>The Raw Plant UML disclosure under each diagram image starts open (non-BrowserJs
+diff --git a/src/Kronikol/Reports/ReportToggleDefaultsResolver.cs b/src/Kronikol/Reports/ReportToggleDefaultsResolver.cs
+index c103b279..58e2b4ec 100644
+--- a/src/Kronikol/Reports/ReportToggleDefaultsResolver.cs
++++ b/src/Kronikol/Reports/ReportToggleDefaultsResolver.cs
+@@ -85,6 +85,16 @@ public static ResolvedToggleDefaults Resolve(ReportConfigurationOptions options,
+         return resolved;
+     }
+ 
++    /// <summary>
++    /// Whether a report's separate Background section holding a failed step starts open though
++    /// <see cref="ResolvedToggleDefaults.BackgroundStepsOpen"/> is false: so when <see cref="ReportToggleDefaults.BackgroundStepsOpen"/>
++    /// was left unset (#222). Only the options can tell unset from false, so a value set says what it says, as does a record
++    /// handed to <c>GenerateHtmlReport</c>.
++    /// </summary>
++    internal static bool BackgroundOpensOnFailure(ReportConfigurationOptions options, bool specifications) =>
++        options.TestRunReportToggleDefaults.BackgroundStepsOpen is null
++        && (!specifications || options.SpecificationsToggleDefaults.BackgroundStepsOpen is null);
++
+     private static ResolvedToggleDefaults Overlay(ResolvedToggleDefaults baseline, ReportToggleDefaults overrides) => new()
+     {
+         Details = Defined(overrides.Details) ?? baseline.Details,
+diff --git a/src/Kronikol/Reports/ScenarioStep.cs b/src/Kronikol/Reports/ScenarioStep.cs
+index 62c3e941..5305d46d 100644
+--- a/src/Kronikol/Reports/ScenarioStep.cs
++++ b/src/Kronikol/Reports/ScenarioStep.cs
+@@ -25,6 +25,9 @@ public record ScenarioStep
+     public string? DocString { get; set; }
+     public string? DocStringMediaType { get; set; }
+ 
++    /// <summary>What opened this step, where an adapter has to tell it from one that reads the same (#222). Never written out.</summary>
++    internal object? OpenedBy { get; set; }
++
+     /// <summary>
+     /// Why this step or assertion failed — the assertion's message, or the exception message that ended
+     /// the step. The single most-wanted piece of information about a failing test, and until it lived here
+diff --git a/src/Kronikol/Reports/report-search-function.js b/src/Kronikol/Reports/report-search-function.js
+index 29b328dc..daa7fde1 100644
+--- a/src/Kronikol/Reports/report-search-function.js
++++ b/src/Kronikol/Reports/report-search-function.js
+@@ -19,13 +19,21 @@ function revealSingleMatch(el) {
+     [el.closest('details.feature'), el.closest('details.rule'), el].forEach(function(d) {
+         if (d && !d.open) { _openedBySearch.push(d); d.setAttribute('open', ''); }
+     });
+-    ['details.example-diagrams', 'details.scenario-steps', 'details.scenario-background'].forEach(function(sel) {
+-        var section = el.querySelector(sel);
+-        if (section) section.setAttribute('open', '');
++}
++
++// The sections a match needs, on the row shown, so this runs once the search has chosen its row. No other row's, as the
++// reader's choices there are not the search's to change, and each once until the search is emptied, so one the reader closes
++// stays closed.
++var _sectionsRevealed = new WeakSet();
++function revealMatchSections(el) {
++    var shown = el.querySelector('.param-detail-panel:not([style*="display"])') || el;
++    [el.querySelector('details.example-diagrams'), shown.querySelector('details.scenario-steps'), shown.querySelector('details.scenario-background')].forEach(function(section) {
++        if (section && !_sectionsRevealed.has(section)) { _sectionsRevealed.add(section); section.setAttribute('open', ''); }
+     });
+ }
+ 
+ function close_opened_by_search() {
++    _sectionsRevealed = new WeakSet();
+     _openedBySearch.forEach(function(d) { d.removeAttribute('open'); });
+     _openedBySearch = [];
+ }
+@@ -45,12 +53,18 @@ function choose_search_row(row) {
+         _rowsChosenBySearch.push(chosen);
+     }
+     chosen.row = row;
++    click_search_row(row);
++}
++// A row the search chooses or puts back shows as it stands, as the search's choice is not the reader's to keep.
++function click_search_row(row) {
++    selectRowBySearch = true;
+     row.click();
++    selectRowBySearch = false;
+ }
+ function clear_search_rows() {
+     document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });
+     _rowsChosenBySearch.forEach(function(c) {
+-        if (c.was && c.row.classList.contains('row-active') && !c.was.classList.contains('row-active')) c.was.click();
++        if (c.was && c.row.classList.contains('row-active') && !c.was.classList.contains('row-active')) click_search_row(c.was);
+     });
+     _rowsChosenBySearch = [];
+ }
+@@ -381,6 +395,7 @@ function run_search_scenarios() {
+         revealSingleMatch(r.single);
+     }
+     highlight_search_rows(r.words);
++    if (r.count === 1 && r.single) revealMatchSections(r.single);
+ }
+ 
+ // The search's own query (the owner, 2026-10-27: a search gives a page of results, and a result picked goes to it; a
+diff --git a/src/Kronikol/Reports/report-select-row-function.js b/src/Kronikol/Reports/report-select-row-function.js
+index 7394e367..93ef3614 100644
+--- a/src/Kronikol/Reports/report-select-row-function.js
++++ b/src/Kronikol/Reports/report-select-row-function.js
+@@ -1,3 +1,8 @@
++// What the reader left open or closed in each outline's rows, for as long as the page is open. It outlives a switch, so a
++// choice carries past a row that lacks that <details> or holds a failure there.
++var selectRowKept = Object.create(null);
++// Set round a click the search makes: that row shows as it stands, and neither keeps nor brings what the reader left.
++var selectRowBySearch = false;
+ function selectRow(clickedRow, prefix) {
+     var table = clickedRow.closest('table');
+     if (!table) return;
+@@ -8,6 +13,7 @@ function selectRow(clickedRow, prefix) {
+     // Scope queries to the scenario container instead of the full document
+     var container = table.closest('.scenario') || document;
+     var activePanel = document.getElementById(prefix + '-detail-' + idx);
++    var kept = selectRowKept[prefix] || (selectRowKept[prefix] = { sections: Object.create(null), steps: Object.create(null) });
+     // Capture outgoing panel's <details> open states before hiding
+     var panels = container.querySelectorAll('[id^="' + prefix + '-detail-"]');
+     var outgoing = null;
+@@ -16,28 +22,21 @@ function selectRow(clickedRow, prefix) {
+     }
+     // A composite step's state goes by its place among the steps: a panel draws a closed one's sub-steps only when it is
+     // first opened (5.0.0, plans/REPORT_FORMAT_PLAN.md 4.8), so counted by position an undrawn subtree would shift every
+-    // state after it. The other <details> keep their order, which nothing changes.
+-    var detailStates = [];
+-    var stepStates = {};
+-    if (outgoing && outgoing !== activePanel) {
+-        outgoing.querySelectorAll('details').forEach(function(d) {
+-            if (d.classList.contains('step-collapsible')) stepStates[selectRowStepPath(d, outgoing)] = d.open;
+-            else detailStates.push(d.open);
++    // state after it. The other <details> go by their kind, as a row can lack a kind the row left has: one that never
++    // reached its steps has a Failure Result where the row left has its Background.
++    var carrying = outgoing !== activePanel && !selectRowBySearch;
++    if (outgoing && carrying) {
++        selectRowEachSection(outgoing, function(d, key) { kept.sections[key] = d.open; });
++        outgoing.querySelectorAll('details.step-collapsible').forEach(function(d) {
++            if (!selectRowHoldsFailure(d)) kept.steps[selectRowStepPath(d, outgoing)] = d.open;
+         });
+     }
+     // Switch detail panels
+     for (var i = 0; i < panels.length; i++) panels[i].style.display = 'none';
+     if (activePanel) {
+-        // Sync <details> open states from outgoing panel
+-        if (detailStates.length > 0) {
+-            var incoming = Array.prototype.filter.call(activePanel.querySelectorAll('details'), function(d) {
+-                return !d.classList.contains('step-collapsible');
+-            });
+-            for (var i = 0; i < incoming.length && i < detailStates.length; i++) {
+-                incoming[i].open = detailStates[i];
+-            }
+-        }
+-        selectRowSyncSteps(activePanel, stepStates);
++        // Sync <details> open states from what the reader left
++        if (carrying) selectRowEachSection(activePanel, function(d, key) { if (key in kept.sections) d.open = kept.sections[key]; });
++        selectRowSyncSteps(activePanel, carrying ? kept.steps : Object.create(null));
+         activePanel.style.display = '';
+     }
+     // Switch diagram divs (sequence)
+@@ -96,6 +95,20 @@ function highlightColumns(table, prefix) {
+     });
+ }
+ 
++// A <details> holding a failure is open for that reason and not by the reader's hand, so nothing crosses to or from it, and
++// each row keeps its own: a Background section the generator marks, as one set to stay closed has no such hold, and a
++// composite step with a failed step in it, which always starts open and always has its sub-steps drawn.
++function selectRowHoldsFailure(d) {
++    return d.hasAttribute('data-holds-failure') || (d.classList.contains('step-collapsible') && d.querySelector('.step-status.failed') !== null);
++}
++
++// Each <details> of `panel` but the composite steps and those holding a failure, with its kind, of which a panel has one.
++function selectRowEachSection(panel, visit) {
++    panel.querySelectorAll('details').forEach(function(d) {
++        if (!d.classList.contains('step-collapsible') && !selectRowHoldsFailure(d)) visit(d, d.classList[0]);
++    });
++}
++
+ // A composite step's place among the steps of `panel`: its index, and that of each composite above it, among its
+ // siblings, so the same step in two rows' panels has the same path whether or not its sub-steps are drawn yet. A step of
+ // the background's own section starts with 'b', as its address in the data file does, so the first step there and the
+@@ -118,6 +131,7 @@ function selectRowStepPath(details, panel) {
+ function selectRowSyncSteps(panel, states) {
+     function apply(root) {
+         root.querySelectorAll('details.step-collapsible').forEach(function(d) {
++            if (selectRowHoldsFailure(d)) return;
+             var open = states[selectRowStepPath(d, panel)];
+             if (open !== undefined && d.open !== open) d.open = open;
+         });
+diff --git a/src/Kronikol/Tracking/StepCollector.cs b/src/Kronikol/Tracking/StepCollector.cs
+index 4946362e..8ea13ee8 100644
+--- a/src/Kronikol/Tracking/StepCollector.cs
++++ b/src/Kronikol/Tracking/StepCollector.cs
+@@ -53,6 +53,14 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+     /// </summary>
+     public static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
+         string[][]? table, string? docString)
++        => StartStep(testId, keyword, text, paramNames, paramValues, table, docString, openedBy: null);
++
++    /// <summary>
++    /// The same, saying what opened the step, which reaches <see cref="ScenarioStep.OpenedBy"/>: an adapter that hears of a
++    /// step twice can then tell its own from one that reads the same.
++    /// </summary>
++    internal static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
++        string[][]? table, string? docString, object? openedBy)
+     {
+         if (testId is null)
+             return;
+@@ -64,7 +72,8 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+             OriginalKeyword = keyword,
+             Text = text,
+             StartTime = Stopwatch.GetTimestamp(),
+-            Parameters = BuildParameters(paramNames, paramValues)
++            Parameters = BuildParameters(paramNames, paramValues),
++            OpenedBy = openedBy
+         };
+ 
+         var isTopLevel = false;
+@@ -494,7 +503,8 @@ private static ScenarioStep ToScenarioStep(CollectedStep step)
+                 : null,
+             Attachments = step.Attachments is { Count: > 0 }
+                 ? step.Attachments.ToArray()
+-                : null
++                : null,
++            OpenedBy = step.OpenedBy
+         };
+     }
+ 
+@@ -560,5 +570,6 @@ private class CollectedStep
+         public StepParameter[]? Parameters { get; set; }
+         public List<CollectedStep> SubSteps { get; } = new();
+         public List<FileAttachment>? Attachments { get; set; }
++        public object? OpenedBy { get; set; }
+     }
+ }
+diff --git a/tests/Kronikol.Tests.EndToEnd/BackgroundSectionRowSwitchTests.cs b/tests/Kronikol.Tests.EndToEnd/BackgroundSectionRowSwitchTests.cs
+new file mode 100644
+index 00000000..d4b92cbc
+--- /dev/null
++++ b/tests/Kronikol.Tests.EndToEnd/BackgroundSectionRowSwitchTests.cs
+@@ -0,0 +1,493 @@
++using Kronikol.Reports;
++using Microsoft.Playwright;
++
++namespace Kronikol.Tests.EndToEnd;
++
++/// <summary>
++/// #222: what a row switch does with SeparateBackgroundSteps, in a report made from the options: what the reader left carries
++/// over, past a row that lacks that section or holds a failure there, and a section or composite holding a failure keeps its own.
++/// </summary>
++[Collection(PlaywrightCollections.Reports)]
++public class BackgroundSectionRowSwitchTests : PlaywrightTestBase
++{
++    public BackgroundSectionRowSwitchTests(PlaywrightFixture fixture) : base(fixture) { }
++
++    private static Scenario Row(string id, string row, ExecutionResult result, ScenarioStep[]? background, ScenarioStep[]? steps, string outline = "Pay") => new()
++    {
++        Id = id,
++        DisplayName = outline,
++        OutlineId = outline,
++        Result = result,
++        ExampleValues = new Dictionary<string, string> { ["row"] = row },
++        ExampleRawValues = new Dictionary<string, object?> { ["row"] = row },
++        BackgroundSteps = background,
++        Steps = steps,
++        ErrorMessage = result == ExecutionResult.Failed ? "it failed" : null,
++    };
++
++    private static ScenarioStep[] SignedIn(ExecutionResult status) => [new ScenarioStep { Keyword = "Given", Text = "a customer is signed in", Status = status }];
++
++    private static ScenarioStep[] Pays() => [new ScenarioStep { Keyword = "When", Text = "the customer pays", Status = ExecutionResult.Passed }];
++
++    private static ScenarioStep[] Composite(ExecutionResult status, string inner = "the card is read") =>
++    [
++        new ScenarioStep
++        {
++            Keyword = "When", Text = "the customer pays", Status = status,
++            SubSteps = [new ScenarioStep { Keyword = "Given", Text = inner, Status = ExecutionResult.Passed }],
++        },
++    ];
++
++    // a passes, b fails in its Background, c never reaches its steps, d passes
++    private static Scenario[] Pay() =>
++    [
++        Row("a222a", "a passes", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays()),
++        Row("a222b", "b fails", ExecutionResult.Failed, SignedIn(ExecutionResult.Failed), null),
++        Row("a222c", "c never starts", ExecutionResult.Failed, null, null),
++        Row("a222d", "d passes", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays()),
++    ];
++
++    private async Task OpenReport(string name, Scenario[] rows, ReportConfigurationOptions? options = null)
++    {
++        options ??= new ReportConfigurationOptions();
++        options.ReportsFolderPath = Path.Combine(TempDir, name);
++        options.SeparateBackgroundSteps = true;
++        options.GenerateSpecificationsReport = false;
++        options.GenerateSpecificationsData = false;
++        lock (ReportTestHelper.WholePipeline)
++        {
++            DefaultDiagramsFetcher.Reset();
++            ReportGenerator.CreateStandardReportsWithDiagrams([new Feature { DisplayName = "Orders", Scenarios = rows }], DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
++            DefaultDiagramsFetcher.Reset();
++        }
++        await Page.GotoReportAsync(new Uri(Path.Combine(options.ReportsFolderPath, "TestRunReport.html")).AbsoluteUri);
++        await Page.Locator("details.feature").First.WaitForAsync();
++        await ExpandAllFeaturesAsync();
++        await ExpandAllScenariosAsync();
++    }
++
++    private async Task SelectRow(int row) => await Page.Locator("details.scenario tr[data-row-idx]").Nth(row).ClickAsync();
++
++    private async Task<bool> IsOpen(string selector) => await Page.EvaluateAsync<bool>(
++        """
++        selector => {
++            const panel = Array.from(document.querySelectorAll('[id*="-detail-"]')).find(p => p.style.display !== 'none');
++            return panel.querySelector(selector).open;
++        }
++        """,
++        selector);
++
++    private async Task SetOpen(string selector, bool open) => await Page.EvaluateAsync(
++        """
++        ([selector, open]) => {
++            const panel = Array.from(document.querySelectorAll('[id*="-detail-"]')).find(p => p.style.display !== 'none');
++            panel.querySelector(selector).open = open;
++        }
++        """,
++        new object[] { selector, open });
++
++    [Fact]
++    public async Task A_failing_rows_section_is_open_and_the_row_left_keeps_its_own_state()
++    {
++        await OpenReport("RowSwitchFailing", Pay());
++
++        Assert.False(await IsOpen("details.scenario-background"));
++        await SelectRow(1);
++        Assert.True(await IsOpen("details.scenario-background"));
++        await SelectRow(0);
++        Assert.False(await IsOpen("details.scenario-background"));
++    }
++
++    [Fact]
++    public async Task A_failing_rows_section_the_reader_closed_stays_closed_when_they_come_back()
++    {
++        await OpenReport("RowSwitchReaderClosed", Pay());
++
++        await SelectRow(1);
++        Assert.True(await IsOpen("details.scenario-background"));
++        await SetOpen("details.scenario-background", false);
++        await SelectRow(0);
++        await SelectRow(1);
++
++        Assert.False(await IsOpen("details.scenario-background"));
++    }
++
++    [Fact]
++    public async Task A_row_that_never_reached_its_steps_keeps_its_failure_result_open()
++    {
++        await OpenReport("RowSwitchFailureResult", Pay());
++
++        await SelectRow(2);
++
++        Assert.True(await IsOpen("details.failure-result"));
++    }
++
++    [Fact]
++    public async Task A_section_the_reader_opened_stays_open_past_a_failing_row_and_back()
++    {
++        await OpenReport("RowSwitchReaderOpened", Pay());
++
++        await SetOpen("details.scenario-background", true);
++        await SelectRow(1);
++        await SelectRow(3);
++        Assert.True(await IsOpen("details.scenario-background"));
++        await SelectRow(0);
++        Assert.True(await IsOpen("details.scenario-background"));
++    }
++
++    [Fact]
++    public async Task A_section_the_reader_closed_stays_closed_past_a_row_without_it()
++    {
++        await OpenReport("RowSwitchPastARowWithoutIt", Pay());
++
++        await SetOpen("details.scenario-steps", false);
++        await SelectRow(2);
++        await SelectRow(3);
++
++        Assert.False(await IsOpen("details.scenario-steps"));
++    }
++
++    [Fact]
++    public async Task A_failure_result_the_reader_closed_stays_closed_on_the_next_row_that_has_one()
++    {
++        await OpenReport("RowSwitchFailureResultClosed",
++        [
++            Row("a222a", "a passes", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays()),
++            Row("a222b", "b never starts", ExecutionResult.Failed, null, null),
++            Row("a222c", "c never starts", ExecutionResult.Failed, null, null),
++        ]);
++
++        await SelectRow(1);
++        await SetOpen("details.failure-result", false);
++        await SelectRow(2);
++
++        Assert.False(await IsOpen("details.failure-result"));
++    }
++
++    [Fact]
++    public async Task A_section_set_to_stay_closed_holds_nothing_on_a_failing_row()
++    {
++        await OpenReport("RowSwitchSetClosed", Pay(), new ReportConfigurationOptions { TestRunReportToggleDefaults = { BackgroundStepsOpen = false } });
++
++        await SelectRow(1);
++        Assert.False(await IsOpen("details.scenario-background"));
++        await SetOpen("details.scenario-background", true);
++        await SelectRow(0);
++        Assert.True(await IsOpen("details.scenario-background"));
++    }
++
++    [Theory]
++    [InlineData(true)]
++    [InlineData(false)]
++    public async Task A_failed_composite_keeps_its_state_on_its_own_row(bool failedByItself)
++    {
++        ScenarioStep[] failed = failedByItself
++            ? Composite(ExecutionResult.Failed)
++            :
++            [
++                new ScenarioStep
++                {
++                    Keyword = "When", Text = "the customer pays", Status = ExecutionResult.Passed,
++                    SubSteps = [new ScenarioStep { Keyword = "Given", Text = "the card is read", Status = ExecutionResult.Failed }],
++                },
++            ];
++        await OpenReport("RowSwitchComposite" + failedByItself,
++        [
++            Row("a222a", "a fails", ExecutionResult.Failed, null, failed),
++            Row("a222b", "b passes", ExecutionResult.Passed, null, Composite(ExecutionResult.Passed)),
++            Row("a222c", "c passes", ExecutionResult.Passed, null, Composite(ExecutionResult.Passed)),
++        ]);
++
++        Assert.True(await IsOpen("details.step-collapsible"));
++        await SelectRow(1);
++        Assert.False(await IsOpen("details.step-collapsible"));
++        await SelectRow(2);
++        Assert.False(await IsOpen("details.step-collapsible"));
++        await SelectRow(0);
++        Assert.True(await IsOpen("details.step-collapsible"));
++    }
++
++    [Fact]
++    public async Task A_composite_the_reader_opened_stays_open_past_a_failed_one()
++    {
++        await OpenReport("RowSwitchCompositeOpened",
++        [
++            Row("a222a", "a passes", ExecutionResult.Passed, null, Composite(ExecutionResult.Passed)),
++            Row("a222b", "b fails", ExecutionResult.Failed, null, Composite(ExecutionResult.Failed)),
++            Row("a222c", "c passes", ExecutionResult.Passed, null, Composite(ExecutionResult.Passed)),
++        ]);
++
++        await SetOpen("details.step-collapsible", true);
++        await SelectRow(1);
++        Assert.True(await IsOpen("details.step-collapsible"));
++        await SetOpen("details.step-collapsible", false);
++        await SelectRow(2);
++
++        Assert.True(await IsOpen("details.step-collapsible"));
++    }
++
++    // a holds a failure in its Background, and only b's Background holds the word.
++    private static Scenario[] Searched() =>
++    [
++        Row("a222a", "a fails", ExecutionResult.Failed, SignedIn(ExecutionResult.Failed), null),
++        Row("a222b", "b passes", ExecutionResult.Passed, [new ScenarioStep { Keyword = "Given", Text = "a zebraword customer is signed in", Status = ExecutionResult.Passed }], Pays()),
++        Row("a222c", "c passes", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays()),
++    ];
++
++    private async Task WaitForRow(string row) => await Page.WaitForFunctionAsync(
++        "row => { const r = document.querySelector('details.scenario tr.row-active'); return r && r.getAttribute('data-row-idx') === row; }",
++        row, new PageWaitForFunctionOptions { PollingInterval = 200 });
++
++    [Theory]
++    [InlineData(false)]
++    [InlineData(true)]
++    public async Task A_single_search_match_shows_in_its_row_when_the_first_row_holds_a_failure(bool readerMovedFirst)
++    {
++        await OpenReport("RowSwitchSearch" + readerMovedFirst, Searched());
++
++        if (readerMovedFirst)
++        {
++            await SelectRow(2);
++            await SelectRow(0);
++        }
++        await FillSearchBar("zebraword");
++        await WaitForRow("1");
++
++        Assert.True(await IsOpen("details.scenario-background"));
++        Assert.True(await Page.GetByText("a zebraword customer is signed in").First.IsVisibleAsync());
++    }
++
++    [Fact]
++    public async Task Emptying_the_search_puts_back_what_the_reader_left()
++    {
++        await OpenReport("RowSwitchSearchEmptied", Searched());
++
++        await SelectRow(2);
++        await SetOpen("details.scenario-steps", false);
++        await FillSearchBar("zebraword");
++        await WaitForRow("1");
++        Assert.True(await IsOpen("details.scenario-steps"));
++        await FillSearchBar("");
++        await WaitForRow("2");
++
++        Assert.False(await IsOpen("details.scenario-steps"));
++        Assert.False(await IsOpen("details.scenario-background"));
++    }
++
++    [Fact]
++    public async Task The_search_changes_no_row_but_the_one_it_chose()
++    {
++        await OpenReport("RowSwitchSearchOtherRows", Searched());
++
++        await SelectRow(2);
++        await SetOpen("details.scenario-steps", false);
++        await FillSearchBar("zebraword");
++        await WaitForRow("1");
++
++        Assert.False(await Page.EvaluateAsync<bool>(
++            """() => document.querySelector('[id$="-detail-2"] details.scenario-steps').open"""));
++        Assert.False(await Page.EvaluateAsync<bool>(
++            """() => document.querySelector('[id$="-detail-2"] details.scenario-background').open"""));
++    }
++
++    private static ScenarioStep[] Reading(string text) => [new ScenarioStep { Keyword = "Given", Text = text, Status = ExecutionResult.Passed }];
++
++    private async Task<bool> IsOpenOnRow(int row, string selector) => await Page.EvaluateAsync<bool>(
++        """([row, selector]) => document.querySelector('[id$="-detail-' + row + '"] ' + selector).open""",
++        new object[] { row, selector });
++
++    [Fact]
++    public async Task A_search_that_moves_to_another_row_shows_its_match_on_each_and_leaves_the_rest()
++    {
++        await OpenReport("RowSwitchSearchMoves",
++        [
++            Row("a222a", "a passes", ExecutionResult.Passed, Reading("a zebra customer is signed in"), Pays()),
++            Row("a222b", "b passes", ExecutionResult.Passed, Reading("a zebra stripe customer is signed in"), Pays()),
++            Row("a222c", "c passes", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays()),
++        ]);
++
++        await FillSearchBar("zebra");
++        await WaitForRow("0");
++        Assert.True(await IsOpen("details.scenario-background"));
++        await FillSearchBar("zebra stripe");
++        await WaitForRow("1");
++        Assert.True(await IsOpen("details.scenario-background"));
++        await FillSearchBar("");
++        await WaitForRow("0");
++
++        Assert.False(await IsOpenOnRow(2, "details.scenario-background"));
++    }
++
++    [Fact]
++    public async Task A_section_the_reader_closed_during_a_search_stays_closed_as_it_narrows()
++    {
++        await OpenReport("RowSwitchSearchNarrows",
++        [
++            Row("a222a", "a passes", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays()),
++            Row("a222b", "b passes", ExecutionResult.Passed, Reading("a zebra stripe customer is signed in"), Pays()),
++        ]);
++
++        await FillSearchBar("zebra");
++        await WaitForRow("1");
++        Assert.True(await IsOpen("details.scenario-background"));
++        await SetOpen("details.scenario-background", false);
++        await FillSearchBar("zebra stripe");
++        await WaitForRow("1");
++
++        Assert.False(await IsOpen("details.scenario-background"));
++    }
++
++    // The reader starts on a, and b and c each hold one word.
++    private static Scenario[] TwoWords() =>
++    [
++        Row("a222a", "a passes", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays()),
++        Row("a222b", "b passes", ExecutionResult.Passed, Reading("a zebra customer is signed in"), Pays()),
++        Row("a222c", "c passes", ExecutionResult.Passed, Reading("a stripe customer is signed in"), Pays()),
++    ];
++
++    [Fact]
++    public async Task A_section_the_reader_closed_stays_closed_when_the_match_moves_away_and_back()
++    {
++        await OpenReport("RowSwitchSearchAwayAndBack", TwoWords());
++
++        await FillSearchBar("zebra");
++        await WaitForRow("1");
++        await SetOpen("details.scenario-background", false);
++        await FillSearchBar("stripe");
++        await WaitForRow("2");
++        Assert.True(await IsOpen("details.scenario-background"));
++        await FillSearchBar("zebra");
++        await WaitForRow("1");
++
++        Assert.False(await IsOpen("details.scenario-background"));
++    }
++
++    [Fact]
++    public async Task A_new_search_opens_again_what_the_reader_closed_in_the_last()
++    {
++        await OpenReport("RowSwitchSearchAgain", TwoWords());
++
++        await FillSearchBar("zebra");
++        await WaitForRow("1");
++        await SetOpen("details.scenario-background", false);
++        await FillSearchBar("");
++        await WaitForRow("0");
++        await FillSearchBar("zebra");
++        await WaitForRow("1");
++
++        Assert.True(await IsOpen("details.scenario-background"));
++    }
++
++    [Fact]
++    public async Task A_row_the_search_chooses_takes_nothing_from_the_row_it_left()
++    {
++        await OpenReport("RowSwitchSearchTakesNothing",
++        [
++            Row("a222a", "a never starts", ExecutionResult.Failed, null, null),
++            Row("a222b", "b zebra never starts", ExecutionResult.Failed, null, null),
++        ]);
++
++        await SetOpen("details.failure-result", false);
++        await FillSearchBar("zebra");
++        await WaitForRow("1");
++
++        Assert.True(await IsOpen("details.failure-result"));
++    }
++
++    private async Task<bool> IsOpenIn(int scenario, string selector) => await Page.Locator("details.scenario").Nth(scenario).EvaluateAsync<bool>(
++        """
++        (element, selector) => Array.from(element.querySelectorAll('[id*="-detail-"]')).find(p => p.style.display !== 'none').querySelector(selector).open
++        """,
++        selector);
++
++    [Fact]
++    public async Task What_the_reader_left_in_one_outline_stays_out_of_another()
++    {
++        await OpenReport("RowSwitchTwoOutlines",
++        [
++            Row("a222a", "a", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays()),
++            Row("a222b", "b", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays()),
++            // c has no Background, so nothing of this outline's overwrites what the other outline's row left
++            Row("a222c", "c", ExecutionResult.Failed, null, null, outline: "Refund"),
++            Row("a222d", "d", ExecutionResult.Passed, SignedIn(ExecutionResult.Passed), Pays(), outline: "Refund"),
++        ]);
++
++        await Page.Locator("details.scenario").First.EvaluateAsync(
++            """
++            element => {
++                const panel = Array.from(element.querySelectorAll('[id*="-detail-"]')).find(p => p.style.display !== 'none');
++                panel.querySelector('details.scenario-background').open = true;
++            }
++            """);
++        await SelectRow(1);
++        Assert.True(await IsOpenIn(0, "details.scenario-background"));
++        await SelectRow(3);
++
++        Assert.False(await IsOpenIn(1, "details.scenario-background"));
++    }
++
++    [Fact]
++    public async Task A_composite_at_another_place_among_the_steps_takes_no_state()
++    {
++        var plain = new ScenarioStep { Keyword = "Given", Text = "a customer is signed in", Status = ExecutionResult.Passed };
++        await OpenReport("RowSwitchCompositePlace",
++        [
++            Row("a222a", "a", ExecutionResult.Passed, null, [plain, .. Composite(ExecutionResult.Passed)]),
++            Row("a222b", "b", ExecutionResult.Passed, null, [.. Composite(ExecutionResult.Passed), plain]),
++        ]);
++
++        await SetOpen("details.step-collapsible", true);
++        await SelectRow(1);
++
++        Assert.False(await IsOpen("details.step-collapsible"));
++    }
++
++    [Fact]
++    public async Task A_click_on_the_row_already_chosen_leaves_a_composite_as_it_is()
++    {
++        await OpenReport("RowSwitchSameRowComposite",
++        [
++            Row("a222a", "a", ExecutionResult.Passed, null, Composite(ExecutionResult.Passed)),
++            Row("a222b", "b", ExecutionResult.Passed, null, Composite(ExecutionResult.Passed)),
++        ]);
++
++        await SelectRow(1);
++        await SelectRow(0);
++        await SetOpen("details.step-collapsible", true);
++        await SelectRow(0);
++
++        Assert.True(await IsOpen("details.step-collapsible"));
++    }
++
++    [Fact]
++    public async Task A_click_on_the_row_already_chosen_changes_nothing()
++    {
++        await OpenReport("RowSwitchSameRow", Pay());
++
++        await SelectRow(3);
++        await SelectRow(0);
++        await SetOpen("details.scenario-background", true);
++        await SelectRow(0);
++
++        Assert.True(await IsOpen("details.scenario-background"));
++    }
++
++    [Fact]
++    public async Task A_details_of_any_class_a_suites_script_adds_does_not_stop_a_switch()
++    {
++        await OpenReport("RowSwitchAnyClass", Pay());
++
++        await Page.EvaluateAsync(
++            """
++            () => document.querySelectorAll('[id*="-detail-"]').forEach(panel => {
++                const added = document.createElement('details');
++                added.className = 'constructor';
++                panel.appendChild(added);
++            })
++            """);
++        await SelectRow(1);
++
++        Assert.EndsWith("-detail-1", await Page.EvaluateAsync<string>(
++            """() => Array.from(document.querySelectorAll('[id*="-detail-"]')).find(p => p.style.display !== 'none').id"""));
++    }
++}
+diff --git a/tests/Kronikol.Tests.EndToEnd/SearchFunctionPageTests.cs b/tests/Kronikol.Tests.EndToEnd/SearchFunctionPageTests.cs
+index 01ea6b60..ac2608ed 100644
+--- a/tests/Kronikol.Tests.EndToEnd/SearchFunctionPageTests.cs
++++ b/tests/Kronikol.Tests.EndToEnd/SearchFunctionPageTests.cs
+@@ -239,6 +239,18 @@ public async Task One_match_is_opened_where_it_is_with_its_steps_and_diagrams_bu
+         Assert.Equal("none", (await DisplaysAsync("details.scenario"))[Vanilla]);
+     }
+ 
++    [Fact]
++    public async Task A_diagrams_section_the_reader_closed_stays_closed_on_the_next_key()
++    {
++        await OpenAsync(GenerateReveal("SearchPage_RevealReaderClosed.html"));
++        await SearchAsync("chocolate", ChocolateCake);
++        await Page.EvaluateAsync("id => { document.getElementById(id).querySelector('details.example-diagrams').open = false; }", ChocolateCake);
++
++        await SearchAsync("chocolate cake", ChocolateCake);
++
++        Assert.Equal("feature rule scenario steps background", await OpenedAsync(ChocolateCake));
++    }
++
+     // ---- emptying the search ----
+ 
+     [Fact]
+diff --git a/tests/Kronikol.Tests/Reports/ToggleDefaultsMarkupTests.cs b/tests/Kronikol.Tests/Reports/ToggleDefaultsMarkupTests.cs
+index 46c86465..a70cb410 100644
+--- a/tests/Kronikol.Tests/Reports/ToggleDefaultsMarkupTests.cs
++++ b/tests/Kronikol.Tests/Reports/ToggleDefaultsMarkupTests.cs
+@@ -603,7 +603,7 @@ public void Single_match_reveal_opens_every_section_that_can_hide_matched_conten
+         Assert.Contains("closest('details.rule')", content);
+         // the feature round the match too (5.2.0): where features start closed, the match opened out of sight
+         Assert.Contains("[el.closest('details.feature'), el.closest('details.rule'), el].forEach(", content);
+-        Assert.Contains("'details.example-diagrams', 'details.scenario-steps', 'details.scenario-background'", content);
++        Assert.Contains("[el.querySelector('details.example-diagrams'), shown.querySelector('details.scenario-steps'), shown.querySelector('details.scenario-background')].forEach(", content);
+     }
+ 
+     // ═══════════════════════════════════════════════════════════
+diff --git a/tests/Kronikol.Tests/Reports/VerdictFencesTests.cs b/tests/Kronikol.Tests/Reports/VerdictFencesTests.cs
+index cd1a16c0..7c4470c1 100644
+--- a/tests/Kronikol.Tests/Reports/VerdictFencesTests.cs
++++ b/tests/Kronikol.Tests/Reports/VerdictFencesTests.cs
+@@ -68,7 +68,7 @@ public class VerdictFencesTests
+         // script, default variant (no verdicts), verdict variant
+         { "advanced-search.js", "1543f8d6b072935b1b5a7f4838a4f6a3315a2b3c689026b3f099a116e55c0fb2", "e15cf8d1c84cb2cd0fc4c44bd3e237ca1dd37398d3028b0f813a1409e11a51a7" },
+         { "report-scenario-feature-map-helper.js", "1fabc946b6ce384a3c0192f482831af92667c8a571c94271c17d039f823c5da2", "094f7e44413e058c7cdf5974a7484626e0af4be7cc150d6f8aa875fd953a0342" },
+-        { "report-search-function.js", "0696f19fc5f00917a5fde122641a1a6f62116962d51d23a66a1508367149c0d9", "e6b805eb054d3ce9f80aa4706e2b3fe10581e50f23fc209a4d8420ec298ac9d8" },
++        { "report-search-function.js", "b5f6f5811d7bce51829bd9b47fe2dd5adcac0b52d050cd2c9325803a9a4bba88", "20a6ef88a398d4e2999472fd9adc54418b0cd85e132597953347740cfbf592cc" },
+         { "report-search-index.js", "d40cbeafe0fee2252ead016c52cc9e0c51554239e40ec4ba086cee22c284ed03", "181ced75ceb7c88a81f3cfb0ba9c67e30da8589aead9a2bb48465175681a6549" },
+     };
+ 
+diff --git a/tests/Kronikol.Tests/ReqNRoll/BackgroundAsWrittenTests.cs b/tests/Kronikol.Tests/ReqNRoll/BackgroundAsWrittenTests.cs
+new file mode 100644
+index 00000000..0b44ee8a
+--- /dev/null
++++ b/tests/Kronikol.Tests/ReqNRoll/BackgroundAsWrittenTests.cs
+@@ -0,0 +1,826 @@
++using System.Globalization;
++using System.Reflection;
++using Io.Cucumber.Messages.Types;
++using GherkinFeature = Io.Cucumber.Messages.Types.Feature;
++using GherkinScenarioNode = Io.Cucumber.Messages.Types.Scenario;
++using Feature = Kronikol.Reports.Feature;
++using Scenario = Kronikol.Reports.Scenario;
++using Kronikol.Ingestion;
++using Kronikol.Query;
++using Kronikol.PlantUml;
++using Kronikol.Reports;
++using Kronikol.ReqNRoll;
++using Kronikol.Tracking;
++using Reqnroll;
++using Reqnroll.Formatters.RuntimeSupport;
++
++namespace Kronikol.Tests.ReqNRoll;
++
++/// <summary>
++/// #222: a Reqnroll step is drawn as a Background step when the feature file wrote it in a <c>Background:</c>, and each
++/// scenario keeps its own steps. The first cut of plans/BACKGROUND_AS_WRITTEN_PLAN.md section 6's facts.
++/// </summary>
++public class BackgroundAsWrittenTests
++{
++    private sealed class FakeMessages(GherkinDocument? document, List<Pickle> pickles) : IFeatureLevelCucumberMessages
++    {
++        public bool HasMessages => document is not null;
++        public GherkinDocument GherkinDocument => document!;
++        public IEnumerable<Pickle> Pickles => pickles;
++        public Source Source => null!;
++    }
++
++    private static Location Loc => new(1, 1);
++
++    private static Step GherkinStep(string id, string text) => new(Loc, "Given ", StepKeywordType.CONTEXT, text, null!, null!, id);
++
++    private static GherkinScenarioNode GherkinScenario(string id, string name, params Step[] steps) =>
++        new(Loc, [], "Scenario", name, "", steps.ToList(), [], id);
++
++    private static Background GherkinBackground(string id, params Step[] steps) =>
++        new(Loc, "Background", "", "", steps.ToList(), id);
++
++    private static Pickle PickleOf(string id, string name, string scenarioAstId) =>
++        new(id, "Features/Orders.feature", name, "en", [], [], [scenarioAstId]);
++
++    /// <summary>A feature's Background, a rule's on top of it, a rule without one, and a scenario outside any rule.</summary>
++    private static FeatureInfo Orders()
++    {
++        var plain = GherkinScenario("plain", "Outside any rule", GherkinStep("p1", "the order is placed"));
++        var noOwnSteps = GherkinScenario("empty", "With no steps of its own");
++        var ruled = GherkinScenario("ruled", "Inside the rule", GherkinStep("r1", "the order is placed"));
++        var bare = GherkinScenario("bare", "Inside the bare rule", GherkinStep("b1", "the order is placed"));
++
++        var feature = new GherkinFeature(Loc, [], "en", "Feature", "Orders", "",
++        [
++            new FeatureChild(null, GherkinBackground("bg", GherkinStep("bg1", "a customer is signed in"), GherkinStep("bg2", "the basket is full")), null),
++            new FeatureChild(null, null, plain),
++            new FeatureChild(null, null, noOwnSteps),
++            new FeatureChild(new Rule(Loc, [], "Rule", "Paying", "",
++                [new RuleChild(GherkinBackground("rbg", GherkinStep("rbg1", "the card is valid")), null), new RuleChild(null, ruled)], "rule-1"), null, null),
++            new FeatureChild(new Rule(Loc, [], "Rule", "Bare", "", [new RuleChild(null, bare)], "rule-2"), null, null),
++        ]);
++        return new FeatureInfo(CultureInfo.InvariantCulture, "Features", "Orders", "", ProgrammingLanguage.CSharp, [],
++            new FakeMessages(new GherkinDocument("Features/Orders.feature", feature, []),
++            [
++                PickleOf("p0", "Outside any rule", "plain"),
++                PickleOf("p1", "With no steps of its own", "empty"),
++                PickleOf("p2", "Inside the rule", "ruled"),
++                PickleOf("p3", "Inside the bare rule", "bare"),
++            ]));
++    }
++
++    private static ScenarioInfo Running(string title, string? pickleIndex) => new(title, null, [], null!, [], pickleIndex!);
++
++    [Fact]
++    public void A_scenario_is_given_its_features_background()
++    {
++        Assert.Equal(["a customer is signed in", "the basket is full"],
++            ExamplesBlockResolver.ResolveBackgroundSteps(Orders(), Running("Outside any rule", "0")));
++    }
++
++    [Fact]
++    public void A_scenario_in_a_rule_with_a_background_runs_the_features_then_the_rules()
++    {
++        Assert.Equal(["a customer is signed in", "the basket is full", "the card is valid"],
++            ExamplesBlockResolver.ResolveBackgroundSteps(Orders(), Running("Inside the rule", "2")));
++    }
++
++    [Fact]
++    public void A_rule_without_a_background_leaves_the_features()
++    {
++        Assert.Equal(["a customer is signed in", "the basket is full"],
++            ExamplesBlockResolver.ResolveBackgroundSteps(Orders(), Running("Inside the bare rule", "3")));
++    }
++
++    [Fact]
++    public void A_scenario_with_no_steps_of_its_own_still_runs_the_background()
++    {
++        // Gherkin compiles it to a pickle with no steps, so the answer has to come from the document.
++        Assert.Equal(2, ExamplesBlockResolver.ResolveBackgroundSteps(Orders(), Running("With no steps of its own", "1")).Count);
++    }
++
++    [Fact]
++    public void A_scenario_no_pickle_is_found_for_is_found_by_its_title()
++    {
++        Assert.Equal(3, ExamplesBlockResolver.ResolveBackgroundSteps(Orders(), Running("Inside the rule", null)).Count);
++    }
++
++    [Fact]
++    public void Without_reqnrolls_messages_no_step_is_a_background_step()
++    {
++        var bare = new FeatureInfo(CultureInfo.InvariantCulture, "Features", "Orders", "", ProgrammingLanguage.CSharp, [],
++            new FakeMessages(null, []));
++
++        Assert.Empty(ExamplesBlockResolver.ResolveBackgroundSteps(bare, Running("Outside any rule", "0")));
++    }
++
++    [Theory]
++    [InlineData(new[] { "a", "b", "c" }, new[] { "a", "b" }, 2)] // as written
++    [InlineData(new[] { "a" }, new[] { "a", "b" }, 1)]           // the first step failed, so the second never ran
++    [InlineData(new[] { "x", "a", "b" }, new[] { "a", "b" }, 0)] // a step that disagrees with the document is never counted as it
++    [InlineData(new[] { "a", "x" }, new[] { "a", "b" }, 1)]
++    [InlineData(new[] { "a", "b" }, new string[0], 0)]           // nothing written
++    public void Only_steps_that_ran_and_agree_with_the_document_are_counted(string[] ran, string[] written, int expected)
++    {
++        var steps = ran.Select(text => new ScenarioStep { Keyword = "Given", Text = text }).ToArray();
++
++        Assert.Equal(expected, ScenarioInfoEnumerableExtensions.CountBackgroundSteps(steps, written));
++    }
++
++    private static ReqNRollScenarioInfo Collected(string id, string title, int backgroundCount, params ReqNRollStepInfo[] steps) => new()
++    {
++        ScenarioId = id,
++        ScenarioTitle = title,
++        FeatureTitle = "Orders",
++        ScenarioTags = [],
++        CombinedTags = [],
++        Steps = [.. steps],
++        ExecutionStatus = steps.Any(s => s.Status == ScenarioExecutionStatus.TestError) ? ScenarioExecutionStatus.TestError : ScenarioExecutionStatus.OK,
++        WrittenBackground = steps.Take(backgroundCount).Select(s => s.Text).ToArray(),
++    };
++
++    [Fact]
++    public void Steps_that_read_alike_stay_each_scenarios_own()
++    {
++        var first = Collected("a", "A first scenario", 0,
++            new ReqNRollStepInfo("Given", "the basket holds", TableText: "| sku |\n| APPLE |\n", Duration: TimeSpan.FromSeconds(1)),
++            new ReqNRollStepInfo("When", "the customer pays"),
++            new ReqNRollStepInfo("Then", "the order is confirmed"));
++        var second = Collected("b", "B second scenario", 0,
++            new ReqNRollStepInfo("Given", "the basket holds", TableText: "| sku |\n| BANANA |\n", Duration: TimeSpan.FromSeconds(2)),
++            new ReqNRollStepInfo("When", "the customer pays", ScenarioExecutionStatus.TestError));
++
++        var scenarios = new[] { first, second }.ToFeatures()[0].Scenarios;
++
++        Assert.Null(scenarios[0].BackgroundSteps);
++        Assert.Null(scenarios[1].BackgroundSteps);
++        Assert.Equal(3, scenarios[0].Steps!.Length);
++        Assert.Equal(ExecutionResult.Failed, scenarios[1].Steps![1].Status);
++        Assert.Equal(TimeSpan.FromSeconds(2), scenarios[1].Steps![0].Duration);
++        Assert.Equal("BANANA", scenarios[1].Steps![0].Parameters![0].TabularValue!.Rows[0].Values[0].Value);
++    }
++
++    [Fact]
++    public void The_steps_a_background_gave_a_scenario_come_first_and_are_its_own()
++    {
++        var first = Collected("a", "A first scenario", 1,
++            new ReqNRollStepInfo("Given", "a customer is signed in"),
++            new ReqNRollStepInfo("When", "the customer pays"));
++        var second = Collected("b", "B second scenario", 1,
++            new ReqNRollStepInfo("Given", "a customer is signed in", ScenarioExecutionStatus.TestError));
++
++        var scenarios = new[] { first, second }.ToFeatures()[0].Scenarios;
++
++        Assert.Equal("a customer is signed in", Assert.Single(scenarios[0].BackgroundSteps!).Text);
++        Assert.Equal(ExecutionResult.Passed, scenarios[0].BackgroundSteps![0].Status);
++        Assert.Equal("the customer pays", Assert.Single(scenarios[0].Steps!).Text);
++
++        Assert.Equal(ExecutionResult.Failed, Assert.Single(scenarios[1].BackgroundSteps!).Status);
++        Assert.Null(scenarios[1].Steps);
++        Assert.NotSame(scenarios[0].BackgroundSteps![0], scenarios[1].BackgroundSteps![0]);
++    }
++
++    [Fact]
++    public void A_scenario_keeps_its_layout_when_another_scenario_fails()
++    {
++        var first = Collected("a", "A first scenario", 0,
++            new ReqNRollStepInfo("Given", "a customer is signed in"),
++            new ReqNRollStepInfo("Given", "the address is checked"),
++            new ReqNRollStepInfo("When", "the customer pays"),
++            new ReqNRollStepInfo("Then", "the order is confirmed"));
++        var failing = Collected("b", "B second scenario", 0,
++            new ReqNRollStepInfo("Given", "a customer is signed in"),
++            new ReqNRollStepInfo("Given", "the address is checked", ScenarioExecutionStatus.TestError));
++        var passing = Collected("b", "B second scenario", 0,
++            new ReqNRollStepInfo("Given", "a customer is signed in"),
++            new ReqNRollStepInfo("Given", "the address is checked"),
++            new ReqNRollStepInfo("When", "the customer pays"),
++            new ReqNRollStepInfo("Then", "a receipt is sent"));
++
++        var whenAllPass = new[] { first, passing }.ToFeatures()[0].Scenarios[0];
++        var whenOneFails = new[] { first, failing }.ToFeatures()[0].Scenarios[0];
++
++        Assert.Equal(whenAllPass.Steps!.Length, whenOneFails.Steps!.Length);
++        Assert.Equal(whenAllPass.BackgroundSteps?.Length, whenOneFails.BackgroundSteps?.Length);
++    }
++
++    [Fact]
++    public void A_scenario_on_its_own_is_laid_out_as_it_is_among_others()
++    {
++        var only = Collected("a", "A first scenario", 1,
++            new ReqNRollStepInfo("Given", "a customer is signed in"),
++            new ReqNRollStepInfo("When", "the customer pays"));
++
++        var scenario = new[] { only }.ToFeatures()[0].Scenarios[0];
++
++        Assert.Single(scenario.BackgroundSteps!);
++        Assert.Single(scenario.Steps!);
++    }
++
++    [Fact]
++    public void A_step_that_differs_from_the_document_only_in_case_is_not_counted()
++    {
++        var ran = Collected("a", "A", 1, new ReqNRollStepInfo("Given", "A customer is signed in")) with { WrittenBackground = ["a customer is signed in"] };
++
++        var scenario = new[] { ran }.ToFeatures()[0].Scenarios[0];
++
++        Assert.Null(scenario.BackgroundSteps);
++        Assert.Single(scenario.Steps!);
++    }
++
++    [Fact]
++    public void A_count_past_the_steps_that_ran_takes_them_all()
++    {
++        var ran = Collected("a", "A", 1, new ReqNRollStepInfo("Given", "only one ran")) with { WrittenBackground = ["only one ran", "the second never ran"] };
++
++        var scenario = new[] { ran }.ToFeatures()[0].Scenarios[0];
++
++        Assert.Single(scenario.BackgroundSteps!);
++        Assert.Null(scenario.Steps);
++    }
++}
++
++/// <summary>#222: what the detector, which ingest still calls, and the attachment copier must hold whoever calls them.</summary>
++public class StepsAStepRanTests
++{
++    private static ReqNRollScenarioInfo Ran(string id, ReqNRollStepInfo step, Action collect) => new()
++    {
++        ScenarioId = id,
++        ScenarioTitle = "A",
++        FeatureTitle = "Orders",
++        ScenarioTags = [],
++        CombinedTags = [],
++        Steps = Collecting(id, step, collect),
++        ExecutionStatus = step.Status,
++    };
++
++    private static List<ReqNRollStepInfo> Collecting(string id, ReqNRollStepInfo step, Action collect)
++    {
++        Kronikol.Tracking.StepCollector.StartStep(id, "Given", step.Text, null, null);
++        collect();
++        Kronikol.Tracking.StepCollector.CompleteStep(id, step.Status == ScenarioExecutionStatus.OK);
++        return [step];
++    }
++
++    [Fact]
++    public void A_step_a_step_ran_keeps_its_table_doc_string_and_outcome()
++    {
++        var id = nameof(A_step_a_step_ran_keeps_its_table_doc_string_and_outcome);
++        var inner = new ReqNRollStepInfo("Given", "the basket is listed", ScenarioExecutionStatus.TestError, null, "|sku|\n|APPLE|", "a doc string") { Nested = new List<ReqNRollStepInfo>() };
++        var outer = new ReqNRollStepInfo("Given", "a composite step", ScenarioExecutionStatus.TestError) { Nested = [inner] };
++
++        var mapped = new[]
++        {
++            Ran(id, outer, () =>
++            {
++                Kronikol.Tracking.StepCollector.StartStep(id, "Given", "woven first", null, null);
++                Kronikol.Tracking.StepCollector.CompleteStep(id, true);
++                Kronikol.Tracking.StepCollector.StartStep(id, "Given", inner.Text, null, null, null, null, inner.Nested);
++                Kronikol.Tracking.StepCollector.CompleteStep(id, false);
++            }),
++        }.ToFeatures()[0].Scenarios[0].Steps![0];
++
++        Assert.Equal(ExecutionResult.Failed, mapped.Status);
++        Assert.Equal(["woven first", inner.Text], mapped.SubSteps!.Select(s => s.Text));
++        Assert.Null(mapped.SubSteps![0].DocString);
++        Assert.Equal("a doc string", mapped.SubSteps![1].DocString);
++        Assert.Equal("table", Assert.Single(mapped.SubSteps![1].Parameters!).Name);
++        Assert.Equal(ExecutionResult.Failed, mapped.SubSteps![1].Status);
++    }
++}
++
++public class StepsUnderAWovenStepTests
++{
++    // As the hooks do: a list of its own for each step, which is also what StepCollector is told opened it.
++    private static ReqNRollStepInfo Opened(string text, ScenarioExecutionStatus status = ScenarioExecutionStatus.OK, string? table = null, string? docString = null,
++        InlineParamCapture[]? inlineParams = null, ReqNRollStepInfo[]? nested = null) =>
++        new("Given", text, status, null, table, docString, inlineParams) { Nested = new List<ReqNRollStepInfo>(nested ?? []) };
++
++    private static void Start(string id, ReqNRollStepInfo step) =>
++        StepCollector.StartStep(id, step.Keyword, step.Text, null, null, null, null, step.Nested);
++
++    private static ScenarioStep[] SubStepsOf(string id, ReqNRollStepInfo outer)
++    {
++        var info = new ReqNRollScenarioInfo
++        {
++            ScenarioId = id,
++            ScenarioTitle = "A",
++            FeatureTitle = "Orders",
++            ScenarioTags = [],
++            CombinedTags = [],
++            Steps = [outer],
++            WrittenBackground = [],
++            ExecutionStatus = outer.Status,
++        };
++
++        return new[] { info }.ToFeatures()[0].Scenarios[0].Steps![0].SubSteps!;
++    }
++
++    [Theory]
++    [InlineData(null)]
++    [InlineData("Given")]
++    public void A_nested_step_is_not_taken_for_a_woven_step_that_reads_the_same(string? wovenKeyword)
++    {
++        var id = nameof(A_nested_step_is_not_taken_for_a_woven_step_that_reads_the_same) + wovenKeyword;
++        var inner = Opened("the namesake step", ScenarioExecutionStatus.TestError, "|sku|\n|APPLE|", "a doc string");
++        var outer = Opened("a composite step", ScenarioExecutionStatus.TestError, nested: [inner]);
++
++        Start(id, outer);
++        StepCollector.StartStep(id, wovenKeyword, inner.Text, null, null);
++        StepCollector.CompleteStep(id, true);
++        Start(id, inner);
++        StepCollector.CompleteStep(id, false);
++        StepCollector.CompleteStep(id, false);
++
++        var subSteps = SubStepsOf(id, outer);
++
++        Assert.Equal(ExecutionResult.Passed, subSteps[0].Status);
++        Assert.Null(subSteps[0].Parameters);
++        Assert.Null(subSteps[0].DocString);
++        Assert.Equal(ExecutionResult.Failed, subSteps[1].Status);
++        Assert.Equal("table", Assert.Single(subSteps[1].Parameters!).Name);
++        Assert.Equal("a doc string", subSteps[1].DocString);
++    }
++
++    [Fact]
++    public void A_woven_step_that_failed_stays_failed_beside_a_nested_step_that_reads_the_same()
++    {
++        var id = nameof(A_woven_step_that_failed_stays_failed_beside_a_nested_step_that_reads_the_same);
++        var inner = Opened("the namesake step");
++        var outer = Opened("a composite step", nested: [inner]);
++
++        Start(id, outer);
++        StepCollector.StartStep(id, "Given", inner.Text, null, null);
++        StepCollector.CompleteStep(id, false);
++        Start(id, inner);
++        StepCollector.CompleteStep(id, true);
++        StepCollector.CompleteStep(id, true);
++
++        var subSteps = SubStepsOf(id, outer);
++
++        Assert.Equal(ExecutionResult.Failed, subSteps[0].Status);
++        Assert.Equal(ExecutionResult.Passed, subSteps[1].Status);
++    }
++
++    [Fact]
++    public void A_step_found_under_a_woven_step_keeps_its_arguments_as_does_the_one_after_it()
++    {
++        var id = nameof(A_step_found_under_a_woven_step_keeps_its_arguments_as_does_the_one_after_it);
++        var inHelper = Opened("the basket is listed", table: "|sku|\n|APPLE|");
++        var afterHelper = Opened("a note says", docString: "a doc string");
++        var outer = Opened("a composite step", nested: [inHelper, afterHelper]);
++
++        Start(id, outer);
++        StepCollector.StartStep(id, "Given", "a woven helper", null, null);
++        Start(id, inHelper);
++        StepCollector.CompleteStep(id, true);
++        StepCollector.CompleteStep(id, true);
++        Start(id, afterHelper);
++        StepCollector.CompleteStep(id, true);
++        StepCollector.CompleteStep(id, true);
++
++        var subSteps = SubStepsOf(id, outer);
++
++        Assert.Equal("table", Assert.Single(subSteps[0].SubSteps![0].Parameters!).Name);
++        Assert.Equal("a doc string", subSteps[1].DocString);
++    }
++
++    [Fact]
++    public void A_nested_steps_own_nested_steps_keep_their_arguments()
++    {
++        var id = nameof(A_nested_steps_own_nested_steps_keep_their_arguments);
++        var leaf = Opened("the card is read", table: "|sku|\n|APPLE|");
++        var middle = Opened("the customer pays", nested: [leaf]);
++        var outer = Opened("a composite step", nested: [middle]);
++
++        Start(id, outer);
++        Start(id, middle);
++        Start(id, leaf);
++        StepCollector.CompleteStep(id, true);
++        StepCollector.CompleteStep(id, true);
++        StepCollector.CompleteStep(id, true);
++
++        Assert.Equal("table", Assert.Single(Assert.Single(SubStepsOf(id, outer)[0].SubSteps!).Parameters!).Name);
++    }
++
++    [Fact]
++    public void A_nested_step_keeps_its_inline_values()
++    {
++        var id = nameof(A_nested_step_keeps_its_inline_values);
++        var inner = Opened("the basket holds APPLE", inlineParams: [new InlineParamCapture(17, 5, "APPLE", "sku")]);
++        var outer = Opened("a composite step", nested: [inner]);
++
++        Start(id, outer);
++        Start(id, inner);
++        StepCollector.CompleteStep(id, true);
++        StepCollector.CompleteStep(id, true);
++
++        Assert.NotNull(Assert.Single(SubStepsOf(id, outer)).TextSegments);
++    }
++
++    [Fact]
++    public void A_step_a_step_ran_reads_what_the_hooks_saw_not_what_the_collector_was_told()
++    {
++        // The collector only hears passed or not, so a pending step is failed there and skipped here.
++        var id = nameof(A_step_a_step_ran_reads_what_the_hooks_saw_not_what_the_collector_was_told);
++        var inner = Opened("a pending step", ScenarioExecutionStatus.StepDefinitionPending);
++        var outer = Opened("a composite step", ScenarioExecutionStatus.StepDefinitionPending, nested: [inner]);
++
++        Start(id, outer);
++        Start(id, inner);
++        StepCollector.CompleteStep(id, false);
++        StepCollector.CompleteStep(id, false);
++
++        Assert.Equal(ExecutionResult.Skipped, Assert.Single(SubStepsOf(id, outer)).Status);
++    }
++}
++
++public class SharedStepsTests
++{
++    private static Scenario Plain(string id, ExecutionResult second, string doc) => new()
++    {
++        Id = id,
++        DisplayName = id,
++        Result = second == ExecutionResult.Failed ? ExecutionResult.Failed : ExecutionResult.Passed,
++        Steps =
++        [
++            new ScenarioStep { Keyword = "Given", Text = "the basket holds", Status = ExecutionResult.Passed, DocString = doc },
++            new ScenarioStep { Keyword = "When", Text = "the customer pays", Status = second },
++            new ScenarioStep { Keyword = "Then", Text = "the outcome of " + id, Status = ExecutionResult.Passed },
++        ],
++    };
++
++    [Fact]
++    public void The_detector_leaves_each_scenario_its_own_steps()
++    {
++        var scenarios = new[] { Plain("a", ExecutionResult.Passed, "apple"), Plain("b", ExecutionResult.Failed, "banana") };
++
++        BackgroundStepsDetector.DetectAndExtract(scenarios);
++
++        Assert.Equal(2, scenarios[1].BackgroundSteps!.Length);
++        Assert.Equal("banana", scenarios[1].BackgroundSteps![0].DocString);
++        Assert.Equal(ExecutionResult.Failed, scenarios[1].BackgroundSteps![1].Status);
++        Assert.Equal(ExecutionResult.Passed, scenarios[0].BackgroundSteps![1].Status);
++    }
++
++    [Fact]
++    public void A_file_attached_to_a_step_two_scenarios_share_does_not_stop_the_report()
++    {
++        var folder = Directory.CreateTempSubdirectory("krk-222-").FullName;
++        var file = Path.Combine(folder, "shot.png");
++        File.WriteAllText(file, "x");
++        var shared = new ScenarioStep { Keyword = "Given", Text = "the basket holds", Status = ExecutionResult.Passed, Attachments = [new FileAttachment("shot.png", file)] };
++        var features = new[]
++        {
++            new Feature
++            {
++                DisplayName = "Orders",
++                Scenarios =
++                [
++                    new Scenario { Id = "a", DisplayName = "a", BackgroundSteps = [shared] },
++                    new Scenario { Id = "b", DisplayName = "b", BackgroundSteps = [shared] },
++                ],
++            },
++        };
++
++        ReportGenerator.CopyAttachmentsToReportsFolder(features, Path.Combine(folder, "Reports"));
++
++        Assert.Equal("attachments/shot.png", shared.Attachments![0].RelativePath);
++    }
++
++    [Fact]
++    public void A_scenario_a_list_holds_twice_is_placed_once()
++    {
++        var folder = Directory.CreateTempSubdirectory("krk-222-").FullName;
++        var file = Path.Combine(folder, "shot.png");
++        File.WriteAllText(file, "x");
++        var scenario = new Scenario { Id = "a", DisplayName = "a", Attachments = [new FileAttachment("shot.png", file)] };
++
++        ReportGenerator.CopyAttachmentsToReportsFolder([new Feature { DisplayName = "Orders", Scenarios = [scenario, scenario] }], Path.Combine(folder, "Reports"));
++
++        Assert.Equal("attachments/shot.png", scenario.Attachments![0].RelativePath);
++    }
++
++    [Fact]
++    public void A_record_handed_to_the_generator_says_what_it_says()
++    {
++        foreach (var toggles in new ResolvedToggleDefaults?[] { null, new(), ResolvedToggleDefaults.BuiltIn, ResolvedToggleDefaults.BuiltIn with { HeadersShown = true }, new() { BackgroundStepsOpen = false } })
++            Assert.Contains("<details class=\"scenario-background\">", WithAFailedBackgroundStep(toggles));
++        Assert.Contains("<details class=\"scenario-background\" open>", WithAFailedBackgroundStep(new ResolvedToggleDefaults { BackgroundStepsOpen = true }));
++    }
++
++    [Fact]
++    public void The_built_in_toggles_are_a_record_nobody_configured() =>
++        Assert.Equal(new ResolvedToggleDefaults(), ResolvedToggleDefaults.BuiltIn);
++
++    private static string WithAFailedBackgroundStep(ResolvedToggleDefaults? toggles)
++    {
++        var features = new[]
++        {
++            new Feature
++            {
++                DisplayName = "Orders",
++                Scenarios =
++                [
++                    new Scenario
++                    {
++                        Id = "a", DisplayName = "a", Result = ExecutionResult.Failed,
++                        BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "a customer is signed in", Status = ExecutionResult.Failed }],
++                    },
++                ],
++            },
++        };
++        var path = ReportGenerator.GenerateHtmlReport(
++            [new DefaultDiagramsFetcher.DiagramAsCode("a", "", "@startuml\n@enduml")], features,
++            DateTime.UtcNow, DateTime.UtcNow,
++            null, $"Bg222_{Guid.NewGuid():N}.html", "Test", true,
++            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs,
++            separateBackgroundSteps: true, toggleDefaults: toggles);
++
++        return ReportHtml.Read(path);
++    }
++
++    private static string Report(ScenarioStep step)
++    {
++        var features = new[]
++        {
++            new Feature { DisplayName = "Orders", Scenarios = [new Scenario { Id = "a", DisplayName = "a", Result = ExecutionResult.Failed, Steps = [step] }] },
++        };
++        var path = ReportGenerator.GenerateHtmlReport(
++            [new DefaultDiagramsFetcher.DiagramAsCode("a", "", "@startuml\n@enduml")], features,
++            DateTime.UtcNow, DateTime.UtcNow,
++            null, $"Bg222_{Guid.NewGuid():N}.html", "Test", true,
++            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
++
++        return ReportHtml.Read(path);
++    }
++
++    [Fact]
++    public void A_failed_step_whose_many_sub_steps_passed_has_them_drawn_and_not_held()
++    {
++        var html = Report(new ScenarioStep
++        {
++            Keyword = "When", Text = "the customer pays", Status = ExecutionResult.Failed,
++            SubSteps = Enumerable.Range(1, 30).Select(i => new ScenarioStep { Keyword = "Given", Text = $"the card is read {i} " + new string('x', 100), Status = ExecutionResult.Passed }).ToArray(),
++        });
++
++        Assert.DoesNotContain("data-steps=", html, StringComparison.Ordinal);
++        Assert.Contains("the card is read 30 ", html, StringComparison.Ordinal);
++    }
++
++    [Fact]
++    public void A_step_with_a_failed_step_two_levels_down_starts_open()
++    {
++        var html = Report(new ScenarioStep
++        {
++            Keyword = "When", Text = "the customer pays", Status = ExecutionResult.Passed,
++            SubSteps =
++            [
++                new ScenarioStep
++                {
++                    Keyword = "Given", Text = "the card is read", Status = ExecutionResult.Passed,
++                    SubSteps = [new ScenarioStep { Keyword = "Given", Text = "the chip answers", Status = ExecutionResult.Failed }],
++                },
++            ],
++        });
++
++        Assert.Equal(2, System.Text.RegularExpressions.Regex.Matches(html, "<details class=\"step step-collapsible\" open>").Count);
++    }
++
++    [Fact]
++    public void A_failed_step_whose_sub_steps_passed_starts_open()
++    {
++        var step = new ScenarioStep
++        {
++            Keyword = "When", Text = "the customer pays", Status = ExecutionResult.Failed,
++            SubSteps = [new ScenarioStep { Keyword = "Given", Text = "the card is read", Status = ExecutionResult.Passed }],
++        };
++        var features = new[]
++        {
++            new Feature { DisplayName = "Orders", Scenarios = [new Scenario { Id = "a", DisplayName = "a", Result = ExecutionResult.Failed, Steps = [step] }] },
++        };
++        var path = ReportGenerator.GenerateHtmlReport(
++            [new DefaultDiagramsFetcher.DiagramAsCode("a", "", "@startuml\n@enduml")], features,
++            DateTime.UtcNow, DateTime.UtcNow,
++            null, $"Bg222_{Guid.NewGuid():N}.html", "Test", true,
++            diagramFormat: DiagramFormat.PlantUml, plantUmlRendering: PlantUmlRendering.BrowserJs);
++
++        Assert.Contains("<details class=\"step step-collapsible\" open>", ReportHtml.Read(path));
++    }
++}
++
++/// <summary>#222: what a report made from the options does with a Background section holding a failed step.</summary>
++[Collection("DiagramsFetcher")]
++public class BackgroundSectionFromTheOptionsTests : IDisposable
++{
++    private static readonly DateTime Start = new(2026, 11, 3, 9, 0, 0, DateTimeKind.Utc);
++
++    private readonly string _dir = Directory.CreateTempSubdirectory("kronikol-background-section").FullName;
++
++    public void Dispose() => Directory.Delete(_dir, true);
++
++    private string Report(ReportConfigurationOptions options, params Scenario[] scenarios)
++    {
++        options.ReportsFolderPath = _dir;
++        options.SeparateBackgroundSteps = true;
++        options.GenerateSpecificationsData = false;
++        DefaultDiagramsFetcher.Reset();
++        ReportGenerator.CreateStandardReportsWithDiagrams([new Feature { DisplayName = "Orders", Scenarios = scenarios }], Start, Start.AddSeconds(30), options);
++        DefaultDiagramsFetcher.Reset();
++        return ReportHtml.Read(Path.Combine(_dir, "TestRunReport.html"));
++    }
++
++    [Fact]
++    public void The_specifications_page_reads_its_own_value()
++    {
++        // A scenario that passed on a retry keeps the failed attempt's step, and the page is not blank for it.
++        var retried = Holding(FailedStep) with { Result = ExecutionResult.Passed };
++        var options = new ReportConfigurationOptions { SpecificationsToggleDefaults = { BackgroundStepsOpen = false } };
++
++        var testRun = Report(options, retried);
++
++        Assert.Contains("<details class=\"scenario-background\" data-holds-failure open>", testRun);
++        Assert.Contains("<details class=\"scenario-background\">", ReportHtml.Read(Path.Combine(_dir, "Specifications.html")));
++    }
++
++    private static Scenario Holding(ScenarioStep background) => new()
++    {
++        Id = "a222section", DisplayName = "a", Result = ExecutionResult.Failed, BackgroundSteps = [background],
++    };
++
++    private static Scenario Row(string id, string row, ExecutionResult background) => new()
++    {
++        Id = id,
++        DisplayName = "Pay",
++        OutlineId = "Pay",
++        Result = background,
++        ExampleValues = new Dictionary<string, string> { ["row"] = row },
++        ExampleRawValues = new Dictionary<string, object?> { ["row"] = row },
++        BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "a customer is signed in", Status = background }],
++    };
++
++    private static readonly ScenarioStep FailedStep = new() { Keyword = "Given", Text = "a customer is signed in", Status = ExecutionResult.Failed };
++
++    [Fact]
++    public void Left_unset_a_section_holding_a_failed_step_starts_open() =>
++        Assert.Contains("<details class=\"scenario-background\" data-holds-failure open>", Report(new ReportConfigurationOptions(), Holding(FailedStep)));
++
++    [Fact]
++    public void Left_unset_a_section_whose_step_has_a_failed_sub_step_starts_open() =>
++        Assert.Contains("<details class=\"scenario-background\" data-holds-failure open>", Report(new ReportConfigurationOptions(), Holding(new ScenarioStep
++        {
++            Keyword = "Given", Text = "a composite step", Status = ExecutionResult.Passed,
++            SubSteps = [new ScenarioStep { Keyword = "Given", Text = "the inner step", Status = ExecutionResult.Failed }],
++        })));
++
++    [Fact]
++    public void Set_to_false_a_section_holding_a_failed_step_stays_closed()
++    {
++        var html = Report(new ReportConfigurationOptions { TestRunReportToggleDefaults = { BackgroundStepsOpen = false } }, Holding(FailedStep));
++
++        Assert.Contains("<details class=\"scenario-background\">", html);
++        Assert.DoesNotContain("<details class=\"scenario-background\" data-holds-failure", html);
++    }
++
++    [Fact]
++    public void Set_to_true_a_section_holding_a_failed_step_is_open_with_no_hold() =>
++        Assert.Contains("<details class=\"scenario-background\" open>", Report(new ReportConfigurationOptions { TestRunReportToggleDefaults = { BackgroundStepsOpen = true } }, Holding(FailedStep)));
++
++    [Fact]
++    public void Left_unset_a_failing_rows_section_starts_open_and_a_passing_rows_does_not()
++    {
++        var html = Report(new ReportConfigurationOptions(), Row("a222rowa", "passes", ExecutionResult.Passed), Row("a222rowb", "fails", ExecutionResult.Failed));
++
++        Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "<details class=\"scenario-background\" data-holds-failure open>"));
++        Assert.Single(System.Text.RegularExpressions.Regex.Matches(html, "<details class=\"scenario-background\">"));
++    }
++
++    [Fact]
++    public void Set_to_false_a_failing_rows_section_stays_closed() =>
++        Assert.DoesNotContain("<details class=\"scenario-background\" data-holds-failure", Report(new ReportConfigurationOptions { TestRunReportToggleDefaults = { BackgroundStepsOpen = false } },
++            Row("a222rowa", "passes", ExecutionResult.Passed), Row("a222rowb", "fails", ExecutionResult.Failed)));
++
++    [Theory]
++    [InlineData(null, null, false, true)]
++    [InlineData(null, null, true, true)]
++    [InlineData(false, null, false, false)]
++    [InlineData(false, null, true, false)]
++    [InlineData(null, false, false, true)]
++    [InlineData(null, false, true, false)]
++    [InlineData(true, null, false, false)]
++    [InlineData(true, false, true, false)]
++    public void Only_a_section_left_unset_opens_for_a_failure(bool? testRun, bool? specifications, bool forSpecifications, bool expected)
++    {
++        var options = new ReportConfigurationOptions
++        {
++            TestRunReportToggleDefaults = { BackgroundStepsOpen = testRun },
++            SpecificationsToggleDefaults = { BackgroundStepsOpen = specifications },
++        };
++
++        Assert.Equal(expected, ReportToggleDefaultsResolver.BackgroundOpensOnFailure(options, forSpecifications));
++    }
++}
++
++/// <summary>#222: what the fix leaves as it was, for whoever reads the public lists or builds a scenario by hand.</summary>
++public class WhatTheFixLeavesTests
++{
++    private static ReqNRollScenarioInfo ByHand(string id, string title, params ReqNRollStepInfo[] steps) => new()
++    {
++        ScenarioId = id,
++        ScenarioTitle = title,
++        FeatureTitle = "Orders",
++        ScenarioTags = [],
++        CombinedTags = [],
++        Steps = [.. steps],
++    };
++
++    [Fact]
++    public void Scenarios_built_by_hand_keep_the_guess_each_with_its_own_steps()
++    {
++        var first = ByHand("a", "A first", new ReqNRollStepInfo("Given", "a customer is signed in"), new ReqNRollStepInfo("Then", "the order is confirmed"));
++        var second = ByHand("b", "B second", new ReqNRollStepInfo("Given", "a customer is signed in", ScenarioExecutionStatus.TestError), new ReqNRollStepInfo("Then", "a receipt is sent"));
++
++        var scenarios = new[] { first, second }.ToFeatures()[0].Scenarios;
++
++        Assert.Equal("a customer is signed in", Assert.Single(scenarios[0].BackgroundSteps!).Text);
++        Assert.Equal(ExecutionResult.Failed, Assert.Single(scenarios[1].BackgroundSteps!).Status);
++        Assert.NotSame(scenarios[0].BackgroundSteps![0], scenarios[1].BackgroundSteps![0]);
++    }
++
++    [Fact]
++    public void A_feature_the_hooks_saw_is_not_guessed_at_when_the_document_writes_nothing()
++    {
++        var first = ByHand("a", "A first", new ReqNRollStepInfo("Given", "a customer is signed in"), new ReqNRollStepInfo("Then", "the order is confirmed")) with { WrittenBackground = [] };
++        var second = ByHand("b", "B second", new ReqNRollStepInfo("Given", "a customer is signed in"), new ReqNRollStepInfo("Then", "a receipt is sent")) with { WrittenBackground = [] };
++
++        var scenarios = new[] { first, second }.ToFeatures()[0].Scenarios;
++
++        Assert.Null(scenarios[0].BackgroundSteps);
++        Assert.Null(scenarios[1].BackgroundSteps);
++    }
++
++    [Fact]
++    public void A_step_a_step_ran_stays_in_the_list_and_is_no_row()
++    {
++        var inner = new ReqNRollStepInfo("Given", "the card is read") { RanByAStep = true };
++        var outer = new ReqNRollStepInfo("When", "the customer pays") { Nested = [inner] };
++        var then = new ReqNRollStepInfo("Then", "the order is confirmed");
++        var collected = ByHand("a222left", "A first", inner, outer, then) with { WrittenBackground = [] };
++
++        var scenario = new[] { collected }.ToFeatures()[0].Scenarios[0];
++
++        Assert.Equal(3, collected.Steps.Count);
++        Assert.Equal(["the customer pays", "the order is confirmed"], scenario.Steps!.Select(s => s.Text));
++    }
++
++    [Fact]
++    public void A_feature_any_scenario_of_which_the_hooks_saw_is_not_guessed_at()
++    {
++        var first = ByHand("a", "A first", new ReqNRollStepInfo("Given", "a customer is signed in"), new ReqNRollStepInfo("Then", "the order is confirmed")) with { WrittenBackground = [] };
++        var second = ByHand("b", "B second", new ReqNRollStepInfo("Given", "a customer is signed in"), new ReqNRollStepInfo("Then", "a receipt is sent"));
++
++        var scenarios = new[] { first, second }.ToFeatures()[0].Scenarios;
++
++        Assert.Null(scenarios[0].BackgroundSteps);
++        Assert.Null(scenarios[1].BackgroundSteps);
++    }
++
++    [Fact]
++    public void The_hooks_public_methods_are_the_four_they_were()
++    {
++        var methods = typeof(ReqNRollTrackingHooks).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
++
++        Assert.Equal(["AfterScenario", "AfterStep", "BeforeScenario", "BeforeStep"], methods.Select(m => m.Name).OrderBy(n => n, StringComparer.Ordinal));
++    }
++}
++
++[Collection("DiagramsFetcher")]
++public class QueryOverBackgroundStepsTests
++{
++    private static readonly DateTimeOffset T0 = new(2026, 11, 3, 12, 0, 0, TimeSpan.Zero);
++
++    [Fact]
++    public void A_failure_outside_any_step_is_said_to_be_so_when_only_Background_steps_are_listed()
++    {
++        var options = IngestPipeline.DefaultOptions();
++        options.ReportsFolderPath = Path.Combine(Path.GetTempPath(), "a222hint-" + Guid.NewGuid().ToString("N"));
++        options.GenerateComponentDiagram = false;
++
++        IngestPipeline.Run(new IngestRequest
++        {
++            Interactions = [],
++            TestRecords =
++            [
++                new() { Event = "start", TestId = "t", TestName = "t", Timestamp = T0 },
++                new() { Event = "step", TestId = "t", Keyword = "Given", Text = "a background step", Background = true, Status = "passed", Timestamp = T0.AddSeconds(1) },
++                new() { Event = "end", TestId = "t", Status = "failed", Timestamp = T0.AddSeconds(2) },
++            ],
++            Options = options,
++        });
++
++        var output = new StringWriter();
++        QueryCommand.Run(["failures", options.ReportsFolderPath], output, new StringWriter());
++        Assert.Contains("no step is marked failed", output.ToString());
++    }
++}

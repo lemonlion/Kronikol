@@ -1,0 +1,357 @@
+Build succeeded.
+Time Elapsed 00:00:03.28
+=== e-new334: reqnroll 3.3.4, one, dlls=<prototype>/src/Kronikol.ReqNRoll.xUnit2/bin/Release/net10.0 exit 1
+Total tests: 53
+--- s0 pass      0s     0 calls  B01 passes
+s0  R8 background hooks › B01 passes  [Passed]  0s
+at Features/Background.feature:7
+  b0    Given r8 setup one
+  b1    And r8 setup two
+  0     When r8 action
+  1     Then r8 check
+0 calls · interactions s0 · flow s0
+--- s1 FAIL      0s     0 calls  B02 scenario step left open
+s1  R8 background hooks › B02 scenario step left open  [Failed]  0s
+at Features/Background.feature:12
+  b0    Given r8 setup one
+  b1    And r8 setup two
+✗ 0     When r8 action~!
+0 calls · interactions s1 · flow s1
+--- s2 FAIL   0.05s     0 calls  B03 background step left open
+s2  R8 background left open › B03 background step left open  [Failed]  0.05s
+at Features/BackgroundLeftOpen.feature:8
+✗ b0    Given r8 setup one~!  0.02s
+0 calls · interactions s2 · flow s2
+--- s3 FAIL      0s     0 calls  B04 background step left open, second scenario
+s3  R8 background left open › B04 background step left open, second scenario  [Failed]  0s
+at Features/BackgroundLeftOpen.feature:12
+✗ b0    Given r8 setup one~!
+0 calls · interactions s3 · flow s3
+--- s4 FAIL      0s     0 calls  H01 AfterStep throws on a plain step
+s4  R8 hooks › H01 AfterStep throws on a plain step  [Failed]  0s
+at Features/Hooks.feature:3
+  0     Given r8 one
+✗ 1     When r8 two~!
+0 calls · interactions s4 · flow s4
+--- s5 FAIL      0s     0 calls  H02 who sees the failed step in the list
+s5  R8 hooks › H02 who sees the failed step in the list  [Failed]  0s
+at Features/Hooks.feature:9
+  0     Given r8 one
+✗ 1     When r8 two~!
+0 calls · interactions s5 · flow s5
+--- s6 FAIL      0s     0 calls  H03 woven step in AfterScenario at 0, step left open
+s6  R8 hooks › H03 woven step in AfterScenario at 0, step left open  [Failed]  0s
+at Features/Hooks.feature:14
+✗ 0     Given r8 one~!  0s
+0 calls · interactions s6 · flow s6
+--- s7 FAIL      0s     0 calls  H04 woven step in AfterScenario at int.MinValue, step left open
+s7  R8 hooks › H04 woven step in AfterScenario at int.MinValue, step left open  [Failed]  0s
+at Features/Hooks.feature:18
+✗ 0     Given r8 one~!
+    0.0   Woven in after scenario
+        · at
+        · at min
+0 calls · interactions s7 · flow s7
+--- s8 FAIL      0s     0 calls  H05 woven step in AfterScenario at int.MinValue plus one, step left open
+s8  R8 hooks › H05 woven step in AfterScenario at int.MinValue plus one, step left open  [Failed]  0s
+at Features/Hooks.feature:22
+✗ 0     Given r8 one~!
+0 calls · interactions s8 · flow s8
+--- s9 FAIL      0s     0 calls  H06 woven step in AfterScenario at int.MaxValue, step left open
+s9  R8 hooks › H06 woven step in AfterScenario at int.MaxValue, step left open  [Failed]  0s
+at Features/Hooks.feature:26
+✗ 0     Given r8 one~!
+0 calls · interactions s9 · flow s9
+--- s10 FAIL      0s     0 calls  H10 nested step left open, the outer lets it through, hook throws once
+s10  R8 hooks › H10 nested step left open, the outer lets it through, hook throws once  [Failed]  0s
+at Features/Hooks.feature:41
+✗ 0     Given r8 outer(inner~!)
+  ✗ 0.0   Given r8 inner~!
+0 calls · interactions s10 · flow s10
+--- s11 FAIL      0s     0 calls  H11 nested step left open, the outer catches, hook throws once
+s11  R8 hooks › H11 nested step left open, the outer catches, hook throws once  [Failed]  0s
+at Features/Hooks.feature:44
+✗ 0     Given r8 outer~k(inner~!)
+  ✗ 0.0   Given r8 inner~!
+0 calls · interactions s11 · flow s11
+--- s12 FAIL      0s     0 calls  H12 nested and outer both throw in the hook
+s12  R8 hooks › H12 nested and outer both throw in the hook  [Failed]  0s
+at Features/Hooks.feature:48
+✗ 0     Given r8 outer~!(inner~!)
+  ✗ 0.0   Given r8 inner~!
+0 calls · interactions s12 · flow s12
+--- s13 FAIL      0s     0 calls  H13 deep nesting all left open
+s13  R8 hooks › H13 deep nesting all left open  [Failed]  0s
+at Features/Hooks.feature:51
+✗ 0     Given r8 a~!(b~!(c~!(d~!)))
+  ✗ 0.0   Given r8 b~!(c~!(d~!))
+    ✗ 0.0.0 Given r8 c~!(d~!)
+      ✗ 0.0.0.0 Given r8 d~!
+0 calls · interactions s13 · flow s13
+--- s14 FAIL      0s     0 calls  H14 a sibling after a caught left open step
+s14  R8 hooks › H14 a sibling after a caught left open step  [Failed]  0s
+at Features/Hooks.feature:54
+✗ 0     Given r8 outer~k(inner~!,sib)
+  ✗ 0.0   Given r8 inner~!
+0 calls · interactions s14 · flow s14
+--- s15 FAIL   0.02s     0 calls  H15 woven wrapper between outer and left open step
+s15  R8 hooks › H15 woven wrapper between outer and left open step  [Failed]  0.02s
+at Features/Hooks.feature:58
+✗ 0     Given r8 outer~o(inner~!)  0.02s
+  ✗ 0.0   Woven wrapper  0.02s
+        · children
+        · [List<String>]
+        · catching
+        · False
+    ✗ 0.0.0 Given r8 inner~!
+          suite AfterStep threw on inner
+0 calls · interactions s15 · flow s15
+--- s16 FAIL      0s     0 calls  H16 woven wrapper catches, outer goes on
+s16  R8 hooks › H16 woven wrapper catches, outer goes on  [Failed]  0s
+at Features/Hooks.feature:61
+✗ 0     Given r8 outer~ok(inner~!)
+  ✗ 0.0   Woven wrapper
+        · children
+        · [List<String>]
+        · catching
+        · True
+    ✗ 0.0.0 Given r8 inner~!
+0 calls · interactions s16 · flow s16
+--- s17 FAIL      0s     0 calls  H17 woven step in the throwing hook
+s17  R8 hooks › H17 woven step in the throwing hook  [Failed]  0s
+at Features/Hooks.feature:65
+✗ 0     Given r8 one~W!
+    0.0   Woven in after step
+        · on
+        · one
+0 calls · interactions s17 · flow s17
+--- s18 FAIL      0s     0 calls  H18 woven step in the definition and in the throwing hook
+s18  R8 hooks › H18 woven step in the definition and in the throwing hook  [Failed]  0s
+at Features/Hooks.feature:69
+✗ 0     Given r8 one~wW!
+    0.0   Woven in definition
+        · who
+        · one
+    0.1   Woven in after step
+        · on
+        · one
+0 calls · interactions s18 · flow s18
+--- s19 FAIL      0s     0 calls  H19 definition throws and the hook throws too
+s19  R8 hooks › H19 definition throws and the hook throws too  [Failed]  0s
+at Features/Hooks.feature:72
+✗ 0     Given r8 one~x!
+0 calls · interactions s19 · flow s19
+--- s20 skip      0s     0 calls  H20 hook throws pending
+s20  R8 hooks › H20 hook throws pending  [Skipped]  0s
+at Features/Hooks.feature:76
+  0     Given r8 one~p
+0 calls · interactions s20 · flow s20
+--- s21 pass      0s     0 calls  H21 a step run by AfterScenario, nothing left open
+s21  R8 hooks › H21 a step run by AfterScenario, nothing left open  [Passed]  0s
+at Features/Hooks.feature:81
+  0     Given r8 one
+  1     Given r8 cleanup
+0 calls · interactions s21 · flow s21
+--- s22 FAIL      0s     0 calls  H22 a step run by AfterScenario, a step left open
+s22  R8 hooks › H22 a step run by AfterScenario, a step left open  [Failed]  0s
+at Features/Hooks.feature:85
+✗ 0     Given r8 one~!
+0 calls · interactions s22 · flow s22
+--- s23 FAIL      0s     0 calls  H23 a step run by AfterScenario leaves itself open, hook catches
+s23  R8 hooks › H23 a step run by AfterScenario leaves itself open, hook catches  [Failed]  0s
+at Features/Hooks.feature:89
+  0     Given r8 one
+0 calls · interactions s23 · flow s23
+--- s24 FAIL      0s     0 calls  H24 woven in BeforeScenario, step left open
+s24  R8 hooks › H24 woven in BeforeScenario, step left open  [Failed]  0s
+at Features/Hooks.feature:93
+  0     Given r8 one~w
+✗ 1     When r8 two~!
+    1.0   Woven in definition
+        · who
+        · one
+0 calls · interactions s24 · flow s24
+--- s25 pass      0s     0 calls  H25 woven in BeforeScenario, nothing left open
+s25  R8 hooks › H25 woven in BeforeScenario, nothing left open  [Passed]  0s
+at Features/Hooks.feature:98
+  0     Given r8 one~w
+  1     When r8 two~w
+    1.0   Woven in definition
+        · who
+        · one
+0 calls · interactions s25 · flow s25
+--- s26 FAIL      0s     0 calls  H26 failing woven in AfterScenario at 0, step left open
+s26  R8 hooks › H26 failing woven in AfterScenario at 0, step left open  [Failed]  0s
+at Features/Hooks.feature:103
+✗ 0     Given r8 one~!
+0 calls · interactions s26 · flow s26
+--- s27 FAIL      0s     0 calls  H27 BeforeStep ahead throws under a nested step
+s27  R8 hooks › H27 BeforeStep ahead throws under a nested step  [Failed]  0s
+at Features/Hooks.feature:106
+✗ 0     Given r8 outer(inner~^)
+  ✗ 0.0   Given r8 inner~^
+0 calls · interactions s27 · flow s27
+--- s28 FAIL      0s     0 calls  H28 BeforeStep ahead throws at the top, then AfterStep sees no frame
+s28  R8 hooks › H28 BeforeStep ahead throws at the top, then AfterStep sees no frame  [Failed]  0s
+at Features/Hooks.feature:109
+✗ 0     Given r8 one~^
+0 calls · interactions s28 · flow s28
+--- s29 FAIL      0s     0 calls  H29 BeforeStep ahead throws, no frame, woven in AfterScenario takes its place
+s29  R8 hooks › H29 BeforeStep ahead throws, no frame, woven in AfterScenario takes its place  [Failed]  0s
+at Features/Hooks.feature:114
+  0     Given r8 one
+✗ 1     When r8 two~^
+0 calls · interactions s29 · flow s29
+--- s30 FAIL      0s     0 calls  H30 outline rows, hook throws on one row
+s30  R8 hooks › H30 outline rows, hook throws on one row  [Failed]  0s
+at Features/Hooks.feature:118
+example: a=fails~!
+✗ 0     Given r8 fails~!
+0 calls · interactions s30 · flow s30
+--- s31 pass      0s     0 calls  H30 outline rows, hook throws on one row
+s31  R8 hooks › H30 outline rows, hook throws on one row  [Passed]  0s
+at Features/Hooks.feature:118
+example: a=fine
+  0     Given r8 fine
+  1     When r8 two
+0 calls · interactions s31 · flow s31
+--- s32 pass      0s     0 calls  H30 outline rows, hook throws on one row
+s32  R8 hooks › H30 outline rows, hook throws on one row  [Passed]  0s
+at Features/Hooks.feature:118
+example: a=later
+  0     Given r8 later
+  1     When r8 two
+0 calls · interactions s32 · flow s32
+--- s33 FAIL      0s     0 calls  H31 suite clears the list in AfterScenario, step left open
+s33  R8 hooks › H31 suite clears the list in AfterScenario, step left open  [Failed]  0s
+at Features/Hooks.feature:129
+0 calls · interactions s33 · flow s33
+--- s34 pass      0s     0 calls  H32 scenario passes, control
+s34  R8 hooks › H32 scenario passes, control  [Passed]  0s
+at Features/Hooks.feature:132
+  0     Given r8 one~w
+    0.0   Woven in definition
+        · who
+        · one
+  1     When r8 outer(inner)
+    1.0   Given r8 inner
+0 calls · interactions s34 · flow s34
+--- s35 FAIL      0s     0 calls  A01 attachment in AfterScenario at 0, step left open
+s35  R8 more › A01 attachment in AfterScenario at 0, step left open  [Failed]  0s
+at Features/More.feature:39
+attachments: 1 of its own · attachments s35
+✗ 0     Given r8 one~!
+0 calls · interactions s35 · flow s35
+--- s36 FAIL      0s     0 calls  A02 attachment in AfterScenario at int.MinValue, step left open
+s36  R8 more › A02 attachment in AfterScenario at int.MinValue, step left open  [Failed]  0s
+at Features/More.feature:43
+attachments: 1 on its steps · attachments s36
+✗ 0     Given r8 one~!  0s
+      attachment: at-min.txt → <prototype>\.r8\e-new334\out\attachments\at-min.txt
+0 calls · interactions s36 · flow s36
+--- s37 FAIL      0s     0 calls  A03 attachment in the throwing hook
+s37  R8 more › A03 attachment in the throwing hook  [Failed]  0s
+at Features/More.feature:46
+attachments: 1 on its steps · attachments s37
+✗ 0     Given r8 one~a!
+      attachment: in-after-step.txt → <prototype>\.r8\e-new334\out\attachments\in-after-step.txt
+0 calls · interactions s37 · flow s37
+--- s38 skip      0s     0 calls  I01 the hook ignores the scenario at run time
+s38  R8 more › I01 the hook ignores the scenario at run time  [Skipped]  0s
+at Features/More.feature:49
+  0     Given r8 one~i
+0 calls · interactions s38 · flow s38
+--- s39 FAIL      0s     0 calls  P01 a step BeforeScenario runs is left open
+s39  R8 more › P01 a step BeforeScenario runs is left open  [Failed]  0s
+at Features/More.feature:54
+✗ 0     Given r8 pre~!  0s
+0 calls · interactions s39 · flow s39
+--- s40 FAIL      0s     0 calls  S01 definition throws, then a next step
+s40  R8 more › S01 definition throws, then a next step  [Failed]  0s
+at Features/More.feature:3
+✗ 0     Given r8 one~x
+0 calls · interactions s40 · flow s40
+--- s41 FAIL      0s     0 calls  S02 inner definition throws, outer lets it through
+s41  R8 more › S02 inner definition throws, outer lets it through  [Failed]  0s
+at Features/More.feature:7
+✗ 0     Given r8 outer(inner~x)
+  ✗ 0.0   Given r8 inner~x
+0 calls · interactions s41 · flow s41
+--- s42 FAIL      0s     0 calls  S03 inner definition throws, outer catches
+s42  R8 more › S03 inner definition throws, outer catches  [Failed]  0s
+at Features/More.feature:11
+✗ 0     Given r8 outer~k(inner~x)
+  ✗ 0.0   Given r8 inner~x
+0 calls · interactions s42 · flow s42
+--- s43 FAIL      0s     0 calls  S04 inner definition throws under a woven wrapper
+s43  R8 more › S04 inner definition throws under a woven wrapper  [Failed]  0s
+at Features/More.feature:15
+✗ 0     Given r8 outer~o(inner~x)
+    0.0   Woven wrapper
+        · children
+        · [List<String>]
+        · catching
+        · False
+    ✗ 0.0.0 Given r8 inner~x
+0 calls · interactions s43 · flow s43
+--- s44 FAIL      0s     0 calls  S05 inner definition throws and the hook throws on it
+s44  R8 more › S05 inner definition throws and the hook throws on it  [Failed]  0s
+at Features/More.feature:18
+✗ 0     Given r8 outer(inner~x!)
+  ✗ 0.0   Given r8 inner~x!
+0 calls · interactions s44 · flow s44
+--- s45 FAIL      0s     0 calls  S06 outer left open, inner fine
+s45  R8 more › S06 outer left open, inner fine  [Failed]  0s
+at Features/More.feature:21
+✗ 0     Given r8 outer~!(inner)
+    0.0   Given r8 inner
+0 calls · interactions s45 · flow s45
+--- s46 FAIL      0s     0 calls  S07 outer left open, two inner, the second fails
+s46  R8 more › S07 outer left open, two inner, the second fails  [Failed]  0s
+at Features/More.feature:24
+✗ 0     Given r8 outer~!(in1,in2~x)
+    0.0   Given r8 in1
+  ✗ 0.1   Given r8 in2~x
+0 calls · interactions s46 · flow s46
+--- s47 FAIL      0s     0 calls  S08 outer catches and goes on, hook throws on the second inner, third inner is s…
+s47  R8 more › S08 outer catches and goes on, hook throws on the second inner, third inner is skipped  [Failed]  0s
+at Features/More.feature:27
+✗ 0     Given r8 outer~k(in1,in2~!,in3)
+    0.0   Given r8 in1
+  ✗ 0.1   Given r8 in2~!
+0 calls · interactions s47 · flow s47
+--- s48 FAIL      0s     0 calls  S09 definition throws after a left open inner it caught
+s48  R8 more › S09 definition throws after a left open inner it caught  [Failed]  0s
+at Features/More.feature:31
+✗ 0     Given r8 outer~kx(inner~!)
+  ✗ 0.0   Given r8 inner~!
+0 calls · interactions s48 · flow s48
+--- s49 FAIL      0s     0 calls  S10 nested left open, reads at each order
+s49  R8 more › S10 nested left open, reads at each order  [Failed]  0s
+at Features/More.feature:35
+✗ 0     Given r8 outer~!(inner~!)
+  ✗ 0.0   Given r8 inner~!
+0 calls · interactions s49 · flow s49
+
+=== what the suite's hooks saw
+HOOK AfterScenario order=-2147483648 R8.Suite.R8Steps.AtMin
+HOOK AfterScenario order=-2147483648 Kronikol.ReqNRoll.ReqNRollTrackingHooks.CloseStepsLeftOpen
+HOOK AfterScenario order=-2147483647 R8.Suite.R8Steps.AtMinPlus
+HOOK AfterScenario order=0 R8.Suite.R8Steps.AtZero
+HOOK AfterScenario order=2147483647 R8.Suite.R8Steps.AtMax
+HOOK AfterScenario order=2147483647 Kronikol.ReqNRoll.ReqNRollTrackingHooks.AfterScenario
+HOOK AfterStep order=100 R8.Suite.R8Steps.AfterHook
+HOOK AfterStep order=2147483647 Kronikol.ReqNRoll.ReqNRollTrackingHooks.AfterStep
+AS 0 | B03 background step left open | [setup one~!:TestError] | active=False | status=TestError
+AS min | H02 who sees the failed step in the list | [one:OK] | active=True | status=TestError
+AS min+1 | H02 who sees the failed step in the list | [one:OK; two~!:TestError] | active=False | status=TestError
+AS 0 | H02 who sees the failed step in the list | [one:OK; two~!:TestError] | active=False | status=TestError
+AS max | H02 who sees the failed step in the list | [one:OK; two~!:TestError] | active=False | status=TestError
+CAUGHT at 0: suite AfterStep threw on cleanup
+CAUGHT in H11 nested step left open, the outer catches, hook throws once: suite AfterStep threw on inner
+CAUGHT in H16 woven wrapper catches, outer goes on: suite AfterStep threw on inner
+CAUGHT in H14 a sibling after a caught left open step: suite AfterStep threw on inner
+AS min | S10 nested left open, reads at each order | [] | active=True | status=TestError
+AS 0 | S10 nested left open, reads at each order | [inner~!:TestError; outer~!(inner~!):TestError] | active=False | status=TestError
+CAUGHT in S08 outer catches and goes on, hook throws on the second inner, third inner is skipped: suite AfterStep threw on in2
+CAUGHT in S09 definition throws after a left open inner it caught: suite AfterStep threw on inner

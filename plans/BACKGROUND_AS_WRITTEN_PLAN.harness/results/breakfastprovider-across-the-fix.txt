@@ -1,0 +1,102 @@
+BreakfastProvider at 640c190, pins moved to 5.28.2
+
+=== two runs of the same published 5.28.2
+- bp-control\TestRunReport.krkl  2026-11-04T06:42:08Z  214 scenarios, 0 failed
++ bp-control2\TestRunReport.krkl  2026-11-04T06:42:44Z  214 scenarios, 0 failed
+
+Slower (8):
+  s16 1.4s → 2.26s  Creating an order should produce an audit log entry and even…
+  s26 0.17s → 0.89s  An order should progress through all status transitions to c…
+  s45 0.1s → 0.2s  Health check should report degraded when the cow service is …
+  s87 0.19s → 0.32s  The menu endpoint should return all menu items with availabi…
+  s161 0.22s → 0.36s  The AsyncApi endpoint should return a valid specification
+  s163 0.1s → 0.28s  The GraphQL schema definition endpoint should return the sch…
+  s180 0.26s → 0.59s  Creating an order should emit a structured log entry
+  s183 0.15s → 0.22s  Toppings should exclude raspberries when the feature flag is…
+
+matched on stableId · compare s3 s7 for two scenarios in one run
+
+=== published 5.28.2 against the fix
+- bp-control\TestRunReport.krkl  2026-11-04T06:42:08Z  214 scenarios, 0 failed
++ bp-fix\TestRunReport.krkl  2026-11-04T06:43:01Z  214 scenarios, 0 failed
+
+Slower (10):
+  s45 0.1s → 0.33s  Health check should report degraded when the cow service is …
+  s88 0.19s → 0.36s  Menu responses should be cached and returned even when suppl…
+  s93 0.21s → 1.47s  An order at the maximum items per order should be accepted
+  s99 0.37s → 1.54s  Exceeding the rate limit should return too many requests
+  s154 0.33s → 1.13s  Ingredient shipments should be recorded when delivered via e…
+  s161 0.22s → 0.34s  The AsyncApi endpoint should return a valid specification
+  s164 0.7s → 1.5s  The GraphQL schema endpoint should return a valid specificat…
+  s169 0.11s → 0.24s  Grpc server reflection should list the breakfast service
+  s172 0.27s → 0.45s  The Scalar UI endpoint should return a valid page
+  s183 0.15s → 0.24s  Toppings should exclude raspberries when the feature flag is…
+
+Tracking (3):
+  total  1344 → 1342 calls  (-2)
+  Google Cloud Pub/Sub  66 → 65 calls  (-1)
+  Supplier Service  10 → 9 calls  (-1)
+
+matched on stableId · compare s3 s7 for two scenarios in one run
+
+=== published 5.28.2 against a second run of the fix
+- bp-control\TestRunReport.krkl  2026-11-04T06:42:08Z  214 scenarios, 0 failed
++ bp-fix2\TestRunReport.krkl  2026-11-04T06:43:10Z  214 scenarios, 0 failed
+
+Slower (10):
+  s15 0.65s → 1.26s  A valid order should be created and an event published
+  s26 0.17s → 1.56s  An order should progress through all status transitions to c…
+  s62 0.19s → 0.35s  Goat milk endpoint should return not found when feature is d…
+  s70 0.42s → 0.7s  Getting usage summary should return aggregated data
+  s93 0.21s → 0.85s  An order at the maximum items per order should be accepted
+  s111 0.88s → 1.38s  An invalid status transition should return a conflict respon…
+  s154 0.33s → 1.24s  Ingredient shipments should be recorded when delivered via e…
+  s172 0.27s → 0.53s  The Scalar UI endpoint should return a valid page
+  s180 0.26s → 1.9s  Creating an order should emit a structured log entry
+  s183 0.15s → 0.33s  Toppings should exclude raspberries when the feature flag is…
+
+matched on stableId · compare s3 s7 for two scenarios in one run
+
+=== two runs of the fix
+- bp-fix\TestRunReport.krkl  2026-11-04T06:43:01Z  214 scenarios, 0 failed
++ bp-fix2\TestRunReport.krkl  2026-11-04T06:43:10Z  214 scenarios, 0 failed
+
+Slower (8):
+  s26 0.16s → 1.56s  An order should progress through all status transitions to c…
+  s62 0.12s → 0.35s  Goat milk endpoint should return not found when feature is d…
+  s70 0.34s → 0.7s  Getting usage summary should return aggregated data
+  s94 0.41s → 0.91s  An order exceeding the maximum items per order should be rej…
+  s113 0.59s → 1.52s  Order status via gRPC should return order details
+  s153 0.17s → 0.53s  Batch completions should contain data ingested via pubsub co…
+  s158 0.16s → 0.54s  Deleting a reservation should return no content
+  s180 0.33s → 1.9s  Creating an order should emit a structured log entry
+
+matched on stableId · compare s3 s7 for two scenarios in one run
+
+bp-control: BackgroundSteps blocks in Specifications.yml: 10
+bp-control2: BackgroundSteps blocks in Specifications.yml: 10
+bp-fix: BackgroundSteps blocks in Specifications.yml: 0
+bp-fix2: BackgroundSteps blocks in Specifications.yml: 0
+
+=== every scenario's step addresses, published 5.28.2 against the fix
+scenarios: 214 and 214; by stable id only in one: []
+moved: Toppings Update > Update toppings endpoint is called with invalid or dangerous input: b0 0 1 2 -> 0 1 2 3
+moved: Toppings Update > Update toppings endpoint is called with invalid or dangerous input: b0 0 1 2 -> 0 1 2 3
+moved: Toppings Update > Update toppings endpoint is called with invalid or dangerous input: b0 0 1 2 -> 0 1 2 3
+moved: Toppings Update > Update toppings endpoint is called with invalid or dangerous input: b0 0 1 2 -> 0 1 2 3
+moved: Toppings Update > Update toppings endpoint is called with invalid or dangerous input: b0 0 1 2 -> 0 1 2 3
+moved: Toppings Update > Update toppings endpoint is called with invalid or dangerous input: b0 0 1 2 -> 0 1 2 3
+moved: Daily Specials Idempotency > Submitting the same order with different idempotency keys should retur: b0 0 1 2 -> 0 1 2 3
+moved: Daily Specials Idempotency > Submitting the same order with the same idempotency key should return : b0 0 1 2 -> 0 1 2 3
+moved: Order Cross-Field Validation > An order at the maximum items per order should be accepted: b0 b1 0 1 2 -> 0 1 2 3 4
+moved: Order Cross-Field Validation > An order exceeding the maximum items per order should be rejected: b0 b1 0 1 2 3 -> 0 1 2 3 4 5
+with a b address: 10 and 0
+scenarios whose step addresses moved: 10
+
+=== the same against a second run of published 5.28.2
+scenarios: 214 and 214; by stable id only in one: []
+with a b address: 10 and 10
+scenarios whose step addresses moved: 0
+
+=== the census's 205 rows against the report's
+report rows: 214; rows the files write, by this count: 214; files: 73

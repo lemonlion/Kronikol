@@ -1,0 +1,42 @@
+Build succeeded.
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+--- history after the seventh run on 5.27.13
+KRONIKOL_HISTORY=off: history is switched off in this environment. Pass --history <file> to read a ledger anyway.
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+--- history after one run on the fixed build
+KRONIKOL_HISTORY=off: history is switched off in this environment. Pass --history <file> to read a ledger anyway.
+--- the fixed run's console line about history, if any, and its summary
+41 scenarios · 0 failed · 236 interactions · 1 distinct bodies
+01 Background then When  2 passed
+02 Background then Given  2 passed
+03 Background then Then  2 passed
+04 No background, shared Given and When  2 passed
+05 No background, outline with placeholders in a table  2 passed
+06 Background and one scenario  1 passed
+07 Feature and rule backgrounds  4 passed
+--- query diff, 5.27.13 against the fixed build
+! old: mergeable-format report
+! new: mergeable-format report
+- upgrade-before\TestRunReport.krkl  2026-11-04T06:40:42Z  41 scenarios, 0 failed
++ upgrade-after\TestRunReport.krkl  2026-11-04T06:40:45Z  41 scenarios, 0 failed
+
+no change in results, timings or tracked calls
+matched on stableId · compare s3 s7 for two scenarios in one run
+--- merge of the fixed run
+Wrote merged data to <scratch>\upgrade-merged.krkl
+Kronikol: reports written to <scratch>  (upgrade-merged.html · upgrade-merged.krkl · Failures.md)
+! mergeable-format report
+s0  01 one  [Passed]
+
+── b0  Given a logged in customer
+  s0/i0     Shape Tests → Shape API  GET /ran-for/01%20one  OK  0 ms
+── 0  When the customer acts "one"
+  s0/i2     Shape Tests → Shape API  GET /ran-for/01%20one  OK  0 ms
+── 1  Then the outcome is "one"
+  s0/i4     Shape Tests → Shape API  GET /ran-for/01%20one  OK  0 ms

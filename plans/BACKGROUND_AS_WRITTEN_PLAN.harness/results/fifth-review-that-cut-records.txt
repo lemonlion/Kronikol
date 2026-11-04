@@ -1,0 +1,37 @@
+record | flag | == BuiltIn | ToString == BuiltIn's | hash == | section in a failing report
+BuiltIn | True | True | True | True | [data-holds-failure open] x1
+new() | False | False | True | False | [] x1
+new() { HeadersShown = true } | False | False | False | False | [] x1
+new() { BackgroundStepsOpen = false } | False | False | True | False | [] x1
+new() { BackgroundStepsOpen = true } | False | False | False | False | [open] x1
+BuiltIn with { HeadersShown = true } | True | False | False | False | [data-holds-failure open] x1
+BuiltIn with { BackgroundStepsOpen = false } | False | False | True | False | [] x1
+BuiltIn with { BackgroundStepsOpen = true } | False | False | False | False | [open] x1
+BuiltIn with { BackgroundStepsOpen = BuiltIn.BackgroundStepsOpen } | False | False | True | False | [] x1
+(BuiltIn with { BackgroundStepsOpen = true }) with { BackgroundStepsOpen = false } | False | False | True | False | [] x1
+Resolve(unset, unset) run | True | True | True | True | [data-holds-failure open] x1
+Resolve(unset, unset) spec | True | True | True | True | [data-holds-failure open] x1
+Resolve(false, unset) run | False | False | True | False | [] x1
+Resolve(false, unset) spec | False | False | True | False | [] x1
+Resolve(true, unset) run | False | False | False | False | [open] x1
+Resolve(true, unset) spec | False | False | False | False | [open] x1
+Resolve(unset, false) run | True | True | True | True | [data-holds-failure open] x1
+Resolve(unset, false) spec | False | False | True | False | [] x1
+Resolve(unset, true) spec | False | False | False | False | [open] x1
+Resolve(true, false) spec | False | False | True | False | [] x1
+Resolve(false, true) spec | False | False | False | False | [open] x1
+Resolve(unset) with { HeadersShown = true } | True | False | False | False | [data-holds-failure open] x1
+JSON round trip of BuiltIn | False | False | True | False | [] x1
+JSON round trip of Resolve(unset) | False | False | True | False | [] x1
+public properties copied by reflection from BuiltIn | False | False | True | False | [] x1
+toggleDefaults omitted | - | - | - | - | [data-holds-failure open] x1
+Specifications page, unset | [data-holds-failure open] x1 | status icon shown: True | failure-result: True
+Specifications page, run false | [] x1 | status icon shown: True | failure-result: True
+Specifications page, spec false | [] x1 | status icon shown: True | failure-result: True
+Specifications page, blank on failure | length 0
+Specifications page, scenario passed with a failed Background step | [data-holds-failure open] x1
+composite of 3, failed by itself: file 509209 bytes, plain 1296788, <details class="step step-collapsible" open> data-steps:False | passed: file 508961, plain 1296254
+composite of 200, failed by itself: file 511869 bytes, plain 1352970, <details class="step step-collapsible" open> data-steps:False | passed: file 511441, plain 1311569
+composite of 5000, failed by itself: file 529547 bytes, plain 2715752, <details class="step step-collapsible" open> data-steps:False | passed: file 529799, plain 1678364
+storm 500 x 60: file 640524, plain 11841593, data-steps holders 0
+storm 2000 x 20: file 783722, plain 22142249, data-steps holders 0

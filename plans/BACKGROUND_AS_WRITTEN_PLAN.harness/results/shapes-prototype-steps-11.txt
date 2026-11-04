@@ -1,0 +1,43 @@
+# Shape 11 on the prototype
+s21  11 A background step that calls a step › 11 one  [Passed]  0s
+
+  b0    Given a composite step calls another  [i0-i2] 2 calls
+    b0.0  Ran for
+        · who
+        · 11 one
+    b0.1  Given the basket holds "from the composite"
+      b0.1.0 Ran for
+          · who
+          · 11 one
+  0     When the customer acts "one"  [i4]
+    0.0   Ran for
+        · who
+        · 11 one
+  1     Then the outcome is "one"  [i6]
+    1.0   Ran for
+        · who
+        · 11 one
+4 calls · interactions s21 · flow s21
+
+# Shape 11 on published 5.28.2
+s21  11 A background step that calls a step › 11 one  [Passed]  0s
+
+  0     Given the basket holds "from the composite"
+    0.0   Ran for
+        · who
+        · 11 one
+    0.1   Given the basket holds "from the composite"
+      0.1.0 Ran for
+          · who
+          · 11 one
+  1     Given a composite step calls another
+    1.0   Ran for
+        · who
+        · 11 one
+  2     When the customer acts "one"
+    2.0   Ran for
+        · who
+        · 11 one
+  3     Then the outcome is "one"
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s21 · flow s21

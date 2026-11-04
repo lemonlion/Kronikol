@@ -1,0 +1,54 @@
+The fourth review's shapes, probes/review-4, on the final patch: a step woven in a BeforeScenario hook shifts sub-steps a row (#223's), and nothing is drawn twice.
+--- s0
+s0  R02 A woven step reads like the step that runs after it › R02 one  [Passed]  0.06s
+at Features/R02_WovenNamesake.feature:6
+  b0    Given an r composite runs a woven namesake and then the step  0.04s  [i0-i2] 2 calls
+    b0.0  The namesake step  0.02s
+      b0.0.0 Ran for  0.02s
+          · who
+          · R02 one woven
+    b0.1  Given the namesake step  0s
+        · table
+        · sku
+        · APPLE
+        """the doc string of the namesake"""
+      b0.1.0 Ran for
+          · who
+          · R02 one defined the doc string of the namesake1
+  0     When an r step "own"  [i4]
+    0.0   Ran for
+        · who
+        · R02 one own
+3 calls · interactions s0 · flow s0
+--- s1
+s1  R03 A woven step in a BeforeScenario hook, outside any Gherkin step › R03 one  [Passed]  0.06s
+at Features/R03_WovenInHook.feature:7
+  b0    Given an r composite runs an r step "inner"  0.01s
+  0     When an r step "own"
+    0.0   Ran for
+        · who
+        · R03 one composite
+    0.1   Given an r step "inner"
+      0.1.0 Ran for
+          · who
+          · R03 one inner
+  1     Then an r step "last"
+    1.0   Ran for
+        · who
+        · R03 one own
+   5 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s1 · flow s1
+--- s2
+s2  R60 A woven step in a BeforeScenario hook, and plain steps › R60 one  [Passed]  0.06s
+at Features/R60_WovenHookPlainSteps.feature:7
+  b0    Given an r step "bg"  0s
+  0     When an r step "own"  0s
+    0.0   Ran for
+        · who
+        · R60 one bg
+  1     Then an r step "last"  0s
+    1.0   Ran for
+        · who
+        · R60 one own
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s2 · flow s2

@@ -1,0 +1,29 @@
+# Cucumber lane, And fails in 09 two: steps listed, skipped ones included
+! Cucumber messages: 41 scenario(s) have no 'kronikol-test-id' attachment, so captured interactions cannot be joined to them: '03 two', '09 one', '01 one', '16 fr…
+s18  09 Outcome decides the layout › 09 two  [Failed]  0.02s
+stableId 70cb402e07bf44e5
+at Features/09_OutcomeFlipsTheLayout.feature:10
+open: TestRunReport.html#sid-70cb402e07bf44e5
+
+  0     Given a logged in customer
+✗ 1     And the address is checked  0s
+      fail-and failed in 09 two   at 09_OutcomeFlipsTheLayout.feature:12
+  2     When the customer acts "the same"  0s
+  3     Then the outcome is "two"
+0 calls · interactions s18 · flow s18
+
+# In-process lane, prototype, the same failure
+s18  09 Outcome decides the layout › 09 two  [Failed]  0.04s
+stableId 70ad8b4727633350
+at Features/09_OutcomeFlipsTheLayout.feature:10
+open: TestRunReport.html#sid-70ad8b4727633350
+
+  0     Given a logged in customer  [i0]
+    0.0   Ran for
+        · who
+        · 09 two
+✗ 1     And the address is checked  0s  [i2]
+    1.0   Ran for
+        · who
+        · 09 two
+2 calls · interactions s18 · flow s18

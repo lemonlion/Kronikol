@@ -1,0 +1,14 @@
+The shape suite on Linux (mcr.microsoft.com/dotnet/sdk:10.0 in the podman machine), published 5.27.13 packages with the final prototype's two assemblies swapped in, 2026-11-03.
+Build succeeded.
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration: 330 ms - Shapes.Sui
+Failed!  - Failed:     1, Passed:    40, Skipped:     0, Total:    41, Duration: 315 ms - Shapes.Sui
+Failed!  - Failed:     1, Passed:    40, Skipped:     0, Total:    41, Duration: 316 ms - Shapes.Sui
+Failed!  - Failed:     1, Passed:    40, Skipped:     0, Total:    41, Duration: 325 ms - Shapes.Sui
+Failed!  - Failed:     1, Passed:    40, Skipped:     0, Total:    41, Duration: 334 ms - Shapes.Sui
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration: 309 ms - Shapes.Sui
+attach run, report files: 2, attachments: 2
+pass: scenarios=41 MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: scenarios=41 MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: scenarios=41 MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: scenarios=41 MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: scenarios=41 MISSED=0 INVENTED=0 BORROWED=0 

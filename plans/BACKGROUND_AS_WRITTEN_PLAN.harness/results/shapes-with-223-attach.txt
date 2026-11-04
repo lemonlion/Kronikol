@@ -1,0 +1,12 @@
+dotnet test exit code: 0
+Total tests: 41
+     Passed: 41
+Report files: 2 of TestRunReport.html and .krkl
+attachment copied: 18-one.txt
+attachment copied: 18-two.txt
+--- 18 one
+s35/0  18-one.txt → <scratch>\with-223\bin\Release\net10.0\Reports\attachments\18-one.txt
+1 attachments
+--- 18 two
+s36/0  18-two.txt → <scratch>\with-223\bin\Release\net10.0\Reports\attachments\18-two.txt
+1 attachments

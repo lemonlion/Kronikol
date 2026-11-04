@@ -1,0 +1,4 @@
+41 scenarios against 41: 38 mark the same number of steps
+  differs: 11 one: ('pass', '1', '3') | ('skip', '2', '3')  (result, marked, steps)
+  differs: 11 two: ('pass', '1', '3') | ('skip', '2', '3')  (result, marked, steps)
+  differs: 15 empty: ('pass', '1', '1') | ('skip', '0', '0')  (result, marked, steps)

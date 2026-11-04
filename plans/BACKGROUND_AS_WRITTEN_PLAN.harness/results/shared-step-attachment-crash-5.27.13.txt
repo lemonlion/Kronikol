@@ -1,0 +1,26 @@
+
+
+[xUnit.net 00:00:01.70]     [Test Assembly Cleanup Failure (Shapes.Suite.dll)] System.Collections.Generic.KeyNotFoundException
+[xUnit.net 00:00:01.70]       System.Collections.Generic.KeyNotFoundException : The given key 'FileAttachment { Name = 18-one.txt, RelativePath = attachments/18-one.txt, MediaType = , IsInlineImage = False, Pro
+[xUnit.net 00:00:01.70]       Stack Trace:
+[xUnit.net 00:00:01.70]            at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+[xUnit.net 00:00:01.70]            at Kronikol.Reports.ReportGenerator.<>c__DisplayClass216_0.<CopyAttachments>g__Place|4(FileAttachment attachment)
+[xUnit.net 00:00:01.70]            at System.Linq.Enumerable.ArraySelectIterator`2.Fill(ReadOnlySpan`1 source, Span`1 destination, Func`2 func)
+[xUnit.net 00:00:01.70]            at System.Linq.Enumerable.ArraySelectIterator`2.ToArray()
+[xUnit.net 00:00:01.70]            at Kronikol.Reports.ReportGenerator.<>c__DisplayClass216_0.<CopyAttachments>b__3(FileAttachment[] attachments)
+[xUnit.net 00:00:01.70]            at Kronikol.Reports.AttachmentPlacement.<ForEachList>g__Steps|9_0(ScenarioStep[] steps, <>c__DisplayClass9_0&)
+[xUnit.net 00:00:01.70]            at Kronikol.Reports.AttachmentPlacement.ForEachList(IEnumerable`1 scenarios, Func`2 replace)
+[xUnit.net 00:00:01.70]            at Kronikol.Reports.ReportGenerator.CopyAttachments(Feature[] features, String reportsDirectory)
+[xUnit.net 00:00:01.70]            at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, R
+[xUnit.net 00:00:01.70]            at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions o
+[xUnit.net 00:00:01.70]            at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEn
+[xUnit.net 00:00:01.70]            at Kronikol.ReqNRoll.ReqNRollReportGenerator.CreateStandardReportsWithDiagrams(IEnumerable`1 scenarios, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions 
+[xUnit.net 00:00:01.70]            at Kronikol.ReqNRoll.ReqNRollReportGenerator.CreateStandardReportsWithDiagrams(ReportConfigurationOptions options)
+[xUnit.net 00:00:01.70]         <scratch>\m\5.27.13\Hooks\Hooks.cs(27,0): at Shapes.Suite.Hooks.Hooks.WriteReports()
+[xUnit.net 00:00:01.70]            at InvokeStub_Action`1.Invoke(Object, Span`1)
+[xUnit.net 00:00:01.70]            at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:01.70]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:01.70]            at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHol
+[xUnit.net 00:00:01.70]            at Reqnroll.Infrastructure.TestExecutionEngine.InvokeHookAsync(IAsyncBindingInvoker invoker, IHookBinding hookBinding, HookType hookType)
+[xUnit.net 00:00:01.70]            at Reqnroll.Infrastructure.TestExecutionEngine.InvokeHookAsync(IAsyncBindingInvoker invoker, IHookBinding hookBinding, HookType hookType)
+[xUnit.net 00:00:01.70]            at Reqnroll.Infrastructure.TestExecutionEngine.FireEventsAsync(HookType hookType)

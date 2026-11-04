@@ -1,0 +1,37 @@
+record | flag | == BuiltIn | ToString == BuiltIn's | hash == | section in a failing report
+BuiltIn | - | True | True | True | [] x1
+new() | - | True | True | True | [] x1
+new() { HeadersShown = true } | - | False | False | False | [] x1
+new() { BackgroundStepsOpen = false } | - | True | True | True | [] x1
+new() { BackgroundStepsOpen = true } | - | False | False | False | [open] x1
+BuiltIn with { HeadersShown = true } | - | False | False | False | [] x1
+BuiltIn with { BackgroundStepsOpen = false } | - | True | True | True | [] x1
+BuiltIn with { BackgroundStepsOpen = true } | - | False | False | False | [open] x1
+BuiltIn with { BackgroundStepsOpen = BuiltIn.BackgroundStepsOpen } | - | True | True | True | [] x1
+(BuiltIn with { BackgroundStepsOpen = true }) with { BackgroundStepsOpen = false } | - | True | True | True | [] x1
+Resolve(unset, unset) run | - | True | True | True | [] x1
+Resolve(unset, unset) spec | - | True | True | True | [] x1
+Resolve(false, unset) run | - | True | True | True | [] x1
+Resolve(false, unset) spec | - | True | True | True | [] x1
+Resolve(true, unset) run | - | False | False | False | [open] x1
+Resolve(true, unset) spec | - | False | False | False | [open] x1
+Resolve(unset, false) run | - | True | True | True | [] x1
+Resolve(unset, false) spec | - | True | True | True | [] x1
+Resolve(unset, true) spec | - | False | False | False | [open] x1
+Resolve(true, false) spec | - | True | True | True | [] x1
+Resolve(false, true) spec | - | False | False | False | [open] x1
+Resolve(unset) with { HeadersShown = true } | - | False | False | False | [] x1
+JSON round trip of BuiltIn | - | True | True | True | [] x1
+JSON round trip of Resolve(unset) | - | True | True | True | [] x1
+public properties copied by reflection from BuiltIn | - | True | True | True | [] x1
+toggleDefaults omitted | - | - | - | - | [] x1
+Specifications page, unset | [] x1 | status icon shown: True | failure-result: True
+Specifications page, run false | [] x1 | status icon shown: True | failure-result: True
+Specifications page, spec false | [] x1 | status icon shown: True | failure-result: True
+Specifications page, blank on failure | length 0
+Specifications page, scenario passed with a failed Background step | [] x1
+composite of 3, failed by itself: file 509029 bytes, plain 1296278, <details class="step step-collapsible"> data-steps:False | passed: file 508785, plain 1295749
+composite of 200, failed by itself: file 511517 bytes, plain 1311589, <details class="step step-collapsible"> data-steps:True | passed: file 511261, plain 1311064
+composite of 5000, failed by itself: file 529879 bytes, plain 1678384, <details class="step step-collapsible"> data-steps:True | passed: file 529699, plain 1677859
+storm 500 x 60: file 651100, plain 6000379, data-steps holders 500
+storm 2000 x 20: file 806114, plain 14695436, data-steps holders 2000

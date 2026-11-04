@@ -1,0 +1,3 @@
+before {"scenarioOpen":false,"shown":"row 0","states":"background=shut bgComposite=shut failure-result=open","activeRow":"1aFailed","matchHasBoxes":null,"matchVisible":null}
+searched {"scenarioOpen":true,"shown":"row 1","states":"background=open bgComposite=shut steps=open","activeRow":"2bPassed","matchHasBoxes":true,"matchVisible":true}
+emptied {"scenarioOpen":false,"shown":"row 0","states":"background=open bgComposite=shut failure-result=open","activeRow":"1aFailed","matchHasBoxes":null,"matchVisible":null}

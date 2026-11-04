@@ -1,0 +1,273 @@
+WATCH R741 one | r7 first | suite AfterStep ahead: running 0 ms
+WATCH R741 one | r7 first | suite AfterStep last: running 0 ms
+WATCH R741 one | r7 bgtop! | suite AfterStep ahead: running 0 ms
+WATCH R722 a woven step catches the failure, then a woven step | r7 n! | suite AfterStep ahead: running 0 ms
+WATCH R740 one | r7 inner! | suite AfterStep ahead: running 0 ms
+WATCH R722 a woven step catches the failure, then a woven step | r7w woven catches it, then a woven step | suite AfterStep ahead: running 0 ms
+WATCH R722 a woven step catches the failure, then a woven step | r7w woven catches it, then a woven step | suite AfterStep last: running 0 ms
+SEEN R741 one: 1
+WATCH R740 one | r7 bg(inner!) | suite AfterStep ahead: running 0 ms
+WATCH R753 control, a step calls and fails in its definition, the AfterScenario hook calls | r7c calls and definition fails | suite AfterStep ahead: running 0 ms
+SEEN R722 a woven step catches the failure, then a woven step: 2
+WATCH R740 one | r7 bg(inner!) | suite AfterStep last: running 0 ms
+WATCH R753 control, a step calls and fails in its definition, the AfterScenario hook calls | r7c calls and definition fails | suite AfterStep last: running 0 ms
+SEEN R740 one: 2
+SEEN R753 control, a step calls and fails in its definition, the AfterScenario hook calls: 1
+WATCH R702 every level's hook throws | r7 d! | suite AfterStep ahead: running 0 ms
+WATCH R702 every level's hook throws | r7 c!(d!) | suite AfterStep ahead: running 0 ms
+SEEN R752 a step calls, its AfterStep hook throws, the AfterScenario hook calls: 0
+WATCH R702 every level's hook throws | r7 b!(c!(d!)) | suite AfterStep ahead: running 0 ms
+WATCH R702 every level's hook throws | r7 a!(b!(c!(d!))) | suite AfterStep ahead: running 0 ms
+SEEN R702 every level's hook throws: 0
+WATCH R709 passes before, the failing child among siblings, caught at the top | r7 b | suite AfterStep ahead: running 0 ms
+WATCH R709 passes before, the failing child among siblings, caught at the top | r7 b | suite AfterStep last: running 0 ms
+WATCH R754 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws, and catches it | r7 h! | suite AfterStep ahead: running 0 ms
+WATCH R709 passes before, the failing child among siblings, caught at the top | r7 d! | suite AfterStep ahead: running 0 ms
+WATCH R754 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws, and catches it | r7 s | suite AfterStep ahead: running 0 ms
+WATCH R709 passes before, the failing child among siblings, caught at the top | r7 c(d!) | suite AfterStep ahead: running 0 ms
+WATCH R709 passes before, the failing child among siblings, caught at the top | r7 c(d!) | suite AfterStep last: running 0 ms
+WATCH R754 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws, and catches it | r7 s | suite AfterStep last: running 0 ms
+WATCH R709 passes before, the failing child among siblings, caught at the top | r7 ac(b,c(d!),e) | suite AfterStep ahead: stopped 0 ms
+WATCH R709 passes before, the failing child among siblings, caught at the top | r7 ac(b,c(d!),e) | suite AfterStep last: stopped 0 ms
+SEEN R754 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws, and catches it: 1
+SEEN R709 passes before, the failing child among siblings, caught at the top: 4
+WATCH R706 the top catches, a sibling is skipped | r7 b! | suite AfterStep ahead: running 0 ms
+WATCH R750 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws | r7 h! | suite AfterStep ahead: running 0 ms
+CAUGHT a: an AfterStep hook failed on b
+WATCH R750 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws | r7 s | suite AfterStep ahead: running 0 ms
+WATCH R706 the top catches, a sibling is skipped | r7 ac(b!,d) | suite AfterStep ahead: running 0 ms
+WATCH R750 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws | r7 s | suite AfterStep last: running 0 ms
+WATCH R706 the top catches, a sibling is skipped | r7 ac(b!,d) | suite AfterStep last: running 0 ms
+SEEN R706 the top catches, a sibling is skipped: 2
+SEEN R750 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws: 1
+WATCH R714 a slow step whose hook throws, siblings ran before | r7 b | suite AfterStep ahead: running 0 ms
+WATCH R714 a slow step whose hook throws, siblings ran before | r7 b | suite AfterStep last: running 0 ms
+WATCH R751 an AfterStep hook ahead of ours runs a step whose AfterStep hook throws | r7 h! | suite AfterStep ahead: running 0 ms
+SEEN R751 an AfterStep hook ahead of ours runs a step whose AfterStep hook throws: 0
+WATCH R714 a slow step whose hook throws, siblings ran before | r7 slowc! | suite AfterStep ahead: running 300 ms
+WATCH R714 a slow step whose hook throws, siblings ran before | r7 a(b,slowc!,d) | suite AfterStep ahead: running 300 ms
+WATCH R714 a slow step whose hook throws, siblings ran before | r7 a(b,slowc!,d) | suite AfterStep last: running 300 ms
+SEEN R714 a slow step whose hook throws, siblings ran before: 3
+WATCH R730 a row's nested step #a(b) | r7 b | suite AfterStep ahead: running 0 ms
+WATCH R730 a row's nested step #a(b) | r7 b | suite AfterStep last: running 0 ms
+WATCH R730 a row's nested step #a(b) | r7 a(b) | suite AfterStep ahead: stopped 0 ms
+WATCH R730 a row's nested step #a(b) | r7 a(b) | suite AfterStep last: stopped 0 ms
+WATCH R730 a row's nested step #a(b) | r7 z | suite AfterStep ahead: running 0 ms
+WATCH R730 a row's nested step #a(b) | r7 z | suite AfterStep last: running 0 ms
+SEEN R730 a row's nested step #a(b): 3
+WATCH R730 a row's nested step #a(b(c)) | r7 c | suite AfterStep ahead: running 0 ms
+WATCH R730 a row's nested step #a(b(c)) | r7 c | suite AfterStep last: running 0 ms
+WATCH R730 a row's nested step #a(b(c)) | r7 b(c) | suite AfterStep ahead: stopped 0 ms
+WATCH R730 a row's nested step #a(b(c)) | r7 b(c) | suite AfterStep last: stopped 0 ms
+WATCH R730 a row's nested step #a(b(c)) | r7 a(b(c)) | suite AfterStep ahead: stopped 0 ms
+WATCH R730 a row's nested step #a(b(c)) | r7 a(b(c)) | suite AfterStep last: stopped 0 ms
+WATCH R730 a row's nested step #a(b(c)) | r7 z | suite AfterStep ahead: running 0 ms
+WATCH R730 a row's nested step #a(b(c)) | r7 z | suite AfterStep last: running 0 ms
+SEEN R730 a row's nested step #a(b(c)): 4
+WATCH R730 a row's nested step #a(b!) | r7 b! | suite AfterStep ahead: running 0 ms
+WATCH R730 a row's nested step #a(b!) | r7 a(b!) | suite AfterStep ahead: running 0 ms
+WATCH R730 a row's nested step #a(b!) | r7 a(b!) | suite AfterStep last: running 0 ms
+SEEN R730 a row's nested step #a(b!): 2
+WATCH R712 the parent catches the hook's failure and throws its own | r7 b! | suite AfterStep ahead: running 0 ms
+CAUGHT a: an AfterStep hook failed on b
+WATCH R712 the parent catches the hook's failure and throws its own | r7 acx(b!) | suite AfterStep ahead: running 0 ms
+WATCH R712 the parent catches the hook's failure and throws its own | r7 acx(b!) | suite AfterStep last: running 0 ms
+SEEN R712 the parent catches the hook's failure and throws its own: 2
+WATCH R718 the parent catches, then works on for a while | r7 b! | suite AfterStep ahead: running 0 ms
+CAUGHT a: an AfterStep hook failed on b
+WATCH R718 the parent catches, then works on for a while | r7 acz(b!) | suite AfterStep ahead: running 500 ms
+WATCH R718 the parent catches, then works on for a while | r7 acz(b!) | suite AfterStep last: running 500 ms
+SEEN R718 the parent catches, then works on for a while: 2
+WATCH R723 the definition catches the failure, then a woven step | r7 n! | suite AfterStep ahead: running 0 ms
+WATCH R723 the definition catches the failure, then a woven step | r7w the definition catches it, then a woven step | suite AfterStep ahead: running 0 ms
+WATCH R723 the definition catches the failure, then a woven step | r7w the definition catches it, then a woven step | suite AfterStep last: running 0 ms
+SEEN R723 the definition catches the failure, then a woven step: 2
+WATCH R700 control, every hook passes | r7 c | suite AfterStep ahead: running 0 ms
+WATCH R700 control, every hook passes | r7 c | suite AfterStep last: running 0 ms
+WATCH R700 control, every hook passes | r7 b(c) | suite AfterStep ahead: stopped 0 ms
+WATCH R700 control, every hook passes | r7 b(c) | suite AfterStep last: stopped 0 ms
+WATCH R700 control, every hook passes | r7 d | suite AfterStep ahead: running 0 ms
+WATCH R700 control, every hook passes | r7 d | suite AfterStep last: running 0 ms
+WATCH R700 control, every hook passes | r7 a(b(c),d) | suite AfterStep ahead: stopped 0 ms
+WATCH R700 control, every hook passes | r7 a(b(c),d) | suite AfterStep last: stopped 0 ms
+WATCH R700 control, every hook passes | r7 z | suite AfterStep ahead: running 0 ms
+WATCH R700 control, every hook passes | r7 z | suite AfterStep last: running 0 ms
+SEEN R700 control, every hook passes: 5
+WATCH R707 a top level step only | r7 a! | suite AfterStep ahead: running 0 ms
+SEEN R707 a top level step only: 0
+WATCH R703 alternate levels | r7 d! | suite AfterStep ahead: running 0 ms
+WATCH R703 alternate levels | r7 c(d!) | suite AfterStep ahead: running 0 ms
+WATCH R703 alternate levels | r7 c(d!) | suite AfterStep last: running 0 ms
+WATCH R703 alternate levels | r7 b!(c(d!)) | suite AfterStep ahead: stopped 0 ms
+WATCH R703 alternate levels | r7 a(b!(c(d!))) | suite AfterStep ahead: stopped 0 ms
+WATCH R703 alternate levels | r7 a(b!(c(d!))) | suite AfterStep last: stopped 0 ms
+SEEN R703 alternate levels: 4
+WATCH R701 the deepest level's hook throws | r7 d! | suite AfterStep ahead: running 0 ms
+WATCH R701 the deepest level's hook throws | r7 c(d!) | suite AfterStep ahead: running 0 ms
+WATCH R701 the deepest level's hook throws | r7 c(d!) | suite AfterStep last: running 0 ms
+WATCH R701 the deepest level's hook throws | r7 b(c(d!)) | suite AfterStep ahead: stopped 0 ms
+WATCH R701 the deepest level's hook throws | r7 b(c(d!)) | suite AfterStep last: stopped 0 ms
+WATCH R701 the deepest level's hook throws | r7 a(b(c(d!))) | suite AfterStep ahead: stopped 0 ms
+WATCH R701 the deepest level's hook throws | r7 a(b(c(d!))) | suite AfterStep last: stopped 0 ms
+SEEN R701 the deepest level's hook throws: 4
+WATCH R720 a woven step lets the failure through | r7 n! | suite AfterStep ahead: running 0 ms
+WATCH R720 a woven step lets the failure through | r7w woven lets it through | suite AfterStep ahead: running 0 ms
+WATCH R720 a woven step lets the failure through | r7w woven lets it through | suite AfterStep last: running 0 ms
+SEEN R720 a woven step lets the failure through: 2
+WATCH R708 the second of three | r7 a | suite AfterStep ahead: running 0 ms
+WATCH R708 the second of three | r7 a | suite AfterStep last: running 0 ms
+WATCH R708 the second of three | r7 b! | suite AfterStep ahead: running 0 ms
+SEEN R708 the second of three: 1
+WATCH R721 a woven step catches the failure | r7 n! | suite AfterStep ahead: running 0 ms
+WATCH R721 a woven step catches the failure | r7w woven catches it | suite AfterStep ahead: running 0 ms
+WATCH R721 a woven step catches the failure | r7w woven catches it | suite AfterStep last: running 0 ms
+SEEN R721 a woven step catches the failure: 2
+WATCH R715 a top level step's hook throws, the AfterScenario hook takes a while and runs a woven step | r7 slowa! | suite AfterStep ahead: running 300 ms
+SEEN R715 a top level step's hook throws, the AfterScenario hook takes a while and runs a woven step: 0
+WATCH R710 a BeforeStep hook ahead of ours and the AfterStep hook throw on one nested step | r7 b^! | suite AfterStep ahead: running 0 ms
+WATCH R710 a BeforeStep hook ahead of ours and the AfterStep hook throw on one nested step | r7 a(b^!) | suite AfterStep ahead: running 0 ms
+WATCH R710 a BeforeStep hook ahead of ours and the AfterStep hook throw on one nested step | r7 a(b^!) | suite AfterStep last: running 0 ms
+SEEN R710 a BeforeStep hook ahead of ours and the AfterStep hook throw on one nested step: 1
+WATCH R705 the middle catches, a sibling is skipped | r7 c! | suite AfterStep ahead: running 0 ms
+CAUGHT b: an AfterStep hook failed on c
+WATCH R705 the middle catches, a sibling is skipped | r7 bc(c!,d) | suite AfterStep ahead: running 0 ms
+WATCH R705 the middle catches, a sibling is skipped | r7 bc(c!,d) | suite AfterStep last: running 0 ms
+WATCH R705 the middle catches, a sibling is skipped | r7 a(bc(c!,d)) | suite AfterStep ahead: stopped 0 ms
+WATCH R705 the middle catches, a sibling is skipped | r7 a(bc(c!,d)) | suite AfterStep last: stopped 0 ms
+SEEN R705 the middle catches, a sibling is skipped: 3
+WATCH R717 a nested step's hook throws at every level, the same AfterScenario hook | r7 slowb! | suite AfterStep ahead: running 300 ms
+WATCH R717 a nested step's hook throws at every level, the same AfterScenario hook | r7 slowa!(slowb!) | suite AfterStep ahead: running 300 ms
+SEEN R717 a nested step's hook throws at every level, the same AfterScenario hook: 0
+WATCH R724 a woven step catches the failure, then throws its own | r7 n! | suite AfterStep ahead: running 0 ms
+WATCH R724 a woven step catches the failure, then throws its own | r7w woven catches it, then throws | suite AfterStep ahead: running 0 ms
+WATCH R724 a woven step catches the failure, then throws its own | r7w woven catches it, then throws | suite AfterStep last: running 0 ms
+SEEN R724 a woven step catches the failure, then throws its own: 2
+WATCH R704 outer and inner, not the middle | r7 c! | suite AfterStep ahead: running 0 ms
+WATCH R704 outer and inner, not the middle | r7 b(c!) | suite AfterStep ahead: running 0 ms
+WATCH R704 outer and inner, not the middle | r7 b(c!) | suite AfterStep last: running 0 ms
+WATCH R704 outer and inner, not the middle | r7 a!(b(c!)) | suite AfterStep ahead: stopped 0 ms
+SEEN R704 outer and inner, not the middle: 2
+WATCH R716 control, the same AfterScenario hook, a step that fails in its definition | r7 slowax | suite AfterStep ahead: running 300 ms
+WATCH R716 control, the same AfterScenario hook, a step that fails in its definition | r7 slowax | suite AfterStep last: running 300 ms
+SEEN R716 control, the same AfterScenario hook, a step that fails in its definition: 1
+WATCH R713 the parent's own failure is first, then its hook throws | r7 b | suite AfterStep ahead: running 0 ms
+WATCH R713 the parent's own failure is first, then its hook throws | r7 b | suite AfterStep last: running 0 ms
+WATCH R713 the parent's own failure is first, then its hook throws | r7 ax!(b) | suite AfterStep ahead: stopped 0 ms
+SEEN R713 the parent's own failure is first, then its hook throws: 1
+WATCH R711 a BeforeStep hook ahead of ours throws on a nested step, then the parent's hook throws | r7 b^ | suite AfterStep ahead: running 0 ms
+WATCH R711 a BeforeStep hook ahead of ours throws on a nested step, then the parent's hook throws | r7 b^ | suite AfterStep last: running 0 ms
+WATCH R711 a BeforeStep hook ahead of ours throws on a nested step, then the parent's hook throws | r7 a!(b^) | suite AfterStep ahead: running 0 ms
+SEEN R711 a BeforeStep hook ahead of ours throws on a nested step, then the parent's hook throws: 1
+LIST R700 control, every hook passes: 5
+   Given r7 c [OK] 0ms ranByStep=True nested=[]
+   Given r7 b(c) [OK] 0ms ranByStep=True nested=[c]
+   Given r7 d [OK] 0ms ranByStep=True nested=[]
+   Given r7 a(b(c),d) [OK] 0ms ranByStep=False nested=[b(c); d]
+   Then r7 z [OK] 0ms ranByStep=False nested=[]
+LIST R701 the deepest level's hook throws: 4
+   Given r7 d! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 c(d!) [TestError] 0ms ranByStep=True nested=[d!]
+   Given r7 b(c(d!)) [TestError] 0ms ranByStep=True nested=[c(d!)]
+   Given r7 a(b(c(d!))) [TestError] 0ms ranByStep=False nested=[b(c(d!))]
+LIST R702 every level's hook throws: 4
+   Given r7 d! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 c!(d!) [TestError] 0ms ranByStep=True nested=[d!]
+   Given r7 b!(c!(d!)) [TestError] 0ms ranByStep=True nested=[c!(d!)]
+   Given r7 a!(b!(c!(d!))) [TestError] 0ms ranByStep=False nested=[b!(c!(d!))]
+LIST R703 alternate levels: 4
+   Given r7 d! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 c(d!) [TestError] 0ms ranByStep=True nested=[d!]
+   Given r7 b!(c(d!)) [TestError] 0ms ranByStep=True nested=[c(d!)]
+   Given r7 a(b!(c(d!))) [TestError] 0ms ranByStep=False nested=[b!(c(d!))]
+LIST R704 outer and inner, not the middle: 3
+   Given r7 c! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 b(c!) [TestError] 0ms ranByStep=True nested=[c!]
+   Given r7 a!(b(c!)) [TestError] 0ms ranByStep=False nested=[b(c!)]
+LIST R705 the middle catches, a sibling is skipped: 3
+   Given r7 c! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 bc(c!,d) [TestError] 0ms ranByStep=True nested=[c!]
+   Given r7 a(bc(c!,d)) [TestError] 0ms ranByStep=False nested=[bc(c!,d)]
+LIST R706 the top catches, a sibling is skipped: 2
+   Given r7 b! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 ac(b!,d) [TestError] 0ms ranByStep=False nested=[b!]
+LIST R707 a top level step only: 1
+   Given r7 a! [TestError] 0ms ranByStep=False nested=[]
+LIST R708 the second of three: 2
+   Given r7 a [OK] 0ms ranByStep=False nested=[]
+   When r7 b! [TestError] 0ms ranByStep=False nested=[]
+LIST R709 passes before, the failing child among siblings, caught at the top: 4
+   Given r7 b [OK] 0ms ranByStep=True nested=[]
+   Given r7 d! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 c(d!) [TestError] 0ms ranByStep=True nested=[d!]
+   Given r7 ac(b,c(d!),e) [TestError] 0ms ranByStep=False nested=[b; c(d!)]
+LIST R710 a BeforeStep hook ahead of ours and the AfterStep hook throw on one nested step: 1
+   Given r7 a(b^!) [TestError] 0ms ranByStep=False nested=[]
+LIST R711 a BeforeStep hook ahead of ours throws on a nested step, then the parent's hook throws: 2
+   Given r7 b^ [TestError] 0ms ranByStep=True nested=[]
+   Given r7 a!(b^) [TestError] 0ms ranByStep=False nested=[b^]
+LIST R712 the parent catches the hook's failure and throws its own: 2
+   Given r7 b! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 acx(b!) [TestError] 0ms ranByStep=False nested=[b!]
+LIST R713 the parent's own failure is first, then its hook throws: 2
+   Given r7 b [OK] 0ms ranByStep=True nested=[]
+   Given r7 ax!(b) [TestError] 0ms ranByStep=False nested=[b]
+LIST R714 a slow step whose hook throws, siblings ran before: 3
+   Given r7 b [OK] 0ms ranByStep=True nested=[]
+   Given r7 slowc! [TestError] 300ms ranByStep=True nested=[]
+   Given r7 a(b,slowc!,d) [TestError] 300ms ranByStep=False nested=[b; slowc!]
+LIST R715 a top level step's hook throws, the AfterScenario hook takes a while and runs a woven step: 1
+   Given r7 slowa! [TestError] 1500ms ranByStep=False nested=[]
+LIST R716 control, the same AfterScenario hook, a step that fails in its definition: 1
+   Given r7 slowax [TestError] 300ms ranByStep=False nested=[]
+LIST R717 a nested step's hook throws at every level, the same AfterScenario hook: 2
+   Given r7 slowb! [TestError] 1500ms ranByStep=True nested=[]
+   Given r7 slowa!(slowb!) [TestError] 1800ms ranByStep=False nested=[slowb!]
+LIST R718 the parent catches, then works on for a while: 2
+   Given r7 b! [TestError] 500ms ranByStep=True nested=[]
+   Given r7 acz(b!) [TestError] 500ms ranByStep=False nested=[b!]
+LIST R720 a woven step lets the failure through: 2
+   Given r7 n! [TestError] 0ms ranByStep=True nested=[]
+   Given r7w woven lets it through [TestError] 0ms ranByStep=False nested=[n!]
+LIST R721 a woven step catches the failure: 2
+   Given r7 n! [TestError] 0ms ranByStep=True nested=[]
+   Given r7w woven catches it [TestError] 0ms ranByStep=False nested=[n!]
+LIST R722 a woven step catches the failure, then a woven step: 2
+   Given r7 n! [TestError] 0ms ranByStep=True nested=[]
+   Given r7w woven catches it, then a woven step [TestError] 0ms ranByStep=False nested=[n!]
+LIST R723 the definition catches the failure, then a woven step: 2
+   Given r7 n! [TestError] 0ms ranByStep=True nested=[]
+   Given r7w the definition catches it, then a woven step [TestError] 0ms ranByStep=False nested=[n!]
+LIST R724 a woven step catches the failure, then throws its own: 2
+   Given r7 n! [TestError] 0ms ranByStep=True nested=[]
+   Given r7w woven catches it, then throws [BindingError] 0ms ranByStep=False nested=[n!]
+LIST R730 a row's nested step #a(b!): 2
+   Given r7 b! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 a(b!) [TestError] 0ms ranByStep=False nested=[b!]
+LIST R730 a row's nested step #a(b(c)): 4
+   Given r7 c [OK] 0ms ranByStep=True nested=[]
+   Given r7 b(c) [OK] 0ms ranByStep=True nested=[c]
+   Given r7 a(b(c)) [OK] 0ms ranByStep=False nested=[b(c)]
+   Then r7 z [OK] 0ms ranByStep=False nested=[]
+LIST R730 a row's nested step #a(b): 3
+   Given r7 b [OK] 0ms ranByStep=True nested=[]
+   Given r7 a(b) [OK] 0ms ranByStep=False nested=[b]
+   Then r7 z [OK] 0ms ranByStep=False nested=[]
+LIST R740 one: 2
+   Given r7 inner! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 bg(inner!) [TestError] 0ms ranByStep=False nested=[inner!]
+LIST R741 one: 2
+   Given r7 first [OK] 0ms ranByStep=False nested=[]
+   And r7 bgtop! [TestError] 0ms ranByStep=False nested=[]
+LIST R750 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws: 2
+   Given r7 s [TestError] 0ms ranByStep=True nested=[]
+   Given r7 h! [TestError] 0ms ranByStep=False nested=[s]
+LIST R751 an AfterStep hook ahead of ours runs a step whose AfterStep hook throws: 2
+   Given r7 h! [TestError] 0ms ranByStep=True nested=[]
+   Given r7 s [TestError] 0ms ranByStep=False nested=[h!]
+LIST R752 a step calls, its AfterStep hook throws, the AfterScenario hook calls: 1
+   Given r7c calls and hook fails [TestError] 0ms ranByStep=False nested=[]
+LIST R753 control, a step calls and fails in its definition, the AfterScenario hook calls: 1
+   Given r7c calls and definition fails [TestError] 0ms ranByStep=False nested=[]
+LIST R754 a BeforeStep hook ahead of ours runs a step whose AfterStep hook throws, and catches it: 2
+   Given r7 s [TestError] 0ms ranByStep=True nested=[]
+   Given r7 h! [TestError] 0ms ranByStep=False nested=[s]

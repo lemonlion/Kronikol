@@ -1,0 +1,22 @@
+5.27.13, the When fails in 09 two: one failed scenario
+  headings: [["","Scenarios","Steps","Duration"],["Feature","Total","Passed","Failed","Skipped","Total","Passed","Failed","Skipped","Total","Avg","Longest"]]
+  09 Outcome decides the layout | 2 | 1 | 1 | 0 | 14 | 14 | 0 | 0
+prototype, same run
+  headings: [["","Scenarios","Steps","Duration"],["Feature","Total","Passed","Failed","Skipped","Total","Passed","Failed","Skipped","Total","Avg","Longest"]]
+  09 Outcome decides the layout | 2 | 1 | 1 | 0 | 14 | 13 | 1 | 0
+5.27.13, the Background fails in 17 breaks only: one failed scenario, one passed
+  headings: [["","Scenarios","Steps","Duration"],["Feature","Total","Passed","Failed","Skipped","Total","Passed","Failed","Skipped","Total","Avg","Longest"]]
+  17 Background fails, then Then | 2 | 1 | 1 | 0 | 6 | 4 | 2 | 0
+prototype, same run
+  headings: [["","Scenarios","Steps","Duration"],["Feature","Total","Passed","Failed","Skipped","Total","Passed","Failed","Skipped","Total","Avg","Longest"]]
+  17 Background fails, then Then | 2 | 1 | 1 | 0 | 6 | 5 | 1 | 0
+
+
+
+
+
+Final prototype on 5.28.2, 2026-11-04
+prototype-on-5.28.2
+  09 Outcome decides the layout | 2 | 1 | 1 | 0 | 14 | 13 | 1 | 0
+prototype-on-5.28.2
+  17 Background fails, then Then | 2 | 1 | 1 | 0 | 6 | 5 | 1 | 0

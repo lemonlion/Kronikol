@@ -1,0 +1,185 @@
+{
+ "label": "prototype: a real Background step fails (08 breaks)",
+ "sid": "cce21c52d659349f",
+ "lists": [
+  {
+   "cls": "scenario-steps",
+   "startsOpen": true
+  }
+ ],
+ "hasFailureBlock": true,
+ "steps": [
+  {
+   "cls": "step step-collapsible step-background",
+   "keyword": "Given",
+   "text": "a logged in customer",
+   "textColour": "rgb(91, 100, 116)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status failed",
+   "iconColour": "rgb(179, 55, 46)",
+   "borderLeft": "0px rgb(91, 100, 116)"
+  }
+ ]
+}
+{
+ "label": "prototype: a real Background step passes (08 holds)",
+ "sid": "ca67439847f2d5f6",
+ "lists": [
+  {
+   "cls": "scenario-steps",
+   "startsOpen": true
+  }
+ ],
+ "hasFailureBlock": false,
+ "steps": [
+  {
+   "cls": "step step-collapsible step-background",
+   "keyword": "Given",
+   "text": "a logged in customer",
+   "textColour": "rgb(91, 100, 116)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(91, 100, 116)"
+  },
+  {
+   "cls": "step step-collapsible",
+   "keyword": "When",
+   "text": "the customer acts \"holds\"",
+   "textColour": "rgb(36, 43, 54)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(36, 43, 54)"
+  },
+  {
+   "cls": "step step-collapsible",
+   "keyword": "Then",
+   "text": "the outcome is \"holds\"",
+   "textColour": "rgb(36, 43, 54)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(36, 43, 54)"
+  }
+ ]
+}
+{
+ "label": "prototype: an ordinary step fails (09 two)",
+ "sid": "70ad8b4727633350",
+ "lists": [
+  {
+   "cls": "scenario-steps",
+   "startsOpen": true
+  }
+ ],
+ "hasFailureBlock": true,
+ "steps": [
+  {
+   "cls": "step step-collapsible",
+   "keyword": "Given",
+   "text": "a logged in customer",
+   "textColour": "rgb(36, 43, 54)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(36, 43, 54)"
+  },
+  {
+   "cls": "step step-collapsible",
+   "keyword": "And",
+   "text": "the address is checked",
+   "textColour": "rgb(36, 43, 54)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status failed",
+   "iconColour": "rgb(179, 55, 46)",
+   "borderLeft": "0px rgb(36, 43, 54)"
+  }
+ ]
+}
+{
+ "label": "5.27.13: the When fails, the list shows the first scenario's (09 two)",
+ "sid": "70ad8b4727633350",
+ "lists": [
+  {
+   "cls": "scenario-steps",
+   "startsOpen": true
+  }
+ ],
+ "hasFailureBlock": true,
+ "steps": [
+  {
+   "cls": "step step-collapsible step-background",
+   "keyword": "Given",
+   "text": "a logged in customer",
+   "textColour": "rgb(91, 100, 116)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(91, 100, 116)"
+  },
+  {
+   "cls": "step step-collapsible step-background",
+   "keyword": "And",
+   "text": "the address is checked",
+   "textColour": "rgb(91, 100, 116)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(91, 100, 116)"
+  },
+  {
+   "cls": "step step-collapsible step-background",
+   "keyword": "When",
+   "text": "the customer acts \"the same\"",
+   "textColour": "rgb(91, 100, 116)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(91, 100, 116)"
+  }
+ ]
+}
+{
+ "label": "5.27.13 Cucumber lane: a Background step with no sub-steps (01 one)",
+ "sid": "7dce06caab2a80b0",
+ "lists": [
+  {
+   "cls": "scenario-steps",
+   "startsOpen": true
+  }
+ ],
+ "hasFailureBlock": false,
+ "steps": [
+  {
+   "cls": "step step-background",
+   "keyword": "Given",
+   "text": "a logged in customer",
+   "textColour": "rgb(91, 100, 116)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(91, 100, 116)"
+  },
+  {
+   "cls": "step",
+   "keyword": "When",
+   "text": "the customer acts \"one\"",
+   "textColour": "rgb(36, 43, 54)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(36, 43, 54)"
+  },
+  {
+   "cls": "step",
+   "keyword": "Then",
+   "text": "the outcome is \"one\"",
+   "textColour": "rgb(36, 43, 54)",
+   "keywordColour": "rgb(91, 100, 116)",
+   "iconClass": "step-status passed",
+   "iconColour": "rgb(39, 108, 68)",
+   "borderLeft": "0px rgb(36, 43, 54)"
+  }
+ ]
+}

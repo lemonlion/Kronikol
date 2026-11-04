@@ -1,0 +1,11 @@
+{"event":"start","testId":"a","testName":"The order goes through","feature":"Orders","timestamp":"2026-11-02T10:00:00Z"}
+{"event":"step","testId":"a","keyword":"Given","text":"the basket holds apple","status":"passed","docString":"apple","timestamp":"2026-11-02T10:00:01Z"}
+{"event":"step","testId":"a","keyword":"When","text":"the customer places the order","status":"passed","timestamp":"2026-11-02T10:00:02Z"}
+{"event":"step","testId":"a","keyword":"Then","text":"the order is confirmed","status":"passed","timestamp":"2026-11-02T10:00:03Z"}
+{"event":"attachment","testId":"a","name":"a.txt","path":"@FILES@/a.txt","step":0,"timestamp":"2026-11-02T10:00:03Z"}
+{"event":"end","testId":"a","status":"passed","timestamp":"2026-11-02T10:00:04Z"}
+{"event":"start","testId":"b","testName":"The payment is declined","feature":"Orders","timestamp":"2026-11-02T10:00:05Z"}
+{"event":"step","testId":"b","keyword":"Given","text":"the basket holds apple","status":"passed","docString":"banana","timestamp":"2026-11-02T10:00:06Z"}
+{"event":"step","testId":"b","keyword":"When","text":"the customer places the order","status":"failed","error":"402 card declined","timestamp":"2026-11-02T10:00:07Z"}
+{"event":"attachment","testId":"b","name":"b.txt","path":"@FILES@/b.txt","step":0,"timestamp":"2026-11-02T10:00:07Z"}
+{"event":"end","testId":"b","status":"failed","error":"402 card declined","timestamp":"2026-11-02T10:00:08Z"}

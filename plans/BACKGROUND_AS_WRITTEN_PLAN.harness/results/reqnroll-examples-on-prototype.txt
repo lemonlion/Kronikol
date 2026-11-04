@@ -1,0 +1,15 @@
+--- xUnit2
+Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 453 ms - Example.Api.Tests.Component.ReqNRoll.xUn
+--- xUnit3
+Passed!  - Failed:     0, Passed:    21, Skipped:     0, Total:    21, Duration: 382 ms - Example.Api.Tests.Component.ReqNRoll.xUn
+--- TUnit
+Test run summary: Passed! - <prototype>\examples\Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\bin\Release\net10.0\Example.Api.Tests.Component.Re
+  total: 12
+  failed: 0
+  succeeded: 12
+--- ReqNRollDuplicateStepsTests, tightened, on the final cut
+Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 38 s - Example.Api.Tests.Integration.dll (net10.0)
+--- ReqNRollDuplicateStepsTests with R4
+Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 40 s - Example.Api.Tests.Integration.dll (net10.0)
+--- Integration, every fact, the final cut
+Passed!  - Failed:     0, Passed:   265, Skipped:     0, Total:   265, Duration: 10 m 52 s - Example.Api.Tests.Integration.dll (net10.0)

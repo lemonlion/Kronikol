@@ -1,0 +1,6 @@
+5.28.2 {"panels":1500,"before":1500,"sync":32,"settled":266,"after":1502,"togglesSeen":4,"emptySync":13,"emptySettled":19,"left":1502}
+patch  {"panels":1500,"before":1500,"sync":41,"settled":272,"after":3000,"togglesSeen":1502,"emptySync":15,"emptySettled":22,"left":3000}
+5.28.2 {"panels":1500,"before":1500,"sync":34,"settled":282,"after":1502,"togglesSeen":4,"emptySync":13,"emptySettled":20,"left":1502}
+patch  {"panels":1500,"before":1500,"sync":41,"settled":315,"after":3000,"togglesSeen":1502,"emptySync":14,"emptySettled":20,"left":3000}
+5.28.2 {"panels":1500,"before":1500,"sync":33,"settled":263,"after":1502,"togglesSeen":4,"emptySync":14,"emptySettled":20,"left":1502}
+patch  {"panels":1500,"before":1500,"sync":41,"settled":288,"after":3000,"togglesSeen":1502,"emptySync":14,"emptySettled":21,"left":3000}

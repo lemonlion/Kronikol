@@ -1,0 +1,4 @@
+R3 tried on main at 9d994a4b: FeatureSynthesizer.cs's call to DetectBackgroundSteps removed, nothing else.
+dotnet test tests/Kronikol.Tests -c Release --filter "FullyQualifiedName~Ingest|FullyQualifiedName~Widened|FullyQualifiedName~FeatureSynthesizer|FullyQualifiedName~TestRunRecord"
+  Failed Kronikol.Tests.Ingestion.WidenedTestRunRecordTests.The_background_heuristic_runs_only_when_no_explicit_background_was_given [1 ms]
+Failed!  - Failed:     1, Passed:   590, Skipped:     0, Total:   591, Duration: 1 m 27 s - Kronikol.Tests.dll (net10.0)

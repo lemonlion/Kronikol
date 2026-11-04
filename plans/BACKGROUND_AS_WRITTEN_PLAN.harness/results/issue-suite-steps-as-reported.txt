@@ -1,0 +1,223 @@
+# query steps s8
+s8  Shared prefix › The first scenario's order goes through  [Passed]  0.95s
+stableId 53286f847badf43b
+at Features/SharedPrefix.feature:4
+open: TestRunReport.html#sid-53286f847badf43b
+
+  b0    Given the basket holds  0.32s  [i0-i4] 3 calls
+      · table
+      · sku
+      · qty
+      · APPLE
+      · 1
+    b0.0  A customer is registered  0.31s
+        · name
+        · customer-2
+      b0.0.0 Their address is verified  0.29s
+      · b0.0.0.0 Response is success status code should be true
+    b0.1  An item is added  0s
+        · sku
+        · APPLE
+        · qty
+        · 1
+  b1    When the customer places the order  0.59s  [i6-i8] 2 calls
+    b1.0  The payment is authorised  0.59s
+        · amount
+        · 99.99
+        · card
+        · 4111
+    · b1.0.0 Response status code should be OK
+    b1.1  The order is submitted
+  0     Then the order is confirmed
+  · 0.0   Shop order status should be "Confirmed"
+5 calls · interactions s8 · flow s8
+
+# query steps s9
+s9  Shared prefix › The second scenario's payment is declined  [Failed]  0s
+stableId d1a3b65632e63092
+at Features/SharedPrefix.feature:12
+open: TestRunReport.html#sid-d1a3b65632e63092
+
+  b0    Given the basket holds  0.32s  [i0-i4] 3 calls
+      · table
+      · sku
+      · qty
+      · APPLE
+      · 1
+    b0.0  A customer is registered  0.31s
+        · name
+        · customer-2
+      b0.0.0 Their address is verified  0.29s
+      · b0.0.0.0 Response is success status code should be true
+    b0.1  An item is added  0s
+        · sku
+        · APPLE
+        · qty
+        · 1
+  b1    When the customer places the order  0.59s  [i6]
+    b1.0  The payment is authorised  0.59s
+        · amount
+        · 99.99
+        · card
+        · 4111
+    · b1.0.0 Response status code should be OK
+    b1.1  The order is submitted
+4 calls · interactions s9 · flow s9
+
+# query steps s2
+s2  Outline table › An order line for APPLE  [Passed]  1.02s
+stableId da12dc7b954cbd4d
+at Features/OutlineTable.feature:3
+open: TestRunReport.html#sid-da12dc7b954cbd4d
+example: Holds=sku: APPLE, qty: 1
+
+  b0    Given the basket holds  [i0-i4] 3 calls
+      · table
+      · sku
+      · qty
+      · APPLE
+      · 1
+    b0.0  A customer is registered
+        · name
+        · customer-7
+      b0.0.0 Their address is verified
+      · b0.0.0.0 Response is success status code should be true
+    b0.1  An item is added
+        · sku
+        · APPLE
+        · qty
+        · 1
+  b1    When the customer places the order  [i6-i8] 2 calls
+    b1.0  The payment is authorised
+        · amount
+        · 99.99
+        · card
+        · 4111
+    · b1.0.0 Response status code should be OK
+    b1.1  The order is submitted
+  b2    Then the order is confirmed
+  · b2.0  Shop order status should be "Confirmed"
+5 calls · interactions s2 · flow s2
+
+# query steps s3
+s3  Outline table › An order line for BANANA  [Passed]  0s
+stableId 4f8f8e4fc2c7c52e
+at Features/OutlineTable.feature:3
+open: TestRunReport.html#sid-4f8f8e4fc2c7c52e
+example: Holds=sku: BANANA, qty: 2
+
+  b0    Given the basket holds  [i0-i4] 3 calls
+      · table
+      · sku
+      · qty
+      · APPLE
+      · 1
+    b0.0  A customer is registered
+        · name
+        · customer-7
+      b0.0.0 Their address is verified
+      · b0.0.0.0 Response is success status code should be true
+    b0.1  An item is added
+        · sku
+        · APPLE
+        · qty
+        · 1
+  b1    When the customer places the order  [i6-i8] 2 calls
+    b1.0  The payment is authorised
+        · amount
+        · 99.99
+        · card
+        · 4111
+    · b1.0.0 Response status code should be OK
+    b1.1  The order is submitted
+  b2    Then the order is confirmed
+  · b2.0  Shop order status should be "Confirmed"
+5 calls · interactions s3 · flow s3
+
+# query steps s0
+s0  Orders › A customer's order is confirmed  [Passed]  0s
+stableId f51cc1fa2d82a3d3
+at Features/Orders.feature:4
+open: TestRunReport.html#sid-f51cc1fa2d82a3d3
+
+  b0    Given a registered customer with a full basket  [i0-i8] 5 calls
+    b0.0  A customer is registered
+        · name
+        · customer-9
+      b0.0.0 Their address is verified
+      · b0.0.0.0 Response is success status code should be true
+    b0.1  Items are added to the basket
+        · count
+        · 3
+  b1    When the customer places the order  [i10-i12] 2 calls
+    b1.0  The payment is authorised
+        · amount
+        · 99.99
+        · card
+        · 4111
+    · b1.0.0 Response status code should be OK
+    b1.1  The order is submitted
+  0     Then the order is confirmed
+  · 0.0   Shop order status should be "Confirmed"
+7 calls · interactions s0 · flow s0
+
+# query steps s1
+s1  Orders › A customer's order sends a confirmation email  [Passed]  0.95s
+stableId 1f4ef872c0a5d937
+at Features/Orders.feature:9
+open: TestRunReport.html#sid-1f4ef872c0a5d937
+
+  b0    Given a registered customer with a full basket  [i0-i8] 5 calls
+    b0.0  A customer is registered
+        · name
+        · customer-9
+      b0.0.0 Their address is verified
+      · b0.0.0.0 Response is success status code should be true
+    b0.1  Items are added to the basket
+        · count
+        · 3
+  b1    When the customer places the order  [i10-i12] 2 calls
+    b1.0  The payment is authorised
+        · amount
+        · 99.99
+        · card
+        · 4111
+    · b1.0.0 Response status code should be OK
+    b1.1  The order is submitted
+  0     Then a confirmation email is sent  0s
+    0.0   The confirmation email is queued
+    · 0.0.0 Order status should be "Confirmed"
+7 calls · interactions s1 · flow s1
+
+# query interactions s9
+method  path                                  calls errors   median      max bodies     bytes
+POST    /customers                                1      0     0 ms     0 ms      1      24 B
+GET     /customers/customer-10/address-check      1      0     0 ms     0 ms      1       2 B
+PUT     /basket/customer-10/items/BANANA          1      0     0 ms     0 ms      1      26 B
+POST    /payments                                 1      1     0 ms     0 ms      1      59 B
+4 buckets
+
+# query interactions s3
+method  path                                 calls errors   median      max bodies     bytes
+POST    /customers                               1      0     0 ms     0 ms      1      23 B
+GET     /customers/customer-8/address-check      1      0     0 ms     0 ms      1       2 B
+PUT     /basket/customer-8/items/BANANA          1      0     0 ms     0 ms      1      26 B
+POST    /payments                                1      0     0 ms     0 ms      1      32 B
+POST    /orders                                  1      0     0 ms     0 ms      1      47 B
+5 buckets
+
+# query flow s9
+s9  The second scenario's payment is declined  [Failed]
+
+── b0  Given the basket holds
+  s9/i0     Shop Tests → Shop API  POST /customers  OK  0 ms  b:96a84f9b 22 B
+  s9/i2     Shop Tests → Shop API  GET /customers/customer-10/address-check  OK  0 ms
+  s9/i4     Shop Tests → Shop API  PUT /basket/customer-10/items/BANANA  OK  0 ms  b:b2e1c5ca 24 B
+── b1  When the customer places the order
+  s9/i6     Shop Tests → Shop API  POST /payments  PaymentRequired  0 ms  b:9aad6217 34 B
+4 calls shown · http s9/iN --keys for a payload
+
+# query failures s9 --help line
+13:  failures     <report>                        why each failing test failed, in context
+70:                  truncated, next } instead of text, on: summary, scenarios, services, parties, sizes, failures, repro, attachments, assertions, interactions, diagram, diff, history
+75:  ignored - `failures --service X` used to print every failure under a filter that never ran.

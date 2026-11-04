@@ -1,0 +1,2 @@
+Passed!  - Failed:     0, Passed:    92, Skipped:     0, Total:    92, Duration: 44 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 43 s - Kronikol.Tests.EndToEnd.dll (net10.0)

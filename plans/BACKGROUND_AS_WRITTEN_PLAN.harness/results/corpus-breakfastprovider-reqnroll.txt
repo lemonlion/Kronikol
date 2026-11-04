@@ -1,0 +1,21 @@
+   73  features
+  214  scenarios (rows counted)
+    7  scenarios whose steps a report replaces with the first's
+
+First step a scenario writes after a feature-level Background:
+
+The detector against what is written, every scenario passing:
+  204  right: none written, none marked
+   10  INVENTED: marked, none written
+
+INVENTED: marked, none written, first 12:
+  DailySpecials\DailySpecialsIdempotency.feature: Submitting the same order with the same idempotency key should return the same confirmation (written 0, marked 1)
+  DailySpecials\DailySpecialsIdempotency.feature: Submitting the same order with different idempotency keys should return different confirmations (written 0, marked 1)
+  Orders\CrossFieldValidation.feature: An order exceeding the maximum items per order should be rejected (written 0, marked 2)
+  Orders\CrossFieldValidation.feature: An order at the maximum items per order should be accepted (written 0, marked 2)
+  Toppings\ToppingsUpdate.feature: Update toppings endpoint is called with invalid or dangerous input (written 0, marked 1)
+  Toppings\ToppingsUpdate.feature: Update toppings endpoint is called with invalid or dangerous input (written 0, marked 1)
+  Toppings\ToppingsUpdate.feature: Update toppings endpoint is called with invalid or dangerous input (written 0, marked 1)
+  Toppings\ToppingsUpdate.feature: Update toppings endpoint is called with invalid or dangerous input (written 0, marked 1)
+  Toppings\ToppingsUpdate.feature: Update toppings endpoint is called with invalid or dangerous input (written 0, marked 1)
+  Toppings\ToppingsUpdate.feature: Update toppings endpoint is called with invalid or dangerous input (written 0, marked 1)

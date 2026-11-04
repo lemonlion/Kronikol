@@ -1,0 +1,20 @@
+load #row1 (fails)             5.28.2 r1 background=- cb.0=- cb.0.0=O cb.0.1=- failure=O hash=#sid-a4b1914da3d85
+                               patch  r1 background*=O cb.0=O cb.0.0=O cb.0.1=- failure=O hash=#sid-a4b1914da3d85
+load #row2 (passes)            same  r2 background=- cb.0=- steps=O hash=#sid-b13162fb1d14d
+load #row0                     same  r0 background=- cb.0=- steps=O hash=#sid-8d7897554024b
+reader opens Background        same  r0 background=O cb.0=- steps=O hash=#sid-8d7897554024b
+link to row1 (fails)           5.28.2 r1 background=O cb.0=- cb.0.0=O cb.0.1=- failure=O hash=#sid-a4b1914da3d85
+                               patch  r1 background*=O cb.0=O cb.0.0=O cb.0.1=- failure=O hash=#sid-a4b1914da3d85
+reader closes its Background   5.28.2 r1 background=- cb.0=- cb.0.0=O cb.0.1=- failure=O hash=#sid-a4b1914da3d85
+                               patch  r1 background*=- cb.0=O cb.0.0=O cb.0.1=- failure=O hash=#sid-a4b1914da3d85
+link to row2                   5.28.2 r2 background=- cb.0=- steps=O hash=#sid-b13162fb1d14d
+                               patch  r2 background=O cb.0=- steps=O hash=#sid-b13162fb1d14d
+Back (row1)                    5.28.2 r2 background=- cb.0=- steps=O hash=#sid-a4b1914da3d85
+                               patch  r2 background=O cb.0=- steps=O hash=#sid-a4b1914da3d85
+Back (row0)                    5.28.2 r2 background=- cb.0=- steps=O hash=#sid-8d7897554024b
+                               patch  r2 background=O cb.0=- steps=O hash=#sid-8d7897554024b
+Forward (row1)                 5.28.2 r2 background=- cb.0=- steps=O hash=#sid-a4b1914da3d85
+                               patch  r2 background=O cb.0=- steps=O hash=#sid-a4b1914da3d85
+Forward (row2)                 5.28.2 r2 background=- cb.0=- steps=O hash=#sid-b13162fb1d14d
+                               patch  r2 background=O cb.0=- steps=O hash=#sid-b13162fb1d14d
+reload at row2                 same  r2 background=- cb.0=- steps=O hash=#sid-b13162fb1d14d

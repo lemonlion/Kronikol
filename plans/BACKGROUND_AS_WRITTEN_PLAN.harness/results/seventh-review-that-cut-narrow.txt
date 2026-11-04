@@ -1,0 +1,23 @@
+
+## Narrow: typed letter by letter: row a, then b, then c; emptied; toured (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "sku1": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=2 bar="sku1" addr=#q=sku1
+  patch search "sku1": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=3 bar="sku1" addr=#q=sku1
+ 5.28.2 search "sku12": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] active=1 marked=1,2 | tracked=2 bar="sku12" addr=#q=sku12
+  patch search "sku12": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] active=1 marked=1,2 | tracked=3 bar="sku12" addr=#q=sku12
+ 5.28.2 search "sku123": OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] active=2 marked=2 | tracked=2 bar="sku123" addr=#q=sku123
+  patch search "sku123": OPEN r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] active=2 marked=2 | tracked=3 bar="sku123" addr=#q=sku123
+   same search "": shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] active=0 | tracked=0 bar="" addr=
+   same row 1: shut (feature shut) r0[bg+ st+] *r1[bg+ st+] r2[bg+ st+] active=1 | tracked=0 bar="" addr=
+   same row 2: shut (feature shut) r0[bg+ st+] r1[bg+ st+] *r2[bg+ st+] active=2 | tracked=0 bar="" addr=
+   same row 0: shut (feature shut) *r0[bg+ st+] r1[bg+ st+] r2[bg+ st+] active=0 | tracked=0 bar="" addr=
+
+## Narrow: the reader closed Steps on a; typed to b; emptied (rows.html)
+   same start: shut (feature shut) *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader opens scenario: OPEN *r0[bg- st+] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+   same reader toggles scenario-steps: OPEN *r0[bg- st-] r1[bg- st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=
+ 5.28.2 search "sku1": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=0 bar="sku1" addr=#q=sku1
+  patch search "sku1": OPEN *r0[bg+ st+] r1[bg- st+] r2[bg- st+] active=0 marked=0,1,2 | tracked=2 bar="sku1" addr=#q=sku1
+ 5.28.2 search "sku12": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] active=1 marked=1,2 | tracked=0 bar="sku12" addr=#q=sku12
+  patch search "sku12": OPEN r0[bg+ st+] *r1[bg+ st+] r2[bg- st+] active=1 marked=1,2 | tracked=2 bar="sku12" addr=#q=sku12
+   same search "": OPEN *r0[bg+ st+] r1[bg+ st+] r2[bg- st+] active=0 | tracked=0 bar="" addr=

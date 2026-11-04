@@ -1,0 +1,159 @@
+SCENARIO	09 Outcome decides the layout	09 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=09 one	pickleSteps=4	leadingBackground=0	laterBackground=0
+SCENARIO	16 Two files, one title	16 from file a	hasMessages=True	index=0	pickleId=<empty>	pickleName=16 from file a	pickleSteps=2	leadingBackground=1	laterBackground=0
+SCENARIO	01 Background then When	01 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=01 one	pickleSteps=3	leadingBackground=1	laterBackground=0
+SCENARIO	16 Two files, one title	16 from file b	hasMessages=True	index=0	pickleId=<empty>	pickleName=16 from file b	pickleSteps=2	leadingBackground=0	laterBackground=0
+SCENARIO	04 No background, shared Given and When	04 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=04 one	pickleSteps=3	leadingBackground=0	laterBackground=0
+SCENARIO	08 Background fails, then When	08 breaks	hasMessages=True	index=1	pickleId=<empty>	pickleName=08 breaks	pickleSteps=3	leadingBackground=1	laterBackground=0
+SCENARIO	13 Star keyword	13 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=13 two	pickleSteps=3	leadingBackground=1	laterBackground=0
+SCENARIO	06 Background and one scenario	06 only	hasMessages=True	index=0	pickleId=<empty>	pickleName=06 only	pickleSteps=2	leadingBackground=1	laterBackground=0
+SCENARIO	17 Background fails, then Then	17 breaks	hasMessages=True	index=1	pickleId=<empty>	pickleName=17 breaks	pickleSteps=2	leadingBackground=1	laterBackground=0
+SCENARIO	02 Background then Given	02 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=02 one	pickleSteps=4	leadingBackground=1	laterBackground=0
+SCENARIO	05 No background, outline with placeholders in a table	05 row <sku>	hasMessages=True	index=0	pickleId=<empty>	pickleName=05 row APPLE	pickleSteps=3	leadingBackground=0	laterBackground=0
+SCENARIO	20 A placeholder written in a background	20 row <what>	hasMessages=True	index=1	pickleId=<empty>	pickleName=20 row y	pickleSteps=3	leadingBackground=1	laterBackground=0
+SCENARIO	03 Background then Then	03 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=03 two	pickleSteps=2	leadingBackground=1	laterBackground=0
+SCENARIO	19 A background with a table	19 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=19 two	pickleSteps=3	leadingBackground=1	laterBackground=0
+SCENARIO	07 Feature and rule backgrounds	07 a two	hasMessages=True	index=1	pickleId=<empty>	pickleName=07 a two	pickleSteps=4	leadingBackground=2	laterBackground=0
+SCENARIO	18 A shared step attaches a file	18 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=18 one	pickleSteps=2	leadingBackground=0	laterBackground=0
+SCENARIO	15 Background and a scenario with no steps	15 empty	hasMessages=True	index=0	pickleId=<empty>	pickleName=15 empty	pickleSteps=0	leadingBackground=0	laterBackground=0
+SCENARIO	12 Grundlage auf Deutsch	12 eins	hasMessages=True	index=0	pickleId=<empty>	pickleName=12 eins	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	02 one	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	15 empty	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	07 a two	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	16 from file a	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	20 row <what>	keyword=Given	type=Given	text=the basket holds "<what>"	pickleStepId=<empty>	sequence=null
+STEP	03 two	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	01 one	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	12 eins	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	09 one	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	19 two	keyword=Given	type=Given	text=the basket holds	pickleStepId=<empty>	sequence=null
+STEP	05 row <sku>	keyword=Given	type=Given	text=the basket holds	pickleStepId=<empty>	sequence=null
+STEP	17 breaks	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	04 one	keyword=Given	type=Given	text=the basket holds	pickleStepId=<empty>	sequence=null
+STEP	06 only	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	08 breaks	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	16 from file b	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	13 two	keyword=And	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	18 one	keyword=Given	type=Given	text=a screenshot is attached	pickleStepId=<empty>	sequence=null
+STEP	09 one	keyword=And	type=Given	text=the address is checked	pickleStepId=<empty>	sequence=null
+STEP	07 a two	keyword=Given	type=Given	text=the address is checked	pickleStepId=<empty>	sequence=null
+STEP	16 from file a	keyword=Then	type=Then	text=the outcome is "a"	pickleStepId=<empty>	sequence=null
+STEP	17 breaks	keyword=Then	type=Then	text=the outcome is "breaks"	pickleStepId=<empty>	sequence=null
+STEP	06 only	keyword=Then	type=Then	text=the outcome is "only"	pickleStepId=<empty>	sequence=null
+STEP	03 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null
+STEP	07 a two	keyword=When	type=When	text=the customer acts "a two"	pickleStepId=<empty>	sequence=null
+STEP	16 from file b	keyword=Then	type=Then	text=the outcome is "b"	pickleStepId=<empty>	sequence=null
+STEP	13 two	keyword=And	type=Given	text=the basket holds "pear"	pickleStepId=<empty>	sequence=null
+STEP	01 one	keyword=When	type=When	text=the customer acts "one"	pickleStepId=<empty>	sequence=null
+STEP	20 row <what>	keyword=When	type=When	text=the customer acts "y"	pickleStepId=<empty>	sequence=null
+STEP	04 one	keyword=When	type=When	text=the customer acts "the same"	pickleStepId=<empty>	sequence=null
+STEP	08 breaks	keyword=When	type=When	text=the customer acts "breaks"	pickleStepId=<empty>	sequence=null
+STEP	09 one	keyword=When	type=When	text=the customer acts "the same"	pickleStepId=<empty>	sequence=null
+STEP	13 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null
+STEP	07 a two	keyword=Then	type=Then	text=the outcome is "a two"	pickleStepId=<empty>	sequence=null
+STEP	01 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+STEP	20 row <what>	keyword=Then	type=Then	text=the outcome is "y"	pickleStepId=<empty>	sequence=null
+STEP	04 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+STEP	08 breaks	keyword=Then	type=Then	text=the outcome is "breaks"	pickleStepId=<empty>	sequence=null
+STEP	09 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+STEP	02 one	keyword=Given	type=Given	text=the basket holds "apple"	pickleStepId=<empty>	sequence=null
+STEP	12 eins	keyword=When	type=When	text=the customer acts "eins"	pickleStepId=<empty>	sequence=null
+STEP	02 one	keyword=When	type=When	text=the customer acts "one"	pickleStepId=<empty>	sequence=null
+STEP	05 row <sku>	keyword=When	type=When	text=the customer acts "the same"	pickleStepId=<empty>	sequence=null
+STEP	19 two	keyword=When	type=When	text=the customer acts "two"	pickleStepId=<empty>	sequence=null
+STEP	12 eins	keyword=Then	type=Then	text=the outcome is "eins"	pickleStepId=<empty>	sequence=null
+STEP	02 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+STEP	05 row <sku>	keyword=Then	type=Then	text=the outcome is "the same"	pickleStepId=<empty>	sequence=null
+STEP	19 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null
+SCENARIO	05 No background, outline with placeholders in a table	05 row <sku>	hasMessages=True	index=1	pickleId=<empty>	pickleName=05 row BANANA	pickleSteps=3	leadingBackground=0	laterBackground=0
+SCENARIO	20 A placeholder written in a background	20 row <what>	hasMessages=True	index=0	pickleId=<empty>	pickleName=20 row x	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	05 row <sku>	keyword=Given	type=Given	text=the basket holds	pickleStepId=<empty>	sequence=null
+SCENARIO	17 Background fails, then Then	17 holds	hasMessages=True	index=0	pickleId=<empty>	pickleName=17 holds	pickleSteps=2	leadingBackground=1	laterBackground=0
+SCENARIO	19 A background with a table	19 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=19 one	pickleSteps=3	leadingBackground=1	laterBackground=0
+SCENARIO	13 Star keyword	13 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=13 one	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	19 one	keyword=Given	type=Given	text=the basket holds	pickleStepId=<empty>	sequence=null
+SCENARIO	15 Background and a scenario with no steps	15 full	hasMessages=True	index=1	pickleId=<empty>	pickleName=15 full	pickleSteps=3	leadingBackground=1	laterBackground=0
+SCENARIO	03 Background then Then	03 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=03 one	pickleSteps=2	leadingBackground=1	laterBackground=0
+SCENARIO	01 Background then When	01 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=01 two	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	20 row <what>	keyword=Given	type=Given	text=the basket holds "<what>"	pickleStepId=<empty>	sequence=null
+SCENARIO	09 Outcome decides the layout	09 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=09 two	pickleSteps=4	leadingBackground=0	laterBackground=0
+STEP	09 two	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+SCENARIO	08 Background fails, then When	08 holds	hasMessages=True	index=0	pickleId=<empty>	pickleName=08 holds	pickleSteps=3	leadingBackground=1	laterBackground=0
+SCENARIO	12 Grundlage auf Deutsch	12 zwei	hasMessages=True	index=1	pickleId=<empty>	pickleName=12 zwei	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	17 holds	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	05 row <sku>	keyword=When	type=When	text=the customer acts "the same"	pickleStepId=<empty>	sequence=null
+SCENARIO	11 A background step that calls a step	11 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=11 two	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	05 row <sku>	keyword=Then	type=Then	text=the outcome is "the same"	pickleStepId=<empty>	sequence=null
+SCENARIO	04 No background, shared Given and When	04 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=04 two	pickleSteps=3	leadingBackground=0	laterBackground=0
+STEP	13 one	keyword=And	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	04 two	keyword=Given	type=Given	text=the basket holds	pickleStepId=<empty>	sequence=null
+STEP	19 one	keyword=When	type=When	text=the customer acts "one"	pickleStepId=<empty>	sequence=null
+STEP	15 full	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	03 one	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	01 two	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	20 row <what>	keyword=When	type=When	text=the customer acts "x"	pickleStepId=<empty>	sequence=null
+SCENARIO	02 Background then Given	02 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=02 two	pickleSteps=4	leadingBackground=1	laterBackground=0
+SCENARIO	14 No background, a doc string differs	14 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=14 one	pickleSteps=2	leadingBackground=0	laterBackground=0
+STEP	09 two	keyword=And	type=Given	text=the address is checked	pickleStepId=<empty>	sequence=null
+STEP	08 holds	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	12 zwei	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	17 holds	keyword=Then	type=Then	text=the outcome is "holds"	pickleStepId=<empty>	sequence=null
+SCENARIO	10 Background and an outline	10 row <what>	hasMessages=True	index=1	pickleId=<empty>	pickleName=10 row y	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	11 two	keyword=Given	type=Given	text=a composite step calls another	pickleStepId=<empty>	sequence=null
+STEP	13 one	keyword=And	type=Given	text=the basket holds "apple"	pickleStepId=<empty>	sequence=null
+STEP	04 two	keyword=When	type=When	text=the customer acts "the same"	pickleStepId=<empty>	sequence=null
+STEP	19 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+STEP	15 full	keyword=When	type=When	text=the customer acts "full"	pickleStepId=<empty>	sequence=null
+STEP	03 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+STEP	01 two	keyword=When	type=When	text=the customer acts "two"	pickleStepId=<empty>	sequence=null
+STEP	20 row <what>	keyword=Then	type=Then	text=the outcome is "x"	pickleStepId=<empty>	sequence=null
+SCENARIO	07 Feature and rule backgrounds	07 a one	hasMessages=True	index=0	pickleId=<empty>	pickleName=07 a one	pickleSteps=4	leadingBackground=2	laterBackground=0
+STEP	02 two	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	09 two	keyword=When	type=When	text=the customer acts "the same"	pickleStepId=<empty>	sequence=null
+STEP	08 holds	keyword=When	type=When	text=the customer acts "holds"	pickleStepId=<empty>	sequence=null
+STEP	14 one	keyword=Given	type=Given	text=a note says	pickleStepId=<empty>	sequence=null
+STEP	12 zwei	keyword=When	type=When	text=the customer acts "zwei"	pickleStepId=<empty>	sequence=null
+STEP	10 row <what>	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	13 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+STEP	04 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null
+STEP	15 full	keyword=Then	type=Then	text=the outcome is "full"	pickleStepId=<empty>	sequence=null
+STEP	01 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null
+STEP	07 a one	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	02 two	keyword=Given	type=Given	text=the basket holds "pear"	pickleStepId=<empty>	sequence=null
+STEP	09 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null
+STEP	02 two	keyword=When	type=When	text=the customer acts "two"	pickleStepId=<empty>	sequence=null
+STEP	12 zwei	keyword=Then	type=Then	text=the outcome is "zwei"	pickleStepId=<empty>	sequence=null
+STEP	10 row <what>	keyword=When	type=When	text=the customer acts "y"	pickleStepId=<empty>	sequence=null
+STEP	07 a one	keyword=Given	type=Given	text=the address is checked	pickleStepId=<empty>	sequence=null
+STEP	08 holds	keyword=Then	type=Then	text=the outcome is "holds"	pickleStepId=<empty>	sequence=null
+STEP	14 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+STEP	02 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null
+STEP	10 row <what>	keyword=Then	type=Then	text=the outcome is "y"	pickleStepId=<empty>	sequence=null
+STEP	07 a one	keyword=When	type=When	text=the customer acts "a one"	pickleStepId=<empty>	sequence=null
+STEP	11 two	keyword=Given	type=Given	text=the basket holds "from the composite"	pickleStepId=<empty>	sequence=null
+STEP	07 a one	keyword=Then	type=Then	text=the outcome is "a one"	pickleStepId=<empty>	sequence=null
+STEP	11 two	keyword=When	type=When	text=the customer acts "two"	pickleStepId=<empty>	sequence=null
+STEP	11 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null
+SCENARIO	10 Background and an outline	10 row <what>	hasMessages=True	index=0	pickleId=<empty>	pickleName=10 row x	pickleSteps=3	leadingBackground=1	laterBackground=0
+SCENARIO	07 Feature and rule backgrounds	07 b one	hasMessages=True	index=2	pickleId=<empty>	pickleName=07 b one	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	10 row <what>	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+SCENARIO	14 No background, a doc string differs	14 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=14 two	pickleSteps=2	leadingBackground=0	laterBackground=0
+STEP	07 b one	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	10 row <what>	keyword=When	type=When	text=the customer acts "x"	pickleStepId=<empty>	sequence=null
+STEP	14 two	keyword=Given	type=Given	text=a note says	pickleStepId=<empty>	sequence=null
+SCENARIO	11 A background step that calls a step	11 one	hasMessages=True	index=0	pickleId=<empty>	pickleName=11 one	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	07 b one	keyword=When	type=When	text=the customer acts "b one"	pickleStepId=<empty>	sequence=null
+STEP	10 row <what>	keyword=Then	type=Then	text=the outcome is "x"	pickleStepId=<empty>	sequence=null
+STEP	14 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null
+STEP	11 one	keyword=Given	type=Given	text=a composite step calls another	pickleStepId=<empty>	sequence=null
+STEP	07 b one	keyword=Then	type=Then	text=the outcome is "b one"	pickleStepId=<empty>	sequence=null
+STEP	11 one	keyword=Given	type=Given	text=the basket holds "from the composite"	pickleStepId=<empty>	sequence=null
+STEP	11 one	keyword=When	type=When	text=the customer acts "one"	pickleStepId=<empty>	sequence=null
+STEP	11 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+SCENARIO	07 Feature and rule backgrounds	07 b two	hasMessages=True	index=3	pickleId=<empty>	pickleName=07 b two	pickleSteps=3	leadingBackground=1	laterBackground=0
+STEP	07 b two	keyword=Given	type=Given	text=a logged in customer	pickleStepId=<empty>	sequence=null
+STEP	07 b two	keyword=When	type=When	text=the customer acts "b two"	pickleStepId=<empty>	sequence=null
+STEP	07 b two	keyword=Then	type=Then	text=the outcome is "b two"	pickleStepId=<empty>	sequence=null
+STEP	18 one	keyword=Then	type=Then	text=the outcome is "one"	pickleStepId=<empty>	sequence=null
+SCENARIO	18 A shared step attaches a file	18 two	hasMessages=True	index=1	pickleId=<empty>	pickleName=18 two	pickleSteps=2	leadingBackground=0	laterBackground=0
+STEP	18 two	keyword=Given	type=Given	text=a screenshot is attached	pickleStepId=<empty>	sequence=null
+STEP	18 two	keyword=Then	type=Then	text=the outcome is "two"	pickleStepId=<empty>	sequence=null

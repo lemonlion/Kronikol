@@ -1,0 +1,20 @@
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 208 ms - 
+== Reqnroll 3.3.4
+step
+own public
+own internal
+own private
+base public
+base internal
+base private protected
+base protected
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 207 ms - 
+== Reqnroll 3.0.1
+step
+own public
+own internal
+own private
+base public
+base internal
+base private protected
+base protected

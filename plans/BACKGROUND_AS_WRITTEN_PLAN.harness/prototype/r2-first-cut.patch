@@ -1,0 +1,129 @@
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+index ff45fdb7..a8739dec 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+@@ -214,6 +214,24 @@ private void CloseLeftOpen(OpenStep? upTo, string scenarioId, List<ReqNRollStepI
+     private OpenStep? InnermostOpenStep =>
+         _scenarioContext.TryGetValue(ReqNRollConstants.OpenStepKey, out OpenStep? open) ? open : null;
+ 
++    /// <summary>
++    /// Reqnroll runs no step hook for a step it skips, so a failed step leaves the rest of the scenario out of the list. The
++    /// pickle has them. Only when the steps that ran are the first of those it plans: anything else is left as it ran.
++    /// </summary>
++    internal static void AddStepsThatNeverRan(List<ReqNRollStepInfo> steps, IReadOnlyList<PlannedStep> planned)
++    {
++        var rows = steps.Where(step => !step.RanByAStep).ToList();
++        if (rows.Count >= planned.Count)
++            return;
++        for (var i = 0; i < rows.Count; i++)
++        {
++            if (!string.Equals(rows[i].Text, planned[i].Text, StringComparison.Ordinal))
++                return;
++        }
++        for (var i = rows.Count; i < planned.Count; i++)
++            steps.Add(new ReqNRollStepInfo(planned[i].Keyword, planned[i].Text, ScenarioExecutionStatus.Skipped, null, planned[i].TableText, planned[i].DocString));
++    }
++
+     /// <summary>A step under way. Its definition can run more of them, which finish inside it.</summary>
+     private sealed class OpenStep(Stopwatch stopwatch, OpenStep? parent, StepInfo stepInfo)
+     {
+@@ -271,6 +289,7 @@ public void AfterScenario()
+             : ExamplesBlock.None;
+         // Unconditional, unlike the Examples: lookup - every scenario has a source, outline or not.
+         var source = ExamplesBlockResolver.ResolveSource(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo);
++        AddStepsThatNeverRan(steps, ExamplesBlockResolver.ResolvePlannedSteps(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo));
+ 
+         ReqNRollScenarioCollector.Collect(new ReqNRollScenarioInfo
+         {
+diff --git a/src/Kronikol.ReqNRoll.Core/ExamplesBlockResolver.cs b/src/Kronikol.ReqNRoll.Core/ExamplesBlockResolver.cs
+index 53946cc4..ecb2c87e 100644
+--- a/src/Kronikol.ReqNRoll.Core/ExamplesBlockResolver.cs
++++ b/src/Kronikol.ReqNRoll.Core/ExamplesBlockResolver.cs
+@@ -24,6 +24,9 @@ internal readonly record struct ScenarioSource(string? File, int? Line)
+     public static readonly ScenarioSource None = new(null, null);
+ }
+ 
++/// <summary>A step a scenario's pickle plans: its keyword as the hooks name one, its text, and its arguments with an outline's values filled.</summary>
++internal readonly record struct PlannedStep(string Keyword, string Text, string? TableText, string? DocString);
++
+ /// <summary>
+ /// Maps a running Reqnroll scenario back to the <c>Examples:</c> block its row came from.
+ /// Reqnroll's generated code embeds the feature's Cucumber messages (Gherkin document + pickles)
+@@ -83,6 +86,55 @@ public static ScenarioSource ResolveSource(FeatureInfo? featureInfo, ScenarioInf
+         }
+     }
+ 
++    /// <summary>
++    /// Every step the running scenario's pickle plans, in the order they run; empty when the pickle is not found or is not
++    /// this scenario's. Same reflection seam, same silent-degradation contract as <see cref="Resolve"/>.
++    /// </summary>
++    public static IReadOnlyList<PlannedStep> ResolvePlannedSteps(FeatureInfo? featureInfo, ScenarioInfo? scenarioInfo)
++    {
++        if (featureInfo is null || scenarioInfo is null)
++            return [];
++        try
++        {
++            var lookup = LookupCache.GetValue(featureInfo, BuildLookup);
++            if (FindPickle(lookup, scenarioInfo) is not { Steps: { } steps })
++                return [];
++            return steps.Select(step => new PlannedStep(
++                KeywordOf(step, lookup),
++                step.Text ?? "",
++                TableTextOf(step.Argument?.DataTable),
++                step.Argument?.DocString?.Content)).ToArray();
++        }
++        catch
++        {
++            return [];
++        }
++    }
++
++    /// <summary>
++    /// The keyword as Reqnroll's <c>StepDefinitionKeyword</c> names it, whatever the feature file's language: the step's type,
++    /// with a conjunction read as And unless it is written But in English.
++    /// </summary>
++    private static string KeywordOf(PickleStep step, FeatureBlockLookup lookup)
++    {
++        var written = step.AstNodeIds is { Count: > 0 } ids && lookup.StepsById.TryGetValue(ids[0], out var ast) ? ast : null;
++        return written?.KeywordType switch
++        {
++            StepKeywordType.CONTEXT => "Given",
++            StepKeywordType.ACTION => "When",
++            StepKeywordType.OUTCOME => "Then",
++            _ => written?.Keyword?.Trim() == "But" ? "But" : "And",
++        };
++    }
++
++    /// <summary>A table as <c>Table.ToString()</c> writes it, which is what the step mapper parses.</summary>
++    private static string? TableTextOf(PickleTable? table)
++    {
++        if (table?.Rows is not { Count: > 0 } rows)
++            return null;
++        return string.Concat(rows.Select(row => "|" + string.Concat(row.Cells.Select(c => " " + c.Value + " |")) + "\n"));
++    }
++
+     /// <summary>
+     /// The texts of the steps the feature's <c>Background:</c> and the scenario's rule's give the running scenario, in the
+     /// order they run, from the Gherkin document Reqnroll embeds (#222). Empty when no Background is written, or when
+@@ -249,6 +301,9 @@ private sealed class FeatureBlockLookup
+         /// </summary>
+         public Dictionary<string, int> LinesByScenarioName { get; } = new(StringComparer.Ordinal);
+ 
++        /// <summary>Every written step by its ast id, which a pickle step names: its keyword is the document's alone.</summary>
++        public Dictionary<string, Step> StepsById { get; } = new(StringComparer.Ordinal);
++
+         /// <summary>A scenario's ast id to the texts of the Background steps it runs first: its feature's, then its rule's.</summary>
+         public Dictionary<string, string[]> BackgroundByScenarioId { get; } = new(StringComparer.Ordinal);
+ 
+@@ -325,6 +380,11 @@ private static void IndexBackgrounds(FeatureBlockLookup lookup, Feature? feature
+ 
+     private static void IndexBackground(FeatureBlockLookup lookup, Scenario scenario, IReadOnlyList<Step> steps)
+     {
++        foreach (var step in steps.Concat(scenario.Steps ?? []))
++        {
++            if (step.Id is { Length: > 0 } stepId)
++                lookup.StepsById[stepId] = step;
++        }
+         var texts = steps.Select(s => s.Text ?? "").ToArray();
+         if (scenario.Id is { Length: > 0 } id)
+             lookup.BackgroundByScenarioId[id] = texts;

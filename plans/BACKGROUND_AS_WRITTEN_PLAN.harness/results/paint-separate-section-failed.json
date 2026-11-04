@@ -1,0 +1,9 @@
+{
+ "background": {
+  "startsOpen": false,
+  "holdsFailedStep": true,
+  "summary": "Background Steps",
+  "summaryTitle": "The steps of the feature's background, which run before this scenario's own"
+ },
+ "stepsListPresent": false
+}

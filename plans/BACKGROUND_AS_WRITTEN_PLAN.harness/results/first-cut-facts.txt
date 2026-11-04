@@ -1,0 +1,1 @@
+Passed!  - Failed:     0, Passed:   142, Skipped:     0, Total:   142, Duration: 11 s - Kronikol.Tests.dll (net10.0)

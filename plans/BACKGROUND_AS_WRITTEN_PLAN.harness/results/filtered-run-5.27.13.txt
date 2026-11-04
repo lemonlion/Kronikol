@@ -1,0 +1,11 @@
+# 5.27.13: the same suite with one scenario run alone by --filter "DisplayName=04 one", against the whole run
+Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1,
+  0     Given the basket holds  0.11s  [i0]
+  1     When the customer acts "the same"  0s  [i2]
+  2     Then the outcome is "one"  0s  [i4]
+3 calls · interactions s0 · flow s0
+--- the whole run
+  b0    Given the basket holds  0.06s  [i0]
+  b1    When the customer acts "the same"  0s  [i2]
+  0     Then the outcome is "one"  [i4]
+3 calls · interactions s6 · flow s6

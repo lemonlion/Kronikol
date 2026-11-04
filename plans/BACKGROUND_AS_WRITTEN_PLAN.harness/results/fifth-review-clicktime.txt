@@ -1,0 +1,4 @@
+out-storm-old {"rows":300,"openMs":1285,"clickMedianMs":5.2,"clickP95Ms":6}
+out-storm-new {"rows":300,"openMs":167,"clickMedianMs":28.1,"clickP95Ms":32.3}
+out-storm-old {"rows":300,"openMs":688,"clickMedianMs":5,"clickP95Ms":5.7}
+out-storm-new {"rows":300,"openMs":160,"clickMedianMs":27.7,"clickP95Ms":32.6}
