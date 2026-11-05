@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.29.2] - 2026-11-05
+
+The patch part moves (5.29.1 to 5.29.2): each change is a bug fix in what the assertion weaver reads of a statement for its note, with nothing new to call (F31 of `plans/STEP_METHOD_SHAPES_PLAN.md`, found by its sixth review).
+
+### Fixed
+
+- **Reading a statement's values for its note could break a test that passes, or end its process.** The assertion weaver took a statement's variables at their word on how to read them. Each of these now runs as the compiler wrote it, and the value is shown as written where it cannot be held:
+  - A `ref` local or a pointer in the statement, as in `ref int r = ref v; 1.ShouldBe(r);`, ended the process with an access violation (`0xC0000005`), with no result for any test in it.
+  - A tuple's item as an argument in an `async` method or an iterator, as in `var p = ("x", 1); "x".ShouldBe(p.Item1);`, threw `BadImageFormatException`. A test is more likely to meet this one than any other here.
+  - Another object's field as an argument, as in `"x".ShouldBe(q.k)` with `q` a local, was read as a field of the class it is in, and threw `NullReferenceException` or ended the process. It no longer reads a field of the wrong class.
+  - A field of a generic base class, and a `T` in a closure or a local function of a generic method, threw `BadImageFormatException`.
+  - A `Span<T>`, a `ReadOnlySpan<T>`, another `ref struct` or a `TypedReference` in the statement threw `InvalidProgramException`.
+  - A `volatile` field in an `async` method threw `NullReferenceException`.
+  - An argument's field was read before the subject ran, so `Log(3, "subject").ShouldBe(o.k)` with `o` null threw with the subject not run.
+- **A lazy argument was enumerated again for the note.** `new[] { 1 }.ShouldBe(Gen())` ran the iterator twice, and `new[] { 1 }.ShouldBe(c.GetConsumingEnumerable().Take(1))` on a collection holding one item hung. A sequence with no count of its own is no longer run for its values.
+
+**Behaviour changes:** a label no longer shows the items of a query or an iterator, and shows its code as written; an array, a list and any other collection read as they did. A value the weave cannot hold is shown as written where it was a crash before. Report output moves only there, so golden pins do not, and the Kronikol4J ledger has the entry.
+
 ## [5.29.1] - 2026-11-05
 
 The patch part moves (5.29.0 to 5.29.1): a bug fix, with no new option and no new public member (#236, `plans/BACKGROUND_AS_WRITTEN_PLAN.md` R4).

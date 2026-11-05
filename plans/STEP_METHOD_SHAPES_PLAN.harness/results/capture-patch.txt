@@ -1,0 +1,43 @@
+The capture patch (F31) on 5.29.0's code: suites on Windows, the assertion project on Linux, BreakfastProvider on its two weavers, and each decision taken out by hand.
+
+--- suites
+Passed!  - Failed:     0, Passed:  1603, Skipped:    28, Total:  1631 - Kronikol.Tests.AssertionTracking.dll (net10.0)
+Passed!  - Failed:     0, Passed: 12091, Skipped:     2, Total: 12093 - Kronikol.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  2091, Skipped:     0, Total:  2091 - Kronikol.Tests.StepTracking.dll (net10.0)
+
+--- Linux, in the SDK container: the skips are the cross-SDK facts, which need SDKs it does not have, and no fact of this patch's
+Passed!  - Failed:     0, Passed:  1486, Skipped:   145, Total:  1631 - Kronikol.Tests.AssertionTracking.dll (net10.0)
+
+--- BreakfastProvider
+BreakfastProvider at 640c190, against the capture patch's two weavers as 5.28.99-proto226 over its 5.14.0 core
+xunit published: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+nunit published: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+tunit published: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+xunit prototype: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+nunit prototype: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+tunit prototype: exit 0,  failed: 0  succeeded: 212  total: 212 , KRONIKOL warnings: 0
+== xunit, the scenario with the woven steps, published against prototype, timings taken out:
+no line differs
+== nunit, the scenario with the woven steps, published against prototype, timings taken out:
+no line differs
+== tunit, the scenario with the woven steps, published against prototype, timings taken out:
+no line differs
+
+--- taken out by hand
+1
+Passed!  - Failed:     0, Passed:   143, Skipped:     0, Total:   143, Duration: 1 s - Kronikol.Tests.dll (net10.0)
+Passed!  - Failed:     0, Passed:  1603, Skipped:    28, Total:  1631, Duration: 11 m 23 s - Kronikol.Tests.AssertionTracking.dll (net10.0)
+no-field-check exit 1: Total tests: 98  Passed: 70  Failed: 28  0 crash
+ACastObjectsField ANewObjectsField ANullConditionalsField ARefStructLocal AStaticHoldersField AnArrayElementsField AnAwaitedObjectsField AnotherObjectsField AnotherObject
+
+no-type-filter exit 1: Total tests: 6  Passed: 5  Failed: 1  1 crash
+AReadOnlySpanInANew 
+
+modifier-left-on exit 1: Total tests: 98  Passed: 95  Failed: 3  0 crash
+AVolatileField 
+
+lazy-is-run exit 1: Total tests: 98  Passed: 96  Failed: 2  0 crash
+  Failed Kronikol.Tests.AssertionTracking.ValueCaptureLeavesTheProgramAloneTests.A_lazy_argument_runs_as_often_as_it_does_with_no_weave(configuration: Debug) [1 s]   Fail
+
+ 2 files changed, 60 insertions(+), 6 deletions(-)
+done

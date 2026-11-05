@@ -21,6 +21,30 @@ public class TrackValueResolutionTests : IDisposable
     // --- FormatValue tests ---
 
     [Fact]
+    public void FormatValue_does_not_run_a_lazy_sequence_to_read_it()
+    {
+        // It may be a query, or one that can be read once: the assertion has run it already, and a note is no reason to run it again.
+        var runs = 0;
+        IEnumerable<int> Lazy()
+        {
+            runs++;
+            yield return 1;
+        }
+
+        Assert.Null(Track.FormatValue(Lazy()));
+        Assert.Equal(0, runs);
+    }
+
+    [Fact]
+    public void FormatValue_reads_a_collection_that_knows_its_count()
+    {
+        Assert.Equal("[ 1, 2 ]", Track.FormatValue(new[] { 1, 2 }));
+        Assert.Equal("[ 1, 2 ]", Track.FormatValue(new List<int> { 1, 2 }));
+        Assert.Equal("[ 1, 2 ]", Track.FormatValue(new HashSet<int> { 1, 2 }));
+        Assert.Equal("[ 1, 2 ]", Track.FormatValue((IReadOnlyCollection<int>)new Queue<int>(new[] { 1, 2 })));
+    }
+
+    [Fact]
     public void FormatValue_null_returns_null_string()
     {
         Assert.Equal("null", Track.FormatValue(null));

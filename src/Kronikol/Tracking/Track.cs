@@ -260,6 +260,11 @@ public static class Track
 
     private const int MaxValueLength = 100;
 
+    /// <summary>A sequence with no count of its own is only known by running it, which may be a query, or one that can be read once: a note does without.</summary>
+    internal static bool IsLazySequence(object value) =>
+        value is IEnumerable and not ICollection && !value.GetType().GetInterfaces().Any(i => i.IsGenericType &&
+            (i.GetGenericTypeDefinition() == typeof(ICollection<>) || i.GetGenericTypeDefinition() == typeof(IReadOnlyCollection<>)));
+
     internal static string? FormatValue(object? value)
     {
         if (value is null)
@@ -269,6 +274,9 @@ public static class Track
             return s.Length > MaxValueLength
                 ? s[..MaxValueLength] + "..."
                 : s;
+
+        if (IsLazySequence(value))
+            return null;
 
         if (value is IEnumerable enumerable)
         {

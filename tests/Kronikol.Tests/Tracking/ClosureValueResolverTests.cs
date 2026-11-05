@@ -180,6 +180,26 @@ public class ClosureValueResolverTests
     }
 
     [Fact]
+    public void A_lazy_sequence_is_not_run_to_read_it()
+    {
+        // It may be a query, or one that can be read once: a note is no reason to run it.
+        var runs = 0;
+        IEnumerable<int> Lazy()
+        {
+            runs++;
+            yield return 1;
+        }
+
+        var expected = Lazy();
+        Action action = () => Dummy(expected);
+
+        var result = ClosureValueResolver.ResolveValues(action, "() => x.Should().BeEquivalentTo(expected)");
+
+        Assert.Equal(0, runs);
+        Assert.False(result.ResolvedValues.ContainsKey("expected"));
+    }
+
+    [Fact]
     public void Shows_collection_count()
     {
         var items = new List<int> { 1, 2, 3 };

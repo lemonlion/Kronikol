@@ -888,8 +888,8 @@ public class AssertionWeaver
             var isAwaited = mergePoint != null;
             var capturedVariables = refusal != null
                 ? new List<CapturedVariable>()
-                : DetectCapturedVariables(method, statementInstructions, sourceText,
-                    () => analysis ??= StackAnalysis.Analyze(method.Body));
+                : WhatCanBeRead(DetectCapturedVariables(method, statementInstructions, sourceText,
+                    () => analysis ??= StackAnalysis.Analyze(method.Body)), method);
             // The values are read at the merge point, after the await's resumption. A value one of MoveNext's own
             // locals held is gone there once the state machine has suspended: an optimized build keeps a local for one
             // call of MoveNext, and the code after a suspension runs in the next call, whose locals start zeroed. Such
@@ -1795,7 +1795,7 @@ public class AssertionWeaver
             if (t.FullName is "System.MulticastDelegate" or "System.Linq.Expressions.Expression")
                 return false;
         }
-        return !(definition.HasCustomAttributes && definition.CustomAttributes.Any(a => a.AttributeType.Name == "IsByRefLikeAttribute"));
+        return !IsByRefLike(definition);
     }
 
     /// <summary>Whether a stack value of this type can be stored in a local of the method and loaded back.</summary>
@@ -2255,8 +2255,6 @@ public class AssertionWeaver
                 var fieldName = standaloneFldRef.Name;
                 if (!NameAppearsInExpression(fieldName, sourceText))
                     continue;
-                if (!seenNames.Add(fieldName))
-                    continue;
 
                 // Find the <>4__this field on the state machine
                 FieldDefinition? outerThisForStandalone = null;
@@ -2269,7 +2267,9 @@ public class AssertionWeaver
                     }
                 }
 
-                if (outerThisForStandalone != null)
+                // A tuple's item or another object's field is on no object this read holds. Read off the class, it takes whatever lies at that
+                // offset, and a passing test throws or its process dies.
+                if (outerThisForStandalone != null && IsFieldOf(standaloneFldRef, outerThisForStandalone.FieldType) && seenNames.Add(fieldName))
                 {
                     // Resolve generic parameter types through the outer class type (Issue #55).
                     var outerClassType = outerThisForStandalone.FieldType;
@@ -2289,6 +2289,53 @@ public class AssertionWeaver
         }
 
         return captured;
+    }
+
+    /// <summary>
+    /// Reading a value for the note must not change what the program does. A by-ref or a ref struct cannot sit in the values array, where the note reads it
+    /// as an object and the process dies. A type only another class can name cannot be boxed here. And a field under a modifier holds the type inside it, or
+    /// a volatile int goes in unboxed.
+    /// </summary>
+    private static List<CapturedVariable> WhatCanBeRead(List<CapturedVariable> captured, MethodDefinition method)
+    {
+        foreach (var variable in captured)
+        {
+            variable.Type = WithoutModifiers(variable.Type);
+            variable.NeedsBoxing = variable.Type.IsValueType || variable.Type is GenericParameter;
+        }
+        captured.RemoveAll(variable => !CanBeRead(variable.Type, method));
+        return captured;
+    }
+
+    private static TypeReference WithoutModifiers(TypeReference type) => type switch
+    {
+        RequiredModifierType required => WithoutModifiers(required.ElementType),
+        OptionalModifierType optional => WithoutModifiers(optional.ElementType),
+        _ => type,
+    };
+
+    private static bool CanBeRead(TypeReference type, MethodDefinition method)
+    {
+        const GenericParameterAttributes allowsRefStruct = (GenericParameterAttributes)0x20;
+        if (!CanHoldAsLocal(type, method) || (type is GenericParameter parameter && (parameter.Attributes & allowsRefStruct) != 0))
+            return false;
+        var definition = TryResolve(type);
+        return definition == null ? !type.IsValueType : !IsByRefLike(definition);
+    }
+
+    private static bool IsByRefLike(TypeDefinition definition) =>
+        definition.HasCustomAttributes && definition.CustomAttributes.Any(a => a.AttributeType.Name == "IsByRefLikeAttribute");
+
+    /// <summary>Whether a field is declared on this type or a base of it.</summary>
+    private static bool IsFieldOf(FieldReference field, TypeReference type)
+    {
+        var owner = field.DeclaringType.GetElementType().FullName;
+        for (var t = TryResolve(type); t != null; t = t.BaseType != null ? TryResolve(t.BaseType) : null)
+        {
+            if (t.FullName == owner)
+                return true;
+        }
+        return false;
     }
 
     /// <summary>

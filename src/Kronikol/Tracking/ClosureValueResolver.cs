@@ -264,6 +264,9 @@ public static class ClosureValueResolver
                 ? s[..MaxValueLength] + "..."
                 : s;
 
+        if (Track.IsLazySequence(value))
+            return null;
+
         // Collections — show inline values for small scalar collections, count for others
         if (value is IEnumerable enumerable and not string)
         {

@@ -99,6 +99,9 @@ public static class TestAssemblyBuilder
     private static string Build(string name, string source, CSharpCompilationOptions options, DebugInformationFormat? symbols,
         IReadOnlyList<string> extraReferences)
     {
+        if (source.Contains("unsafe", StringComparison.Ordinal))
+            options = options.WithAllowUnsafe(true);
+
         var assemblyPath = Path.Combine(OutputDir, $"{name}.dll");
         var pdbPath = Path.ChangeExtension(assemblyPath, ".pdb");
 
