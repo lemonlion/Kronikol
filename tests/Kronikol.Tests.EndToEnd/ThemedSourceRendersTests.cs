@@ -37,7 +37,9 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
     private Task<string> EngineSvg(string id) => Page.EvaluateAsync<string>("""
         id => {
             var svg = document.getElementById(id).querySelector('svg').cloneNode(true);
-            if (svg.getAttribute('style') === '') svg.removeAttribute('style');
+            // What the page's measuring leaves, or has not left yet: it is no part of what the engine drew.
+            var style = (svg.getAttribute('style') || '').replace(/max-width:\s*100%;?\s*/, '').trim();
+            if (style === '') svg.removeAttribute('style'); else svg.setAttribute('style', style);
             svg.querySelectorAll('[data-source-line]').forEach(function (el) { el.removeAttribute('data-source-line'); });
             return svg.outerHTML.replace(/<\?[\s\S]*?\?>/g, '').replace(/<!--[\s\S]*?-->/g, '');
         }
@@ -52,13 +54,13 @@ public class ThemedSourceRendersTests : PlaywrightTestBase
         await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateBrowserJsPage(("d-themed", Themed), ("d-plain", Plain))));
         await RenderAll("d-themed", "d-plain");
         // The page measures each diagram a frame after it is drawn, to decide whether it needs a zoom button, and the
-        // measuring leaves an empty style on the svg. A full run under load read the themed diagram after its frame and
-        // the plain one before its own; the plain one is put back as it is before its frame, so that is the case every time.
+        // measuring leaves an empty style on the svg, or a max-width while it is under way. A full run under load read the
+        // themed diagram after its frame and the plain one before its own, twice, so that is made the case every time.
         await Page.EvaluateAsync("""
             () => {
                 window._getDiagramNaturalWidth(document.getElementById('d-themed'));
-                var plain = document.querySelector('#d-plain svg');
-                if (plain.getAttribute('style') === '') plain.removeAttribute('style');
+                document.querySelector('#d-themed svg').style.maxWidth = '100%';
+                document.querySelector('#d-plain svg').removeAttribute('style');
             }
             """);
 

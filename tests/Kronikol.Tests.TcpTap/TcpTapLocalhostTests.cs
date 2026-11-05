@@ -13,6 +13,7 @@ namespace Kronikol.Tests.TcpTap;
 /// "localhost" made every connection wait 2 s for a server on 127.0.0.1 alone. Linux answers a refused address at once,
 /// so the timing facts are red only on Windows; the order itself is pinned on every platform.
 /// </summary>
+[Collection(FreedPortCollection.Name)]
 public class TcpTapLocalhostTests
 {
     private static readonly TimeSpan Patience = TimeSpan.FromSeconds(15);
