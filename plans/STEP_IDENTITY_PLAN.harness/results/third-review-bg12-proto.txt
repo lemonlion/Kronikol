@@ -1,0 +1,5 @@
+Test run for C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq-p\bin\Debug\net10.0\HookSteps.Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.74]     [Test Assembly Cleanup Failure (HookSteps.Repro.dll)] System.Collections.Generic.KeyNotFoundException
+
+Failed!  - Failed:     2, Passed:     1, Skipped:     1, Total:     4, Duration: 375 ms - HookSteps.Repro.dll (net10.0)

@@ -1,0 +1,125 @@
+
+### s0 steps
+s0  Probes › P0 control  [Passed]  0s
+stableId b9d4c8d44fdabea9
+open: TestRunReport.html#sid-b9d4c8d44fdabea9
+
+  0     A customer is registered  [i0]
+  1     An order is submitted  [i2]
+2 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s1 steps
+s1  Probes › P1 a call between two steps  [Passed]  0s
+stableId c7092bf89924ebea
+open: TestRunReport.html#sid-c7092bf89924ebea
+
+  0     A customer is registered  [i0-i2] 2 calls
+  1     An order is submitted  [i4]
+3 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /between        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s2 steps
+s2  Probes › P2 a call before the first step and after the last  [Passed]  0s
+stableId d338b2d76e27b3ba
+open: TestRunReport.html#sid-d338b2d76e27b3ba
+
+  0     A customer is registered  [i2-i4] 2 calls
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /before         1      0     0 ms     0 ms      1       4 B
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /after          1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s3 steps
+s3  Probes › P3 a call after a step that made none  [Passed]  0s
+stableId b7117f75c28c1669
+open: TestRunReport.html#sid-b7117f75c28c1669
+
+  0     A customer is registered  [i0]
+  1     A step with no call  [i2]
+2 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+step  method  path               calls errors   median      max bodies     bytes
+0     POST    /customers             1      0     0 ms     0 ms      1       4 B
+1     POST    /after-empty-step      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s4 steps
+s4  Probes › P4 a call in teardown  [Passed]  0s
+stableId eae90d0848ec6bb5
+open: TestRunReport.html#sid-eae90d0848ec6bb5
+
+  0     A customer is registered  [i0-i2] 2 calls
+2 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /teardown       1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s5 steps
+s5  Probes › P5 two steps in parallel the first ending first  [Passed]  0.18s
+stableId 2370b8239465bfd8
+open: TestRunReport.html#sid-2370b8239465bfd8
+
+  0     A fast parallel  0.15s  [i0-i2] 2 calls
+    0.0   A slow parallel  0.07s
+  1     An order is submitted  [i4]
+3 calls · interactions s5 · flow s5
+
+### s5 calls: step, method, path
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /fast        1      0     2 ms     2 ms      1       4 B
+0     POST    /slow        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders      1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s6 steps
+s6  Probes › P6 a step longer than 110 characters  [Passed]  0s
+stableId 16f6eebc85a81ca6
+open: TestRunReport.html#sid-16f6eebc85a81ca6
+
+  0     A basket that held two apples and a pear last week but nothing at all this week while the …  0s  [i0]
+  1     An order is submitted  [i2]
+2 calls · interactions s6 · flow s6
+
+### s6 calls: step, method, path
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /long        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s7 steps
+s7  Probes › P7 a step that starts another and ends first  [Passed]  0.22s
+stableId 378bbecf01713876
+open: TestRunReport.html#sid-378bbecf01713876
+
+  0     A step that starts another and ends first  0.12s  [i0-i2] 2 calls
+    0.0   A slow parallel
+  1     An order is submitted  [i4]
+3 calls · interactions s7 · flow s7
+
+### s7 calls: step, method, path
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /own         1      0     0 ms     0 ms      1       4 B
+0     POST    /slow        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders      1      0     0 ms     0 ms      1       4 B
+3 buckets

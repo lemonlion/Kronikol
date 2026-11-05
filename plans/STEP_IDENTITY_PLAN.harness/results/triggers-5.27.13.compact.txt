@@ -1,0 +1,365 @@
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s0  Hook steps › T00 no hook is the control  [Passed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+      call> ! calls
+      call> 0 /customers
+      call> 1 /orders
+      call> 2 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s1  Hook steps › T01 a step method in BeforeScenario  [Passed]  0s
+  0     Given a registered customer
+  1     When the customer places the order
+    1.0   A customer is registered
+  2     Then the order is confirmed
+    2.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /seed
+      call> - /customers
+      call> - /orders
+      call> - /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s2  Hook steps › T02 a step method in BeforeScenarioBlock  [Passed]  0s
+  0     Given a registered customer
+  1     When the customer places the order
+    1.0   A customer is registered
+  2     Then the order is confirmed
+   6 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /block
+      call> - /customers
+      call> - /orders
+      call> - /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s3  Hook steps › T03 a step method in AfterScenarioBlock  [Passed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order
+  2     Then the order is confirmed
+    2.0   An order is submitted
+   5 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /block
+      call> 0 /customers
+      call> - /orders
+      call> - /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s4  Hook steps › T04 a step method in AfterScenario  [Passed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> 0 /customers
+      call> 1 /orders
+      call> 2 /orders/1
+      call> - /clean
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s5  Hook steps › T05 a step method that fails in BeforeScenario  [Failed]  0s
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /seed
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s6  Hook steps › T06 an AfterStep hook that throws  [Failed]  0s
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /customers
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s7  Hook steps › T07 a BeforeStep hook that throws  [Failed]  0s
+✗ 0     Given a registered customer  0s
+      call> ! calls
+      call> buckets: at
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s8  Hook steps › T08 a failing step with steps after it  [Failed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+✗ 1     When the payment fails  0s  [i2]
+      call> ! calls
+      call> 0 /customers
+      call> 1 /payments
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s9  Hook steps › T09 a plain call in BeforeScenario with no step method  [Passed]  0s
+  0     Given a registered customer  [i2]
+    0.0   A customer is registered
+  1     When the customer places the order  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /seed
+      call> 0 /customers
+      call> 1 /orders
+      call> 2 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s10  Hook steps › T10 a step method in BeforeStep  [Passed]  0s
+  0     Given a registered customer  0s  [i0-i2] 2 calls
+    0.0   Step observed
+    0.1   A customer is registered
+  1     When the customer places the order  [i4-i6] 2 calls
+    1.0   Step observed
+    1.1   An order is submitted
+  2     Then the order is confirmed  [i8-i10] 2 calls
+    2.0   Step observed
+    2.1   The order is read back
+      call> ! calls
+      call> 0 /observe
+      call> 0 /customers
+      call> 1 /observe
+      call> 1 /orders
+      call> 2 /observe
+      call> 2 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s11  Hook steps › T11 a Given step method in BeforeScenario  [Passed]  0s
+  0     Given a registered customer
+  1     When the customer places the order
+    1.0   A customer is registered
+  2     Then the order is confirmed
+    2.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /tenant
+      call> - /customers
+      call> - /orders
+      call> - /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s12  Hook steps › T12 a step method in AfterStep  [Passed]  0.1s
+  0     Given a registered customer  0.06s  [i0-i2] 2 calls
+    0.0   A customer is registered  0.03s
+    0.1   Step observed
+  1     When the customer places the order  0s  [i4-i6] 2 calls
+    1.0   An order is submitted
+    1.1   Step observed
+  2     Then the order is confirmed  0s  [i8-i10] 2 calls
+    2.0   The order is read back
+    2.1   Step observed
+      call> ! calls
+      call> 0 /customers
+      call> 0 /observe
+      call> 1 /orders
+      call> 1 /observe
+      call> 2 /orders/1
+      call> 2 /observe
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s13  Hook steps › T13 a step method in BeforeScenario and a failing step  [Failed]  0s
+  0     Given a registered customer
+✗ 1     When the payment fails
+    1.0   A customer is registered
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /seed
+      call> - /customers
+      call> - /payments
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s14  Hook steps › T14 an attachment and a plain call in BeforeScenario  [Passed]  0.02s
+attachments: 1 of its own · attachments s14
+  0     Given a registered customer  [i2]
+    0.0   A customer is registered
+  1     When the customer places the order  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /seed
+      call> 0 /customers
+      call> 1 /orders
+      call> 2 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s15  Hook steps › T16 a BeforeScenario hook at the same order as Kronikol's  [Passed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+      call> ! calls
+      call> 0 /customers
+      call> 1 /orders
+      call> 2 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s16  Hook steps › T17 a step method left running when its step ends  [Passed]  0s
+  0     Given a step method is left running  0s  [i0-i4] 3 calls
+    0.0   A slow background check
+    0.1   When the customer places the order
+      0.1.0 An order is submitted
+    0.2   Then the order is confirmed
+      0.2.0 The order is read back
+  1     When the customer places the order
+  2     Then the order is confirmed
+      call> ! calls
+      call> 0 /started
+      call> 0 /orders
+      call> 0 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s17  Hook steps › T18 an undefined step  [Skipped]  0.04s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+      call> ! calls
+      call> 0 /customers
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s18  Hook steps › T19 two step methods in parallel  [Passed]  0.06s
+  0     Given two step methods run in parallel  0.05s  [i0-i2] 2 calls
+    0.0   First parallel  0.05s
+      0.0.0 Second parallel  0.02s
+  1     When the customer places the order  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+      call> ! calls
+      call> 0 /second
+      call> 0 /first
+      call> 1 /orders
+      call> 2 /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s19  Hook steps › T20 a plain call in AfterScenario with no step method  [Passed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4-i6] 2 calls
+    2.0   The order is read back
+      call> ! calls
+      call> 0 /customers
+      call> 1 /orders
+      call> 2 /orders/1
+      call> 2 /teardown
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s20  Hook steps › T21 a step that runs another step  [Passed]  0s
+  0     Given a registered customer
+    0.0   Given a registered customer
+      0.0.0 A customer is registered
+  1     Given a step that runs another step
+    1.0   An order is submitted
+  2     When the customer places the order
+    2.0   The order is read back
+  3     Then the order is confirmed
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /customers
+      call> - /outer
+      call> - /orders
+      call> - /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s21  Hook steps › T22 a BeforeScenarioBlock hook that throws on the second block  [Failed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+      call> ! calls
+      call> 0 /customers
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s22  Hook steps › T23 two step methods left running, one ending before its step  [Passed]  0.58s
+  0     Given two step methods are left running  0.07s  [i0-i6] 4 calls
+    0.0   A quick check  0.07s
+      0.0.0 A slow background check  0.02s
+    0.1   When the order takes a while  0.51s
+      0.1.0 An order is submitted slowly  0.25s
+  1     When the order takes a while  0.51s
+    1.0   The order is read back
+  2     Then the order is confirmed
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> 0 /quick
+      call> 0 /started
+      call> 0 /background
+      call> 0 /orders
+      call> - /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s23  Hook steps › T24 a step method left running by a hook  [Passed]  0.53s
+  0     Given a registered customer
+    0.0   Given a registered customer
+      0.0.0 A customer is registered
+    0.1   When the order takes a while  0.52s
+      0.1.0 An order is submitted slowly  0.32s
+  1     When the order takes a while  0.52s
+    1.0   The order is read back
+  2     Then the order is confirmed
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /customers
+      call> - /background
+      call> - /orders
+      call> - /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s24  Hook steps › T25 a step that runs steps with arguments  [Passed]  0.02s
+  0     Given the basket is listed  0s
+      · table
+      · sku
+      · count
+      · APPLE
+      · 3
+    0.0   Given the basket is listed  0s
+    0.1   Given the note "kept" says  0s
+  1     Given the note "kept" says  0s
+      """a doc string"""
+    1.0   An order is submitted
+  2     Given a step that runs steps with arguments  0s
+    2.0   The order is read back
+  3     When the customer places the order
+  4     Then the order is confirmed
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /basket
+      call> - /note
+      call> - /orders
+      call> - /orders/1
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s25  Hook steps › T26 a step that runs two steps, the first failing  [Failed]  0.01s
+✗ 0     Given an inner step fails  0s
+  ✗ 0.0   Given an inner step fails  0s
+  1     Given a step that runs two steps, the first failing  0s
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+      call> ! calls
+      call> - /inner
+
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '2b089de8-c…
+s26  Hook steps › T27 a hook that runs a step  [Passed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+  2     When the customer places the order  [i4]
+    2.0   An order is submitted
+  3     Then the order is confirmed  [i6]
+    3.0   The order is read back
+      call> ! calls
+      call> 0 /customers
+      call> 1 /customers
+      call> 2 /orders
+      call> 3 /orders/1
+
+No scenario s27 — the report has 27 (s0-s26).
+      call> No s27

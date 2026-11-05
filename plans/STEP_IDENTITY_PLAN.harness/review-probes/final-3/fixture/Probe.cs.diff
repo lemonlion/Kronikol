@@ -1,0 +1,32 @@
+diff --git a/tests/Kronikol.Tests.RealEngines.Fixtures/Engine.BDDfy/Probe.cs b/tests/Kronikol.Tests.RealEngines.Fixtures/Engine.BDDfy/Probe.cs
+index c486ebed..885ce45d 100644
+--- a/tests/Kronikol.Tests.RealEngines.Fixtures/Engine.BDDfy/Probe.cs
++++ b/tests/Kronikol.Tests.RealEngines.Fixtures/Engine.BDDfy/Probe.cs
+@@ -3,6 +3,7 @@
+ using Kronikol.BDDfy.xUnit3;
+ using Kronikol.Tracking;
+ using TestStack.BDDfy;
++using TestStack.BDDfy.Configuration;
+ using Xunit;
+ 
+ [assembly: TrackSteps]
+@@ -16,7 +17,9 @@ public ValueTask InitializeAsync()
+     {
+         if (Environment.GetEnvironmentVariable("NO_BARS") == "1")
+             StepCollector.Options = new StepTrackingOptions { ShowStepDelimiters = false };
++        Configurator.StepExecutor = new ReviewInnerExecutor(Configurator.StepExecutor);
+         BDDfyDiagramsConfigurator.Configure();
++        ReviewSetup.Install();
+         BDDfyScenarioCollector.StartRunTime = DateTime.UtcNow;
+         return ValueTask.CompletedTask;
+     }
+@@ -24,7 +27,8 @@ public ValueTask InitializeAsync()
+     public ValueTask DisposeAsync()
+     {
+         BDDfyScenarioCollector.EndRunTime = DateTime.UtcNow;
+-        foreach (var scenario in BDDfyScenarioCollector.GetAll().Where(s => s.ScenarioTitle.StartsWith("F5", StringComparison.Ordinal) || s.ScenarioTitle.StartsWith("HS2", StringComparison.Ordinal)))
++        ReviewSetup.Dump();
++        foreach (var scenario in BDDfyScenarioCollector.GetAll().Where(s => s.ScenarioTitle.StartsWith("F5", StringComparison.Ordinal) || s.ScenarioTitle.StartsWith("HS2", StringComparison.Ordinal) || s.ScenarioTitle.StartsWith("RV1 ", StringComparison.Ordinal) || s.ScenarioTitle.StartsWith("RV1b ", StringComparison.Ordinal) || s.ScenarioTitle.StartsWith("RV3 ", StringComparison.Ordinal)))
+             scenario.Steps[1] = new BDDfyStepInfo(scenario.Steps[1].Keyword, "the order is ***", scenario.Steps[1].Result, scenario.Steps[1].Duration);
+         BDDfyReportGenerator.CreateStandardReportsWithDiagrams(new ReportConfigurationOptions
+         {

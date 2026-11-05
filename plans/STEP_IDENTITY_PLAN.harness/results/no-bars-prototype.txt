@@ -1,0 +1,14 @@
+### prototype at 9b85227f, ShowStepDelimiters=false: T00 control
+s0  Hook steps › T00 no hook is the control  [Passed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s0 · flow s0
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+3 buckets

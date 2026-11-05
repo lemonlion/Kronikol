@@ -1,0 +1,17 @@
+### published, ShowStepDelimiters=false: T00 control
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '000eff6a-e…
+s0  Hook steps › T00 no hook is the control  [Passed]  0s
+  0     Given a registered customer
+    0.0   A customer is registered
+  1     When the customer places the order
+    1.0   An order is submitted
+  2     Then the order is confirmed
+    2.0   The order is read back
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under '000eff6a-e…
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders         1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+3 buckets

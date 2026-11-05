@@ -1,0 +1,106 @@
+Test run for C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq-p\bin\Debug\net10.0\HookSteps.Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:01.71]     A fails at its Given with a screenshot [FAIL]
+[xUnit.net 00:00:02.02]     [Test Assembly Cleanup Failure (HookSteps.Repro.dll)] System.Collections.Generic.KeyNotFoundException
+  Failed A fails at its Given with a screenshot [24 ms]
+  Error Message:
+   System.InvalidOperationException : the shop did not start
+  Stack Trace:
+     at HookSteps.Repro.ZSteps.Ready() in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq-p\Bindings\Z.cs:line 23
+   at Reqnroll.Bindings.AsyncMethodHelper.ConvertTaskOfT(Task task, Boolean getValue)
+   at Reqnroll.Bindings.BindingDelegateInvoker.InvokeDelegateAsync(Delegate bindingDelegate, Object[] invokeArgs, ExecutionContextHolder executionContext)
+   at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+   at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+   at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+   at Reqnroll.Infrastructure.TestExecutionEngine.<>c__DisplayClass57_0.<<ExecuteStepAsync>b__7>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Reqnroll.Infrastructure.TestExecutionEngine.<>c__DisplayClass57_0.<<ExecuteStepAsync>g__HandleStepExecutionExceptions|0>d.MoveNext()
+   at Reqnroll.Infrastructure.TestExecutionEngine.OnAfterLastStepAsync()
+   at Reqnroll.TestRunner.CollectScenarioErrorsAsync()
+   at HookSteps.Repro.Features.BG8ScreenshotOnFailureFailingFirstFeature.ScenarioCleanupAsync()
+   at HookSteps.Repro.Features.BG8ScreenshotOnFailureFailingFirstFeature.AFailsAtItsGivenWithAScreenshot() in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq-p\Features\Z10.feature:line 8
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ Given the shop is ready
+ -> error: the shop did not start (0.0s)
+ -> Attachment 'C:\Users\cex\AppData\Local\Temp\z-failure-shot-4ed3043ed63b415d9701277b9c86bd42.txt' added (not forwarded to the test runner).
+ When the customer orders
+ -> skipped because of previous errors
+ Then the order is listed
+ -> skipped because of previous errors
+
+
+  Failed A fails at its Given with a screenshot [1 ms]
+  Error Message:
+   [Test Assembly Cleanup Failure (HookSteps.Repro.dll)]: System.Collections.Generic.KeyNotFoundException : The given key 'FileAttachment { Name = z-failure-shot-4ed3043ed63b415d9701277b9c86bd42.txt, RelativePath = attachments/z-failure-shot-4ed3043ed63b415d9701277b9c86bd42.txt, MediaType = , IsInlineImage = False, Problem = , IsUrl = False }' was not present in the dictionary.
+  Stack Trace:
+     at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Kronikol.Reports.ReportGenerator.<>c__DisplayClass217_0.<CopyAttachments>g__Place|4(FileAttachment attachment) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 7165
+   at System.Linq.Enumerable.ArraySelectIterator`2.Fill(ReadOnlySpan`1 source, Span`1 destination, Func`2 func)
+   at System.Linq.Enumerable.ArraySelectIterator`2.ToArray()
+   at Kronikol.Reports.ReportGenerator.<>c__DisplayClass217_0.<CopyAttachments>b__3(FileAttachment[] attachments) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 7160
+   at Kronikol.Reports.AttachmentPlacement.<ForEachList>g__Steps|9_0(ScenarioStep[] steps, <>c__DisplayClass9_0&) in C:\Code\Kronikol-223r\src\Kronikol\Reports\AttachmentPlacement.cs:line 151
+   at Kronikol.Reports.AttachmentPlacement.ForEachList(IEnumerable`1 scenarios, Func`2 replace) in C:\Code\Kronikol-223r\src\Kronikol\Reports\AttachmentPlacement.cs:line 142
+   at Kronikol.Reports.ReportGenerator.CopyAttachments(Feature[] features, String reportsDirectory) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 7160
+   at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment environment, Func`2 getEnv, Action`1 beforeFirstWrite, IReadOnlyList`1 suppliedSpans, String historyBaseDirectory, AttachmentContext attachmentContext, Boolean printsDiagnostics) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 504
+   at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment environment, Func`2 getEnv, Action`1 beforeFirstWrite, IReadOnlyList`1 spans, String historyBaseDirectory, AttachmentContext attachments) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 201
+   at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment environment) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 158
+   at Kronikol.ReqNRoll.ReqNRollReportGenerator.CreateStandardReportsWithDiagrams(IEnumerable`1 scenarios, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options) in C:\Code\Kronikol-223r\src\Kronikol.ReqNRoll.Core\ReqNRollReportGenerator.cs:line 21
+   at Kronikol.ReqNRoll.ReqNRollReportGenerator.CreateStandardReportsWithDiagrams(ReportConfigurationOptions options) in C:\Code\Kronikol-223r\src\Kronikol.ReqNRoll.Core\ReqNRollReportGenerator.cs:line 15
+   at HookSteps.Repro.ZHooks.Report() in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq-p\Bindings\Z.cs:line 55
+   at InvokeStub_Action`1.Invoke(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+--- End of stack trace from previous location ---
+   at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+   at Reqnroll.Infrastructure.TestExecutionEngine.InvokeHookAsync(IAsyncBindingInvoker invoker, IHookBinding hookBinding, HookType hookType)
+   at Reqnroll.Infrastructure.TestExecutionEngine.InvokeHookAsync(IAsyncBindingInvoker invoker, IHookBinding hookBinding, HookType hookType)
+   at Reqnroll.Infrastructure.TestExecutionEngine.FireEventsAsync(HookType hookType)
+   at Reqnroll.Infrastructure.TestExecutionEngine.FireEventsAsync(HookType hookType)
+   at Reqnroll.Infrastructure.TestExecutionEngine.OnTestRunEndAsync()
+   at Reqnroll.Infrastructure.TestExecutionEngine.OnTestRunEndAsync()
+   at Reqnroll.TestRunner.OnTestRunEndAsync()
+   at Reqnroll.TestRunnerManager.FireTestRunEndAsync()
+   at Reqnroll.TestRunnerManager.DisposeAsync()
+   at Reqnroll.TestRunnerManager.DisposeAsync()
+   at Reqnroll.TestRunnerManager.OnTestRunEndAsync(Assembly testAssembly, IContainerBuilder containerBuilder)
+   at HookSteps_Repro_XUnitAssemblyFixture.DisposeAsync() in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq-p\obj\Debug\net10.0\xUnit.AssemblyHooks.HookSteps_Repro.cs:line 21
+   at Reqnroll.xUnit.ReqnrollPlugin.XunitTestAssemblyRunnerWithAssemblyFixture.<>c__DisplayClass3_0.<<BeforeTestAssemblyFinishedAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+  Failed B passes [1 ms]
+  Error Message:
+   [Test Assembly Cleanup Failure (HookSteps.Repro.dll)]: System.Collections.Generic.KeyNotFoundException : The given key 'FileAttachment { Name = z-failure-shot-4ed3043ed63b415d9701277b9c86bd42.txt, RelativePath = attachments/z-failure-shot-4ed3043ed63b415d9701277b9c86bd42.txt, MediaType = , IsInlineImage = False, Problem = , IsUrl = False }' was not present in the dictionary.
+  Stack Trace:
+     at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Kronikol.Reports.ReportGenerator.<>c__DisplayClass217_0.<CopyAttachments>g__Place|4(FileAttachment attachment) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 7165
+   at System.Linq.Enumerable.ArraySelectIterator`2.Fill(ReadOnlySpan`1 source, Span`1 destination, Func`2 func)
+   at System.Linq.Enumerable.ArraySelectIterator`2.ToArray()
+   at Kronikol.Reports.ReportGenerator.<>c__DisplayClass217_0.<CopyAttachments>b__3(FileAttachment[] attachments) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 7160
+   at Kronikol.Reports.AttachmentPlacement.<ForEachList>g__Steps|9_0(ScenarioStep[] steps, <>c__DisplayClass9_0&) in C:\Code\Kronikol-223r\src\Kronikol\Reports\AttachmentPlacement.cs:line 151
+   at Kronikol.Reports.AttachmentPlacement.ForEachList(IEnumerable`1 scenarios, Func`2 replace) in C:\Code\Kronikol-223r\src\Kronikol\Reports\AttachmentPlacement.cs:line 142
+   at Kronikol.Reports.ReportGenerator.CopyAttachments(Feature[] features, String reportsDirectory) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 7160
+   at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment environment, Func`2 getEnv, Action`1 beforeFirstWrite, IReadOnlyList`1 suppliedSpans, String historyBaseDirectory, AttachmentContext attachmentContext, Boolean printsDiagnostics) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 504
+   at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment environment, Func`2 getEnv, Action`1 beforeFirstWrite, IReadOnlyList`1 spans, String historyBaseDirectory, AttachmentContext attachments) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 201
+   at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagrams(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment environment) in C:\Code\Kronikol-223r\src\Kronikol\Reports\ReportGenerator.cs:line 158
+   at Kronikol.ReqNRoll.ReqNRollReportGenerator.CreateStandardReportsWithDiagrams(IEnumerable`1 scenarios, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options) in C:\Code\Kronikol-223r\src\Kronikol.ReqNRoll.Core\ReqNRollReportGenerator.cs:line 21
+   at Kronikol.ReqNRoll.ReqNRollReportGenerator.CreateStandardReportsWithDiagrams(ReportConfigurationOptions options) in C:\Code\Kronikol-223r\src\Kronikol.ReqNRoll.Core\ReqNRollReportGenerator.cs:line 15
+   at HookSteps.Repro.ZHooks.Report() in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq-p\Bindings\Z.cs:line 55
+   at InvokeStub_Action`1.Invoke(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+--- End of stack trace from previous location ---
+   at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+   at Reqnroll.Infrastructure.TestExecutionEngine.InvokeHookAsync(IAsyncBindingInvoker invoker, IHookBinding hookBinding, HookType hookType)
+   at Reqnroll.Infrastructure.TestExecutionEngine.InvokeHookAsync(IAsyncBindingInvoker invoker, IHookBinding hookBinding, HookType hookType)
+   at Reqnroll.Infrastructure.TestExecutionEngine.FireEventsAsync(HookType hookType)
+   at Reqnroll.Infrastructure.TestExecutionEngine.FireEventsAsync(HookType hookType)
+   at Reqnroll.Infrastructure.TestExecutionEngine.OnTestRunEndAsync()
+   at Reqnroll.Infrastructure.TestExecutionEngine.OnTestRunEndAsync()
+   at Reqnroll.TestRunner.OnTestRunEndAsync()
+   at Reqnroll.TestRunnerManager.FireTestRunEndAsync()
+   at Reqnroll.TestRunnerManager.DisposeAsync()
+   at Reqnroll.TestRunnerManager.DisposeAsync()
+   at Reqnroll.TestRunnerManager.OnTestRunEndAsync(Assembly testAssembly, IContainerBuilder containerBuilder)
+   at HookSteps_Repro_XUnitAssemblyFixture.DisposeAsync() in C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq-p\obj\Debug\net10.0\xUnit.AssemblyHooks.HookSteps_Repro.cs:line 21
+   at Reqnroll.xUnit.ReqnrollPlugin.XunitTestAssemblyRunnerWithAssemblyFixture.<>c__DisplayClass3_0.<<BeforeTestAssemblyFinishedAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 479 ms - HookSteps.Repro.dll (net10.0)

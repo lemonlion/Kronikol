@@ -1,0 +1,26 @@
+=== ReqNRoll
+   1342  calls compared
+   1342  same row
+      2  count differs
+           A request with a correlation id should return the same id in: Publish (Pub/Sub) pubsub:///MenuAvailabilityChangedEvent 0 -> 1
+           A request with a correlation id should return the same id in: GET ttp://localhost:5173/ingredients/milk/availability 0 -> 1
+=== LightBDD
+   1368  calls compared
+   1359  same row
+      9  had none, has one
+           Different Muffin Recipes Should Produce The Expected "Muffin: GET http://localhost/eggs: (none) -> A "Spiced Deluxe" muffin recipe at "190" degrees for "20" mi
+           Different Muffin Recipes Should Produce The Expected "Muffin: GET http://localhost/milk: (none) -> A "Spiced Deluxe" muffin recipe at "190" degrees for "20" mi
+           Different Muffin Recipes Should Produce The Expected "Muffin: GET http://localhost:5131/milk: (none) -> A "Spiced Deluxe" muffin recipe at "190" degrees for "20" mi
+           Different Muffin Recipes Should Produce The Expected "Muffin: GET http://localhost/eggs: (none) -> A "Classic" muffin recipe at "180" degrees for "25" minutes 
+           Different Muffin Recipes Should Produce The Expected "Muffin: GET http://localhost/milk: (none) -> A "Classic" muffin recipe at "180" degrees for "25" minutes 
+           Different Muffin Recipes Should Produce The Expected "Muffin: GET http://localhost:5131/milk: (none) -> A "Classic" muffin recipe at "180" degrees for "25" minutes 
+           Different Muffin Recipes Should Produce The Expected "Muffin: GET http://localhost/eggs: (none) -> A "Rustic Wholesome" muffin recipe at "175" degrees for "30"
+           Different Muffin Recipes Should Produce The Expected "Muffin: GET http://localhost/milk: (none) -> A "Rustic Wholesome" muffin recipe at "175" degrees for "30"
+           Different Muffin Recipes Should Produce The Expected "Muffin: GET http://localhost:5131/milk: (none) -> A "Rustic Wholesome" muffin recipe at "175" degrees for "30"
+=== BDDfy
+   1398  calls compared
+   1398  same row
+   1398  calls compared
+   1398  same row
+      1  count differs
+           Outbox message should transition to failed after exhausting : Query https://localhost:9999/colls/orders 4 -> 3

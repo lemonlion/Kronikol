@@ -1,0 +1,12 @@
+passed 282, failed 2
+FAIL OR3_a_step_that_did_not_run_between_two_that_did_stands_after_the_last_that_ran
+    Assert.Equal() Failure: Strings differ
+                                             ↓ (pos 62)
+    Expected: ···" registered\n1 When one\n2 Then one fails [Failed]\n3"···
+    Actual:   ···" registered\n1 When one\n2 When two [Skipped]\n3 Then"···
+                                             ↑ (pos 62)
+FAIL HS4_a_file_on_a_hidden_step_past_the_last_row_stays_in_the_report_once
+    Assert.Equal() Failure: Collections differ
+                                           ↓ (pos 1)
+    Expected: <generated> ["context-file", "second-setup-file"]
+    Actual:   string[]    ["context-file"]

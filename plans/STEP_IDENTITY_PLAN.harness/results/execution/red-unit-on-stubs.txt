@@ -1,0 +1,126 @@
+new facts seen 78 of 78; red 45; green 33
+RED  A_Gherkin_step_takes_the_frame_its_hooks_opened_and_its_row_carries_the_id 
+       Assert.Equal() Failure: Values differ | Expected: 29 | Actual:   null
+RED  A_bar_a_collected_step_drew_is_not_read_against_its_text 
+       Assert.Equal() Failure: Collections differ | ↓ (pos 0) | Expected: ["0"] | Actual:   [null]
+RED  A_bar_carries_the_id_of_the_step_that_drew_it 
+       Assert.All() Failure: 2 out of 2 items in the collection did not pass. | [0]: Item:  RequestResponseLog { TestName = frame-a534398b-b4e9-411d-a8fe-59292d92b2e4, TestId = frame-a534398b-b4e9-411d-a8fe-59292d92b2
+RED  A_collected_step_with_no_id_stands_as_itself 
+       Assert.Equal() Failure: Collections differ at index 0 | ↓ (pos 0) | Expected: "outside by hand" | Actual:   "given"
+RED  A_completion_that_finds_a_frame_on_top_finishes_the_step_left_last 
+       System.IndexOutOfRangeException : Index was outside the bounds of the array.
+RED  A_frame_a_framework_step_opened_inside_another_is_that_steps_sub_step_and_no_row_of_its_own 
+       Assert.Equal() Failure: Collections differ at index 0 | ↓ (pos 7) | Expected: "outer [inner]" | Actual:   "outer [bar of inner]"
+RED  A_frame_closes_through_a_step_left_running_which_keeps_its_place_under_it 
+       Assert.False() Failure | Expected: False | Actual:   True
+RED  A_frame_is_closed_by_its_id_and_listed_with_it 
+       Assert.Equal() Failure: Values differ | Expected: 24 | Actual:   null
+RED  A_frame_listed_under_a_step_method_outside_a_framework_step_is_its_sub_step 
+       Assert.Equal() Failure: Collections differ at index 0 | ↓ (pos 0) | Expected: "outside a hook's step [given]" | Actual:   "given [bar]"
+RED  A_frame_opening_under_a_frame_nests_and_does_not_treat_it_as_left_running 
+       Assert.Equal() Failure: Values differ | Expected: 18 | Actual:   null
+RED  A_frame_opening_with_no_frame_below_it_treats_what_is_open_as_left_running 
+       Assert.Equal() Failure: Collections differ | ↓ (pos 1) | Expected: <generated>                               ["A hook left me running", "the first step"] | Actual:   ArraySelectIterator<ScenarioStep, string> ["
+RED  A_held_call_keeps_the_step_it_was_logged_under_when_a_later_step_confirms_it 
+       Assert.All() Failure: 2 out of 2 items in the collection did not pass. | [0]: Item:  RequestResponseLog { TestName = Pay, TestId = 9c16389956cd4eadb280ad2b8a17a3f7:Pay, Method = Kronikol.Tracking.OneOf`2[System
+RED  A_hook_in_every_scenario_leaves_the_common_Given_extracted_and_its_row_in_the_steps 
+       Assert.Equal() Failure: Collections differ at index 0 | ↓ (pos 0) | Expected: "shared" | Actual:   "Seed"
+RED  A_hook_on_one_scenario_leaves_a_sibling_as_it_would_be_with_no_hook 
+       System.ArgumentNullException : Value cannot be null. (Parameter 'source')
+RED  A_hook_row_first_and_a_When_next_extracts_nothing 
+       Assert.Null() Failure: Value is not null | Expected: null | Actual:   [ScenarioStep { Keyword = , IsAssertion = False, Text = Seed, Status = Passed, BypassReason = , Duration = , SubSteps = , Parameters = , Com
+RED  A_hook_row_keeps_its_own_failure 
+       Assert.Equal() Failure: Collections differ at index 1 | ↓ (pos 0) | Expected: "b" | Actual:   "shared"
+RED  A_hook_row_with_its_own_argument_is_never_compared 
+       Assert.Equal() Failure: Collections differ at index 1 | ↓ (pos 0) | Expected: "a" | Actual:   "shared"
+RED  A_hook_steps_failure_does_not_take_the_row_of_a_Gherkin_step_that_never_ran 
+       Assert.Equal() Failure: Values differ | Expected: Failed | Actual:   Passed
+RED  A_keyword_on_a_hook_row_does_not_read_as_the_scenario_opening_with_that_keyword 
+       Assert.Null() Failure: Value is not null | Expected: null | Actual:   [ScenarioStep { Keyword = Given, IsAssertion = False, Text = A tenant exists, Status = Passed, BypassReason = , Duration = , SubSteps = , Pa
+RED  A_later_scenarios_stamp_reads_through_its_own_background_rows 
+       Assert.Equal() Failure: Collections differ | ↓ (pos 0) | Expected: ["b0", "0"] | Actual:   [null, null]
+RED  A_nested_Gherkin_step_carries_what_the_framework_knows_about_it 
+       Assert.Single() Failure: The collection contained 2 items | Collection: [ScenarioStep { Keyword = Given, IsAssertion = False, Text = the basket is listed, Status = Failed, BypassReason = , Duration = , SubSteps
+RED  A_nested_framework_step_goes_through_the_adapters_own_mapping_at_every_depth 
+       Assert.Equal() Failure: Collections differ at index 0 | ↓ (pos 7) | Expected: "outer [middle [inner [An item is added]]]" | Actual:   "outer [bar [bar [An item is added]]]"
+RED  A_record_is_stamped_with_the_step_open_when_it_is_logged_and_with_none_when_none_is 
+       Assert.Equal() Failure: Values differ | Expected: 16 | Actual:   null
+RED  A_row_that_did_not_run_leaves_the_others_read_by_their_stamps 
+       Assert.Equal() Failure: Collections differ | ↓ (pos 0) | Expected: ["0"] | Actual:   [null]
+RED  A_scenario_with_no_step_of_its_own_lists_what_was_collected 
+       System.ArgumentNullException : Value cannot be null. (Parameter 'collection')
+RED  A_second_bypass_does_not_close_a_frame 
+       Assert.True() Failure | Expected: True | Actual:   False
+RED  A_stamp_on_a_sub_step_reads_the_top_level_step_it_is_in 
+       Assert.Equal() Failure: Collections differ | ↓ (pos 0) | Expected: ["0", "0"] | Actual:   [null, null]
+RED  A_stamp_that_names_no_row_reads_no_step 
+       Assert.Equal() Failure: Collections differ | ↓ (pos 0) | Expected: ["0", null] | Actual:   [null, null]
+RED  A_step_method_after_the_last_framework_step_stands_after_it 
+       Assert.Equal() Failure: Collections differ | ↓ (pos 2) | Expected: ["given", "when", "outside clean"] | Actual:   ["given", "when"]
+RED  A_step_method_ahead_of_steps_that_never_ran_stands_as_itself_and_they_say_they_did_not_run 
+       Assert.Equal() Failure: Values differ | Expected: 3 | Actual:   2
+RED  A_step_method_before_the_first_framework_step_stands_as_itself 
+       Assert.Equal() Failure: Collections differ at index 0 | ↓ (pos 0) | Expected: "outside seed" | Actual:   "given"
+RED  A_step_method_between_two_framework_steps_stands_between_them 
+       Assert.Equal() Failure: Collections differ at index 1 | ↓ (pos 0) | Expected: "outside block" | Actual:   "when"
+RED  A_step_method_no_Gherkin_step_opened_stands_as_itself_with_its_mark 
+       Assert.Equal() Failure: Collections differ at index 0 | ↓ (pos 0) | Expected: "Reference data is seeded" | Actual:   "a basket"
+RED  A_step_two_scenarios_hold_is_visited_once 
+       Assert.Equal() Failure: Values differ | Expected: 1 | Actual:   2
+RED  Closing_a_frame_twice_leaves_its_outcome_and_the_frame_below_it 
+       Assert.True() Failure | Expected: True | Actual:   False
+RED  Closing_with_no_id_or_a_stranger_id_leaves_the_frame_open 
+       Assert.True() Failure | Expected: True | Actual:   False
+RED  Each_scenario_keeps_its_own_background_rows 
+       Assert.Same() Failure: Values are not the same instance | Expected: ScenarioStep { Keyword = Given, IsAssertion = False, Text = a customer, Status = Passed, BypassReason = , Duration = , SubSteps = , Parameters
+RED  Only_CompleteFrame_closes_a_frame 
+       Assert.True() Failure | Expected: True | Actual:   False
+RED  Only_what_was_collected_stands_when_the_framework_lists_nothing 
+       Assert.Equal() Failure: Collections differ | ↓ (pos 0) | Expected: ["outside seed"] | Actual:   []
+RED  OpenStepOf_is_the_deepest_step_open_and_null_with_none_open 
+       Assert.Equal() Failure: Values differ | Expected: 6 | Actual:   null
+RED  The_first_native_of_a_frame_listed_twice_takes_it_and_the_second_lists_no_row 
+       Assert.Equal() Failure: Collections differ | Expected: ["first"] | Actual:   ["first", "not run second"] | ↑ (pos 1)
+RED  Two_left_running_one_ending_before_the_frame_closes_keep_their_rows 
+       Assert.Equal() Failure: Values differ | Expected: Failed | Actual:   Passed
+RED  What_did_not_run_stands_before_a_step_method_after_the_last_that_did 
+       Assert.Equal() Failure: Collections differ at index 1 | ↓ (pos 0) | Expected: "not run then" | Actual:   "then"
+RED  With_bars_hidden_a_stamped_call_keeps_its_step_and_a_call_after_it_the_same 
+       Assert.Equal() Failure: Collections differ | ↓ (pos 0) | Expected: ["0", "0", "1"] | Actual:   [null, null, null]
+RED  With_no_frame_at_all_what_was_collected_stands_first 
+       Assert.Equal() Failure: Collections differ at index 0 | ↓ (pos 0) | Expected: "outside it failed in a hook" | Actual:   "given"
+--- green on published (each must be a control or a guard):
+   A_completion_that_finds_nothing_finishes_the_step_left_last
+   A_failed_frame_keeps_its_message
+   A_frame_shares_one_keyword_sequence_with_a_step_method
+   A_framework_step_whose_frame_is_not_among_what_was_listed_reads_as_not_run
+   A_framework_step_with_no_frame_did_not_run_and_stands_after_the_last_that_did
+   A_hook_row_before_the_remaining_Given_extracts_nothing
+   A_hook_steps_row_takes_a_call_by_its_stamp_and_no_step_moves
+   A_row_rebuilt_by_hand_among_collected_rows_keeps_its_calls
+   A_row_that_did_not_run_is_never_compared
+   A_scenario_where_nothing_ran_lists_no_steps
+   A_scenario_whose_only_rows_a_framework_step_did_not_run_is_not_a_member
+   A_stamped_call_reads_the_step_it_names_and_an_unstamped_one_the_step_before_it
+   A_step_method_inside_a_frame_is_its_sub_step_with_an_id_of_its_own
+   A_step_object_listed_twice_is_taken_once
+   A_sub_step_no_framework_step_opened_stays_as_it_was_and_carries_no_mark
+   A_tracked_assertion_has_no_id_as_no_call_can_be_logged_under_it
+   Ids_never_repeat_across_ClearSteps_or_across_tests
+   No_data_file_holds_a_steps_id_or_its_marks
+   No_test_opens_no_frame_and_closing_it_does_nothing
+   Nor_does_a_record_on_the_ingest_feed
+   Nor_does_the_compressed_file
+   Nothing_about_a_frame_is_public
+   Nothing_outside_a_framework_step_pairs_each_with_its_frame
+   Nothing_ran_and_nothing_is_listed
+   Results_no_step_decorator_ran_for_pair_by_position_and_their_rows_carry_no_id
+   Rows_built_by_hand_over_the_collectors_sub_steps_are_read_against_the_bars
+   Rows_with_no_mark_as_an_ingests_have_read_as_they_always_did
+   Steps_built_by_hand_pair_by_position_and_their_rows_carry_no_id
+   Steps_built_by_hand_pair_by_position_whatever_was_collected_and_their_rows_carry_no_id
+   The_mapped_row_is_what_the_adapter_made_of_it
+   The_stamps_are_never_read_where_every_row_lacks_an_id_as_an_ingest_or_a_hand_built_report_does
+   What_the_weaver_binds_to_keeps_its_public_signature_and_returns_nothing
+   With_no_frame_two_step_methods_overlap_as_they_always_have
+--- not seen: []

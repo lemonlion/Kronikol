@@ -1,0 +1,126 @@
+=================== plain-control (this)
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of Con.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+Report diagnostics: 8 log entries across 1 test(s).
+generator returned
+files: AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json service.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl TestRunReport.labs.html
+degraded: {}
+s0  Plain-control › Control  [Passed]  0s
+  0     Given a thing  0.04s  [i0]
+  1     When another thing  [i2]
+2 calls · interactions s0 · flow s0
+step  method  path    calls errors   median      max bodies     bytes
+0     POST    /given      1      0                        1       4 B
+1     POST    /when       1      0                        1       4 B
+2 buckets
+=================== mix-new-row (this)
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of Con.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+Report diagnostics: 12 log entries across 1 test(s).
+generator returned
+files: AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json service.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl TestRunReport.labs.html
+degraded: {}
+s0  Mix-new-row › One row rebuilt  [Passed]  0s
+  0     Given a thing  0.03s  [i0]
+  1     When another thing
+  2     Then the last thing  [i4]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+step  method  path    calls errors   median      max bodies     bytes
+0     POST    /given      1      0                        1       4 B
+-     POST    /when       1      0                        1       4 B
+2     POST    /then       1      0                        1       4 B
+3 buckets
+=================== mix-background (this)
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of Con.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+Report diagnostics: 12 log entries across 1 test(s).
+generator returned
+files: AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json service.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl TestRunReport.labs.html
+degraded: {}
+s0  Mix-background › Background rebuilt  [Passed]  0s
+  b0    Given a shop  0.03s
+  0     When a basket  [i2]
+  1     Then it is empty  [i4]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /shop        1      0                        1       4 B
+0     POST    /basket      1      0                        1       4 B
+1     POST    /check       1      0                        1       4 B
+3 buckets
+=================== hand-first-line (this)
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of Con.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+Report diagnostics: 16 log entries across 1 test(s).
+generator returned
+files: AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json service.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl TestRunReport.labs.html
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'the order is placed for cash'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  Hand-first-line › Shared first line  [Passed]  0s
+  0     When the order is placed for cash
+  1     And the order is placed for card  [i2]
+  2     Then it is confirmed
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /seed         1      0                        1       4 B
+1     POST    /cash         1      0                        1       4 B
+-     POST    /card         1      0                        1       4 B
+-     POST    /confirm      1      0                        1       4 B
+4 buckets
+=================== hand-400 (this)
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of Con.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+Report diagnostics: 16 log entries across 1 test(s).
+generator returned
+files: AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json service.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl TestRunReport.labs.html
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'the customer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx… (×2; summary --json lists all 2)
+s0  Hand-400 › Shared 400  [Passed]  0s
+  0     When the customer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…
+  1     And the customer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…  [i2]
+  2     Then it is confirmed
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /seed         1      0                        1       4 B
+1     POST    /cash         1      0                        1       4 B
+-     POST    /card         1      0                        1       4 B
+-     POST    /confirm      1      0                        1       4 B
+4 buckets
+=================== hand-fold (this)
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of Con.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+Report diagnostics: 16 log entries across 1 test(s).
+generator returned
+files: AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json service.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl TestRunReport.labs.html
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'a new order'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  Hand-fold › Fold  [Passed]  0s
+  0     When a new order
+  1     And anew order  [i2]
+  2     Then it is confirmed
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /seed         1      0                        1       4 B
+1     POST    /n            1      0                        1       4 B
+-     POST    /m            1      0                        1       4 B
+-     POST    /confirm      1      0                        1       4 B
+4 buckets
+=================== manual-bar (this)
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of Con.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+Report diagnostics: 8 log entries across 1 test(s).
+generator returned
+files: AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json service.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl TestRunReport.labs.html
+degraded: {'StepAttributionMismatch': 1}
+! Step marker 1 does not match step 'a thing'; interactions after it carry no stepPath.
+s0  Manual-bar › Manual bar  [Passed]  0s
+  0     Given a thing  0.02s  [i0]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s0 · flow s0
+step  method  path      calls errors   median      max bodies     bytes
+0     POST    /given        1      0                        1       4 B
+-     POST    /cleanup      1      0                        1       4 B
+2 buckets
+=================== null-test-id (this)
+generator threw ArgumentNullException: Value cannot be null. (Parameter 'key')
+files: 
+=================== null-scenario-id (this)
+generator threw ArgumentNullException: Value cannot be null. (Parameter 'key')
+files: 

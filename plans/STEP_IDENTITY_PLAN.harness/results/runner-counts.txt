@@ -1,0 +1,6 @@
+dotnet test, at 5.28.2 (`run-lanes.sh`, `prototype/measure-cut.sh`; the same on 5.27.13):
+repro/ on Reqnroll xUnit v2, xUnit v3, TUnit, floor 3.0.1, published and prototype: Failed 9, Passed 19, Total 28
+The nine, on purpose: T05 T06 T07 T08 T13 T15 T18 T22 T26
+repro-more/: Failed 2, Passed 14, Total 16 (E07, E08)
+repro-bddfy/: Passed 8. repro-bddfy-retry/: Failed 1, Passed 2. repro-lightbdd/ prototype: Failed 1 (L3), Passed 8; published and R1 alone: Failed 2 (L1, L3), Passed 7.
+review-probes/z-rq without BG10: Failed 10, Passed 17, Skipped 4, Total 31, on both builds. BG10 alone: assembly cleanup KeyNotFoundException on both.

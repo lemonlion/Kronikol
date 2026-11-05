@@ -1,0 +1,513 @@
+=== ReqNRoll
+
+=== LightBDD
+SCENARIO An Order Should Progress Through All Status Transitions To Completion | result Passed Passed
+  published
+    0        GIVEN  Passed     A pancake batch has been created
+    0.0      None   Passed     Milk is retrieved from the milk endpoint
+    0.1      None   Passed     The milk response should be successful
+    0.1.0    None   Passed     Milk steps response message status code should be OK
+    0.2      None   Passed     Eggs are retrieved from the eggs endpoint
+    0.3      None   Passed     The eggs response should be successful
+    0.3.0    None   Passed     Eggs steps response message status code should be OK
+    0.4      None   Passed     Flour is retrieved from the flour endpoint
+    0.5      None   Passed     The flour response should be successful
+    0.5.0    None   Passed     Flour steps response message status code should be OK
+    0.6      None   Passed     A pancake request is submitted with all ingredients
+    0.7      None   Passed     The pancake batch response should be successful
+    0.7.0    None   Passed     Pancake steps response message status code should be Created
+    0.7.1    None   Passed     Response content is valid json should be true
+    0.7.2    None   Passed     Pancake steps response should not be null
+    0.7.3    None   Passed     Pancake steps response batch id should not be empty
+    1        AND    Passed     A breakfast order has been placed for the batch
+    1.0      None   Passed     An order request is submitted for the pancake batch
+    1.1      None   Passed     The order creation response should be successful
+    1.1.0    None   Passed     Order steps response message status code should be Created
+    1.1.1    None   Passed     Response content is valid json should be true
+    1.1.2    None   Passed     Order steps response should not be null
+    1.2      None   Passed     The order id is captured from the order response
+    1.2.0    None   Passed     Order id should not be empty
+    2        WHEN   Passed     The order is progressed through the complete lifecycle
+    2.0      None   Passed     The order status is updated to preparing
+    2.1      None   Passed     The preparing transition should succeed
+    2.1.0    None   Passed     Patch steps response message status code should be OK
+    2.2      None   Passed     The order status is updated to ready
+    2.3      None   Passed     The ready transition should succeed
+    2.3.0    None   Passed     Patch steps response message status code should be OK
+    2.4      None   Passed     The order status is updated to completed
+    2.5      None   Passed     The completed transition should succeed
+    2.5.0    None   Passed     Patch steps response message status code should be OK
+    3        THEN   Passed     The completed order should be retrievable with all details
+    3.0      None   Passed     The order is retrieved by id
+    3.1      None   Passed     The retrieval response should be ok
+    3.1.0    None   Passed     Retrieval steps response message status code should be OK
+    3.2      None   Passed     The retrieved order should be valid json
+    3.2.0    None   Passed     Response content is valid json should be true
+    3.3      None   Passed     The retrieved order status should be completed
+    3.3.0    None   Passed     Retrieval steps response status should be 'Completed'
+    3.4      None   Passed     The retrieved customer name should match
+    3.4.0    None   Passed     Retrieval steps response customer name should be 'LifecycleTestCustomer_#'
+    3.5      None   Passed     The retrieved items should match
+    3.5.0    None   Passed     Retrieval steps response items should have count 1
+    3.6      None   Passed     The retrieved table number should match
+    3.6.0    None   Passed     Retrieval steps response table number should be 4
+    4        AND    Passed     The order timestamps should be recent
+    4.0      None   Passed     Retrieval steps response created at should be close to '05/11/2026 08:50:31', '00:02:00'
+    5        AND    Passed     The order id should be a valid guid format
+    5.0      None   Passed     Retrieval steps response order id should match regex @"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
+    6        AND    Passed     An audit log entry should exist for the order
+    6.0      None   Passed     Audit logs are retrieved for the order
+    6.0.0    None   Passed     Audit log response status code should be OK
+    6.1      None   Passed     The audit logs should contain the order creation entry
+    6.1.0    None   Passed     Audit logs should contain [ l => l.EntityId == '#' && l.Action == AuditLogDefaults.CreatedAction
+    7        AND    Passed     The cow service should have received a milk request
+    7.0      None   Passed     Requests should contain [ r => r.RequestUri.AbsolutePath == "/milk" && r.Method == HttpMethod.Ge
+    8        AND    Passed     The kitchen service should have received a preparation request
+    8.0      None   Passed     Requests should contain [ r => r.RequestUri.AbsolutePath == "/prepare" && r.Method == HttpMethod
+    call x1 GET http://localhost/milk @ 0
+    call x1 GET http://localhost:5131/milk @ 0
+    call x1 GET http://localhost/eggs @ 0
+    call x1 GET http://localhost/flour @ 0
+    call x1 POST http://localhost/pancakes @ 0
+    call x1 Create https://localhost:9999/colls/orders @ 0
+    call x1 Consume (Kafka) kafka:///breakfast_recipe_logs @ 0
+    call x1 Insert sql://localhost/main/RecipeReports @ 0
+    call x1 Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs @ 0
+    call x1 Consume (Pub/Sub) pubsub:///breakfast_batch_completions @ 0
+    call x1 Insert sql://localhost/main/BatchCompletionRecords @ 0
+    call x1 Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent @ 0
+    call x1 Consume (Event Hub) eventhub:///breakfast-equipment-alerts @ 0
+    call x1 Insert sql://localhost/main/EquipmentAlerts @ 0
+    call x1 POST http://localhost/orders @ 1
+    call x2 Create https://localhost:9999/colls/orders @ 1
+    call x1 Publish (Event Grid) eventgrid://topics/OrderCreatedEvent @ 1
+    call x1 POST http://localhost:5134/prepare @ 1
+    call x1 SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrder @ 1
+    call x1 Select sql://localhost/main/OrderSummaries @ 1
+    call x1 Insert sql://localhost/main/OrderSummaries @ 1
+    call x3 PATCH http://localhost/orders/#/status @ 2
+    call x3 Read https://localhost:9999/colls/orders/docs/# @ 2
+    call x3 Upsert https://localhost:9999/colls/orders @ 2
+    call x3 Create https://localhost:9999/colls/orders @ 2
+    call x1 GET http://localhost/orders/# @ 3
+    call x1 Read https://localhost:9999/colls/orders/docs/# @ 3
+    call x1 GET http://localhost/audit-logs @ 6
+    call x1 Query https://localhost:9999/colls/orders @ 6
+  preview
+    0        GIVEN  Passed     A pancake batch has been created
+    0.0      None   Passed     Milk is retrieved from the milk endpoint
+    0.1      None   Passed     The milk response should be successful
+    0.1.0    None   Passed     Milk steps response message status code should be OK
+    0.2      None   Passed     Eggs are retrieved from the eggs endpoint
+    0.3      None   Passed     The eggs response should be successful
+    0.3.0    None   Passed     Eggs steps response message status code should be OK
+    0.4      None   Passed     Flour is retrieved from the flour endpoint
+    0.5      None   Passed     The flour response should be successful
+    0.5.0    None   Passed     Flour steps response message status code should be OK
+    0.6      None   Passed     A pancake request is submitted with all ingredients
+    0.7      None   Passed     The pancake batch response should be successful
+    0.7.0    None   Passed     Pancake steps response message status code should be Created
+    0.7.1    None   Passed     Response content is valid json should be true
+    0.7.2    None   Passed     Pancake steps response should not be null
+    0.7.3    None   Passed     Pancake steps response batch id should not be empty
+    1        AND    Passed     A breakfast order has been placed for the batch
+    1.0      None   Passed     An order request is submitted for the pancake batch
+    1.1      None   Passed     The order creation response should be successful
+    1.1.0    None   Passed     Order steps response message status code should be Created
+    1.1.1    None   Passed     Response content is valid json should be true
+    1.1.2    None   Passed     Order steps response should not be null
+    1.2      None   Passed     The order id is captured from the order response
+    1.2.0    None   Passed     Order id should not be empty
+    2        WHEN   Passed     The order is progressed through the complete lifecycle
+    2.0      None   Passed     The order status is updated to preparing
+    2.1      None   Passed     The preparing transition should succeed
+    2.1.0    None   Passed     Patch steps response message status code should be OK
+    2.2      None   Passed     The order status is updated to ready
+    2.3      None   Passed     The ready transition should succeed
+    2.3.0    None   Passed     Patch steps response message status code should be OK
+    2.4      None   Passed     The order status is updated to completed
+    2.5      None   Passed     The completed transition should succeed
+    2.5.0    None   Passed     Patch steps response message status code should be OK
+    3        THEN   Passed     The completed order should be retrievable with all details
+    3.0      None   Passed     The order is retrieved by id
+    3.1      None   Passed     The retrieval response should be ok
+    3.1.0    None   Passed     Retrieval steps response message status code should be OK
+    3.2      None   Passed     The retrieved order should be valid json
+    3.2.0    None   Passed     Response content is valid json should be true
+    3.3      None   Passed     The retrieved order status should be completed
+    3.3.0    None   Passed     Retrieval steps response status should be 'Completed'
+    3.4      None   Passed     The retrieved customer name should match
+    3.4.0    None   Passed     Retrieval steps response customer name should be 'LifecycleTestCustomer_#'
+    3.5      None   Passed     The retrieved items should match
+    3.5.0    None   Passed     Retrieval steps response items should have count 1
+    3.6      None   Passed     The retrieved table number should match
+    3.6.0    None   Passed     Retrieval steps response table number should be 4
+    4        AND    Passed     The order timestamps should be recent
+    4.0      None   Passed     Retrieval steps response created at should be close to '05/11/2026 08:57:46', '00:02:00'
+    5        AND    Passed     The order id should be a valid guid format
+    5.0      None   Passed     Retrieval steps response order id should match regex @"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
+    6        AND    Passed     An audit log entry should exist for the order
+    6.0      None   Passed     Audit logs are retrieved for the order
+    6.0.0    None   Passed     Audit log response status code should be OK
+    6.1      None   Passed     The audit logs should contain the order creation entry
+    6.1.0    None   Passed     Audit logs should contain [ l => l.EntityId == '#' && l.Action == AuditLogDefaults.CreatedAction
+    7        AND    Passed     The cow service should have received a milk request
+    7.0      None   Passed     Requests should contain [ r => r.RequestUri.AbsolutePath == "/milk" && r.Method == HttpMethod.Ge
+    8        AND    Passed     The kitchen service should have received a preparation request
+    8.0      None   Passed     Requests should contain [ r => r.RequestUri.AbsolutePath == "/prepare" && r.Method == HttpMethod
+    call x1 GET http://localhost/milk @ 0
+    call x1 GET http://localhost:5131/milk @ 0
+    call x1 GET http://localhost/eggs @ 0
+    call x1 GET http://localhost/flour @ 0
+    call x1 POST http://localhost/pancakes @ 0
+    call x1 Create https://localhost:9999/colls/orders @ 0
+    call x1 Consume (Kafka) kafka:///breakfast_recipe_logs @ 0
+    call x1 Insert sql://localhost/main/RecipeReports @ 0
+    call x1 Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs @ 0
+    call x1 Consume (Pub/Sub) pubsub:///breakfast_batch_completions @ 0
+    call x1 Insert sql://localhost/main/BatchCompletionRecords @ 0
+    call x1 Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent @ 0
+    call x1 Consume (Event Hub) eventhub:///breakfast-equipment-alerts @ 0
+    call x1 Insert sql://localhost/main/EquipmentAlerts @ 0
+    call x1 POST http://localhost/orders @ 1
+    call x2 Create https://localhost:9999/colls/orders @ 1
+    call x1 Publish (Event Grid) eventgrid://topics/OrderCreatedEvent @ 1
+    call x1 POST http://localhost:5134/prepare @ 1
+    call x1 SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrder @ 1
+    call x1 Select sql://localhost/main/OrderSummaries @ 1
+    call x1 Insert sql://localhost/main/OrderSummaries @ 1
+    call x3 PATCH http://localhost/orders/#/status @ 2
+    call x3 Read https://localhost:9999/colls/orders/docs/# @ 2
+    call x3 Upsert https://localhost:9999/colls/orders @ 2
+    call x3 Create https://localhost:9999/colls/orders @ 2
+    call x1 GET http://localhost/orders/# @ 3
+    call x1 Read https://localhost:9999/colls/orders/docs/# @ 3
+    call x1 GET http://localhost/audit-logs @ 6
+    call x1 Query https://localhost:9999/colls/orders @ 6
+
+   1 An Order Should Progress Through All Status Transitions To Completion
+=== BDDfy
+SCENARIO Creating an order should produce an audit log entry and events | result Passed Passed
+  published
+    0        Given  Passed     a pancake batch is created and order request is ready
+    1        When   Passed     the order is submitted
+    2        Then   Passed     the order should be created successfully
+    2.0      None   Passed     Order steps response message status code should be Created
+    2.1      None   Passed     Response content is valid json should be true
+    2.2      None   Passed     Order steps response customer name should be 'TestCustomer_#'
+    2.3      None   Passed     Order steps response items should have count 1
+    3        And    Passed     an order created event should have been published
+    4        And    Passed     a recipe log should have been published to kafka
+    4.0      None   Passed     Recipe log messages should contain [ m => m.Message.RecipeType == OrderDefaults.PancakeItemType,
+    call x1 GET http://localhost/milk @ 0
+    call x1 GET http://localhost:5161/milk @ 0
+    call x1 GET http://localhost/eggs @ 0
+    call x1 GET http://localhost/flour @ 0
+    call x1 POST http://localhost/pancakes @ 0
+    call x1 Create https://localhost:9999/colls/orders @ 0
+    call x1 Consume (Kafka) kafka:///breakfast_recipe_logs @ 0
+    call x1 Insert sql://localhost/main/RecipeReports @ 0
+    call x1 Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs @ 0
+    call x1 Consume (Pub/Sub) pubsub:///breakfast_batch_completions @ 0
+    call x1 Insert sql://localhost/main/BatchCompletionRecords @ 0
+    call x1 Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent @ 0
+    call x1 Consume (Event Hub) eventhub:///breakfast-equipment-alerts @ 0
+    call x1 Insert sql://localhost/main/EquipmentAlerts @ 0
+    call x1 POST http://localhost/orders @ 1
+    call x2 Create https://localhost:9999/colls/orders @ 1
+    call x1 Publish (Event Grid) eventgrid://topics/OrderCreatedEvent @ 1
+    call x1 POST http://localhost:5164/prepare @ 1
+    call x1 SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrder @ 1
+    call x1 Select sql://localhost/main/OrderSummaries @ 1
+    call x1 Insert sql://localhost/main/OrderSummaries @ 1
+  preview
+    0        Given  Passed     a pancake batch is created and order request is ready
+    0.0      None   Passed     Milk steps response message status code should be OK
+    0.1      None   Passed     Eggs steps response message status code should be OK
+    0.2      None   Passed     Flour steps response message status code should be OK
+    0.3      None   Passed     Pancake steps response message status code should be Created
+    0.4      None   Passed     Response content is valid json should be true
+    0.5      None   Passed     Pancake steps response should not be null
+    0.6      None   Passed     Pancake steps response batch id should not be empty
+    1        When   Passed     the order is submitted
+    2        Then   Passed     the order should be created successfully
+    2.0      None   Passed     Order steps response message status code should be Created
+    2.1      None   Passed     Response content is valid json should be true
+    2.2      None   Passed     Order steps response customer name should be 'TestCustomer_#'
+    2.3      None   Passed     Order steps response items should have count 1
+    3        And    Passed     an order created event should have been published
+    3.0      None   Passed     Order created events should contain [ e => e.CustomerName == 'TestCustomer_#' ]
+    4        And    Passed     a recipe log should have been published to kafka
+    4.0      None   Passed     Recipe log messages should contain [ m => m.Message.RecipeType == OrderDefaults.PancakeItemType,
+    call x1 GET http://localhost/milk @ 0
+    call x1 GET http://localhost:5161/milk @ 0
+    call x1 GET http://localhost/eggs @ 0
+    call x1 GET http://localhost/flour @ 0
+    call x1 POST http://localhost/pancakes @ 0
+    call x1 Create https://localhost:9999/colls/orders @ 0
+    call x1 Consume (Kafka) kafka:///breakfast_recipe_logs @ 0
+    call x1 Insert sql://localhost/main/RecipeReports @ 0
+    call x1 Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs @ 0
+    call x1 Consume (Pub/Sub) pubsub:///breakfast_batch_completions @ 0
+    call x1 Insert sql://localhost/main/BatchCompletionRecords @ 0
+    call x1 Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent @ 0
+    call x1 Consume (Event Hub) eventhub:///breakfast-equipment-alerts @ 0
+    call x1 Insert sql://localhost/main/EquipmentAlerts @ 0
+    call x1 POST http://localhost/orders @ 1
+    call x2 Create https://localhost:9999/colls/orders @ 1
+    call x1 Publish (Event Grid) eventgrid://topics/OrderCreatedEvent @ 1
+    call x1 POST http://localhost:5164/prepare @ 1
+    call x1 SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrder @ 1
+    call x1 Select sql://localhost/main/OrderSummaries @ 1
+    call x1 Insert sql://localhost/main/OrderSummaries @ 1
+SCENARIO Listing waste by recipe should return matching records | result Passed Passed
+  published
+    0        Given  Passed     an ingredient waste record exists
+    1        When   Passed     the waste is listed by recipe
+    2        Then   Passed     the list response should contain the waste record
+    2.0      None   Passed     Get steps response message status code should be OK
+    2.1      None   Passed     Response content is valid json should be true
+    2.2      None   Passed     Get steps list response should contain [ w => w.WasteId == '#' ]
+    call x1 POST http://localhost/ingredient-waste @ 0
+    call x1 Insert https://bigquery.googleapis.com/breakfast_analytics/table/ingre @ 0
+    call x1 GET http://localhost/ingredient-waste/recipe/Pancakes-# @ 1
+    call x1 Create https://bigquery.googleapis.com/job @ 1
+    call x1 Query https://bigquery.googleapis.com/query/job_# @ 1
+  preview
+    0        Given  Passed     an ingredient waste record exists
+    0.0      None   Passed     Post steps response message status code should be Created
+    0.1      None   Passed     Response content is valid json should be true
+    1        When   Passed     the waste is listed by recipe
+    2        Then   Passed     the list response should contain the waste record
+    2.0      None   Passed     Get steps response message status code should be OK
+    2.1      None   Passed     Response content is valid json should be true
+    2.2      None   Passed     Get steps list response should contain [ w => w.WasteId == '#' ]
+    call x1 POST http://localhost/ingredient-waste @ 0
+    call x1 Insert https://bigquery.googleapis.com/breakfast_analytics/table/ingre @ 0
+    call x1 GET http://localhost/ingredient-waste/recipe/Pancakes-# @ 1
+    call x1 Create https://bigquery.googleapis.com/job @ 1
+    call x1 Query https://bigquery.googleapis.com/query/job_# @ 1
+SCENARIO Creating an order should write an outbox message that gets processed | result Passed Passed
+  published
+    0        Given  Passed     a pancake batch is created and order request is ready
+    1        When   Passed     the order is submitted
+    2        Then   Passed     the order should be created successfully
+    2.0      None   Passed     Order steps response message status code should be Created
+    2.1      None   Passed     Response content is valid json should be true
+    2.2      None   Passed     Order steps response customer name should be 'TestCustomer_#'
+    2.3      None   Passed     Order steps response items should have count 1
+    3        And    Passed     an outbox message should have been written and processed
+    call x1 GET http://localhost/milk @ 0
+    call x1 GET http://localhost:5161/milk @ 0
+    call x1 GET http://localhost/eggs @ 0
+    call x1 GET http://localhost/flour @ 0
+    call x1 POST http://localhost/pancakes @ 0
+    call x1 Create https://localhost:9999/colls/orders @ 0
+    call x1 Consume (Kafka) kafka:///breakfast_recipe_logs @ 0
+    call x1 Insert sql://localhost/main/RecipeReports @ 0
+    call x1 Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs @ 0
+    call x1 Consume (Pub/Sub) pubsub:///breakfast_batch_completions @ 0
+    call x1 Insert sql://localhost/main/BatchCompletionRecords @ 0
+    call x1 Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent @ 0
+    call x1 Consume (Event Hub) eventhub:///breakfast-equipment-alerts @ 0
+    call x1 Insert sql://localhost/main/EquipmentAlerts @ 0
+    call x1 POST http://localhost/orders @ 1
+    call x2 Create https://localhost:9999/colls/orders @ 1
+    call x1 Publish (Event Grid) eventgrid://topics/OrderCreatedEvent @ 1
+    call x1 POST http://localhost:5164/prepare @ 1
+    call x1 SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrder @ 1
+    call x1 Select sql://localhost/main/OrderSummaries @ 1
+    call x1 Insert sql://localhost/main/OrderSummaries @ 1
+    call x2 Query https://localhost:9999/colls/orders @ 3
+  preview
+    0        Given  Passed     a pancake batch is created and order request is ready
+    0.0      None   Passed     Milk steps response message status code should be OK
+    0.1      None   Passed     Eggs steps response message status code should be OK
+    0.2      None   Passed     Flour steps response message status code should be OK
+    0.3      None   Passed     Pancake steps response message status code should be Created
+    0.4      None   Passed     Response content is valid json should be true
+    0.5      None   Passed     Pancake steps response should not be null
+    0.6      None   Passed     Pancake steps response batch id should not be empty
+    1        When   Passed     the order is submitted
+    2        Then   Passed     the order should be created successfully
+    2.0      None   Passed     Order steps response message status code should be Created
+    2.1      None   Passed     Response content is valid json should be true
+    2.2      None   Passed     Order steps response customer name should be 'TestCustomer_#'
+    2.3      None   Passed     Order steps response items should have count 1
+    3        And    Passed     an outbox message should have been written and processed
+    3.0      None   Passed     Outbox messages should contain [ m => m.EventType == 'OrderCreatedEvent', $"an outbox message sh
+    3.1      None   Passed     Outbox messages should contain [ m => m.EventType == 'OrderCreatedEvent' && m.Status == OutboxSt
+    call x1 GET http://localhost/milk @ 0
+    call x1 GET http://localhost:5161/milk @ 0
+    call x1 GET http://localhost/eggs @ 0
+    call x1 GET http://localhost/flour @ 0
+    call x1 POST http://localhost/pancakes @ 0
+    call x1 Create https://localhost:9999/colls/orders @ 0
+    call x1 Consume (Kafka) kafka:///breakfast_recipe_logs @ 0
+    call x1 Insert sql://localhost/main/RecipeReports @ 0
+    call x1 Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs @ 0
+    call x1 Consume (Pub/Sub) pubsub:///breakfast_batch_completions @ 0
+    call x1 Insert sql://localhost/main/BatchCompletionRecords @ 0
+    call x1 Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent @ 0
+    call x1 Consume (Event Hub) eventhub:///breakfast-equipment-alerts @ 0
+    call x1 Insert sql://localhost/main/EquipmentAlerts @ 0
+    call x1 POST http://localhost/orders @ 1
+    call x2 Create https://localhost:9999/colls/orders @ 1
+    call x1 Publish (Event Grid) eventgrid://topics/OrderCreatedEvent @ 1
+    call x1 POST http://localhost:5164/prepare @ 1
+    call x1 SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrder @ 1
+    call x1 Select sql://localhost/main/OrderSummaries @ 1
+    call x1 Insert sql://localhost/main/OrderSummaries @ 1
+    call x2 Query https://localhost:9999/colls/orders @ 3
+SCENARIO Order summaries should contain ingested order data | result Passed Passed
+  published
+    0        Given  Passed     a pancake batch has been created
+    1        And    Passed     a breakfast order has been placed for the batch
+    2        When   Passed     the order summaries are queried via graphql
+    3        Then   Passed     the response should contain the ingested order summary
+    3.0      None   Passed     Graph ql steps response message status code should be OK
+    3.1      None   Passed     Graph ql steps order summaries should contain [ o => o.OrderId == '#' && o.CustomerName == 'Test
+    call x1 GET http://localhost/milk @ 0
+    call x1 GET http://localhost:5161/milk @ 0
+    call x1 GET http://localhost/eggs @ 0
+    call x1 GET http://localhost/flour @ 0
+    call x1 POST http://localhost/pancakes @ 0
+    call x1 Create https://localhost:9999/colls/orders @ 0
+    call x1 Consume (Kafka) kafka:///breakfast_recipe_logs @ 0
+    call x1 Insert sql://localhost/main/RecipeReports @ 0
+    call x1 Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs @ 0
+    call x1 Consume (Pub/Sub) pubsub:///breakfast_batch_completions @ 0
+    call x1 Insert sql://localhost/main/BatchCompletionRecords @ 0
+    call x1 Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent @ 0
+    call x1 Consume (Event Hub) eventhub:///breakfast-equipment-alerts @ 0
+    call x1 Insert sql://localhost/main/EquipmentAlerts @ 0
+    call x1 POST http://localhost/orders @ 1
+    call x2 Create https://localhost:9999/colls/orders @ 1
+    call x1 Publish (Event Grid) eventgrid://topics/OrderCreatedEvent @ 1
+    call x1 POST http://localhost:5164/prepare @ 1
+    call x1 SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrder @ 1
+    call x1 Select sql://localhost/main/OrderSummaries @ 1
+    call x1 Insert sql://localhost/main/OrderSummaries @ 1
+    call x1 POST http://localhost/graphql @ 2
+    call x1 Select sql://localhost/main/OrderSummaries @ 2
+  preview
+    0        Given  Passed     a pancake batch has been created
+    0.0      None   Passed     Milk steps response message status code should be OK
+    0.1      None   Passed     Eggs steps response message status code should be OK
+    0.2      None   Passed     Flour steps response message status code should be OK
+    0.3      None   Passed     Pancake steps response message status code should be Created
+    0.4      None   Passed     Response content is valid json should be true
+    0.5      None   Passed     Pancake steps response should not be null
+    0.6      None   Passed     Pancake steps response batch id should not be empty
+    1        And    Passed     a breakfast order has been placed for the batch
+    1.0      None   Passed     Order steps response message status code should be Created
+    1.1      None   Passed     Response content is valid json should be true
+    1.2      None   Passed     Order steps response should not be null
+    1.3      None   Passed     Order id should not be empty
+    2        When   Passed     the order summaries are queried via graphql
+    3        Then   Passed     the response should contain the ingested order summary
+    3.0      None   Passed     Graph ql steps response message status code should be OK
+    3.1      None   Passed     Graph ql steps order summaries should contain [ o => o.OrderId == '#' && o.CustomerName == 'Test
+    call x1 GET http://localhost/milk @ 0
+    call x1 GET http://localhost:5161/milk @ 0
+    call x1 GET http://localhost/eggs @ 0
+    call x1 GET http://localhost/flour @ 0
+    call x1 POST http://localhost/pancakes @ 0
+    call x1 Create https://localhost:9999/colls/orders @ 0
+    call x1 Consume (Kafka) kafka:///breakfast_recipe_logs @ 0
+    call x1 Insert sql://localhost/main/RecipeReports @ 0
+    call x1 Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs @ 0
+    call x1 Consume (Pub/Sub) pubsub:///breakfast_batch_completions @ 0
+    call x1 Insert sql://localhost/main/BatchCompletionRecords @ 0
+    call x1 Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent @ 0
+    call x1 Consume (Event Hub) eventhub:///breakfast-equipment-alerts @ 0
+    call x1 Insert sql://localhost/main/EquipmentAlerts @ 0
+    call x1 POST http://localhost/orders @ 1
+    call x2 Create https://localhost:9999/colls/orders @ 1
+    call x1 Publish (Event Grid) eventgrid://topics/OrderCreatedEvent @ 1
+    call x1 POST http://localhost:5164/prepare @ 1
+    call x1 SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrder @ 1
+    call x1 Select sql://localhost/main/OrderSummaries @ 1
+    call x1 Insert sql://localhost/main/OrderSummaries @ 1
+    call x1 POST http://localhost/graphql @ 2
+    call x1 Select sql://localhost/main/OrderSummaries @ 2
+
+   1 Creating an order should produce an audit log entry and events
+   1 Listing waste by recipe should return matching records
+   1 Creating an order should write an outbox message that gets processed
+   1 Order summaries should contain ingested order data
+   1 Streaming order updates should return the current status
+   1 Invalid status transition should return conflict [fromStatus: "Ready", toStatus: "Preparing"]
+   1 Valid status transition should update the order [fromStatus: "Ready", toStatus: "Completed"]
+   1 Listing timings by station should return matching records
+   1 Equipment alerts should contain data ingested via event hub consumer
+   1 Valid waffle request with all ingredients should return a fresh batch
+   1 Previously created order should be retrievable by id
+   1 Valid apple cinnamon muffin request should return a fresh batch
+   1 Pancake request with more toppings than allowed should return bad request
+   1 Audit logs should be returned in descending timestamp order
+   1 Valid pancake request with all ingredients should return a fresh batch
+   1 Deleting a reading should remove it from the list
+   1 Invalid status transition should return conflict [fromStatus: "Preparing", toStatus: "Cancelled"]
+   1 Order at maximum items per order should be accepted
+   1 Listing reviews by recipe should return matching reviews
+   1 Order exceeding maximum items per order should be rejected
+   1 Updating customer preferences should return the updated preferences
+   1 Health check should report degraded when downstream service returns non success status
+   1 Order status via grpc should return order details
+   1 Retrieving an existing staff member should return the member
+   1 Updating an existing note should return the updated note
+   1 Cancelling a reservation should return the cancelled reservation
+   1 Menu should return cached results on subsequent requests
+   1 Valid order should be created and an event published
+   1 Listing notes by recipe should return matching notes
+   1 Different muffin recipes should produce the expected batch [recipeName: "Classic", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Plain Flour, Apples = Granny Smith, Cinnamon = Ceylon }, Toppings = System.Collections.Generic.List`1[Breakf…]
+   1 Invalid status transition should return conflict [fromStatus: "Completed", toStatus: "Preparing"]
+   1 Listing all inventory items should return all items
+   1 Audit logs should be filterable by entity type
+   1 Different muffin recipes should produce the expected batch [recipeName: "Spiced Deluxe", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Almond Flour, Apples = Pink Lady, Cinnamon = Saigon }, Toppings = System.Collections.Generic.List`1[Br…]
+   1 Listing usage by ingredient should return matching records
+   1 Retrieving existing review by id should return the review
+   1 Deleting a reservation should return no content
+   1 Requesting second page should return different orders
+   1 Invalid status transition should return conflict [fromStatus: "Created", toStatus: "Ready"]
+   1 Valid status transition should update the order [fromStatus: "Preparing", toStatus: "Ready"]
+   1 Remaining quantity should decrease after each order
+   1 Invalid status transition should return conflict [fromStatus: "Cancelled", toStatus: "Preparing"]
+   1 Audit logs should be filterable by entity id
+   1 Creating an order should emit a structured log entry
+   1 Retrieving existing feedback by id should return the feedback
+   1 Deleting a waste record should return no content
+   1 Ordering daily special beyond threshold should return conflict
+   1 Deleting a staff member should return no content
+   1 Listing orders with small page size should limit results
+   1 Exceeding rate limit should return too many requests
+   1 Valid status transition should update the order [fromStatus: "Created", toStatus: "Preparing"]
+   1 Listing readings by equipment should return matching records
+   1 Same order with different idempotency keys should return different confirmations
+   1 Retrieving an existing inventory item should return the item
+   1 Deleting an inventory item should return no content
+   1 Health check response should include description and data for each entry
+   1 Same order with same idempotency key should return same confirmation
+   1 Retrieving an existing reservation should return the reservation
+   1 Updating an inventory item should return the updated item
+   1 Creating an order should produce a retrievable audit log entry
+   1 Getting usage summary should return aggregated data
+   1 Invalid status transition should return conflict [fromStatus: "Created", toStatus: "Completed"]
+   1 Batch completions should contain data ingested via pubsub consumer
+   1 Getting the timing summary should return aggregated data
+   1 Waffle request with more toppings than allowed should return bad request
+   1 Cancelling an already cancelled reservation should return a conflict response
+   1 Different muffin recipes should produce the expected batch [recipeName: "Rustic Wholesome", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Whole Wheat, Apples = Honeycrisp, Cinnamon = Cassia }, Toppings = System.Collections.Generic.List`1…]
+   1 Ingredient shipments should be recorded when delivered via eventgrid webhook
+   1 Listing feedback for an order should return the feedback
+   1 Recipe reports should contain ingested recipe data
+   1 Creating an order when kitchen service returns error should still create the order
+   1 Valid status transition should update the order [fromStatus: "Created", toStatus: "Cancelled"]
+   1 Retrieving an existing note by id should return the note
+   1 Retrieving existing customer preferences should return the preferences
+   1 Order should progress through all status transitions to completion
+   1 Invalid status transition should return conflict [fromStatus: "Cancelled", toStatus: "Ready"]
+   1 Listing orders should return a paginated response
+=== NUnit
+

@@ -1,0 +1,43 @@
+Passed!  - Failed:     0, Passed:     2, Skipped:     1, Total:     3, Duration: 198 ms - HookSteps.Repro.dll (net10.0)
+3 scenarios · 0 failed · 12 interactions · 1 distinct bodies
+
+BG11 a green run, one scenario skips itself in a hook  2 passed, 1 skipped
+
+=== published: 3 details.scenario, 3 with a stable id
+--- published 112f3c90ba34ab2c: A needs a GPU needs-gpu 10ms📋🔗
+  bars null
+--- published 0890ee88f1196936: B passes 2ms📋🔗
+  row  ✓ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ✓ When the customer orders
+  row    ✓  An order is submitted
+  row  ✓ Then the receipt is sent
+  bars ["Given","When","Then"]
+--- published b41f743402e669a9: C passes 162ms📋🔗
+  row  ✓ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ✓ When the customer orders
+  row    ✓  An order is submitted
+  row  ✓ Then the invoice is sent
+  bars ["Given","When","Then"]
+Passed!  - Failed:     0, Passed:     2, Skipped:     1, Total:     3, Duration: 230 ms - HookSteps.Repro.dll (net10.0)
+3 scenarios · 0 failed · 12 interactions · 1 distinct bodies
+
+BG11 a green run, one scenario skips itself in a hook  2 passed, 1 skipped
+
+=== proto: 3 details.scenario, 3 with a stable id
+--- proto 79343e863c7ad601: A needs a GPU needs-gpu 25ms📋🔗
+  row  Ø Given the shop is ready
+  row  Ø When the customer orders
+  row  Ø Then the order is listed
+  bars null
+--- proto 0ac3cc2f7041bc2b: B passes 2ms📋🔗
+  row  Ø Given the shop is ready
+  row  Ø When the customer orders
+  row  ✓ Then the receipt is sent
+  bars ["Given","When","Then"]
+--- proto 7cc79aeb4b1d3c94: C passes 172ms📋🔗
+  row  Ø Given the shop is ready
+  row  Ø When the customer orders
+  row  ✓ Then the invoice is sent
+  bars ["Given","When","Then"]

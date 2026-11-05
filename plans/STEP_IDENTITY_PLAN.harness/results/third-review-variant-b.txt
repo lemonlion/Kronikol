@@ -1,0 +1,103 @@
+s0  BG1 a Given fails in one scenario, the passing one first › A passes  [Passed]  0.09s
+  0     Given the shop is ready  0.05s  [i0]
+    0.0   A customer is registered  0.03s
+  1     When the customer orders  0s  [i2]
+    1.0   An order is submitted
+  2     Then the order is listed  0s  [i4]
+    2.0   The order is read back
+s1  BG1 a Given fails in one scenario, the passing one first › B fails at its Given  [Failed]  0s
+✗ 0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+  1     When the customer orders
+  2     Then the receipt is sent
+s2  BG11 a green run, one scenario skips itself in a hook › A needs a GPU  [Skipped]  0s
+  0     Given the shop is ready
+  1     When the customer orders
+  2     Then the order is listed
+s3  BG11 a green run, one scenario skips itself in a hook › B passes  [Passed]  0s
+  0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+  1     When the customer orders  [i2]
+    1.0   An order is submitted
+  2     Then the receipt is sent  [i4]
+s4  BG11 a green run, one scenario skips itself in a hook › C passes  [Passed]  0.09s
+  0     Given the shop is ready  0.05s  [i0]
+    0.0   A customer is registered  0.03s
+  1     When the customer orders  0s  [i2]
+    1.0   An order is submitted
+  2     Then the invoice is sent  [i4]
+s5  BG12 a green run, a file after every step, one scenario skips itself in a hook › A passes  [Pa
+  0     Given the shop is ready  0.01s  [i0]
+    0.0   A customer is registered
+  1     When the customer orders  0s  [i2]
+    1.0   An order is submitted
+  2     Then the order is listed  0s  [i4]
+    2.0   The order is read back
+s6  BG12 a green run, a file after every step, one scenario skips itself in a hook › B needs a GPU
+  0     Given the shop is ready
+  1     When the customer orders
+  2     Then the receipt is sent
+s7  BG2 a Given fails in one scenario, the failing one first › A fails at its Given  [Failed]  0.0
+✗ 0     Given the shop is ready  0.05s  [i0]
+    0.0   A customer is registered  0.03s
+  1     When the customer orders
+  2     Then the order is listed
+s8  BG2 a Given fails in one scenario, the failing one first › B passes  [Passed]  0s
+  0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+  1     When the customer orders  [i2]
+    1.0   An order is submitted
+  2     Then the receipt is sent  [i4]
+s9  BG3 a plain hook fails in one scenario, the passing ones after it › A hook fails  [Failed]  0.
+  0     Given the shop is ready
+  1     When the customer orders
+  2     Then the order is listed
+s10  BG3 a plain hook fails in one scenario, the passing ones after it › B passes  [Passed]  0s
+  0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+  1     When the customer orders  [i2]
+    1.0   An order is submitted
+  2     Then the receipt is sent  [i4]
+s11  BG3 a plain hook fails in one scenario, the passing ones after it › C passes  [Passed]  0s
+  0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+  1     When the customer orders  [i2]
+    1.0   An order is submitted
+  2     Then the invoice is sent  [i4]
+s12  BG7 one hook step, failing in one scenario › A hook step passes  [Passed]  0.09s
+  0     Seeding may fail  0.06s  [i0]
+  1     Given the shop is ready  0s  [i2]
+    1.0   A customer is registered
+  2     When the customer orders  0s  [i4]
+    2.0   An order is submitted
+  3     Then the order is listed  0s  [i6]
+    3.0   The order is read back
+s13  BG7 one hook step, failing in one scenario › B hook step fails  [Failed]  0.02s
+✗ 0     Seeding may fail  [i0]
+      seeding failed
+  1     Given the shop is ready
+  2     When the customer orders
+  3     Then the receipt is sent
+s14  BG8 screenshot on failure failing first › A fails at its Given with a screenshot  [Failed]  0
+✗ 0     Given the shop is ready  0.01s  [i0]
+    0.0   A customer is registered
+  1     When the customer orders
+  2     Then the order is listed
+s15  BG8 screenshot on failure failing first › B passes  [Passed]  0.09s
+  0     Given the shop is ready  0.06s  [i0]
+    0.0   A customer is registered  0.04s
+  1     When the customer orders  [i2]
+    1.0   An order is submitted
+  2     Then the receipt is sent  0s  [i4]
+s16  BG9 screenshot on failure failing second › A passes  [Passed]  0.09s
+  0     Given the shop is ready  0.06s  [i0]
+    0.0   A customer is registered  0.03s
+  1     When the customer orders  0s  [i2]
+    1.0   An order is submitted
+  2     Then the order is listed  0s  [i4]
+    2.0   The order is read back
+s17  BG9 screenshot on failure failing second › B fails at its Given with a screenshot  [Failed]  
+✗ 0     Given the shop is ready  0s  [i0]
+    0.0   A customer is registered
+  1     When the customer orders
+  2     Then the receipt is sent

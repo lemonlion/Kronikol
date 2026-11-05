@@ -1,0 +1,36 @@
+    0 Error(s)
+=================== S1-file-in-background-step-hook-everywhere (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 514 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:04.44]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S2-file-after-every-step-hook-everywhere (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 451 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.31]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S3-file-in-background-step-no-hook (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 475 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.46]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S4-file-in-background-hook-first-scenario-only (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 455 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.54]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S5-screenshot-on-failure-first-scenario-hook (proto)
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 513 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.55]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S6-no-background-keyword-shared-first-given (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 347 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.09]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S7-aftersteps-hook-attaches-then-throws (proto)
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 139 ms - Rq6.dll (net10.0)
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl 
+s0  S7 an AfterStep hook attaches a file then throws in the first scenario, its opening step shared › S7a the hook thr
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+s1  S7 an AfterStep hook attaches a file then throws in the first scenario, its opening step shared › S7b passes  [Pas
+  0     Given a registered customer  0s  [i0]
+    0.0   A customer is registered
+  1     And an order of 2 is placed  0s  [i2]
+  2     Then the order is confirmed  0s  [i4]
+No scenario s2 — the report has 2 (s0-s1).

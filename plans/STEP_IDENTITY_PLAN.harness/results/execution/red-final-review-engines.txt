@@ -1,0 +1,22 @@
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.F4_steps_cleared_after_the_run_leave_every_call_its_step
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 67)
+    Expected: ···"rder is confirmed\ncalls: 0 /customers, 1 /orders/1"
+    Actual:   ···"rder is confirmed\ncalls: - /customers, - /orders/1"
+                                            ↑ (pos 67)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.F5_a_row_a_consumer_rebuilt_stands_once_with_its_sub_step_and_nothi
+    Assert.Equal() Failure: Strings differ
+                                             ↓ (pos 85)
+    Expected: ···"\n1 Then the order is ***\n  1.0 The order is read b"···
+    Actual:   ···"\n1 Then the order is ***\ncalls: 0 /customers, - /o"···
+                                             ↑ (pos 85)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.F3_a_hidden_setups_files_stay_in_the_report_and_it_lists_no_row
+    Assert.StartsWith() Failure: String start does not match
+    String:         "0 Given a registered customer\n  0.0 A customer is "···
+    Expected start: "0 Given A registered customer"
+FAIL x1 Kronikol.Tests.RealEngines.PlainLaneTests.P9_a_step_method_that_skips_the_test_reads_skipped
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 A step method that skips the test [Skipped]\ncall"···
+    Actual:   "no scenario 'P9' in: P0 control | P1 a call betwee"···
+               ↑ (pos 0)

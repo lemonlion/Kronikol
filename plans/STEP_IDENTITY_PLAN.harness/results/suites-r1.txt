@@ -1,0 +1,22 @@
+ed8cd528 proto: R1 alone, cut from R14 by split_releases.py
+--- Kronikol.Tests.StepTracking
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 12 s - Kronikol.Tests.StepTracking.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit3
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 16 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit2
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 16 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+--- Kronikol.Tests.xUnit2
+Passed!  - Failed:     0, Passed:   111, Skipped:     0, Total:   111, Duration: 3 m 42 s - Kronikol.Tests.xUnit2.dll (net10.0)
+--- Kronikol.Tests.xUnit3
+Passed!  - Failed:     0, Passed:    33, Skipped:     0, Total:    33, Duration: 3 s - Kronikol.Tests.xUnit3.dll (net10.0)
+--- Kronikol.Tests.NUnit4
+Passed!  - Failed:     0, Passed:    49, Skipped:     0, Total:    49, Duration: 3 s - Kronikol.Tests.NUnit4.dll (net10.0)
+--- Kronikol.Tests.MSTest
+Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 2 s - Kronikol.Tests.MSTest.dll (net10.0)
+--- Kronikol.Tests
+Passed!  - Failed:     0, Passed: 11824, Skipped:     2, Total: 11826, Duration: 14 m 40 s - Kronikol.Tests.dll (net10.0)
+--- Kronikol.Tests.LightBDD.TUnit (dotnet run)
+   Kronikol.Tests.LightBDD.TUnit  Total: 26, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 5.643s
+--- Kronikol.Tests.TUnit (dotnet run)
+   Kronikol.Tests.TUnit  Total: 50, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 1.760s
+--- done

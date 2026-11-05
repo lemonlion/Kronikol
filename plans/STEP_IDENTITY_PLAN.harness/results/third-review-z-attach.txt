@@ -1,0 +1,87 @@
+=== published BG8
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 266 ms - HookSteps.Repro.dll (net10.0)
+AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl attachments query.cs service.json 
+s0  BG8 screenshot on failure failing first › A fails at its Given with a screenshot
+  at Features/Z10.feature:5
+  the shop did not start
+  ✗ s0/0  Given the shop is ready
+    attachment: z-failure-shot-94bfe4c84fbc47b98bade5c593a329fe.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7
+    1 calls in this step:
+      s0/i0  Shop  POST /customers
+
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number
+s0  BG8 screenshot on failure failing first › A fails at its Given with a screenshot  [Failed]  0.04s
+attachments: 1 on its steps · attachments s0
+✗ 0     Given the shop is ready  0.01s  [i0]
+      attachment: z-failure-shot-94bfe4c84fbc47b98bade5c593a329fe.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code
+    0.0   A customer is registered
+1 calls · interactions s0 · flow s0
+s1  BG8 screenshot on failure failing first › B passes  [Passed]  0.14s
+  0     Given the shop is ready  0.1s  [i0]
+    0.0   A customer is registered  0.04s
+  1     When the customer orders  0s  [i2]
+    1.0   An order is submitted  0s
+  2     Then the receipt is sent  0s  [i4]
+3 calls · interactions s1 · flow s1
+=== published BG9
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 219 ms - HookSteps.Repro.dll (net10.0)
+AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl attachments query.cs service.json 
+s1  BG9 screenshot on failure failing second › B fails at its Given with a screenshot
+  at Features/Z11.feature:10
+  the shop did not start
+  ✗ s1/0  Given the shop is ready
+    attachment: z-failure-shot-14e20900775747b491a7ad754bd7cc62.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7
+    1 calls in this step:
+      s1/i0  Shop  POST /customers
+
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number
+s0  BG9 screenshot on failure failing second › A passes  [Passed]  0.17s
+  0     Given the shop is ready  0.1s  [i0]
+    0.0   A customer is registered  0.04s
+  1     When the customer orders  0s  [i2]
+    1.0   An order is submitted  0s
+  2     Then the order is listed  0s  [i4]
+    2.0   The order is read back
+3 calls · interactions s0 · flow s0
+s1  BG9 screenshot on failure failing second › B fails at its Given with a screenshot  [Failed]  0.01s
+attachments: 1 on its steps · attachments s1
+✗ 0     Given the shop is ready  0.01s  [i0]
+      attachment: z-failure-shot-14e20900775747b491a7ad754bd7cc62.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code
+    0.0   A customer is registered
+1 calls · interactions s1 · flow s1
+=== published BG10
+[xUnit.net 00:00:01.45]     [Test Assembly Cleanup Failure (HookSteps.Repro.dll)] System.Collections.Generic.KeyNotFoundException
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 382 ms - HookSteps.Repro.dll (net10.0)
+attachments 
+=== proto BG8
+[xUnit.net 00:00:01.81]     [Test Assembly Cleanup Failure (HookSteps.Repro.dll)] System.Collections.Generic.KeyNotFoundException
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 501 ms - HookSteps.Repro.dll (net10.0)
+attachments 
+=== proto BG9
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 214 ms - HookSteps.Repro.dll (net10.0)
+AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl query.cs service.json 
+s1  BG9 screenshot on failure failing second › B fails at its Given with a screenshot
+  at Features/Z11.feature:10
+  the shop did not start
+  (no step is marked failed — the failure was outside a tracked step)
+
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number
+s0  BG9 screenshot on failure failing second › A passes  [Passed]  0.15s
+  b0    Given the shop is ready  0.08s  [i0]
+    b0.0  A customer is registered  0.04s
+  b1    When the customer orders  0s  [i2]
+    b1.0  An order is submitted  0s
+  0     Then the order is listed  0s  [i4]
+    0.0   The order is read back
+3 calls · interactions s0 · flow s0
+s1  BG9 screenshot on failure failing second › B fails at its Given with a screenshot  [Failed]  0.02s
+  b0    Given the shop is ready  0.08s  [i0]
+    b0.0  A customer is registered  0.04s
+  b1    When the customer orders  0s
+    b1.0  An order is submitted  0s
+  0     Then the receipt is sent
+1 calls · interactions s1 · flow s1
+=== proto BG10
+[xUnit.net 00:00:01.55]     [Test Assembly Cleanup Failure (HookSteps.Repro.dll)] System.Collections.Generic.KeyNotFoundException
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 457 ms - HookSteps.Repro.dll (net10.0)
+attachments 

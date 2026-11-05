@@ -1,0 +1,121 @@
+
+s0  Review probes › R00 a forwarding step method awaited normally is the control  [Passed]  0.82s
+  0     Given a forwarding step method is awaited  0.31s  [i0]
+    0.0   A forwarding check  0.31s
+      0.0.0 A slow inner check  0.31s
+  1     When the order takes a while and is then read back  0.51s  [i2-i4] 2 calls
+    1.0   An order is submitted slowly  0.51s
+    1.1   The order is read back
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+      call> 0 /background
+      call> 1 /orders
+      call> 1 /orders/1
+      call> 2 /orders/1
+
+s1  Review probes › R01 a forwarding step method left running  [Passed]  0.51s
+  0     Given a forwarding step method is left running  0s  [i0]
+    0.0   A forwarding check  0.3s
+      0.0.0 A slow inner check  0.51s
+  1     When the order takes a while and is then read back  0.51s  [i2-i6] 3 calls
+    1.0   An order is submitted slowly  0.3s
+    1.1   The order is read back
+  2     Then the order is confirmed  [i8]
+    2.0   The order is read back
+      call> 0 /started
+      call> 1 /background
+      call> 1 /orders
+      call> 1 /orders/1
+      call> 2 /orders/1
+
+s2  Review probes › R02 a sync step method that leaves one running  [Passed]  0.68s
+  0     Given a sync step method leaves one running  0.07s  [i0]
+    0.0   A sync wrapper  0.58s
+      0.0.0 A slow inner check  0s
+  1     When the order takes a while and is then read back  0.54s  [i2-i6] 3 calls
+    1.0   An order is submitted slowly  0.26s
+    1.1   The order is read back
+  2     Then the order is confirmed  0s  [i8]
+    2.0   The order is read back
+      call> 0 /started
+      call> 1 /background
+      call> 1 /orders
+      call> 1 /orders/1
+      call> 2 /orders/1
+
+s3  Review probes › R03 a hook leaves a step method running and the first step is undefined  [Skipped]  0.03s
+  0     A slow inner check  0.31s
+  1     Given nobody wrote this step either
+  2     When the customer places the order
+  3     Then the order is confirmed
+      call> buckets: at
+
+s4  Review probes › R05 a hook's step method runs a Gherkin step and then makes a call  [Passed]  0.03s
+  0     Seed through a step  0.02s
+  1     Given a registered customer  0s  [i0-i2] 2 calls
+    1.0   A customer is registered
+  2     Given a registered customer  [i4]
+    2.0   A customer is registered
+  3     When the customer places the order  [i6]
+    3.0   An order is submitted
+      call> 1 /customers
+      call> 1 /seed-after
+      call> 2 /customers
+      call> 3 /orders
+
+s5  Review probes › R06 two step methods in parallel in a hook, the first ending first  [Passed]  0.15s
+  0     A fast parallel  0.14s  [i0-i2] 2 calls
+    0.0   A slow parallel  0.03s
+  1     Given a registered customer  0s  [i4]
+    1.0   A customer is registered
+  2     When the customer places the order  0s  [i6]
+    2.0   An order is submitted
+      call> 0 /fast
+      call> 0 /slow
+      call> 1 /customers
+      call> 2 /orders
+
+s6  Review probes › R13 a step method fails in AfterScenario  [Failed]  0s
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+✗ 2     Cleaning fails  [i4]
+      cleaning failed
+      call> 0 /customers
+      call> 1 /orders
+      call> 2 /clean
+
+s7  Review probes › R17 the control for R01, the plan's T17 shape on the same later steps  [Passed]  0.52s
+  0     Given a step method is left running  0s  [i0]
+    0.0   A slow background check  0.51s
+  1     When the order takes a while and is then read back  0.51s  [i2-i6] 3 calls
+    1.0   An order is submitted slowly  0.3s
+    1.1   The order is read back
+  2     Then the order is confirmed  [i8]
+    2.0   The order is read back
+      call> 0 /started
+      call> 1 /background
+      call> 1 /orders
+      call> 1 /orders/1
+      call> 2 /orders/1
+
+s8  Review probes › R18 a failing forwarding step method left running, in a scenario that passes  [Passed]  0.53s
+  0     Given a failing forwarding step method is left running  0s  [i0]
+  ✗ 0.0   A failing forwarding check  0.12s
+        background check failed
+      0.0.0 A failing inner check  0.52s
+  1     When the order takes a while and is then read back  0.52s  [i2-i4] 2 calls
+  ✗ 1.0   An order is submitted slowly  0.12s
+        background check failed
+    1.1   The order is read back
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+      call> 0 /started
+      call> 1 /orders
+      call> 1 /orders/1
+      call> 2 /orders/1
+
+s9  Review probes › R99 keeps the run alive past the left-running steps  [Passed]  1.52s
+  0     Given the run waits a while  1.52s
+      call> buckets: at

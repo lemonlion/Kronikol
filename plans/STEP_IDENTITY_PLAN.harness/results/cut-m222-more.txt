@@ -1,0 +1,340 @@
+### summary
+TestRunReport.krkl  9.7 KB on disk, 107.3 KB as JSON  Kronikol 5.28.2+db19e307f4d96123280311acb00e38afb8f3ffd5
+2026-11-03T09:41:47Z → 2026-11-03T09:41:48Z
+16 scenarios · 1 failed · 102 interactions · 1 distinct bodies
+
+A background that runs steps  2 passed
+Lifecycle  6 passed, 1 skipped, 1 FAILED
+Outlines  4 passed
+Rules  2 passed
+
+Failed:
+  s5  E07 a BeforeStep hook throws on the second step  — BeforeStep hook failed
+  → failures
+
+Slowest:
+  s8  0.55s  E13 a call outlasts its step
+  s10  0.45s  E01 an outline with a hook step on every row
+  s5  0.09s  E07 a BeforeStep hook throws on the second step
+next: failures
+
+### s0 steps
+s0  A background that runs steps › E16 a hook step and a background step that runs another  [Passed]  0s
+stableId 8831e95995d04206
+at Features/NestedBackground.feature:8
+open: TestRunReport.html#sid-8831e95995d04206
+
+  b0    Given a step that runs another  [i2]
+    b0.0  Given a registered customer
+      b0.0.0 A customer is registered
+  b1    And a registered customer  [i4]
+    b1.0  A customer is registered
+  0     Reference data is seeded  [i0]
+  1     When an order of 40 is placed  [i6]
+  2     Then the order is confirmed  [i8]
+5 calls · interactions s0 · flow s0
+
+### s0 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     -       POST    /seed           1      0     0 ms     0 ms      1       4 B
+b0    Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+b1    Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     Action  POST    /orders/40      1      0     0 ms     0 ms      1       4 B
+2     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s1 steps
+s1  A background that runs steps › E16b its sibling  [Passed]  0.09s
+stableId 1bffdee61168f046
+at Features/NestedBackground.feature:12
+open: TestRunReport.html#sid-1bffdee61168f046
+
+  b0    Given a step that runs another  0.05s  [i0]
+    b0.0  Given a registered customer  0s
+      b0.0.0 A customer is registered
+  b1    And a registered customer  [i2]
+    b1.0  A customer is registered
+  0     When an order of 41 is placed  0s  [i4]
+  1     Then the order is confirmed  [i6]
+4 calls · interactions s1 · flow s1
+
+### s1 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+b0    Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+b1    Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     Action  POST    /orders/41      1      0     0 ms     0 ms      1       4 B
+1     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s2 steps
+s2  Lifecycle › E04 a feature hook with a step ran before this  [Passed]  0s
+stableId a69f0b90c0fccd77
+at Features/Lifecycle.feature:4
+open: TestRunReport.html#sid-a69f0b90c0fccd77
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     Then the order is confirmed  [i2]
+2 calls · interactions s2 · flow s2
+
+### s2 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s3 steps
+s3  Lifecycle › E05 a binding constructor runs a step  [Passed]  0s
+stableId 0ee004d0125b3bc3
+at Features/Lifecycle.feature:8
+open: TestRunReport.html#sid-0ee004d0125b3bc3
+
+  0     Given a step whose binding constructor runs a step  0s  [i0-i2] 2 calls
+    0.0   Block prepared
+  1     Then the order is confirmed  [i4]
+3 calls · interactions s3 · flow s3
+
+### s3 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     Setup   POST    /block          1      0     0 ms     0 ms      1       4 B
+0     Setup   POST    /ctor-step      1      0     0 ms     0 ms      1       4 B
+1     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s4 steps
+s4  Lifecycle › E06 an argument transformation runs a step  [Passed]  0.01s
+stableId eb8c34f70d90b928
+at Features/Lifecycle.feature:12
+open: TestRunReport.html#sid-eb8c34f70d90b928
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     Reference data is seeded  [i2]
+  2     When a transformed value of 7 is used  0s  [i4]
+  3     Then the order is confirmed  [i6]
+4 calls · interactions s4 · flow s4
+
+### s4 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     Setup   POST    /seed           1      0     0 ms     0 ms      1       4 B
+2     Action  POST    /used/7         1      0     0 ms     0 ms      1       4 B
+3     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s5 steps
+s5  Lifecycle › E07 a BeforeStep hook throws on the second step  [Failed]  0.09s
+stableId 368f05cf4eef2059
+at Features/Lifecycle.feature:18
+open: TestRunReport.html#sid-368f05cf4eef2059
+
+  0     Given a registered customer  0.03s  [i0]
+    0.0   A customer is registered  0.01s
+✗ 1     When an order of 70 is placed  0s
+  2     Then the order is confirmed
+1 calls · interactions s5 · flow s5
+
+### s5 calls: step, phase, method, path
+step  phase  method  path        calls errors   median      max bodies     bytes
+0     Setup  POST    /customers      1      0     1 ms     1 ms      1       4 B
+1 buckets
+
+### s6 steps
+s6  Lifecycle › E08 a pending step  [Skipped]  0s
+stableId 6943c37ad886f8b0
+at Features/Lifecycle.feature:23
+open: TestRunReport.html#sid-6943c37ad886f8b0
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When a pending step runs  0s
+  2     Then the order is confirmed
+1 calls · interactions s6 · flow s6
+
+### s6 calls: step, phase, method, path
+step  phase  method  path        calls errors   median      max bodies     bytes
+0     Setup  POST    /customers      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s7 steps
+s7  Lifecycle › E09 a step in an AfterScenario hook that ties with Kronikol  [Passed]  0s
+stableId b1555778daa8d098
+at Features/Lifecycle.feature:29
+open: TestRunReport.html#sid-b1555778daa8d098
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     Then the order is confirmed  [i2]
+  2     Reference data is cleaned  [i4]
+3 calls · interactions s7 · flow s7
+
+### s7 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+2     Action  POST    /clean          1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s8 steps
+s8  Lifecycle › E13 a call outlasts its step  [Passed]  0.55s
+stableId 72ef08f8f5a4bc97
+at Features/Lifecycle.feature:33
+open: TestRunReport.html#sid-72ef08f8f5a4bc97
+
+  0     Given a call that outlasts its step  0s  [i0]
+  1     Then the call is answered  0.49s
+  2     Then the order is confirmed  [i2]
+2 calls · interactions s8 · flow s8
+
+### s8 calls: step, phase, method, path
+step  phase   method  path      calls errors   median      max bodies     bytes
+0     Setup   POST    /spans        1      0   333 ms   333 ms      1       4 B
+2     Action  POST    /confirm      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s9 steps
+s9  Lifecycle › E14 phases over a repeated When  [Passed]  0s
+stableId 188de04bb68ce381
+at Features/Lifecycle.feature:38
+open: TestRunReport.html#sid-188de04bb68ce381
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When an order of 90 is placed  [i2]
+  2     And an order of 91 is placed  [i4]
+  3     Then the order is confirmed  [i6]
+4 calls · interactions s9 · flow s9
+
+### s9 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     Action  POST    /orders/90      1      0     0 ms     0 ms      1       4 B
+2     Setup   POST    /orders/91      1      0     0 ms     0 ms      1       4 B
+3     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s10 steps
+s10  Outlines › E01 an outline with a hook step on every row  [Passed]  0.45s
+stableId 68ab069cd1d0c3ff
+at Features/Outlines.feature:4
+open: TestRunReport.html#sid-68ab069cd1d0c3ff
+example: amount=10
+
+  0     Reference data is seeded  0s  [i0]
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+  2     When an order of 10 is placed  [i4]
+  3     Then the order is confirmed  [i6]
+4 calls · interactions s10 · flow s10
+
+### s10 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     -       POST    /seed           1      0     0 ms     0 ms      1       4 B
+1     Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     Action  POST    /orders/10      1      0     0 ms     0 ms      1       4 B
+3     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s11 steps
+s11  Outlines › E01 an outline with a hook step on every row  [Passed]  0s
+stableId 5fb9b4bea8e0bce5
+at Features/Outlines.feature:4
+open: TestRunReport.html#sid-5fb9b4bea8e0bce5
+example: amount=20
+
+  0     Reference data is seeded  [i0]
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+  2     When an order of 20 is placed  [i4]
+  3     Then the order is confirmed  [i6]
+4 calls · interactions s11 · flow s11
+
+### s11 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     -       POST    /seed           1      0     0 ms     0 ms      1       4 B
+1     Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     Action  POST    /orders/20      1      0     0 ms     0 ms      1       4 B
+3     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s12 steps
+s12  Outlines › E02 an outline with a hook step on one row  [Passed]  0s
+stableId 8de3c3fe4502df1f
+at Features/Outlines.feature:15
+open: TestRunReport.html#sid-8de3c3fe4502df1f
+example: amount=10
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When an order of 10 is placed  [i2]
+  2     Then the order is confirmed  [i4]
+3 calls · interactions s12 · flow s12
+
+### s12 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     Action  POST    /orders/10      1      0     0 ms     0 ms      1       4 B
+2     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s13 steps
+s13  Outlines › E02 an outline with a hook step on one row  [Passed]  0s
+stableId 2946c64f206f0414
+at Features/Outlines.feature:15
+open: TestRunReport.html#sid-2946c64f206f0414
+example: amount=20
+
+  0     Reference data is seeded  [i0]
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+  2     When an order of 20 is placed  [i4]
+  3     Then the order is confirmed  [i6]
+4 calls · interactions s13 · flow s13
+
+### s13 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     -       POST    /seed           1      0     0 ms     0 ms      1       4 B
+1     Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     Action  POST    /orders/20      1      0     0 ms     0 ms      1       4 B
+3     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s14 steps
+s14  Rules › E03 a hook step in a rule with a background  [Passed]  0s
+stableId f0cfed51d81f169b
+at Features/Rules.feature:9
+open: TestRunReport.html#sid-f0cfed51d81f169b
+
+  b0    Given a registered customer  [i2]
+    b0.0  A customer is registered
+  0     Reference data is seeded  [i0]
+  1     When an order of 30 is placed  [i4]
+  2     Then the order is confirmed  [i6]
+4 calls · interactions s14 · flow s14
+
+### s14 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+0     -       POST    /seed           1      0     0 ms     0 ms      1       4 B
+b0    Setup   POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     Action  POST    /orders/30      1      0     0 ms     0 ms      1       4 B
+2     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s15 steps
+s15  Rules › E03b its sibling with no hook  [Passed]  0.09s
+stableId 706d065f1b8a3147
+at Features/Rules.feature:13
+open: TestRunReport.html#sid-706d065f1b8a3147
+
+  b0    Given a registered customer  0.03s  [i0]
+    b0.0  A customer is registered  0.01s
+  0     When an order of 31 is placed  0s  [i2]
+  1     Then the order is confirmed  0s  [i4]
+3 calls · interactions s15 · flow s15
+
+### s15 calls: step, phase, method, path
+step  phase   method  path        calls errors   median      max bodies     bytes
+b0    Setup   POST    /customers      1      0     1 ms     1 ms      1       4 B
+0     Action  POST    /orders/31      1      0     0 ms     0 ms      1       4 B
+1     Action  POST    /confirm        1      0     0 ms     0 ms      1       4 B
+3 buckets

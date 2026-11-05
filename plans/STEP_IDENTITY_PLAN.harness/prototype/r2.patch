@@ -1,0 +1,280 @@
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs
+index b196bea1..bcd0b3f3 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs
+@@ -15,6 +15,12 @@ public static class ReqNRollConstants
+     /// <summary>The frame <c>BeforeStep</c> opened for the running Gherkin step.</summary>
+     internal const string StepFrameKey = "Kronikol.StepFrame";
+ 
++    /// <summary>When the scenario started, for its duration.</summary>
++    internal const string ScenarioStopwatchKey = "Kronikol.ScenarioStopwatch";
++
++    /// <summary>Set once the scenario has been collected: the last hook and the finished event both offer to.</summary>
++    internal const string CollectedKey = "Kronikol.Collected";
++
+     /// <summary>The running row's name, as <c>BeforeScenario</c> resolved it (#101).</summary>
+     internal const string RowNameKey = "Kronikol.RowName";
+ }
+\ No newline at end of file
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
+index 96cbe7f0..4adbef79 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
+@@ -16,6 +16,9 @@ public record ReqNRollStepInfo(
+ {
+     /// <summary>The step the hooks opened for this Gherkin step (<c>StepCollector.StartFrame</c>); null on a hand-built one.</summary>
+     internal int? FrameId { get; init; }
++
++    /// <summary>For a step that did not run (skipped, undefined): the id of the step opened last before it.</summary>
++    internal int? NotRunAfter { get; init; }
+ }
+ 
+ /// <summary>
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+index cc274545..4456303e 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+@@ -1,6 +1,7 @@
+ using System.Diagnostics;
+ using System.Runtime.CompilerServices;
+ using Reqnroll;
++using Reqnroll.Bindings;
+ using Reqnroll.Events;
+ using Kronikol.Tracking;
+ 
+@@ -48,6 +49,7 @@ public void BeforeScenario()
+             return;
+ 
+         _stopwatch = Stopwatch.StartNew();
++        _scenarioContext[ReqNRollConstants.ScenarioStopwatchKey] = _stopwatch;
+         var scenarioId = Guid.NewGuid().ToString();
+         _scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey] = scenarioId;
+         _scenarioContext[ReqNRollConstants.OwnerHooksKey] = this;
+@@ -76,6 +78,24 @@ public void BeforeScenario()
+                     if (testId is not null)
+                         StepCollector.AddAttachment(testId, evt.FilePath, name: null);
+                 });
++
++                // Reqnroll runs none of a type's later hooks once one throws, so a suite's own hook can keep this class's
++                // last ones from running. These events come whatever the hooks did.
++                eventPublisher.AddHandler<HookFinishedEvent>(evt =>
++                {
++                    if (evt.HookType == HookType.AfterStep && evt.ScenarioContext is ScenarioContext scenario)
++                        CloseStep(scenario, evt.HookException);
++                });
++                eventPublisher.AddHandler<StepFinishedEvent>(evt =>
++                {
++                    if (evt.ScenarioContext is ScenarioContext scenario)
++                        NoteStepThatDidNotRun(scenario);
++                });
++                eventPublisher.AddHandler<ScenarioFinishedEvent>(evt =>
++                {
++                    if (evt.ScenarioContext is ScenarioContext scenario && evt.FeatureContext is FeatureContext feature)
++                        CollectScenario(scenario, feature);
++                });
+             }
+         }
+         catch
+@@ -110,13 +130,65 @@ public void AfterStep()
+         if (!IsOwner)
+             return;
+ 
+-        var stepStopwatch = (Stopwatch)_scenarioContext[ReqNRollConstants.StepStopwatchKey];
++        CloseStep(_scenarioContext, hookException: null);
++    }
++
++    /// <summary>
++    /// Closes the running Gherkin step's frame and records the step: from <see cref="AfterStep"/>, or, when a suite's hook
++    /// threw before that was reached, from the hooks' finished event. A hook's failure is the step's failure.
++    /// </summary>
++    private static void CloseStep(ScenarioContext scenario, Exception? hookException)
++    {
++        if (!scenario.TryGetValue(ReqNRollConstants.StepFrameKey, out int? frame) || frame is null)
++            return;
++        scenario.Remove(ReqNRollConstants.StepFrameKey);
++
++        var stepStopwatch = (Stopwatch)scenario[ReqNRollConstants.StepStopwatchKey];
+         stepStopwatch.Stop();
+-        var stepContext = _scenarioContext.StepContext;
+-        var steps = (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey];
++        var stepContext = scenario.StepContext;
++        var status = hookException is null ? stepContext.Status : scenario.ScenarioExecutionStatus;
++        var steps = (List<ReqNRollStepInfo>)scenario[ReqNRollConstants.StepsCollectionKey];
+         var tableText = stepContext.StepInfo.Table?.ToString();
+         var docString = stepContext.StepInfo.MultilineText;
+ 
++        var inlineParams = InlineParams(stepContext);
++
++        // Pop the StepCollector step so assertion sub-steps are captured
++        var scenarioId = (string)scenario[ReqNRollConstants.ScenarioRuntimeIdKey];
++        StepCollector.CompleteFrame(scenarioId, frame, status == ScenarioExecutionStatus.OK);
++
++        steps.Add(new ReqNRollStepInfo(
++            stepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString(),
++            stepContext.StepInfo.Text,
++            status,
++            stepStopwatch.Elapsed,
++            tableText,
++            docString,
++            inlineParams) { FrameId = frame });
++    }
++
++    /// <summary>A step Reqnroll ran no hooks for (skipped after a failure, undefined): listed as it came in the scenario.</summary>
++    private static void NoteStepThatDidNotRun(ScenarioContext scenario)
++    {
++        if (scenario.ContainsKey(ReqNRollConstants.StepFrameKey)
++            || !scenario.TryGetValue(ReqNRollConstants.ScenarioRuntimeIdKey, out string? scenarioId)
++            || scenario.StepContext.Status == ScenarioExecutionStatus.OK)
++            return;
++
++        var stepContext = scenario.StepContext;
++        var keyword = stepContext.StepInfo.StepInstance?.StepDefinitionKeyword.ToString()
++                      ?? stepContext.StepInfo.StepDefinitionType.ToString();
++        ((List<ReqNRollStepInfo>)scenario[ReqNRollConstants.StepsCollectionKey]).Add(new ReqNRollStepInfo(
++            keyword,
++            stepContext.StepInfo.Text,
++            stepContext.Status,
++            null,
++            stepContext.StepInfo.Table?.ToString(),
++            stepContext.StepInfo.MultilineText) { NotRunAfter = StepCollector.LastStepIdOf(scenarioId) });
++    }
++
++    private static InlineParamCapture[]? InlineParams(ScenarioStepContext stepContext)
++    {
+         // Capture inline parameter positions from binding match
+         InlineParamCapture[]? inlineParams = null;
+         var bindingMatch = stepContext.StepInfo.BindingMatch;
+@@ -145,20 +217,7 @@ public void AfterStep()
+                 inlineParams = captures.ToArray();
+         }
+ 
+-        // Pop the StepCollector step so assertion sub-steps are captured
+-        var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+-        var passed = stepContext.Status == ScenarioExecutionStatus.OK;
+-        var frame = _scenarioContext.TryGetValue(ReqNRollConstants.StepFrameKey, out int? opened) ? opened : null;
+-        StepCollector.CompleteFrame(scenarioId, frame, passed);
+-
+-        steps.Add(new ReqNRollStepInfo(
+-            stepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString(),
+-            stepContext.StepInfo.Text,
+-            stepContext.Status,
+-            stepStopwatch.Elapsed,
+-            tableText,
+-            docString,
+-            inlineParams) { FrameId = frame });
++        return inlineParams;
+     }
+ 
+     [AfterScenario(Order = int.MaxValue)]
+@@ -167,6 +226,22 @@ public void AfterScenario()
+         if (!IsOwner)
+             return;
+ 
++        CollectScenario(_scenarioContext, _featureContext);
++        ReqNRollTestContext.CurrentTestInfo = null;
++    }
++
++    /// <summary>
++    /// Hands the scenario to the report: from <see cref="AfterScenario"/>, or, when a suite's hook threw before that was
++    /// reached, from the scenario's finished event, without which a failed scenario left the report altogether.
++    /// </summary>
++    private static void CollectScenario(ScenarioContext _scenarioContext, FeatureContext _featureContext)
++    {
++        if (_scenarioContext.ContainsKey(ReqNRollConstants.CollectedKey)
++            || !_scenarioContext.ContainsKey(ReqNRollConstants.ScenarioRuntimeIdKey))
++            return;
++        _scenarioContext[ReqNRollConstants.CollectedKey] = true;
++
++        var _stopwatch = _scenarioContext.TryGetValue(ReqNRollConstants.ScenarioStopwatchKey, out Stopwatch? started) ? started : null;
+         _stopwatch?.Stop();
+         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+         var steps = (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey];
+@@ -226,7 +301,5 @@ public void AfterScenario()
+                 ? rowName
+                 : ExamplesBlockResolver.ResolveRowName(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo)
+         });
+-
+-        ReqNRollTestContext.CurrentTestInfo = null;
+     }
+ }
+\ No newline at end of file
+diff --git a/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs b/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
+index 34661dc3..795c8361 100644
+--- a/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
++++ b/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
+@@ -102,17 +102,23 @@ public static Feature[] ToFeatures(this IEnumerable<ReqNRollScenarioInfo> scenar
+     /// </summary>
+     private static ScenarioStep[]? MapSteps(List<ReqNRollStepInfo> steps, ScenarioStep[] collectedSteps)
+     {
+-        if (steps.Count > 0 && steps.All(s => s.FrameId is null))
++        if (steps.Count > 0 && steps.All(s => s.FrameId is null && s.NotRunAfter is null))
+             return MapStepsByPosition(steps, collectedSteps);
+ 
+-        var byFrame = steps.ToDictionary(s => s.FrameId!.Value);
++        var byFrame = steps.Where(s => s.FrameId is not null).ToDictionary(s => s.FrameId!.Value);
++        var notRun = new Queue<ReqNRollStepInfo>(steps.Where(s => s.FrameId is null));
+         var mapped = new List<ScenarioStep>();
+         var priorFailure = false;
+         foreach (var collected in collectedSteps)
+         {
++            // A step that did not run stands where it came in the scenario: after the step opened last before it.
++            while (notRun.TryPeek(out var next) && next.NotRunAfter < collected.CollectedId)
++                mapped.Add(MapStep(notRun.Dequeue(), null, priorFailure));
++
+             if (collected.CollectedId is not { } id || !byFrame.TryGetValue(id, out var step))
+             {
+                 mapped.Add(collected);
++                priorFailure |= collected.Status == ExecutionResult.Failed;
+                 continue;
+             }
+ 
+@@ -121,12 +127,15 @@ public static Feature[] ToFeatures(this IEnumerable<ReqNRollScenarioInfo> scenar
+                 priorFailure = true;
+         }
+ 
++        while (notRun.TryDequeue(out var rest))
++            mapped.Add(MapStep(rest, null, priorFailure));
++
+         return mapped.Count > 0 ? mapped.ToArray() : null;
+     }
+ 
+-    private static ScenarioStep MapStep(ReqNRollStepInfo step, ScenarioStep collected, bool priorFailure) => new()
++    private static ScenarioStep MapStep(ReqNRollStepInfo step, ScenarioStep? collected, bool priorFailure) => new()
+     {
+-        CollectedId = collected.CollectedId,
++        CollectedId = collected?.CollectedId,
+         Keyword = step.Keyword,
+         Text = step.Text,
+         Status = step.Status.ToStepResult(priorFailure),
+@@ -134,8 +143,8 @@ public static Feature[] ToFeatures(this IEnumerable<ReqNRollScenarioInfo> scenar
+         DocString = step.DocString,
+         Parameters = ParseTableText(step.TableText),
+         TextSegments = BuildTextSegments(step),
+-        SubSteps = collected.SubSteps,
+-        Attachments = collected.Attachments,
++        SubSteps = collected?.SubSteps,
++        Attachments = collected?.Attachments,
+     };
+ 
+     private static ScenarioStep[] MapStepsByPosition(List<ReqNRollStepInfo> steps, ScenarioStep[]? collectedSteps = null)
+diff --git a/src/Kronikol/Tracking/StepCollector.cs b/src/Kronikol/Tracking/StepCollector.cs
+index fecf4d3b..4b5cc78c 100644
+--- a/src/Kronikol/Tracking/StepCollector.cs
++++ b/src/Kronikol/Tracking/StepCollector.cs
+@@ -135,6 +135,16 @@ internal static void CompleteFrame(string? testId, int? frameId, bool passed, st
+             return state.StepStack.Count > 0 ? state.StepStack.Peek().Id : 0;
+     }
+ 
++    /// <summary>The id of the step this test opened last, 0 if none; a step that did not run is placed after it.</summary>
++    internal static int LastStepIdOf(string? testId)
++    {
++        if (testId is null || !States.TryGetValue(testId, out var state))
++            return 0;
++
++        lock (state)
++            return state.LastStepId;
++    }
++
+     private static int? OpenStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
+         string[][]? table, string? docString)
+     {

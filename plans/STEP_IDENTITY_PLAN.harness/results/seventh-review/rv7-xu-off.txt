@@ -1,0 +1,119 @@
+TestRunReport.krkl  4.9 KB on disk, 46 KB as JSON  Kronikol 5.28.2+638f275d2433523444472248faad32c4b5f3dc42
+2026-11-03T22:09:50Z → 2026-11-03T22:09:51Z
+9 scenarios · 0 failed · 50 interactions · 1 distinct bodies
+
+Probes  9 passed
+
+Slowest:
+  s7  0.21s  P7 a step that starts another and ends first
+  s0  0.15s  P0 control
+  s5  0.14s  P5 two steps in parallel the first ending first
+next: scenarios · services
+=== Files: AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl query.cs service.json 
+
+### s0 steps
+s0  Probes › P0 control  [Passed]  0.15s
+
+  0     A customer is registered  0.12s  [i0]
+  1     An order is submitted  0s  [i2]
+2 calls · interactions s0 · flow s0
+--- s0 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     6 ms     6 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+
+### s1 steps
+s1  Probes › P1 a call between two steps  [Passed]  0s
+
+  0     A customer is registered  [i0-i2] 2 calls
+  1     An order is submitted  [i4]
+3 calls · interactions s1 · flow s1
+--- s1 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /between        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+
+### s2 steps
+s2  Probes › P2 a call before the first step and after the last  [Passed]  0s
+
+  0     A customer is registered  [i2-i4] 2 calls
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s2 · flow s2
+--- s2 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /before         1      0     0 ms     0 ms      1       4 B
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /after          1      0     0 ms     0 ms      1       4 B
+
+### s3 steps
+s3  Probes › P3 a call after a step that made none  [Passed]  0s
+
+  0     A customer is registered  [i0-i2] 2 calls
+  1     A step with no call
+2 calls · interactions s3 · flow s3
+--- s3 calls
+step  method  path               calls errors   median      max bodies     bytes
+0     POST    /customers             1      0     0 ms     0 ms      1       4 B
+0     POST    /after-empty-step      1      0     0 ms     0 ms      1       4 B
+
+### s4 steps
+s4  Probes › P4 a call in teardown  [Passed]  0s
+
+  0     A customer is registered  [i0-i2] 2 calls
+2 calls · interactions s4 · flow s4
+--- s4 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /teardown       1      0     0 ms     0 ms      1       4 B
+
+### s5 steps
+s5  Probes › P5 two steps in parallel the first ending first  [Passed]  0.14s
+
+  0     A fast parallel  0.14s  [i0-i2] 2 calls
+    0.0   A slow parallel  0.02s
+  1     An order is submitted  [i4]
+3 calls · interactions s5 · flow s5
+--- s5 calls
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /fast        1      0     0 ms     0 ms      1       4 B
+0     POST    /slow        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders      1      0     0 ms     0 ms      1       4 B
+
+### s6 steps
+s6  Probes › P6 a step longer than 110 characters  [Passed]  0s
+
+  0     A basket that held two apples and a pear last week but nothing at all this week while the …  [i0]
+  1     An order is submitted  [i2]
+2 calls · interactions s6 · flow s6
+--- s6 calls
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /long        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders      1      0     0 ms     0 ms      1       4 B
+
+### s7 steps
+s7  Probes › P7 a step that starts another and ends first  [Passed]  0.21s
+
+  0     A step that starts another and ends first  0.16s  [i0-i2] 2 calls
+    0.0   A slow parallel  0s
+  1     An order is submitted  [i4]
+3 calls · interactions s7 · flow s7
+--- s7 calls
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /own         1      0     0 ms     0 ms      1       4 B
+0     POST    /slow        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders      1      0     0 ms     0 ms      1       4 B
+
+### s8 steps
+s8  Probes › P8 a step still open at report time  [Passed]  0.06s
+
+  0     A customer is registered  [i0]
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s8 · flow s8
+--- s8 calls
+step  method  path           calls errors   median      max bodies     bytes
+0     POST    /customers         1      0     0 ms     0 ms      1       4 B
+-     POST    /open              1      0     0 ms     0 ms      1       4 B
+-     POST    /after-open        1      0     0 ms     0 ms      1       4 B
+-     POST    /orders            1      0     0 ms     0 ms      1       4 B
+-     POST    /after-nested      1      0     0 ms     0 ms      1       4 B

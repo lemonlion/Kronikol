@@ -1,0 +1,111 @@
+=== 5.27.13, feature tagged every
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 101 ms - HookSteps.Every.dll (net10.0)
+s0  A hook step in every scenario, with a background › E0 with a coupon  [Passed]  0.08s
+  b0    Given a registered customer  0.01s
+  0     And the customer has a coupon  0s
+    0.0   A customer is registered
+  1     When the customer places the order  0s
+    1.0   A coupon is added
+  2     Then the order is confirmed  0s
+    2.0   An order is submitted
+   5 calls belong to no step (before the first step, or attribution was not trusted)
+      call> - /seed
+      call> - /customers
+      call> - /coupons
+      call> - /orders
+      call> - /orders/1
+      call> 5 buckets
+s1  A hook step in every scenario, with a background › E1 with a voucher  [Passed]  0s
+  b0    Given a registered customer  0.01s
+  0     And the customer has a voucher
+    0.0   A customer is registered
+  1     When the customer places the order
+    1.0   A voucher is added
+  2     Then the order is confirmed
+    2.0   An order is submitted
+   5 calls belong to no step (before the first step, or attribution was not trusted)
+      call> - /seed
+      call> - /customers
+      call> - /vouchers
+      call> - /orders
+      call> - /orders/1
+      call> 5 buckets
+
+=== 5.27.13, feature tagged some
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 94 ms - HookSteps.Every.dll (net10.0)
+s0  A hook step in one scenario, with a background › S0 with a coupon  [Passed]  0.01s
+  b0    Given a registered customer
+  0     And the customer has a coupon  0s
+    0.0   A customer is registered
+  1     When the customer places the order
+    1.0   A coupon is added
+  2     Then the order is confirmed
+    2.0   An order is submitted
+   5 calls belong to no step (before the first step, or attribution was not trusted)
+      call> - /seed
+      call> - /customers
+      call> - /coupons
+      call> - /orders
+      call> - /orders/1
+      call> 5 buckets
+s1  A hook step in one scenario, with a background › S1 with a voucher  [Passed]  0.08s
+  b0    Given a registered customer  [i0]
+  0     And the customer has a voucher  0s  [i2]
+    0.0   A voucher is added
+  1     When the customer places the order  0s  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  0s  [i6]
+    2.0   The order is read back
+      call> b0 /customers
+      call> 0 /vouchers
+      call> 1 /orders
+      call> 2 /orders/1
+      call> 4 buckets
+
+=== 5.27.13, feature tagged whenfirst
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 71 ms - HookSteps.Every.dll (net10.0)
+s0  A hook step in every scenario, each starting with a When › W0 confirmed  [Passed]  0
+  0     When the customer places the order  0.01s
+  1     Then the order is confirmed  0s
+    1.0   An order is submitted
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+      call> - /seed
+      call> - /orders
+      call> - /orders/1
+      call> 3 buckets
+s1  A hook step in every scenario, each starting with a When › W1 read back  [Passed]  0
+  0     When the customer places the order
+  1     Then the order is read back
+    1.0   An order is submitted
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+      call> - /seed
+      call> - /orders
+      call> - /orders/1
+      call> 3 buckets
+
+=== 5.27.13, feature tagged whenfirstgiven
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 88 ms - HookSteps.Every.dll (net10.0)
+s0  A Given step method in a hook, each scenario starting with a When › G0 confirmed  [P
+  0     When the customer places the order
+  1     Then the order is confirmed
+    1.0   An order is submitted
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+      call> - /tenant
+      call> - /orders
+      call> - /orders/1
+      call> 3 buckets
+s1  A Given step method in a hook, each scenario starting with a When › G1 read back  [P
+  0     When the customer places the order  0.01s
+  1     Then the order is read back  0s
+    1.0   An order is submitted
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+      call> - /tenant
+      call> - /orders
+      call> - /orders/1
+      call> 3 buckets
+
+=== 5.27.13, feature tagged everyfile
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 295 ms - HookSteps.Every.dll (net10.0)
+[xUnit.net 00:00:00.93]     [Test Assembly Cleanup Failure (HookSteps.Every.dll)] System.Collections.Generic.KeyNotFoundException
+NO REPORT was written
+

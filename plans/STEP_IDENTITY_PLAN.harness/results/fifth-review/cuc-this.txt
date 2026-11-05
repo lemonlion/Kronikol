@@ -1,0 +1,41 @@
+=================== att (this)
+degraded: {}
+5 scenarios · 2 failed · 0 interactions · 0 distinct bodies
+=================== att-hooks (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'the page is open'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+5 scenarios · 2 failed · 0 interactions · 0 distinct bodies
+=================== att-notests (this)
+degraded: {}
+5 scenarios · 2 failed · 0 interactions · 0 distinct bodies
+=================== att-notests-hooks (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'the page is open'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+5 scenarios · 2 failed · 0 interactions · 0 distinct bodies
+=================== main (this)
+degraded: {}
+6 scenarios · 1 failed · 0 interactions · 0 distinct bodies
+=================== main-hooks (this)
+degraded: {'StepAttributionMismatch': 10}
+! Step marker 1 does not match step 'the catalogue is loaded'; interactions after it carry no stepPath. (×10; summary --json lists all 10)
+6 scenarios · 1 failed · 0 interactions · 0 distinct bodies
+=================== bypass (this)
+degraded: {}
+3 scenarios · 1 failed · 0 interactions · 0 distinct bodies
+=================== bypass-hooks (this)
+degraded: {}
+3 scenarios · 1 failed · 0 interactions · 0 distinct bodies
+=================== skip (this)
+degraded: {}
+! Cucumber messages: 2 scenario(s) have no 'kronikol-test-id' attachment, so captured interactions cannot be joined to them: 'A step returns skipped', 'A step fai…
+2 scenarios · 2 failed · 0 interactions · 0 distinct bodies
+=================== skip-hooks (this)
+degraded: {}
+! Cucumber messages: 2 scenario(s) have no 'kronikol-test-id' attachment, so captured interactions cannot be joined to them: 'A step returns skipped', 'A step fai…
+2 scenarios · 2 failed · 0 interactions · 0 distinct bodies
+=================== i105 (this)
+degraded: {}
+1 scenarios · 0 failed · 0 interactions · 0 distinct bodies
+=================== i105-hooks (this)
+degraded: {}
+1 scenarios · 0 failed · 0 interactions · 0 distinct bodies

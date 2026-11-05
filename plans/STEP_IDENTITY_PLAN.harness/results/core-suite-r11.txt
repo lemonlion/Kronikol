@@ -1,0 +1,2 @@
+[xUnit.net 00:03:54.05]     Kronikol.Tests.Ingestion.Cucumber.CucumberAttachmentIngestTests.With_hooks_kept_the_step_markers_match_the_steps [FAIL]
+Failed!  - Failed:     1, Passed: 11824, Skipped:     2, Total: 11827, Duration: 15 m 24 s - Kronikol.Tests.dll (net10.0)

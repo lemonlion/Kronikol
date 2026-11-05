@@ -1,0 +1,76 @@
+
+### s0 steps
+s0  Probes › P0 control  [Passed]  0s
+stableId b9d4c8d44fdabea9
+open: TestRunReport.html#sid-b9d4c8d44fdabea9
+
+  0     A customer is registered  [i0]
+  1     An order is submitted  [i2]
+2 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s1 steps
+s1  Probes › P1 a call between two steps  [Passed]  0s
+stableId c7092bf89924ebea
+open: TestRunReport.html#sid-c7092bf89924ebea
+
+  0     A customer is registered  [i0-i2] 2 calls
+  1     An order is submitted  [i4]
+3 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /between        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s2 steps
+s2  Probes › P2 a call before the first step and after the last  [Passed]  0.07s
+stableId d338b2d76e27b3ba
+open: TestRunReport.html#sid-d338b2d76e27b3ba
+
+  0     A customer is registered  0.01s  [i2-i4] 2 calls
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /before         1      0     2 ms     2 ms      1       4 B
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /after          1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s3 steps
+s3  Probes › P3 a call after a step that made none  [Passed]  0s
+stableId b7117f75c28c1669
+open: TestRunReport.html#sid-b7117f75c28c1669
+
+  0     A customer is registered  [i0]
+  1     A step with no call  [i2]
+2 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+step  method  path               calls errors   median      max bodies     bytes
+0     POST    /customers             1      0     0 ms     0 ms      1       4 B
+1     POST    /after-empty-step      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s4 steps
+s4  Probes › P4 a call in teardown  [Passed]  0s
+stableId eae90d0848ec6bb5
+open: TestRunReport.html#sid-eae90d0848ec6bb5
+
+  0     A customer is registered  [i0-i2] 2 calls
+2 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /teardown       1      0     0 ms     0 ms      1       4 B
+2 buckets

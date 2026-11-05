@@ -1,0 +1,30 @@
+=== mix-new-row
+── 0  Given a thing
+  s0/i0     Tests → Shop  POST /given
+── 1  When another thing
+  s0/i2     Tests → Shop  POST /when
+── 2  Then the last thing
+  s0/i4     Tests → Shop  POST /then
+degraded {}
+=== mix-background
+── b0  Given a shop
+  s0/i0     Tests → Shop  POST /shop
+── 0  When a basket
+  s0/i2     Tests → Shop  POST /basket
+── 1  Then it is empty
+  s0/i4     Tests → Shop  POST /check
+degraded {}
+=== custom-adapter
+=== hand-manual-raw
+── 0  When the file C:\temp\new is read
+  s0/i0     Tests → Shop  POST /read
+── 1  And a value <$name> is sent
+  s0/i2     Tests → Shop  POST /send
+── 2  Then it is confirmed
+  s0/i4     Tests → Shop  POST /confirm
+degraded {}
+=== manual-bar
+── 0  Given a thing
+  s0/i0     Tests → Shop  POST /given
+  s0/i2     Tests → Shop  POST /cleanup
+degraded {}

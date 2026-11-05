@@ -1,0 +1,166 @@
+=================== S1-store-plain (this)
+degraded: {}
+s0  Store › Plain  [Passed]  0.05s
+  0     Given a shop  0.01s  [i0]
+  1     When a basket  0.01s  [i2]
+  2     Then it is empty  0.01s  [i4]
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /shop        1      0                        1       4 B
+1     POST    /basket      1      0                        1       4 B
+2     POST    /check       1      0                        1       4 B
+3 buckets
+=================== S10-store-nested (this)
+degraded: {}
+s0  Store › Nested  [Passed]  0.05s
+  0     Given a shop  0.01s  [i0-i2] 2 calls
+    0.0   Seed the stock  0.01s
+  1     Then it is empty  0.01s  [i4]
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path    calls errors   median      max bodies     bytes
+0     POST    /seed       1      0                        1       4 B
+0     POST    /shop       1      0                        1       4 B
+1     POST    /check      1      0                        1       4 B
+3 buckets
+=================== S11-store-row-not-run (this)
+degraded: {}
+s0  Store › Row not run  [Passed]  0.05s
+  0     When a step that did not run  0.01s
+  1     Given a shop  0.01s  [i0]
+  2     Then it is empty  0.01s  [i2]
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path    calls errors   median      max bodies     bytes
+1     POST    /shop       1      0                        1       4 B
+2     POST    /check      1      0                        1       4 B
+2 buckets
+=================== S12-store-same-text (this)
+degraded: {}
+s0  Store › Same text  [Passed]  0.05s
+  0     Given a basket  0.01s  [i0]
+  1     And a basket  0.01s  [i2]
+  2     Then it is empty  0.01s  [i4]
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path    calls errors   median      max bodies     bytes
+0     POST    /one        1      0                        1       4 B
+1     POST    /two        1      0                        1       4 B
+2     POST    /check      1      0                        1       4 B
+3 buckets
+=================== S2-store-background (this)
+degraded: {}
+s0  Store › Background  [Passed]  0.05s
+  b0    Given a shop  0.01s  [i0]
+  b1    And a customer  0.01s  [i2]
+  0     When a basket  0.01s  [i4]
+  1     Then it is empty  0.01s  [i6]
+4 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path       calls errors   median      max bodies     bytes
+b0    POST    /shop          1      0                        1       4 B
+b1    POST    /customer      1      0                        1       4 B
+0     POST    /basket        1      0                        1       4 B
+1     POST    /check         1      0                        1       4 B
+4 buckets
+=================== S3-store-untimed (this)
+degraded: {}
+s0  Store › Untimed  [Passed]  0.05s
+  0     Given a shop  0.01s  [i0]
+  1     When a basket  0.01s  [i2]
+  2     Then it is empty  0.01s  [i4]
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /shop        1      0                        1       4 B
+1     POST    /basket      1      0                        1       4 B
+2     POST    /check       1      0                        1       4 B
+3 buckets
+=================== S4-store-escapes (this)
+degraded: {}
+s0  Store › Escapes  [Passed]  0.05s
+  0     Given the customer with a very long name indeed with a very long name indeed with a very l…  0.01s  
+  1     When the file C:\temp\new is read  0.01s  [i2]
+  2     And a value <$name> and [link] and **bold** is sent  0.01s  [i4]
+  3     Then it is confirmed  0.01s  [i6]
+4 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+0     POST    /long         1      0                        1       4 B
+1     POST    /read         1      0                        1       4 B
+2     POST    /send         1      0                        1       4 B
+3     POST    /confirm      1      0                        1       4 B
+4 buckets
+=================== S5-store-two-lines (this)
+degraded: {}
+s0  Store › Two lines  [Passed]  0.05s
+  0     When the order is placed for cash  0.01s  [i0]
+  1     And the order is placed for card  0.01s  [i2]
+  2     Then it is confirmed  0.01s  [i4]
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+0     POST    /cash         1      0                        1       4 B
+1     POST    /card         1      0                        1       4 B
+2     POST    /confirm      1      0                        1       4 B
+3 buckets
+=================== S6-store-hook-bar (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'a shop'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  Store › Hook bar  [Passed]  0.05s
+  0     Given a shop  0.01s
+  1     When a basket  0.01s
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /seed        1      0                        1       4 B
+-     POST    /shop        1      0                        1       4 B
+-     POST    /basket      1      0                        1       4 B
+3 buckets
+=================== S7-store-hook-bar-background (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 2 does not match step 'a basket'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  Store › Hook bar background  [Passed]  0.05s
+  b0    Given a shop  0.01s
+  0     When a basket  0.01s
+  1     Then it is empty  0.01s
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /seed        1      0                        1       4 B
+-     POST    /shop        1      0                        1       4 B
+-     POST    /basket      1      0                        1       4 B
+-     POST    /check       1      0                        1       4 B
+4 buckets
+=================== S8-store-outline-row (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 2 does not match step 'a basket'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  Store › Outline row  [Passed]  0.05s
+  b0    Given a shop named <name>  0.01s
+  0     When a basket  0.01s
+  1     Then it is empty  0.01s
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /shop        1      0                        1       4 B
+-     POST    /basket      1      0                        1       4 B
+-     POST    /check       1      0                        1       4 B
+3 buckets
+=================== S9-store-outline-untimed (this)
+degraded: {}
+s0  Store › Outline untimed  [Passed]  0.05s
+  0     Given a basket  0.01s  [i0]
+  1     When an order with <amount>  0.01s
+  2     Then it is confirmed  0.01s
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+0     POST    /basket       1      0                        1       4 B
+-     POST    /order        1      0                        1       4 B
+-     POST    /confirm      1      0                        1       4 B
+3 buckets

@@ -1,0 +1,59 @@
+Diagnostics (3):
+  BackgroundCalls ×2  3 calls arrived after 'R0 a test that passes on its second attempt' ended and are listed a…  (summary --json lists all 2)
+  HistoryUnavailable ×1  no history ledger: no .git or .kronikol directory above C:\Users\cex\AppData\Local\Temp\cl…
+next: failures
+
+### s0 steps
+s0  Retries › R0 a test that passes on its second attempt  [Failed]  0.08s
+stableId a66a9905b4964ab6
+open: TestRunReport.html#sid-a66a9905b4964ab6
+
+  0     Given a registered customer  0.08s  [i0]
+    0.0   A customer is registered  0.08s
+✗ 1     When a flaky step runs  0s  [i2]
+    1.0   An order is submitted
+  2     Then the order is read back
+    2.0   A customer is registered
+2 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     1 ms     1 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s1 steps
+s1  Retries › R1 a control with no retry  [Passed]  0s
+stableId 637250d6f1aa9a43
+open: TestRunReport.html#sid-637250d6f1aa9a43
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     Then the order is read back  [i2]
+    1.0   The order is read back
+2 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s2 steps
+s2  Retries › R2 a test that fails every attempt  [Failed]  0s
+stableId 51c4677b1e6c53f9
+open: TestRunReport.html#sid-51c4677b1e6c53f9
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+✗ 1     When a step always fails  [i2]
+    1.0   An order is submitted
+  2     Then the order is read back
+    2.0   A customer is registered
+2 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2 buckets

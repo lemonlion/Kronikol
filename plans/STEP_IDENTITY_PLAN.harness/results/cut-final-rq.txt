@@ -1,0 +1,222 @@
+Diagnostics (1):
+  BackgroundCalls ×1  1 call arrived after 'R03 a hook leaves a step method running and the first step is undefi…
+next: failures
+
+### s0 steps
+s0  Review probes › R00 a forwarding step method awaited normally is the control  [Passed]  0.94s
+stableId 42a28784c0569b55
+at Features/Review.feature:3
+open: TestRunReport.html#sid-42a28784c0569b55
+
+  0     Given a forwarding step method is awaited  0.36s  [i0]
+    0.0   A forwarding check  0.33s
+      0.0.0 A slow inner check  0.33s
+  1     When the order takes a while and is then read back  0.52s  [i2-i4] 2 calls
+    1.0   An order is submitted slowly  0.51s
+    1.1   The order is read back
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+4 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method  path         calls errors   median      max bodies     bytes
+0     POST    /background      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders          1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s1 steps
+s1  Review probes › R01 a forwarding step method left running  [Passed]  0.6s
+stableId 9a25a598a25b246f
+at Features/Review.feature:8
+open: TestRunReport.html#sid-9a25a598a25b246f
+
+  0     Given a forwarding step method is left running  0s  [i0]
+    0.0   A forwarding check  0.31s
+      0.0.0 A slow inner check  0.53s
+  1     When the order takes a while and is then read back  0.55s  [i2-i6] 3 calls
+    1.0   An order is submitted slowly  0.31s
+    1.1   The order is read back
+  2     Then the order is confirmed  [i8]
+    2.0   The order is read back
+5 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path         calls errors   median      max bodies     bytes
+0     POST    /started         1      0     0 ms     0 ms      1       4 B
+1     POST    /background      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders          1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s2 steps
+s2  Review probes › R02 a sync step method that leaves one running  [Passed]  0.73s
+stableId 0c642dc20e033e18
+at Features/Review.feature:13
+open: TestRunReport.html#sid-0c642dc20e033e18
+
+  0     Given a sync step method leaves one running  0.08s  [i0]
+    0.0   A sync wrapper  0.59s
+      0.0.0 A slow inner check  0s
+  1     When the order takes a while and is then read back  0.57s  [i2-i6] 3 calls
+    1.0   An order is submitted slowly  0.26s
+    1.1   The order is read back
+  2     Then the order is confirmed  0.01s  [i8]
+    2.0   The order is read back  0.01s
+5 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step  method  path         calls errors   median      max bodies     bytes
+0     POST    /started         1      0     1 ms     1 ms      1       4 B
+1     POST    /background      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders          1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s3 steps
+s3  Review probes › R03 a hook leaves a step method running and the first step is undefined  [Skipped]  0.04s
+stableId 09193b549681f3d1
+at Features/Review.feature:24
+open: TestRunReport.html#sid-09193b549681f3d1
+
+  0     A slow inner check  0.31s
+- 1     Given nobody wrote this step either
+- 2     When the customer places the order
+- 3     Then the order is confirmed
+0 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s4 steps
+s4  Review probes › R05 a hook's step method runs a Gherkin step and then makes a call  [Passed]  0.03s
+stableId 672047355a4986a1
+at Features/Review.feature:35
+open: TestRunReport.html#sid-672047355a4986a1
+
+  0     Seed through a step  0.02s
+  1     Given a registered customer  0s  [i0-i2] 2 calls
+    1.0   A customer is registered
+  2     Given a registered customer  [i4]
+    2.0   A customer is registered
+  3     When the customer places the order  [i6]
+    3.0   An order is submitted
+4 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+step  method  path         calls errors   median      max bodies     bytes
+1     POST    /customers       1      0     0 ms     0 ms      1       4 B
+1     POST    /seed-after      1      0     0 ms     0 ms      1       4 B
+2     POST    /customers       1      0     0 ms     0 ms      1       4 B
+3     POST    /orders          1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s5 steps
+s5  Review probes › R06 two step methods in parallel in a hook, the first ending first  [Passed]  0.26s
+stableId 6c054698d1cb48ee
+at Features/Review.feature:40
+open: TestRunReport.html#sid-6c054698d1cb48ee
+
+  0     A fast parallel  0.14s  [i0-i2] 2 calls
+    0.0   A slow parallel  0.03s
+  1     Given a registered customer  0s  [i4]
+    1.0   A customer is registered
+  2     When the customer places the order  0s  [i6]
+    2.0   An order is submitted
+4 calls · interactions s5 · flow s5
+
+### s5 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /fast           1      0     0 ms     0 ms      1       4 B
+0     POST    /slow           1      0     0 ms     0 ms      1       4 B
+1     POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     POST    /orders         1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s6 steps
+s6  Review probes › R13 a step method fails in AfterScenario  [Failed]  0s
+stableId efaedb680a94b703
+at Features/Review.feature:45
+open: TestRunReport.html#sid-efaedb680a94b703
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+✗ 2     Cleaning fails  [i4]
+      cleaning failed
+3 calls · interactions s6 · flow s6
+
+### s6 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /clean          1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s7 steps
+s7  Review probes › R17 the control for R01, the plan's T17 shape on the same later steps  [Passed]  0.52s
+stableId f3920cdc511edc71
+at Features/Review.feature:18
+open: TestRunReport.html#sid-f3920cdc511edc71
+
+  0     Given a step method is left running  0s  [i0]
+    0.0   A slow background check  0.52s
+  1     When the order takes a while and is then read back  0.52s  [i2-i6] 3 calls
+    1.0   An order is submitted slowly  0.31s
+    1.1   The order is read back
+  2     Then the order is confirmed  [i8]
+    2.0   The order is read back
+5 calls · interactions s7 · flow s7
+
+### s7 calls: step, method, path
+step  method  path         calls errors   median      max bodies     bytes
+0     POST    /started         1      0     0 ms     0 ms      1       4 B
+1     POST    /background      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders          1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s8 steps
+s8  Review probes › R18 a failing forwarding step method left running, in a scenario that passes  [Passed]  0.63s
+stableId 491434f97ed7e2e1
+at Features/Review.feature:49
+open: TestRunReport.html#sid-491434f97ed7e2e1
+
+  0     Given a failing forwarding step method is left running  0s  [i0]
+  ✗ 0.0   A failing forwarding check  0.11s
+        background check failed
+      0.0.0 A failing inner check  0.52s
+  1     When the order takes a while and is then read back  0.58s  [i2-i4] 2 calls
+  ✗ 1.0   An order is submitted slowly  0.11s
+        background check failed
+    1.1   The order is read back
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+4 calls · interactions s8 · flow s8
+
+### s8 calls: step, method, path
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /started       1      0     0 ms     0 ms      1       4 B
+1     POST    /orders        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s9 steps
+s9  Review probes › R99 keeps the run alive past the left-running steps  [Passed]  1.55s
+stableId 01766e18807466ce
+at Features/Review.feature:54
+open: TestRunReport.html#sid-01766e18807466ce
+
+  0     Given the run waits a while  1.54s
+0 calls · interactions s9 · flow s9
+
+### s9 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total

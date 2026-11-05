@@ -1,0 +1,4 @@
+Unhandled exception: Could not find file 'C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\cuts\cut-final-z-rq\bin\Debug\net10.0\Reports\query.cs'.
+
+### failures
+Unhandled exception: Could not find file 'C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\cuts\cut-final-z-rq\bin\Debug\net10.0\Reports\query.cs'.

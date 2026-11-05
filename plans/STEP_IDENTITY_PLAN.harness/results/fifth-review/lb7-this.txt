@@ -1,0 +1,104 @@
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl TestRunReport.labs.html 
+degraded: {'BackgroundCalls': 1}
+9 scenarios · 0 failed · 52 interactions · 1 distinct bodies
+  BackgroundCalls ×1  1 call arrived after 'M2 a step method after the scenario' ended and are listed as backgro…
+s0  Probes › M0 control  [Passed]
+  0     GIVEN Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     WHEN When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     THEN Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s0 · flow s0
+    call 0 /customers 1
+    call 1 /orders 1
+    call 2 /orders/1 1
+    call 3 buckets 
+s1  Probes › M1 a scenario decorator runs it again  [Passed]
+  0     GIVEN Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     WHEN When it fails the first time  [i2]
+  2     A customer is registered  [i4-i6] 2 calls
+  3     THEN Then the order is confirmed  [i8]
+    3.0   The order is read back
+5 calls · interactions s1 · flow s1
+    call 0 /customers 1
+    call 1 /flaky 1
+    call 2 /customers 1
+    call 2 /flaky 1
+    call 3 /orders/1 1
+    call 5 buckets 
+s2  Probes › M2 a step method after the scenario  [Passed]
+  0     GIVEN Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     THEN Then the order is confirmed  [i2]
+    1.0   The order is read back
+  2     The order is read back
+2 calls · interactions s2 · flow s2
+    call 0 /customers 1
+    call 1 /orders/1 1
+    call 2 buckets 
+s3  Probes › M3 a step ignores the scenario  [Skipped]
+  0     GIVEN Given a registered customer  [i0]
+    0.0   A customer is registered
+- 1     WHEN When the scenario ignores itself  [i2]
+- 2     THEN Then the order is confirmed
+2 calls · interactions s3 · flow s3
+    call 0 /customers 1
+    call 1 /ignored 1
+    call 2 buckets 
+s4  Probes › M4 a step bypasses itself  [Bypassed]
+  0     GIVEN Given a registered customer  [i0]
+    0.0   A customer is registered
+~ 1     WHEN When the step bypasses itself  [i2]
+  2     THEN Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s4 · flow s4
+    call 0 /customers 1
+    call 1 /bypassed 1
+    call 2 /orders/1 1
+    call 3 buckets 
+s5  Probes › M5 two step methods at once  [Passed]
+  0     GIVEN Given two step methods at once  [i0-i2] 2 calls
+    0.0   A customer is registered
+    0.1   An order is submitted
+  1     THEN Then the order is confirmed  [i4]
+    1.0   The order is read back
+3 calls · interactions s5 · flow s5
+    call 0 /customers 1
+    call 0 /orders 1
+    call 1 /orders/1 1
+    call 3 buckets 
+s6  Probes › M6 nested composites  [Passed]
+  0     GIVEN Given a composite with inner composite  [i0-i6] 4 calls
+    0.0   GIVEN a composite step that seeds first
+      0.0.0 Reference data is seeded
+      0.0.1 Native sub step one
+        0.0.1.0 A customer is registered
+      0.0.2 Native sub step two
+        0.0.2.0 An order is submitted
+    0.1   Native sub step two
+      0.1.0 An order is submitted
+  1     THEN Then the order is confirmed  [i8]
+    1.0   The order is read back
+5 calls · interactions s6 · flow s6
+    call 0 /orders 2
+    call 0 /seed 1
+    call 0 /customers 1
+    call 1 /orders/1 1
+    call 4 buckets 
+s7  Probes › M7 two runs in one test  [Passed]
+  0     GIVEN Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     THEN Then the order is confirmed  [i2]
+    1.0   The order is read back
+2 calls · interactions s7 · flow s7
+    call 0 /customers 1
+    call 1 /orders/1 1
+    call 2 buckets 
+s8  Probes › M7 two runs in one test  [Passed]
+  0     WHEN When the customer places the order  [i0]
+    0.0   An order is submitted
+1 calls · interactions s8 · flow s8
+    call 0 /orders 1
+    call 1 buckets 

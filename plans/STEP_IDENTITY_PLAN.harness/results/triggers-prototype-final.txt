@@ -1,0 +1,638 @@
+### summary
+TestRunReport.krkl  16.4 KB on disk, 206.8 KB as JSON  Kronikol 5.27.13+abf7b0a3556be2319f2f2becf25b11b3c41885e2
+2026-11-02T15:07:53Z → 2026-11-02T15:07:55Z
+28 scenarios · 8 failed · 190 interactions · 1 distinct bodies
+
+Hook steps  19 passed, 1 skipped, 8 FAILED
+
+Failed:
+  s5  T05 a step method that fails in BeforeScenario  — seeding failed
+  s6  T06 an AfterStep hook that throws  — after step hook failed
+  s7  T07 a BeforeStep hook that throws  — before step hook failed
+  s8  T08 a failing step with steps after it  — payment declined
+  s13  T13 a step method in BeforeScenario and a failing step  — payment declined
+  s15  T15 an AfterScenario hook that throws  — after scenario hook failed
+  s22  T22 a BeforeScenarioBlock hook that throws on the second block  — block hook failed
+  s26  T26 a step that runs two steps, the first failing  — inner step failed
+  → failures
+
+Slowest:
+  s23  0.58s  T23 two step methods left running, one ending before its step
+  s24  0.52s  T24 a step method left running by a hook
+  s12  0.11s  T12 a step method in AfterStep
+
+Diagnostics (1):
+  BackgroundCalls ×1  1 call arrived after 'T17 a step method left running when its step ends' ended and are lis…
+next: failures
+
+### s0 steps
+s0  Hook steps › T00 no hook is the control  [Passed]  0s
+stableId 58fbd73db0bf91f5
+at Features/Triggers.feature:3
+open: TestRunReport.html#sid-58fbd73db0bf91f5
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s1 steps
+s1  Hook steps › T01 a step method in BeforeScenario  [Passed]  0s
+stableId 79d771e3a33f2891
+at Features/Triggers.feature:9
+open: TestRunReport.html#sid-79d771e3a33f2891
+
+  0     Reference data is seeded  [i0]
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+  2     When the customer places the order  [i4]
+    2.0   An order is submitted
+  3     Then the order is confirmed  [i6]
+    3.0   The order is read back
+4 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /seed           1      0     0 ms     0 ms      1       4 B
+1     POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     POST    /orders         1      0     0 ms     0 ms      1       4 B
+3     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s2 steps
+s2  Hook steps › T02 a step method in BeforeScenarioBlock  [Passed]  0s
+stableId b89b27e581b12e1b
+at Features/Triggers.feature:15
+open: TestRunReport.html#sid-b89b27e581b12e1b
+
+  0     Block prepared  [i0]
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+  2     Block prepared  [i4]
+  3     When the customer places the order  [i6]
+    3.0   An order is submitted
+  4     Block prepared  [i8]
+  5     Then the order is confirmed  [i10]
+    5.0   The order is read back
+6 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /block          1      0     0 ms     0 ms      1       4 B
+1     POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     POST    /block          1      0     0 ms     0 ms      1       4 B
+3     POST    /orders         1      0     0 ms     0 ms      1       4 B
+4     POST    /block          1      0     0 ms     0 ms      1       4 B
+5     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+6 buckets
+
+### s3 steps
+s3  Hook steps › T03 a step method in AfterScenarioBlock  [Passed]  0s
+stableId 648d35ff4b592a49
+at Features/Triggers.feature:21
+open: TestRunReport.html#sid-648d35ff4b592a49
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     Block prepared  [i2]
+  2     When the customer places the order  [i4]
+    2.0   An order is submitted
+  3     Block prepared  [i6]
+  4     Then the order is confirmed  [i8]
+    4.0   The order is read back
+  5     Block prepared  [i10]
+6 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /block          1      0     0 ms     0 ms      1       4 B
+2     POST    /orders         1      0     0 ms     0 ms      1       4 B
+3     POST    /block          1      0     0 ms     0 ms      1       4 B
+4     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+5     POST    /block          1      0     0 ms     0 ms      1       4 B
+6 buckets
+
+### s4 steps
+s4  Hook steps › T04 a step method in AfterScenario  [Passed]  0s
+stableId c15d024ece8b7bde
+at Features/Triggers.feature:27
+open: TestRunReport.html#sid-c15d024ece8b7bde
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+  3     Reference data is cleaned  [i6]
+4 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+3     POST    /clean          1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s5 steps
+s5  Hook steps › T05 a step method that fails in BeforeScenario  [Failed]  0.01s
+stableId 202fca2708f2635e
+at Features/Triggers.feature:33
+open: TestRunReport.html#sid-202fca2708f2635e
+
+✗ 0     Seeding fails  [i0]
+      seeding failed
+  1     Given a registered customer
+  2     When the customer places the order
+  3     Then the order is confirmed
+1 calls · interactions s5 · flow s5
+
+### s5 calls: step, method, path
+step  method  path   calls errors   median      max bodies     bytes
+0     POST    /seed      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s6 steps
+s6  Hook steps › T06 an AfterStep hook that throws  [Failed]  0s
+stableId 59ce507ca5c9b99a
+at Features/Triggers.feature:39
+open: TestRunReport.html#sid-59ce507ca5c9b99a
+
+✗ 0     Given a registered customer  0s  [i0]
+    0.0   A customer is registered
+1 calls · interactions s6 · flow s6
+
+### s6 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s7 steps
+s7  Hook steps › T07 a BeforeStep hook that throws  [Failed]  0s
+stableId 1e8d40b293efbdb4
+at Features/Triggers.feature:45
+open: TestRunReport.html#sid-1e8d40b293efbdb4
+
+✗ 0     Given a registered customer  0s
+  1     When the customer places the order
+  2     Then the order is confirmed
+0 calls · interactions s7 · flow s7
+
+### s7 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s8 steps
+s8  Hook steps › T08 a failing step with steps after it  [Failed]  0s
+stableId 9c2ee5bb50041909
+at Features/Triggers.feature:50
+open: TestRunReport.html#sid-9c2ee5bb50041909
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+✗ 1     When the payment fails  0s  [i2]
+  2     Then the order is confirmed
+2 calls · interactions s8 · flow s8
+
+### s8 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /payments       1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s9 steps
+s9  Hook steps › T09 a plain call in BeforeScenario with no step method  [Passed]  0s
+stableId 99c38c9c041d57db
+at Features/Triggers.feature:56
+open: TestRunReport.html#sid-99c38c9c041d57db
+
+  0     Given a registered customer  [i2]
+    0.0   A customer is registered
+  1     When the customer places the order  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s9 · flow s9
+
+### s9 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     0 ms     0 ms      1       4 B
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s10 steps
+s10  Hook steps › T10 a step method in BeforeStep  [Passed]  0s
+stableId a9ab61d6e0e22f43
+at Features/Triggers.feature:62
+open: TestRunReport.html#sid-a9ab61d6e0e22f43
+
+  0     Given a registered customer  0s  [i0-i2] 2 calls
+    0.0   Step observed
+    0.1   A customer is registered
+  1     When the customer places the order  [i4-i6] 2 calls
+    1.0   Step observed
+    1.1   An order is submitted
+  2     Then the order is confirmed  [i8-i10] 2 calls
+    2.0   Step observed
+    2.1   The order is read back
+6 calls · interactions s10 · flow s10
+
+### s10 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /observe        1      0     0 ms     0 ms      1       4 B
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /observe        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /observe        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+6 buckets
+
+### s11 steps
+s11  Hook steps › T11 a Given step method in BeforeScenario  [Passed]  0s
+stableId 8545141e78b371a0
+at Features/Triggers.feature:68
+open: TestRunReport.html#sid-8545141e78b371a0
+
+  0     Given A tenant exists  [i0]
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+  2     When the customer places the order  [i4]
+    2.0   An order is submitted
+  3     Then the order is confirmed  [i6]
+    3.0   The order is read back
+4 calls · interactions s11 · flow s11
+
+### s11 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /tenant         1      0     0 ms     0 ms      1       4 B
+1     POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     POST    /orders         1      0     0 ms     0 ms      1       4 B
+3     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s12 steps
+s12  Hook steps › T12 a step method in AfterStep  [Passed]  0.11s
+stableId 99c31d96ba32e344
+at Features/Triggers.feature:74
+open: TestRunReport.html#sid-99c31d96ba32e344
+
+  0     Given a registered customer  0.07s  [i0-i2] 2 calls
+    0.0   A customer is registered  0.03s
+    0.1   Step observed
+  1     When the customer places the order  0s  [i4-i6] 2 calls
+    1.0   An order is submitted  0s
+    1.1   Step observed
+  2     Then the order is confirmed  0s  [i8-i10] 2 calls
+    2.0   The order is read back
+    2.1   Step observed
+6 calls · interactions s12 · flow s12
+
+### s12 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     1 ms     1 ms      1       4 B
+0     POST    /observe        1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+1     POST    /observe        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+2     POST    /observe        1      0     0 ms     0 ms      1       4 B
+6 buckets
+
+### s13 steps
+s13  Hook steps › T13 a step method in BeforeScenario and a failing step  [Failed]  0s
+stableId e7ec82cdea4531d6
+at Features/Triggers.feature:80
+open: TestRunReport.html#sid-e7ec82cdea4531d6
+
+  0     Reference data is seeded  [i0]
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+✗ 2     When the payment fails  [i4]
+  3     Then the order is confirmed
+3 calls · interactions s13 · flow s13
+
+### s13 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /seed           1      0     0 ms     0 ms      1       4 B
+1     POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     POST    /payments       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s14 steps
+s14  Hook steps › T14 an attachment and a plain call in BeforeScenario  [Passed]  0.01s
+stableId a1aeb2c0e0d485ee
+at Features/Triggers.feature:86
+open: TestRunReport.html#sid-a1aeb2c0e0d485ee
+attachments: 1 of its own · attachments s14
+
+  0     Given a registered customer  [i2]
+    0.0   A customer is registered
+  1     When the customer places the order  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s14 · flow s14
+
+### s14 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     0 ms     0 ms      1       4 B
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s15 steps
+s15  Hook steps › T15 an AfterScenario hook that throws  [Failed]  0s
+stableId a61642b72f13567f
+at Features/Triggers.feature:92
+open: TestRunReport.html#sid-a61642b72f13567f
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s15 · flow s15
+
+### s15 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s16 steps
+s16  Hook steps › T16 a BeforeScenario hook at the same order as Kronikol's  [Passed]  0s
+stableId ee660157c7c0cee7
+at Features/Triggers.feature:98
+open: TestRunReport.html#sid-ee660157c7c0cee7
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s16 · flow s16
+
+### s16 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s17 steps
+s17  Hook steps › T17 a step method left running when its step ends  [Passed]  0s
+stableId f2a6cad4d4c8acb2
+at Features/Triggers.feature:103
+open: TestRunReport.html#sid-f2a6cad4d4c8acb2
+
+  0     Given a step method is left running  0s  [i0]
+    0.0   A slow background check  0.3s
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s17 · flow s17
+
+### s17 calls: step, method, path
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /started       1      0     0 ms     0 ms      1       4 B
+1     POST    /orders        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s18 steps
+s18  Hook steps › T18 an undefined step  [Skipped]  0.06s
+stableId b9644fd4a8828112
+at Features/Triggers.feature:108
+open: TestRunReport.html#sid-b9644fd4a8828112
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When nobody has written this step
+  2     Then the order is confirmed
+1 calls · interactions s18 · flow s18
+
+### s18 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s19 steps
+s19  Hook steps › T19 two step methods in parallel  [Passed]  0.05s
+stableId fcaeab7c4f1a786f
+at Features/Triggers.feature:114
+open: TestRunReport.html#sid-fcaeab7c4f1a786f
+
+  0     Given two step methods run in parallel  0.05s  [i0-i2] 2 calls
+    0.0   First parallel  0.05s
+      0.0.0 Second parallel  0.02s
+  1     When the customer places the order  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+4 calls · interactions s19 · flow s19
+
+### s19 calls: step, method, path
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /second        1      0     0 ms     0 ms      1       4 B
+0     POST    /first         1      0     0 ms     0 ms      1       4 B
+1     POST    /orders        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s20 steps
+s20  Hook steps › T20 a plain call in AfterScenario with no step method  [Passed]  0s
+stableId 795f43766bab3dd4
+at Features/Triggers.feature:120
+open: TestRunReport.html#sid-795f43766bab3dd4
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4-i6] 2 calls
+    2.0   The order is read back
+4 calls · interactions s20 · flow s20
+
+### s20 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+2     POST    /teardown       1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s21 steps
+s21  Hook steps › T21 a step that runs another step  [Passed]  0s
+stableId dd8badfd1ab74cdb
+at Features/Triggers.feature:125
+open: TestRunReport.html#sid-dd8badfd1ab74cdb
+
+  0     Given a step that runs another step  0s  [i0-i2] 2 calls
+    0.0   Given a registered customer
+      0.0.0 A customer is registered
+  1     When the customer places the order  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+4 calls · interactions s21 · flow s21
+
+### s21 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /outer          1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s22 steps
+s22  Hook steps › T22 a BeforeScenarioBlock hook that throws on the second block  [Failed]  0s
+stableId 44aec08cd2e367e0
+at Features/Triggers.feature:131
+open: TestRunReport.html#sid-44aec08cd2e367e0
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+1 calls · interactions s22 · flow s22
+
+### s22 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s23 steps
+s23  Hook steps › T23 two step methods left running, one ending before its step  [Passed]  0.58s
+stableId 1e10abc1a1e15204
+at Features/Triggers.feature:136
+open: TestRunReport.html#sid-1e10abc1a1e15204
+
+  0     Given two step methods are left running  0.07s  [i0-i2] 2 calls
+    0.0   A quick check  0.57s
+      0.0.0 A slow background check  0.02s
+  1     When the order takes a while  0.5s  [i4-i6] 2 calls
+    1.0   An order is submitted slowly  0.23s
+  2     Then the order is confirmed  [i8]
+    2.0   The order is read back
+5 calls · interactions s23 · flow s23
+
+### s23 calls: step, method, path
+step  method  path         calls errors   median      max bodies     bytes
+0     POST    /quick           1      0     0 ms     0 ms      1       4 B
+0     POST    /started         1      0     0 ms     0 ms      1       4 B
+1     POST    /background      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders          1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s24 steps
+s24  Hook steps › T24 a step method left running by a hook  [Passed]  0.52s
+stableId 2420533a25048467
+at Features/Triggers.feature:142
+open: TestRunReport.html#sid-2420533a25048467
+
+  0     A slow background check  0.5s
+  1     Given a registered customer  [i0]
+    1.0   A customer is registered
+  2     When the order takes a while  0.51s  [i2-i4] 2 calls
+    2.0   An order is submitted slowly  0.3s
+  3     Then the order is confirmed  [i6]
+    3.0   The order is read back
+4 calls · interactions s24 · flow s24
+
+### s24 calls: step, method, path
+step  method  path         calls errors   median      max bodies     bytes
+1     POST    /customers       1      0     0 ms     0 ms      1       4 B
+2     POST    /background      1      0     0 ms     0 ms      1       4 B
+2     POST    /orders          1      0     0 ms     0 ms      1       4 B
+3     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s25 steps
+s25  Hook steps › T25 a step that runs steps with arguments  [Passed]  0.02s
+stableId 8f12634f02796897
+at Features/Triggers.feature:147
+open: TestRunReport.html#sid-8f12634f02796897
+
+  0     Given a step that runs steps with arguments  0.01s  [i0-i2] 2 calls
+    0.0   Given the basket is listed  0s
+        · table
+        · sku
+        · count
+        · APPLE
+        · 3
+    0.1   Given the note "kept" says  0s
+        """a doc string"""
+  1     When the customer places the order  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+4 calls · interactions s25 · flow s25
+
+### s25 calls: step, method, path
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /basket        1      0     0 ms     0 ms      1       4 B
+0     POST    /note          1      0     0 ms     0 ms      1       4 B
+1     POST    /orders        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s26 steps
+s26  Hook steps › T26 a step that runs two steps, the first failing  [Failed]  0s
+stableId 5b0424ec3f54772a
+at Features/Triggers.feature:152
+open: TestRunReport.html#sid-5b0424ec3f54772a
+
+✗ 0     Given a step that runs two steps, the first failing  0s  [i0]
+  ✗ 0.0   Given an inner step fails  0s
+    0.1   Given a registered customer
+  1     When the customer places the order
+  2     Then the order is confirmed
+1 calls · interactions s26 · flow s26
+
+### s26 calls: step, method, path
+step  method  path    calls errors   median      max bodies     bytes
+0     POST    /inner      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s27 steps
+s27  Hook steps › T27 a hook that runs a step  [Passed]  0s
+stableId 5abbcc9cb79cc1bc
+at Features/Triggers.feature:158
+open: TestRunReport.html#sid-5abbcc9cb79cc1bc
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+  2     When the customer places the order  [i4]
+    2.0   An order is submitted
+  3     Then the order is confirmed  [i6]
+    3.0   The order is read back
+4 calls · interactions s27 · flow s27
+
+### s27 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     POST    /orders         1      0     0 ms     0 ms      1       4 B
+3     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+4 buckets

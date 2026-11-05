@@ -1,0 +1,38 @@
+
+### s0 steps
+s0  Cake Feature › Calling Create Cake Endpoint Returns Cake  [Passed]  0.05s
+stableId 6d75f5f2a4bb0404
+open: TestRunReport.html#sid-6d75f5f2a4bb0404
+
+  0     Given a valid post request for the cake endpoint  0.03s  [i0-i6] 4 calls
+  1     When the request is sent to the cake post endpoint  0s  [i8-i9] 2 calls
+  2     Then the response should be successful  0.02s
+6 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method                 path          calls errors   median      max bodies     bytes
+0     GET                    /milk             2      0   217 ms   217 ms      1      52 B
+0     GET                    /eggs             1      0     5 ms     5 ms      1      20 B
+0     GET                    /flour            1      0     4 ms     4 ms      1      22 B
+1     POST                   /cake             1      0    43 ms    43 ms      1     175 B
+1     Send (Event Protocol)  /cake_events      1      0     1 ms     1 ms      1     109 B
+5 buckets
+
+### s1 steps
+s1  Cake Feature › Calling Create Cake Endpoint Without Eggs Returns Bad Request  [Passed]  0s
+stableId 3795eb0f85732ecc
+open: TestRunReport.html#sid-3795eb0f85732ecc
+
+  0     Given a valid post request for the cake endpoint  [i0-i6] 4 calls
+  1     And the request body is missing eggs
+  2     When the request is sent to the cake post endpoint  [i8]
+  3     Then the response http status should be bad request
+5 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path    calls errors   median      max bodies     bytes
+0     GET     /milk       2      0     5 ms     5 ms      1      52 B
+0     GET     /eggs       1      0     0 ms     0 ms      1      20 B
+0     GET     /flour      1      0     0 ms     0 ms      1      22 B
+2     POST    /cake       1      1    16 ms    16 ms      1     301 B
+4 buckets

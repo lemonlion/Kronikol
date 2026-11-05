@@ -1,0 +1,70 @@
+=== ReqNRoll
+
+=== LightBDD
+    8.0      None   Passed     Requests should contain [ r => r.RequestUri.AbsolutePath == "/prepare" && r.Method == Htt
+    call x1 GET http://localhost/milk @ 0
+    call x1 GET http://localhost:5131/milk @ 0
+    call x1 GET http://localhost/eggs @ 0
+    call x1 GET http://localhost/flour @ 0
+    call x1 POST http://localhost/pancakes @ 0
+    call x1 Create https://localhost:9999/colls/orders @ 0
+    call x1 Consume (Kafka) kafka:///breakfast_recipe_logs @ 0
+    call x1 Insert sql://localhost/main/RecipeReports @ 0
+    call x1 Produce → breakfast_recipe_logs kafka:///breakfast_recipe_logs @ 0
+    call x1 Consume (Pub/Sub) pubsub:///breakfast_batch_completions @ 0
+    call x1 Insert sql://localhost/main/BatchCompletionRecords @ 0
+    call x1 Publish (Pub/Sub) pubsub:///PancakeBatchCompletedEvent @ 0
+    call x1 Consume (Event Hub) eventhub:///breakfast-equipment-alerts @ 0
+    call x1 Insert sql://localhost/main/EquipmentAlerts @ 0
+    call x1 POST http://localhost/orders @ 1
+    call x2 Create https://localhost:9999/colls/orders @ 1
+    call x1 Publish (Event Grid) eventgrid://topics/OrderCreatedEvent @ 1
+    call x1 POST http://localhost:5134/prepare @ 1
+    call x1 SendOrderConfirmation grpc:///notifications.NotificationGrpc/SendOrder @ 1
+    call x1 Select sql://localhost/main/OrderSummaries @ 1
+    call x1 Insert sql://localhost/main/OrderSummaries @ 1
+    call x3 PATCH http://localhost/orders/#/status @ 2
+    call x3 Read https://localhost:9999/colls/orders/docs/# @ 2
+    call x3 Upsert https://localhost:9999/colls/orders @ 2
+    call x3 Create https://localhost:9999/colls/orders @ 2
+    call x1 GET http://localhost/orders/# @ 3
+    call x1 Read https://localhost:9999/colls/orders/docs/# @ 3
+    call x1 GET http://localhost/audit-logs @ 6
+    call x1 Query https://localhost:9999/colls/orders @ 6
+
+   1 An Order Should Progress Through All Status Transitions To Completion
+=== BDDfy
+   1 Deleting a waste record should return no content
+   1 Ordering daily special beyond threshold should return conflict
+   1 Deleting a staff member should return no content
+   1 Listing orders with small page size should limit results
+   1 Exceeding rate limit should return too many requests
+   1 Valid status transition should update the order [fromStatus: "Created", toStatus: "Preparing"]
+   1 Listing readings by equipment should return matching records
+   1 Same order with different idempotency keys should return different confirmations
+   1 Retrieving an existing inventory item should return the item
+   1 Deleting an inventory item should return no content
+   1 Health check response should include description and data for each entry
+   1 Same order with same idempotency key should return same confirmation
+   1 Retrieving an existing reservation should return the reservation
+   1 Updating an inventory item should return the updated item
+   1 Creating an order should produce a retrievable audit log entry
+   1 Getting usage summary should return aggregated data
+   1 Invalid status transition should return conflict [fromStatus: "Created", toStatus: "Completed"]
+   1 Batch completions should contain data ingested via pubsub consumer
+   1 Getting the timing summary should return aggregated data
+   1 Waffle request with more toppings than allowed should return bad request
+   1 Cancelling an already cancelled reservation should return a conflict response
+   1 Different muffin recipes should produce the expected batch [recipeName: "Rustic Wholesome", recipe: MuffinRecipeTes
+   1 Ingredient shipments should be recorded when delivered via eventgrid webhook
+   1 Listing feedback for an order should return the feedback
+   1 Recipe reports should contain ingested recipe data
+   1 Creating an order when kitchen service returns error should still create the order
+   1 Valid status transition should update the order [fromStatus: "Created", toStatus: "Cancelled"]
+   1 Retrieving an existing note by id should return the note
+   1 Retrieving existing customer preferences should return the preferences
+   1 Order should progress through all status transitions to completion
+   1 Invalid status transition should return conflict [fromStatus: "Cancelled", toStatus: "Ready"]
+   1 Listing orders should return a paginated response
+=== NUnit
+

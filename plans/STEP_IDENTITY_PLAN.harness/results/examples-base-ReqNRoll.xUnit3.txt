@@ -1,0 +1,266 @@
+
+### s0 steps
+s0  Cake › Calling Create Cake Endpoint Successfully  [Passed]  0.31s
+stableId d6c866e4fbb574f0
+at Features/Cake.feature:8
+open: TestRunReport.html#sid-d6c866e4fbb574f0
+
+  0     Given a valid post request for the Cake endpoint  0.19s  [i0-i6] 4 calls
+  1     When the request is sent to the cake post endpoint  0.03s  [i8-i9] 2 calls
+  2     Then the response should be successful  0s
+6 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method                 path          calls errors   median      max bodies     bytes
+0     GET                    /milk             2      0   148 ms   148 ms      1      52 B
+0     GET                    /eggs             1      0     3 ms     3 ms      1      20 B
+0     GET                    /flour            1      0     1 ms     1 ms      1      22 B
+1     POST                   /cake             1      0    30 ms    30 ms      1     175 B
+1     Send (Event Protocol)  /cake_events      1      0     1 ms     1 ms      1     109 B
+5 buckets
+
+### s1 steps
+s1  Cake › Calling Create Cake Endpoint Without Eggs  [Passed]  0.03s
+stableId 6fb32362a4f528b0
+at Features/Cake.feature:13
+open: TestRunReport.html#sid-6fb32362a4f528b0
+
+  0     Given a valid post request for the Cake endpoint  0s  [i0-i6] 4 calls
+  1     But the request body is missing eggs
+  2     When the request is sent to the cake post endpoint  0.02s  [i8]
+  3     Then the response http status should be bad request
+5 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path    calls errors   median      max bodies     bytes
+0     GET     /milk       2      0     3 ms     3 ms      1      52 B
+0     GET     /eggs       1      0     0 ms     0 ms      1      20 B
+0     GET     /flour      1      0     0 ms     0 ms      1      22 B
+2     POST    /cake       1      1    19 ms    19 ms      1     301 B
+4 buckets
+
+### s2 steps
+s2  Cake Quality › The baked cake contains the requested flour  [Passed]  0.31s
+stableId ee14fcdcab3287cf
+at Features/CakeQuality.feature:14
+open: TestRunReport.html#sid-ee14fcdcab3287cf
+
+  b0    Given a valid post request for the Cake endpoint  0.19s  [i0-i6] 4 calls
+  b1    When the request is sent to the cake post endpoint  0.03s  [i8-i9] 2 calls
+  0     Then the cake should contain the requested flour  0s
+6 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step  method                 path          calls errors   median      max bodies     bytes
+b0    GET                    /milk             2      0   149 ms   149 ms      1      52 B
+b0    GET                    /eggs             1      0     3 ms     3 ms      1      20 B
+b0    GET                    /flour            1      0     1 ms     1 ms      1      22 B
+b1    POST                   /cake             1      0    30 ms    30 ms      1     175 B
+b1    Send (Event Protocol)  /cake_events      1      0     1 ms     1 ms      1     109 B
+5 buckets
+
+### s3 steps
+s3  Cake Quality › The baked cake contains the requested milk  [Passed]  0.01s
+stableId 93b29ae1585a338a
+at Features/CakeQuality.feature:10
+open: TestRunReport.html#sid-93b29ae1585a338a
+
+  b0    Given a valid post request for the Cake endpoint  0.19s  [i0-i6] 4 calls
+  b1    When the request is sent to the cake post endpoint  0.03s  [i8-i9] 2 calls
+  0     Then the cake should contain the requested milk  0s
+6 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+step  method                 path          calls errors   median      max bodies     bytes
+b0    GET                    /milk             2      0     3 ms     3 ms      1      52 B
+b0    GET                    /eggs             1      0     0 ms     0 ms      1      20 B
+b0    GET                    /flour            1      0     0 ms     0 ms      1      22 B
+b1    POST                   /cake             1      0     1 ms     1 ms      1     175 B
+b1    Send (Event Protocol)  /cake_events      1      0     0 ms     0 ms      1     109 B
+5 buckets
+
+### s4 steps
+s4  Month's specials via gRPC › This month's special muffins are baked  [Passed]  0.14s
+stableId e380c842f0903da1
+at Features/MonthsSpecials.feature:5
+open: TestRunReport.html#sid-e380c842f0903da1
+
+  0     Given a valid apple cinnamon muffin recipe with all ingredients  0.02s
+  1     When the muffins are prepared  0.02s
+  2     Then the muffin response should contain a valid batch with all ingredients
+0 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s5 steps
+s5  Parameterized Diagnostic Feature › A valid apple cinnamon muffin request should return a fresh batch  [Passed]  0s
+stableId 9eae2f69fdd38727
+at Features/Muffins.feature:6
+open: TestRunReport.html#sid-9eae2f69fdd38727
+
+  0     Given a valid apple cinnamon muffin recipe with all ingredients
+  1     When the muffins are prepared
+  2     Then the muffin response should contain a valid batch with all ingredients
+  3     And the cow service should have received a milk request for the muffins
+0 calls · interactions s5 · flow s5
+
+### s5 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s6 steps
+s6  Parameterized Diagnostic Feature › Different muffin recipes should produce the expected batch  [Passed]  0.14s
+stableId a61b44a87c19a6d7
+at Features/Muffins.feature:15
+open: TestRunReport.html#sid-a61b44a87c19a6d7
+example: RecipeName=Classic, Recipe=Ingredients: Flour: Plain Flour, Apples: Granny Smith, Cinnamon: Ceylon; Baking: Temperature: 180, DurationMinutes: 25, PanType: Standard; Toppings: 2 items, Expected=ExpectedIngredientCount: 5, ExpectedToppingCount: 2, ExpectedHasBakingInfo: True
+
+  0     Given a muffin recipe "Classic" with the following ingredients:  0.02s
+      · table
+      · Flour
+      · Apples
+      · Cinnamon
+      · Plain Flour
+      · Granny Smith
+      · Ceylon
+  1     And the following baking:  0s
+      · table
+      · Temperature
+      · DurationMinutes
+      · PanType
+      · 180
+      · 25
+      · Standard
+  2     And the following muffin toppings:
+      · table
+      · Name
+      · Amount
+      · Streusel
+      · Light
+      · Icing Glaze
+      · Drizzle
+  3     When the muffins are prepared  0.01s
+  4     Then the muffin batch should have 5 ingredients  0s
+  5     And the muffin response should include 2 toppings  0s
+  6     And the muffin response should have baking info True  0s
+0 calls · interactions s6 · flow s6
+
+### s6 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s7 steps
+s7  Parameterized Diagnostic Feature › Different muffin recipes should produce the expected batch  [Passed]  0s
+stableId 9d4435ff1f3840d4
+at Features/Muffins.feature:15
+open: TestRunReport.html#sid-9d4435ff1f3840d4
+example: RecipeName=Rustic Wholesome, Recipe=Ingredients: Flour: Whole Wheat, Apples: Honeycrisp, Cinnamon: Cassia; Baking: Temperature: 175, DurationMinutes: 30, PanType: Cast Iron; Toppings: 2 items, Expected=ExpectedIngredientCount: 5, ExpectedToppingCount: 2, ExpectedHasBakingInfo: True
+
+  0     Given a muffin recipe "Rustic Wholesome" with the following ingredients:
+      · table
+      · Flour
+      · Apples
+      · Cinnamon
+      · Whole Wheat
+      · Honeycrisp
+      · Cassia
+  1     And the following baking:
+      · table
+      · Temperature
+      · DurationMinutes
+      · PanType
+      · 175
+      · 30
+      · Cast Iron
+  2     And the following muffin toppings:
+      · table
+      · Name
+      · Amount
+      · Brown Sugar Crumb
+      · Heavy
+      · Maple Drizzle
+      · Light
+  3     When the muffins are prepared
+  4     Then the muffin batch should have 5 ingredients
+  5     And the muffin response should include 2 toppings
+  6     And the muffin response should have baking info True
+0 calls · interactions s7 · flow s7
+
+### s7 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s8 steps
+s8  Parameterized Diagnostic Feature › Different muffin recipes should produce the expected batch  [Passed]  0s
+stableId b11d27d982d14924
+at Features/Muffins.feature:15
+open: TestRunReport.html#sid-b11d27d982d14924
+example: RecipeName=Spiced Deluxe, Recipe=Ingredients: Flour: Almond Flour, Apples: Pink Lady, Cinnamon: Saigon; Baking: Temperature: 190, DurationMinutes: 20, PanType: Silicone; Toppings: 2 items, Expected=ExpectedIngredientCount: 5, ExpectedToppingCount: 2, ExpectedHasBakingInfo: True
+
+  0     Given a muffin recipe "Spiced Deluxe" with the following ingredients:
+      · table
+      · Flour
+      · Apples
+      · Cinnamon
+      · Almond Flour
+      · Pink Lady
+      · Saigon
+  1     And the following baking:
+      · table
+      · Temperature
+      · DurationMinutes
+      · PanType
+      · 190
+      · 20
+      · Silicone
+  2     And the following muffin toppings:
+      · table
+      · Name
+      · Amount
+      · Cinnamon Sugar
+      · Heavy
+      · Cream Cheese Swirl
+      · Thick
+  3     When the muffins are prepared
+  4     Then the muffin batch should have 5 ingredients
+  5     And the muffin response should include 2 toppings
+  6     And the muffin response should have baking info True
+0 calls · interactions s8 · flow s8
+
+### s8 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s9 steps
+s9  Party Muffins › A batch of apple cinnamon muffins is baked for a picnic  [Passed]  0.14s
+stableId f9e3c5a23810871a
+at Features/PartyMuffins.feature:5
+open: TestRunReport.html#sid-f9e3c5a23810871a
+example: occasion=a picnic
+
+  b0    Given a valid apple cinnamon muffin recipe with all ingredients  0.02s
+  b1    When the muffins are prepared  0.02s
+  b2    Then the muffin response should contain a valid batch with all ingredients
+0 calls · interactions s9 · flow s9
+
+### s9 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s10 steps
+s10  Party Muffins › A batch of apple cinnamon muffins is baked for breakfast  [Passed]  0s
+stableId f981646be40209b0
+at Features/PartyMuffins.feature:5
+open: TestRunReport.html#sid-f981646be40209b0
+example: occasion=breakfast
+
+  b0    Given a valid apple cinnamon muffin recipe with all ingredients  0.02s
+  b1    When the muffins are prepared  0.02s
+  b2    Then the muffin response should contain a valid batch with all ingredients
+0 calls · interactions s10 · flow s10
+
+### s10 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total

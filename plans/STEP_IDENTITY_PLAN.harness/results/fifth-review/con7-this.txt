@@ -1,0 +1,18 @@
+=================== hand-manual-raw (this)
+⚠ WARNING: WriteQueryScript has no effect here: the reports directory is inside the folder of Con.csproj, which compiles every .cs file below it except under bin, obj and a folder whose name starts 
+Report diagnostics: 12 log entries across 1 test(s).
+generator returned
+files: AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json service.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl TestRunReport.labs.html
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'the file C:\temp\new is read'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  Hand-manual-raw › Own rows own bars  [Passed]  0s
+  0     When the file C:\temp\new is read
+  1     And a value <$name> is sent
+  2     Then it is confirmed  [i4]
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /read         1      0                        1       4 B
+-     POST    /send         1      0                        1       4 B
+2     POST    /confirm      1      0                        1       4 B
+3 buckets

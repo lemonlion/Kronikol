@@ -1,0 +1,81 @@
+=== published
+Failed!  - Failed:     2, Passed:     1, Skipped:     2, Total:     5, Duration: 576 ms - HookSteps.Repro.dll (net10.0)
+4 scenarios · 1 failed · 14 interactions · 1 distinct bodies
+
+BG7 one hook step, failing in one scenario  1 passed, 1 FAILED
+N3 a pending step, a runtime skip, an ignored scenario  0 passed, 2 skipped
+
+Failed:
+s0  BG7 one hook step, failing in one scenario › A hook step passes  [Passed]  0.08s
+  0     Given the shop is ready  0s
+  1     When the customer orders  0s
+    1.0   A customer is registered
+  2     Then the order is listed  0s
+    2.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+s1  BG7 one hook step, failing in one scenario › B hook step fails  [Failed]  0.01s
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+1 calls · interactions s1 · flow s1
+s2  N3 a pending step, a runtime skip, an ignored scenario › A pending  [Skipped]  0.08s
+  0     Given the shop is ready  0.03s  [i0]
+    0.0   A customer is registered  0.02s
+  1     When the step is pending  0s
+1 calls · interactions s2 · flow s2
+s3  N3 a pending step, a runtime skip, an ignored scenario › B skips itself  [Skipped]  0s
+  0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+  1     When the scenario skips itself  0s
+1 calls · interactions s3 · flow s3
+s1  BG7 one hook step, failing in one scenario › B hook step fails
+  at Features/Z9.feature:10
+  seeding failed
+
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number
+=== proto
+Failed!  - Failed:     2, Passed:     1, Skipped:     2, Total:     5, Duration: 511 ms - HookSteps.Repro.dll (net10.0)
+4 scenarios · 1 failed · 14 interactions · 1 distinct bodies
+
+BG7 one hook step, failing in one scenario  1 passed, 1 FAILED
+N3 a pending step, a runtime skip, an ignored scenario  0 passed, 2 skipped
+
+Failed:
+s0  BG7 one hook step, failing in one scenario › A hook step passes  [Passed]  0.08s
+  b0    Seeding may fail  0.05s  [i0]
+      · fail
+      · False
+  b1    Given the shop is ready  0s  [i2]
+    b1.0  A customer is registered
+  b2    When the customer orders  0s  [i4]
+    b2.0  An order is submitted
+  0     Then the order is listed  0s  [i6]
+    0.0   The order is read back
+4 calls · interactions s0 · flow s0
+s1  BG7 one hook step, failing in one scenario › B hook step fails  [Failed]  0s
+  b0    Seeding may fail  0.05s  [i0]
+      · fail
+      · False
+  b1    Given the shop is ready  0s
+    b1.0  A customer is registered
+  b2    When the customer orders  0s
+    b2.0  An order is submitted
+  0     Then the receipt is sent
+1 calls · interactions s1 · flow s1
+s2  N3 a pending step, a runtime skip, an ignored scenario › A pending  [Skipped]  0.08s
+  0     Given the shop is ready  0.03s  [i0]
+    0.0   A customer is registered  0.01s
+  1     When the step is pending  0s
+  2     Then the order is listed
+1 calls · interactions s2 · flow s2
+s3  N3 a pending step, a runtime skip, an ignored scenario › B skips itself  [Skipped]  0s
+  0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+  1     When the scenario skips itself  0s
+  2     Then the receipt is sent
+1 calls · interactions s3 · flow s3
+s1  BG7 one hook step, failing in one scenario › B hook step fails
+  at Features/Z9.feature:10
+  seeding failed
+  (no step is marked failed — the failure was outside a tracked step)
+
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number

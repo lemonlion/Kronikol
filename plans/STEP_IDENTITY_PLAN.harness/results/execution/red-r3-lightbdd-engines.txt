@@ -1,0 +1,26 @@
+FAIL x1 Kronikol.Tests.RealEngines.LightBddStepsTests.L5_a_step_method_that_fails_in_a_scenario_decorator_is_the_faile
+    Assert.Equal() Failure: Strings differ
+                                                              ↓ (pos 211)
+    Expected: ···" is confirmed [SkippedAfterFailure]\ncalls: 0 /seed"
+    Actual:   ···" is confirmed [SkippedAfterFailure]\ncalls: "
+FAIL x1 Kronikol.Tests.RealEngines.LightBddStepsTests.L0_the_control
+    Assert.Equal() Failure: Strings differ
+                                                        ↓ (pos 231)
+    Expected: ···"d back\ncalls: 0 /customers, 1 /orders, 2 /orders/1"
+    Actual:   ···"d back\ncalls: 0 /customers, 1 /orders"
+FAIL x1 Kronikol.Tests.RealEngines.LightBddStepsTests.L2_a_step_method_before_a_composite_steps_own_steps_stands_first
+    Assert.Equal() Failure: Strings differ
+                                                       ↓ (pos 301)
+    Expected: ···"lls: 0 /seed, 0 /customers, 0 /orders, 1 /orders/1"
+    Actual:   ···"lls: 0 /seed, 0 /customers, 0 /orders"
+FAIL x1 Kronikol.Tests.RealEngines.LightBddStepsTests.V1_plain_calls_read_their_step
+    Assert.Equal() Failure: Strings differ
+                                                        ↓ (pos 68)
+    Expected: ···" when\n2 THEN Plain then\ncalls: 0 /v1, 1 /v2, 2 /v3"
+    Actual:   ···" when\n2 THEN Plain then\ncalls: 0 /v1"
+FAIL x1 Kronikol.Tests.RealEngines.LightBddStepsTests.L1_a_step_method_in_a_scenario_decorator_stands_first_and_its_ca
+    Assert.Equal() Failure: Strings differ
+                                           ↓ (pos 26)
+    Expected: ···" Reference data is seeded\n1 GIVEN Given a register"···
+    Actual:   ···" Reference data is seeded [Failed]\n1 GIVEN Given a"···
+                                           ↑ (pos 26)

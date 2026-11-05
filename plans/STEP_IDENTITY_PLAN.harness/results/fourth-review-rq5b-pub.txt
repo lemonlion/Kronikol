@@ -1,0 +1,468 @@
+### summary
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+TestRunReport.krkl  12.4 KB on disk, 147.9 KB as JSON  Kronikol 5.28.2+cc8f459aa3afa79cb8bce48c65db1b355f79848b
+2026-11-03T12:42:38Z → 2026-11-03T12:42:38Z
+20 scenarios · 6 failed · 138 interactions · 1 distinct bodies
+
+A hook then background  2 passed, 1 FAILED
+B a failing hook  2 passed, 1 FAILED
+C block hooks inside the background  1 passed, 1 FAILED
+D background step fails in one  2 passed, 2 FAILED
+E after hooks  2 passed
+G outline with a table and a failing row  2 passed, 1 FAILED
+H keyword hooks and undefined  2 passed, 1 skipped
+
+Failed:
+  s0  A1 hook before background own step fails  — order failed
+  s3  B1 the hook fails  — seeding failed
+  s7  C2 block hook  — order failed
+  s9  D2 background fails  — background failed
+  s10  D3 hook then background fails  — background failed
+  s15  G1 table row fails  — unlucky
+  → failures
+
+Slowest:
+  s16  0.4s  G1 table row fails
+  s19  0.14s  H3 undefined step
+  s13  0.1s  E3 no hook
+
+Diagnostics (1):
+  UnattributedInteractions ×1  6 calls carried a test id that no scenario of this run has, so no scenario and no backgrou…
+next: failures
+
+### s0 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s0  A hook then background › A1 hook before background own step fails  [Failed]  0s
+stableId 059541adb5ab0ccf
+at Features/A.feature:8
+open: TestRunReport.html#sid-059541adb5ab0ccf
+
+  b0    Given a registered customer
+  b1    And a second fixture
+    b1.0  A customer is registered
+  0     And an order of 1 is placed
+✗ 1     Then the order fails
+   5 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path          calls errors   median      max bodies     bytes
+-     POST    /seed             1      0     0 ms     0 ms      1       4 B
+-     POST    /customers        1      0     0 ms     0 ms      1       4 B
+-     POST    /fixture2         1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1         1      0     0 ms     0 ms      1       4 B
+-     POST    /confirmfail      1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s1 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s1  A hook then background › A2 hook before background passes  [Passed]  0s
+stableId bd95eb261d314107
+at Features/A.feature:13
+open: TestRunReport.html#sid-bd95eb261d314107
+
+  b0    Given a registered customer
+  b1    And a second fixture
+    b1.0  A customer is registered
+  0     And an order of 2 is placed
+  1     Then the order is confirmed
+   5 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     0 ms     0 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/2       1      0     0 ms     0 ms      1       4 B
+-     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s2 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s2  A hook then background › A3 no hook  [Passed]  0.1s
+stableId 051b78cbe712c4b8
+at Features/A.feature:17
+open: TestRunReport.html#sid-051b78cbe712c4b8
+
+  b0    Given a registered customer  [i0]
+  b1    And a second fixture  [i2]
+    b1.0  A customer is registered
+  0     And an order of 3 is placed  0s  [i4]
+  1     Then the order is confirmed  [i6]
+4 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+b1    POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+0     POST    /orders/3       1      0     0 ms     0 ms      1       4 B
+1     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s3 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s3  B a failing hook › B1 the hook fails  [Failed]  0s
+stableId 4200ea2997583a36
+at Features/B.feature:7
+open: TestRunReport.html#sid-4200ea2997583a36
+
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+1 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path       calls errors   median      max bodies     bytes
+-     POST    /seedfail      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s4 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s4  B a failing hook › B2 sibling  [Passed]  0s
+stableId 9c4e0b02d69c1c9a
+at Features/B.feature:11
+open: TestRunReport.html#sid-9c4e0b02d69c1c9a
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 2 is placed  [i2]
+  1     Then the order is confirmed  [i4]
+3 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /orders/2       1      0     0 ms     0 ms      1       4 B
+1     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s5 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s5  B a failing hook › B3 sibling  [Passed]  0.1s
+stableId 1958df0a48bb74f2
+at Features/B.feature:15
+open: TestRunReport.html#sid-1958df0a48bb74f2
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 3 is placed  0s  [i2]
+  1     Then the order is confirmed  [i4]
+3 calls · interactions s5 · flow s5
+
+### s5 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+0     POST    /orders/3       1      0     0 ms     0 ms      1       4 B
+1     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s6 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s6  C block hooks inside the background › C1 block hook  [Passed]  0.1s
+stableId 571c8b3e786f1c69
+at Features/C.feature:8
+open: TestRunReport.html#sid-571c8b3e786f1c69
+
+  b0    Given a registered customer  0s
+  b1    And a second fixture  0s
+    b1.0  A customer is registered
+  0     And an order of 1 is placed  0s
+  1     Then the order is confirmed
+   6 calls belong to no step (before the first step, or attribution was not trusted)
+6 calls · interactions s6 · flow s6
+
+### s6 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /block          2      0     1 ms     1 ms      1       8 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+-     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s7 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s7  C block hooks inside the background › C2 block hook  [Failed]  0s
+stableId 485bdcd861104807
+at Features/C.feature:12
+open: TestRunReport.html#sid-485bdcd861104807
+
+  b0    Given a registered customer  0s
+  b1    And a second fixture  0s
+    b1.0  A customer is registered
+  0     And an order of 2 is placed
+✗ 1     Then the order fails  0s
+   6 calls belong to no step (before the first step, or attribution was not trusted)
+6 calls · interactions s7 · flow s7
+
+### s7 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path          calls errors   median      max bodies     bytes
+-     POST    /block            2      0     0 ms     0 ms      1       8 B
+-     POST    /customers        1      0     0 ms     0 ms      1       4 B
+-     POST    /fixture2         1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/2         1      0     0 ms     0 ms      1       4 B
+-     POST    /confirmfail      1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s8 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s8  D background step fails in one › D1 passes first by title  [Passed]  0s
+stableId 1ff7b876f8c778bc
+at Features/D.feature:7
+open: TestRunReport.html#sid-1ff7b876f8c778bc
+
+  b0    Given a customer that fails when tagged  [i0]
+  0     And a second fixture  [i2]
+  1     And an order of 1 is placed  [i4]
+  2     Then the order is confirmed  [i6]
+4 calls · interactions s8 · flow s8
+
+### s8 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+2     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s9 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s9  D background step fails in one › D2 background fails  [Failed]  0.1s
+stableId cb983e29d1815213
+at Features/D.feature:12
+open: TestRunReport.html#sid-cb983e29d1815213
+
+  b0    Given a customer that fails when tagged  [i0]
+1 calls · interactions s9 · flow s9
+
+### s9 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+1 buckets
+
+### s10 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s10  D background step fails in one › D3 hook then background fails  [Failed]  0s
+stableId 64f98cb3df5bbca3
+at Features/D.feature:17
+open: TestRunReport.html#sid-64f98cb3df5bbca3
+
+  b0    Given a customer that fails when tagged
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s10 · flow s10
+
+### s10 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     0 ms     0 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s11 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s11  D background step fails in one › D4 passes last by title  [Passed]  0s
+stableId faff334109db89df
+at Features/D.feature:21
+open: TestRunReport.html#sid-faff334109db89df
+
+  b0    Given a customer that fails when tagged  [i0]
+  0     And a second fixture  [i2]
+  1     And an order of 4 is placed  [i4]
+  2     Then the order is confirmed  [i6]
+4 calls · interactions s11 · flow s11
+
+### s11 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/4       1      0     0 ms     0 ms      1       4 B
+2     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s12 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s12  E after hooks › E1 after hook step passes  [Passed]  0s
+stableId 84db6243df6a55c4
+at Features/E.feature:7
+open: TestRunReport.html#sid-84db6243df6a55c4
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 1 is placed  [i2]
+  1     Then the order is confirmed  [i4]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s12 · flow s12
+
+### s12 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+1     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+-     POST    /clean          1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s13 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s13  E after hooks › E3 no hook  [Passed]  0.1s
+stableId 2de1a9bd952bf002
+at Features/E.feature:16
+open: TestRunReport.html#sid-2de1a9bd952bf002
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 3 is placed  0s  [i2]
+  1     Then the order is confirmed  [i4]
+3 calls · interactions s13 · flow s13
+
+### s13 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+0     POST    /orders/3       1      0     0 ms     0 ms      1       4 B
+1     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s14 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s14  G outline with a table and a failing row › G1 table row fails  [Passed]  0s
+stableId e7190a048a1090b0
+at Features/G.feature:4
+open: TestRunReport.html#sid-e7190a048a1090b0
+example: amount=1, Table=item: a, qty: 2
+
+  0     When the amount 1 is checked
+  1     Given a step with a table:
+      · table
+      · item
+      · qty
+      · a
+      · 2
+  2     Then the order is confirmed
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s14 · flow s14
+
+### s14 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /seed         1      0     0 ms     0 ms      1       4 B
+-     POST    /check/1      1      0     0 ms     0 ms      1       4 B
+-     POST    /table/1      1      0     0 ms     0 ms      1       4 B
+-     POST    /confirm      1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s15 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s15  G outline with a table and a failing row › G1 table row fails  [Failed]  0s
+stableId b72ec76a2ba813aa
+at Features/G.feature:4
+open: TestRunReport.html#sid-b72ec76a2ba813aa
+example: amount=13, item=b, qty=3
+
+✗ 0     When the amount 13 is checked
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s15 · flow s15
+
+### s15 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path       calls errors   median      max bodies     bytes
+-     POST    /seed          1      0     0 ms     0 ms      1       4 B
+-     POST    /check/13      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s16 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s16  G outline with a table and a failing row › G1 table row fails  [Passed]  0.4s
+stableId 88b7234fa48bd512
+at Features/G.feature:4
+open: TestRunReport.html#sid-88b7234fa48bd512
+example: amount=2, Table=item: c, qty: 4
+
+  0     When the amount 2 is checked  0s
+  1     Given a step with a table:  0.01s
+      · table
+      · item
+      · qty
+      · c
+      · 4
+  2     Then the order is confirmed
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s16 · flow s16
+
+### s16 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /seed         1      0     0 ms     0 ms      1       4 B
+-     POST    /check/2      1      0     0 ms     0 ms      1       4 B
+-     POST    /table/1      1      0     0 ms     0 ms      1       4 B
+-     POST    /confirm      1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s17 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s17  H keyword hooks and undefined › H1 a Given keyword hook  [Passed]  0s
+stableId b190320a100c2d77
+at Features/H.feature:7
+open: TestRunReport.html#sid-b190320a100c2d77
+
+  b0    Given a registered customer
+  0     And an order of 1 is placed
+    0.0   A customer is registered
+  1     Then the order is confirmed
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s17 · flow s17
+
+### s17 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /tenant         1      0     0 ms     0 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+-     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s18 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s18  H keyword hooks and undefined › H2 sibling  [Passed]  0s
+stableId d9a9643fb2410269
+at Features/H.feature:11
+open: TestRunReport.html#sid-d9a9643fb2410269
+
+  b0    Given a registered customer  [i0]
+  0     And an order of 2 is placed  [i2]
+  1     Then the order is confirmed  [i4]
+3 calls · interactions s18 · flow s18
+
+### s18 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /orders/2       1      0     0 ms     0 ms      1       4 B
+1     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s19 steps
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+s19  H keyword hooks and undefined › H3 undefined step  [Skipped]  0.14s
+stableId 4b518475d7a62843
+at Features/H.feature:15
+open: TestRunReport.html#sid-4b518475d7a62843
+
+  b0    Given a registered customer  [i0]
+1 calls · interactions s19 · flow s19
+
+### s19 calls: step, method, path
+! 6 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 2 test ids, the most calls (4) under '5dbc82c9-…
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+1 buckets

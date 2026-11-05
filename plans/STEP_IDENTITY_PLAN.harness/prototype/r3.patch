@@ -1,0 +1,323 @@
+diff --git a/src/Kronikol.BDDfy.xUnit3/BDDfyScenarioInfo.cs b/src/Kronikol.BDDfy.xUnit3/BDDfyScenarioInfo.cs
+index ebc856d3..940237c8 100644
+--- a/src/Kronikol.BDDfy.xUnit3/BDDfyScenarioInfo.cs
++++ b/src/Kronikol.BDDfy.xUnit3/BDDfyScenarioInfo.cs
+@@ -62,4 +62,8 @@ public record BDDfyScenarioInfo
+ /// <summary>
+ /// Captures information about an individual BDDfy step execution, including its keyword, text, result, and duration.
+ /// </summary>
+-public record BDDfyStepInfo(string Keyword, string Text, TestStack.BDDfy.Result Result = TestStack.BDDfy.Result.NotExecuted, TimeSpan? Duration = null);
+\ No newline at end of file
++public record BDDfyStepInfo(string Keyword, string Text, TestStack.BDDfy.Result Result = TestStack.BDDfy.Result.NotExecuted, TimeSpan? Duration = null)
++{
++    /// <summary>BDDfy's id for the step, which finds the frame the step executor opened for it.</summary>
++    internal string? StepId { get; init; }
++}
+\ No newline at end of file
+diff --git a/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs b/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
+index 396b2565..1b0caa71 100644
+--- a/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
++++ b/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
+@@ -9,6 +9,12 @@ internal class BDDfyStepTrackingExecutor(IStepExecutor inner) : IStepExecutor
+ {
+     private static readonly AsyncLocal<string?> CurrentStepTypeLocal = new();
+ 
++    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(string TestId, string StepId), int> Frames = new();
++
++    /// <summary>The frame opened for a BDDfy step of a test, if it ran.</summary>
++    internal static int? FrameOf(string testId, string? stepId) =>
++        stepId is not null && Frames.TryGetValue((testId, stepId), out var frame) ? frame : null;
++
+     public static string? CurrentStepType => CurrentStepTypeLocal.Value;
+ 
+     // Matches record-style ToString: "TypeName { Prop = Val, ... }" (possibly nested)
+@@ -32,8 +38,9 @@ public object Execute(Step step, object testObject)
+         try { testId = Xunit.TestContext.Current.Test?.UniqueID; } catch { /* not in xUnit context */ }
+ 
+         var stepText = ExtractStepText(step.Title, keyword);
+-        if (testId is not null)
+-            StepCollector.StartStep(testId, keyword, stepText, null, null);
++        var frame = StepCollector.StartFrame(testId, keyword, stepText);
++        if (testId is not null && frame is { } opened)
++            Frames[(testId, step.Id)] = opened;
+ 
+         try
+         {
+@@ -41,14 +48,12 @@ public object Execute(Step step, object testObject)
+         }
+         catch (Exception)
+         {
+-            if (testId is not null)
+-                StepCollector.CompleteStep(testId, passed: false);
++            StepCollector.CompleteFrame(testId, frame, passed: false);
+             throw;
+         }
+         finally
+         {
+-            if (testId is not null && StepCollector.HasActiveStep(testId))
+-                StepCollector.CompleteStep(testId, passed: true);
++            StepCollector.CompleteFrame(testId, frame, passed: true);
+             CurrentStepTypeLocal.Value = null;
+             TestPhaseContext.Current = TestPhase.Unknown;
+         }
+diff --git a/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs b/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs
+index 6f9ec034..3f2dd030 100644
+--- a/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs
++++ b/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs
+@@ -76,7 +76,7 @@ public static Feature[] ToFeatures(this IEnumerable<BDDfyScenarioInfo> scenarios
+                                 Duration = x.Duration != TimeSpan.Zero ? x.Duration : null,
+                                 EndedAt = x.EndedAt,
+                                 Steps = x.Steps.Count > 0
+-                                    ? MapSteps(x.Steps, StepCollector.GetSteps(x.TestId))
++                                    ? MapSteps(x.Steps, StepCollector.GetSteps(x.TestId), x.TestId)
+                                     : StepCollector.GetSteps(x.TestId) is { Length: > 0 } collectedSteps ? collectedSteps : null,
+                                 Tags = classified.Tags.Length > 0 ? classified.Tags : null,
+                                 OutlineId = outlineId,
+@@ -101,29 +101,25 @@ public static Feature[] ToFeatures(this IEnumerable<BDDfyScenarioInfo> scenarios
+             }).ToArray();
+     }
+ 
+-    private static ScenarioStep[] MapSteps(List<BDDfyStepInfo> steps, ScenarioStep[]? collectedSteps = null)
++    private static ScenarioStep[] MapSteps(List<BDDfyStepInfo> steps, ScenarioStep[] collectedSteps, string testId)
+     {
+-        var mapped = new ScenarioStep[steps.Count];
+         var priorFailure = false;
+-        for (var i = 0; i < steps.Count; i++)
++        return StepPairing.InOrderTheyRan(steps, collectedSteps, s => BDDfyStepTrackingExecutor.FrameOf(testId, s.StepId), (step, collected) =>
+         {
+-            mapped[i] = new ScenarioStep
++            var mapped = new ScenarioStep
+             {
+-                Keyword = steps[i].Keyword,
+-                Text = steps[i].Text,
+-                Status = steps[i].Result.ToStepResult(priorFailure),
+-                Duration = steps[i].Duration,
+-                SubSteps = collectedSteps is not null && i < collectedSteps.Length
+-                    ? collectedSteps[i].SubSteps
+-                    : null,
+-                Attachments = collectedSteps is not null && i < collectedSteps.Length
+-                    ? collectedSteps[i].Attachments
+-                    : null,
++                CollectedId = collected?.CollectedId,
++                Keyword = step.Keyword,
++                Text = step.Text,
++                Status = step.Result.ToStepResult(priorFailure),
++                Duration = step.Duration,
++                SubSteps = collected?.SubSteps,
++                Attachments = collected?.Attachments,
+             };
+-            if (steps[i].Result == TestStack.BDDfy.Result.Failed)
++            if (step.Result == TestStack.BDDfy.Result.Failed)
+                 priorFailure = true;
+-        }
+-        return mapped;
++            return mapped;
++        }).ToArray();
+     }
+ 
+     /// <summary>
+diff --git a/src/Kronikol.BDDfy.xUnit3/StepExtensions.cs b/src/Kronikol.BDDfy.xUnit3/StepExtensions.cs
+index 20aff91b..b21a2c6e 100644
+--- a/src/Kronikol.BDDfy.xUnit3/StepExtensions.cs
++++ b/src/Kronikol.BDDfy.xUnit3/StepExtensions.cs
+@@ -16,9 +16,9 @@ public static BDDfyStepInfo ToBDDfyStepInfo(this Step step)
+         {
+             var firstWord = title[..firstSpace];
+             if (Keywords.Any(k => k.Equals(firstWord, StringComparison.OrdinalIgnoreCase)))
+-                return new BDDfyStepInfo(firstWord, title[(firstSpace + 1)..], step.Result, duration);
++                return new BDDfyStepInfo(firstWord, title[(firstSpace + 1)..], step.Result, duration) { StepId = step.Id };
+         }
+ 
+-        return new BDDfyStepInfo("Step", title, step.Result, duration);
++        return new BDDfyStepInfo("Step", title, step.Result, duration) { StepId = step.Id };
+     }
+ }
+diff --git a/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs b/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs
+index bcb5b4ef..2b0a1a8f 100644
+--- a/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs
++++ b/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs
+@@ -91,7 +91,11 @@ private static Scenario MapScenario(IScenarioResult result, string[] featureTags
+             ErrorMessage = result.Status == ExecutionStatus.Failed ? result.StatusDetails : null,
+             ErrorStackTrace = failedException?.StackTrace,
+             Duration = result.ExecutionTime?.Duration,
+-            EndedAt = result.ExecutionTime?.End,
++            // LightBDD's own timer can read earlier than the clock the scenario's calls are stamped with
++            EndedAt = StepTrackingStepDecorator.LastStepEnded(result.Info.RuntimeId.ToString()) is { } lastStep
++                      && (result.ExecutionTime?.End is not { } end || lastStep > end)
++                ? lastStep
++                : result.ExecutionTime?.End,
+             Steps = MapSteps(result.GetSteps(), result.Status is ExecutionStatus.Ignored or ExecutionStatus.NotRun,
+                 StepCollector.GetSteps(result.Info.RuntimeId.ToString())),
+             IsHappyPath = classified.IsHappyPath,
+@@ -213,17 +217,14 @@ internal static (string BaseName, Dictionary<string, string> Parameters) Extract
+     {
+         var stepArray = steps.ToArray();
+         if (stepArray.Length == 0) return null;
+-        var mapped = new ScenarioStep[stepArray.Length];
+         var priorFailure = false;
+-        for (var i = 0; i < stepArray.Length; i++)
++        return StepPairing.InOrderTheyRan(stepArray, collectedSteps ?? [], s => StepTrackingStepDecorator.FrameOf(s.Info.RuntimeId), (step, collected) =>
+         {
+-            var collected = collectedSteps is not null && i < collectedSteps.Length
+-                ? collectedSteps[i] : null;
+-            mapped[i] = MapStep(stepArray[i], priorFailure, scenarioSkipped, collected);
+-            if (stepArray[i].Status == ExecutionStatus.Failed)
++            var mapped = MapStep(step, priorFailure, scenarioSkipped, collected);
++            if (step.Status == ExecutionStatus.Failed)
+                 priorFailure = true;
+-        }
+-        return mapped;
++            return mapped;
++        }).ToArray();
+     }
+ 
+     private static ScenarioStep MapStep(IStepResult step, bool priorFailure, bool scenarioSkipped,
+@@ -260,15 +261,11 @@ private static ScenarioStep MapStep(IStepResult step, bool priorFailure, bool sc
+ 
+         // Merge sub-steps: pass collected data recursively so assertions inside sub-steps are preserved
+         var collectedSubs = collected?.SubSteps;
+-        var nativeSubSteps = MapSteps(step.GetSubSteps(), scenarioSkipped, collectedSubs);
+-        ScenarioStep[]? subSteps;
+-        if (nativeSubSteps is not null && collectedSubs is not null && collectedSubs.Length > nativeSubSteps.Length)
+-            subSteps = [..nativeSubSteps, ..collectedSubs[nativeSubSteps.Length..]];
+-        else
+-            subSteps = nativeSubSteps ?? collectedSubs;
++        var subSteps = MapSteps(step.GetSubSteps(), scenarioSkipped, collectedSubs) ?? collectedSubs;
+ 
+         return new ScenarioStep
+         {
++            CollectedId = collected?.CollectedId,
+             Keyword = keyword,
+             Text = text,
+             Status = MapStepStatus(step.Status, priorFailure, scenarioSkipped),
+diff --git a/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs b/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
+index 586c1f9b..ba996cac 100644
+--- a/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
++++ b/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
+@@ -15,6 +15,15 @@ namespace Kronikol.LightBDD;
+ /// </summary>
+ internal sealed class StepTrackingStepDecorator : IStepDecorator
+ {
++    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, int> Frames = new();
++    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset> LastEnded = new();
++
++    /// <summary>The frame opened for a LightBDD step, if it ran.</summary>
++    internal static int? FrameOf(Guid runtimeId) => Frames.TryGetValue(runtimeId, out var frame) ? frame : null;
++
++    /// <summary>When a step of the scenario last ended, by the clock calls are stamped with.</summary>
++    internal static DateTimeOffset? LastStepEnded(string testId) => LastEnded.TryGetValue(testId, out var at) ? at : null;
++
+     public async Task ExecuteAsync(IStep step, Func<Task> stepInvocation)
+     {
+         var keyword = step.Info.Name.StepTypeName?.OriginalName;
+@@ -24,8 +33,9 @@ public async Task ExecuteAsync(IStep step, Func<Task> stepInvocation)
+         try { testId = ScenarioExecutionContext.CurrentScenario.Info.RuntimeId.ToString(); }
+         catch { /* not in scenario context */ }
+ 
+-        if (testId is not null)
+-            StepCollector.StartStep(testId, keyword, text, null, null);
++        var frame = StepCollector.StartFrame(testId, keyword, text);
++        if (frame is { } opened)
++            Frames[step.Info.RuntimeId] = opened;
+ 
+         try
+         {
+@@ -33,14 +43,14 @@ public async Task ExecuteAsync(IStep step, Func<Task> stepInvocation)
+         }
+         catch
+         {
+-            if (testId is not null)
+-                StepCollector.CompleteStep(testId, passed: false);
++            StepCollector.CompleteFrame(testId, frame, passed: false);
+             throw;
+         }
+         finally
+         {
+-            if (testId is not null && StepCollector.HasActiveStep(testId))
+-                StepCollector.CompleteStep(testId, passed: true);
++            StepCollector.CompleteFrame(testId, frame, passed: true);
++            if (testId is not null)
++                LastEnded[testId] = DateTimeOffset.UtcNow;
+         }
+     }
+ 
+diff --git a/src/Kronikol/Tracking/StepPairing.cs b/src/Kronikol/Tracking/StepPairing.cs
+new file mode 100644
+index 00000000..4e2457fe
+--- /dev/null
++++ b/src/Kronikol/Tracking/StepPairing.cs
+@@ -0,0 +1,50 @@
++using Kronikol.Reports;
++
++namespace Kronikol.Tracking;
++
++/// <summary>
++/// Puts a framework's own steps together with what <see cref="StepCollector"/> collected, by the frame each opened: what ran,
++/// in the order it ran. A collected step no framework step opened (a step method outside one) stands as itself; a framework
++/// step with no frame did not run, and stands where the framework lists it, after the last step that did.
++/// </summary>
++internal static class StepPairing
++{
++    public static List<ScenarioStep> InOrderTheyRan<T>(IReadOnlyList<T> natives, ScenarioStep[] collected, Func<T, int?> frameOf,
++        Func<T, ScenarioStep?, ScenarioStep> map)
++    {
++        var indexOfFrame = new Dictionary<int, int>();
++        for (var i = 0; i < natives.Count; i++)
++            if (frameOf(natives[i]) is { } frame)
++                indexOfFrame.TryAdd(frame, i);
++
++        var lastFramed = Array.FindLastIndex(collected, c => c.CollectedId is { } id && indexOfFrame.ContainsKey(id));
++        var merged = new List<ScenarioStep>();
++        var next = 0;
++
++        void Through(int end)
++        {
++            for (; next < end; next++)
++                merged.Add(map(natives[next], null));
++        }
++
++        for (var k = 0; k < collected.Length; k++)
++        {
++            if (collected[k].CollectedId is { } id && indexOfFrame.TryGetValue(id, out var native))
++            {
++                Through(native);
++                merged.Add(map(natives[native], collected[k]));
++                next = native + 1;
++            }
++            else
++            {
++                merged.Add(collected[k]);
++            }
++
++            if (k == lastFramed)
++                Through(natives.Count);
++        }
++
++        Through(natives.Count);
++        return merged;
++    }
++}
+diff --git a/src/Kronikol/Tracking/TestTrackingMessageHandler.cs b/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
+index 23b10ca3..a37fa940 100644
+--- a/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
++++ b/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
+@@ -452,7 +452,18 @@ private void InjectImplicitActionStartIfNeeded(TestIdentity currentTestInfo)
+         if (_actionStartInjected || _currentStepTypeFetcher is null)
+             return;
+ 
+-        var currentStepType = _currentStepTypeFetcher();
++        // A fetcher may throw where it has no step to read, as LightBDD's does outside a step, in a scenario decorator. A
++        // call made there is still a call and must not fail the test, as a throwing test identity fetcher does not.
++        string? currentStepType;
++        try
++        {
++            currentStepType = _currentStepTypeFetcher();
++        }
++        catch
++        {
++            currentStepType = null;
++        }
++
+         if (currentStepType is null)
+         {
+             _lastStepType = null;

@@ -1,0 +1,12 @@
+caught M27 a step over a failed inner step reads passed: by 4 on a real engine, ['T26_a_step_over_a_failed_inner_step_reads_failed(lane:', 'T26_a_step_over_a_failed_inner_step_reads_failed(lane:', 'T26_a_step_over_a_failed_inner_step_reads_failed(lane:'] (135s)
+SURVIVED M28 BDDfy lists a step it does not report: ['Passed!  - Failed:     0, Passed:   211, Skipped:     0, Total:   211, Duration: 2 m 59 s - Kronikol.Tests.RealEngines.dll (net10.0)'] (226s)
+caught M29 a later example row takes a frame: by 2 on a real engine, ['With_the_bars_hidden_a_call_keeps_what_it_reads_with_them(scenario:', 'Z8_an_example_table_whose_first_row_stopped_early_lists_that_row_and_t'] (214s)
+caught M26 each level shares one open step: by 136 on a real engine, ['E06_a_step_method_in_an_argument_transformation_stands_before_its_step', 'E06_a_step_method_in_an_argument_transformation_stands_before_its_step', 'E06_a_step_method_in_an_argument_transformation_stands_before_its_step'] (251s)
+caught M30 BDDfy's rows that did not run say nothing: by 1 on a real engine, ['With_the_bars_hidden_a_call_keeps_what_it_reads_with_them(scenario:'] (184s)
+SURVIVED M35 BDDfy pairs a list with no frames by frame: ['Passed!  - Failed:     0, Passed:   211, Skipped:     0, Total:   211, Duration: 1 m 37 s - Kronikol.Tests.RealEngines.dll (net10.0)'] (144s)
+caught M40 BDDfy: one rebuilt row leaves the rest paired by frame: by 1 on a real engine, ['F5_a_row_a_consumer_rebuilt_stands_once_with_its_sub_step_and_nothing_'] (181s)
+caught M43 BDDfy: a row that ran reads as not run when its steps are gone: by 1 on a real engine, ['F4_steps_cleared_after_the_run_leave_every_call_its_step'] (131s)
+caught M46 a file in a step not listed is lost: by 3 on a real engine, ['F1_a_file_in_a_teardown_the_report_does_not_list_stays_in_the_report', 'F3_a_hidden_setups_files_stay_in_the_report_and_it_lists_no_row', 'F2_a_file_in_a_later_row_of_an_example_table_stays_in_the_report'] (119s)
+caught M47 a file under a step not listed is lost: by 1 on a real engine, ['F3_a_hidden_setups_files_stay_in_the_report_and_it_lists_no_row'] (109s)
+caught M51 a row listed with no frame has no place: by 4 on a real engine, ['T29_a_step_with_no_frame_takes_no_hook_steps_row(lane:', 'T29_a_step_with_no_frame_takes_no_hook_steps_row(lane:', 'T29_a_step_with_no_frame_takes_no_hook_steps_row(lane:'] (147s)
+done

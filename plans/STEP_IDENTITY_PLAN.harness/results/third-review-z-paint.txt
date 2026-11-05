@@ -1,0 +1,87 @@
+Failed!  - Failed:     3, Passed:     4, Skipped:     0, Total:     7, Duration: 112 ms - HookSteps.Repro.dll (net10.0)
+ids:  7d95b11bca701715 24092d53346188fb abe1056021ba6fb5 7bcfb49bb803805d db5b76aec5d7ae4f 3a80dbe9bb067c63 3cceaaa60a1c97ad
+=== published: 7 details.scenario, 7 with a stable id
+--- published 7d95b11bca701715: A passes 80ms📋🔗
+  row  ✓ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ✓ When the customer orders
+  row    ✓  An order is submitted
+  row  ✓ Then the order is listed
+  row    ✓  The order is read back
+  bars ["Given","When","Then"]
+--- published 24092d53346188fb: B fails at its Given fail-given 1ms📋🔗
+  row  ✕ Given the shop is ready
+  row    ✓  A customer is registered
+  bars ["Given"]
+--- published abe1056021ba6fb5: A fails at its Given fail-given 95ms📋🔗
+  row  ✕ Given the shop is ready
+  row    ✓  A customer is registered
+  bars ["Given"]
+--- published 7bcfb49bb803805d: B passes 2ms📋🔗
+  row  ✓ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ✓ When the customer orders
+  row    ✓  An order is submitted
+  row  ✓ Then the receipt is sent
+  bars ["Given","When","Then"]
+--- published db5b76aec5d7ae4f: A hook fails fail-hook 43ms📋🔗
+  bars null
+--- published 3a80dbe9bb067c63: B passes 1ms📋🔗
+  row  ✓ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ✓ When the customer orders
+  row    ✓  An order is submitted
+  row  ✓ Then the receipt is sent
+  bars ["Given","When","Then"]
+--- published 3cceaaa60a1c97ad: C passes 2ms📋🔗
+  row  ✓ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ✓ When the customer orders
+  row    ✓  An order is submitted
+  row  ✓ Then the invoice is sent
+  bars ["Given","When","Then"]
+Failed!  - Failed:     3, Passed:     4, Skipped:     0, Total:     7, Duration: 152 ms - HookSteps.Repro.dll (net10.0)
+ids:  e6befe250753a71e d6564162f683a76b 19485573bcfbe7da 33cb10728261343a d0f59965994a60bb e97ebcffc9d6f603 12a01aaceb19a584
+=== proto: 7 details.scenario, 7 with a stable id
+--- proto e6befe250753a71e: A passes 101ms📋🔗
+  row  ✓ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ✓ When the customer orders
+  row    ✓  An order is submitted
+  row  ✓ Then the order is listed
+  row    ✓  The order is read back
+  bars ["Given","When","Then"]
+--- proto d6564162f683a76b: B fails at its Given fail-given 1ms📋🔗
+  row  ✓ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ✓ When the customer orders
+  row    ✓  An order is submitted
+  row  ! Then the receipt is sent
+  bars ["Given"]
+--- proto 19485573bcfbe7da: A fails at its Given fail-given 104ms📋🔗
+  row  ✕ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ! When the customer orders
+  row  ! Then the order is listed
+  bars null
+--- proto 33cb10728261343a: B passes 1ms📋🔗
+  row  ✕ Given the shop is ready
+  row    ✓  A customer is registered
+  row  ! When the customer orders
+  row  ✓ Then the receipt is sent
+  bars ["Given","When","Then"]
+--- proto d0f59965994a60bb: A hook fails fail-hook 64ms📋🔗
+  row  Ø Given the shop is ready
+  row  Ø When the customer orders
+  row  Ø Then the order is listed
+  bars null
+--- proto e97ebcffc9d6f603: B passes 2ms📋🔗
+  row  Ø Given the shop is ready
+  row  Ø When the customer orders
+  row  ✓ Then the receipt is sent
+  bars ["Given","When","Then"]
+--- proto 12a01aaceb19a584: C passes 2ms📋🔗
+  row  Ø Given the shop is ready
+  row  Ø When the customer orders
+  row  ✓ Then the invoice is sent
+  bars ["Given","When","Then"]

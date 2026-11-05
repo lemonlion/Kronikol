@@ -1,0 +1,13 @@
+Build succeeded.
+  Failed Kronikol.Tests.Reports.BackgroundStepsDetectorTests.A_row_that_did_not_run_is_no_part_of_what_a_feature_shares [13 ms]
+  Failed Kronikol.Tests.Tracking.StepPairingTests.What_did_not_run_waits_for_a_step_method_that_opened_before_it [4 ms]
+  Failed Kronikol.Tests.Tracking.StepPairingTests.What_a_frame_no_row_names_holds_stands_in_its_place [< 1 ms]
+  Failed Kronikol.Tests.ReqNRoll.ReqNRollStepPairingTests.A_row_rebuilt_beside_a_step_that_ran_another_pairs_the_top_level_rows_by_position [< 1 ms]
+  Failed Kronikol.Tests.Tracking.StepPairingTests.A_list_not_in_the_order_its_steps_ran_lists_each_row_once_in_the_order_they_ran_and_what_did_not_run_last [< 1 ms]
+  Failed Kronikol.Tests.Reports.BackgroundStepsDetectorTests.A_row_no_framework_step_opened_is_no_part_of_what_a_feature_shares [2 ms]
+  Failed Kronikol.Tests.Reports.ReportAttributionTests.A_held_call_moves_nothing_past_a_bar_with_no_call_under_it [< 1 ms]
+  Failed Kronikol.Tests.Reports.ReportAttributionTests.A_held_call_keeps_its_step_and_what_follows_it_reads_the_step_before_it [< 1 ms]
+  Failed Kronikol.Tests.BDDfy.BDDfyAsyncFrameTests.A_faulted_task_fails_the_step_and_still_throws [2 ms]
+  Failed Kronikol.Tests.BDDfy.BDDfyAsyncFrameTests.An_async_step_stays_open_until_its_task_ends [< 1 ms]
+  Failed Kronikol.Tests.BDDfy.BDDfyAsyncFrameTests.What_an_async_step_opens_after_its_first_await_is_under_it [< 1 ms]
+Failed!  - Failed:    11, Passed:    87, Skipped:     0, Total:    98, Duration: 1 s - Kronikol.Tests.dll (net10.0)

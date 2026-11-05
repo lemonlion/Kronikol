@@ -1,0 +1,79 @@
+TestRunReport.krkl  3.9 KB on disk, 25.8 KB as JSON  Kronikol 5.27.13+abf7b0a3556be2319f2f2becf25b11b3c41885e2
+2026-11-03T09:45:30Z → 2026-11-03T09:45:31Z
+3 scenarios · 1 failed · 20 interactions · 1 distinct bodies
+
+Bddfy  2 passed, 1 FAILED
+
+Failed:
+  s2  Z8 examples the first row fails at its given  — alice is refused
+  → failures
+
+Slowest:
+  s0  0.05s  First of two
+
+### s0 steps
+s0  Bddfy › First of two  [Passed]  0.05s
+
+  0     Given a registered customer  0.05s  [i0]
+    0.0   A customer is registered  0.05s
+  1     Then the order is confirmed  0s  [i2]
+    1.0   The order is read back
+  2     Given a registered customer
+    2.0   A customer is registered
+  3     When the customer places the order
+    3.0   An order is submitted
+  4     Then the order is confirmed
+    4.0   The order is read back
+2 calls · interactions s0 · flow s0
+--- s0 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     2 ms     2 ms      1       4 B
+1     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s1 steps
+s1  Bddfy › Z10 reflective setup and teardown  [Passed]  0.05s
+
+  0     Given a registered customer  [i2]
+    0.0   A customer is registered
+  1     When the customer places the order  [i4]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s1 · flow s1
+--- s1 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     2 ms     2 ms      1       4 B
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+-     POST    /clean          1      0     0 ms     0 ms      1       4 B
+
+### s2 steps
+s2  Bddfy › Z8 examples the first row fails at its given  [Failed]  0.05s
+
+✗ 0     Given the customer is named <customer>  0.05s  [i0]
+    0.0   Customer named  0.05s
+        · name
+        · alice
+  1     And the customer is named <customer>  [i2]
+    1.0   Customer named
+        · name
+        · bob
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s2 · flow s2
+--- s2 calls
+step  method  path              calls errors   median      max bodies     bytes
+0     POST    /customers/alice      1      0     2 ms     2 ms      1       4 B
+1     POST    /customers/bob        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1             1      0     0 ms     0 ms      1       4 B
+
+### failures
+s2  Bddfy › Z8 examples the first row fails at its given
+  alice is refused
+  ✗ s2/0  Given the customer is named <customer>
+    1 calls in this step:
+      s2/i0  Shop  POST /customers/alice
+
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number

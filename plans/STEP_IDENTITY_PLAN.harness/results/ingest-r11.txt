@@ -1,0 +1,24 @@
+# review-probes/fourth/ingest-probe on the final code (R12). On published the same run read degraded {} on the flag and no step on every call under a background step, a long step and a two-line step.
+degraded {}
+s0  F explicit background › With background one  [Passed]  0.5s
+  b0    Given a shop  0.1s
+  b1    And a customer  0.1s
+  0     When a basket  0.1s  [i0]
+  1     Then it is empty  0.1s  [i2]
+s1  F explicit background › With background two  [Passed]  0.5s
+  b0    Given a shop  0.1s
+  b1    And a customer  0.1s
+  0     When a basket  0.1s  [i0]
+  1     Then it is empty  0.1s  [i2]
+s2  F explicit background › With background three  [Passed]  0.5s
+  b0    Given a shop  0.1s
+  b1    And a customer  0.1s
+  0     When a basket  0.1s  [i0]
+  1     Then it is empty  0.1s  [i2]
+s3  G control › No background  [Passed]  0.5s
+  0     When a basket  0.1s  [i0]
+  1     Then it is empty  0.1s  [i2]
+s4  H odd text › Odd step text  [Passed]  0.5s
+  0     Given a value <b>bold</b> and "quoted"  0.1s  [i0]
+  1     When x...…  0.1s  [
+  2     Then line one line two  0.1s  [i4]

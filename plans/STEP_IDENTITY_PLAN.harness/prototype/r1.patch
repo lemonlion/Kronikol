@@ -1,0 +1,448 @@
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs
+index be73aed8..b196bea1 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollConstants.cs
+@@ -12,6 +12,9 @@ public static class ReqNRollConstants
+     public const string StepStopwatchKey = "Kronikol.StepStopwatch";
+     public const string OwnerHooksKey = "Kronikol.OwnerHooks";
+ 
++    /// <summary>The frame <c>BeforeStep</c> opened for the running Gherkin step.</summary>
++    internal const string StepFrameKey = "Kronikol.StepFrame";
++
+     /// <summary>The running row's name, as <c>BeforeScenario</c> resolved it (#101).</summary>
+     internal const string RowNameKey = "Kronikol.RowName";
+ }
+\ No newline at end of file
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
+index 886a807b..96cbe7f0 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
+@@ -12,7 +12,11 @@ public record ReqNRollStepInfo(
+     TimeSpan? Duration = null,
+     string? TableText = null,
+     string? DocString = null,
+-    InlineParamCapture[]? InlineParams = null);
++    InlineParamCapture[]? InlineParams = null)
++{
++    /// <summary>The step the hooks opened for this Gherkin step (<c>StepCollector.StartFrame</c>); null on a hand-built one.</summary>
++    internal int? FrameId { get; init; }
++}
+ 
+ /// <summary>
+ /// Captures a single inline parameter's position and value within the step text.
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+index c340e385..cc274545 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+@@ -100,7 +100,7 @@ public void BeforeStep()
+         // an outline step already has its <placeholders> substituted.
+         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+         var stepInfo = _scenarioContext.StepContext.StepInfo;
+-        StepCollector.StartStep(scenarioId, stepType, stepInfo.Text, null, null,
++        _scenarioContext[ReqNRollConstants.StepFrameKey] = StepCollector.StartFrame(scenarioId, stepType, stepInfo.Text,
+             ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText);
+     }
+ 
+@@ -148,7 +148,8 @@ public void AfterStep()
+         // Pop the StepCollector step so assertion sub-steps are captured
+         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+         var passed = stepContext.Status == ScenarioExecutionStatus.OK;
+-        StepCollector.CompleteStep(scenarioId, passed);
++        var frame = _scenarioContext.TryGetValue(ReqNRollConstants.StepFrameKey, out int? opened) ? opened : null;
++        StepCollector.CompleteFrame(scenarioId, frame, passed);
+ 
+         steps.Add(new ReqNRollStepInfo(
+             stepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString(),
+@@ -157,7 +158,7 @@ public void AfterStep()
+             stepStopwatch.Elapsed,
+             tableText,
+             docString,
+-            inlineParams));
++            inlineParams) { FrameId = frame });
+     }
+ 
+     [AfterScenario(Order = int.MaxValue)]
+diff --git a/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs b/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
+index 001e3837..34661dc3 100644
+--- a/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
++++ b/src/Kronikol.ReqNRoll.Core/ScenarioInfoEnumerableExtensions.cs
+@@ -59,9 +59,7 @@ public static Feature[] ToFeatures(this IEnumerable<ReqNRollScenarioInfo> scenar
+                                 ErrorStackTrace = x.TestError?.StackTrace,
+                                 Duration = x.Duration,
+                                 EndedAt = x.EndedAt,
+-                                Steps = x.Steps.Count > 0
+-                                    ? MapSteps(x.Steps, StepCollector.GetSteps(x.ScenarioId))
+-                                    : null,
++                                Steps = MapSteps(x.Steps, StepCollector.GetSteps(x.ScenarioId)),
+                                 Tags = tags.Length > 0 ? tags : null,
+                                 Rule = x.Rule,
+                                 SourceFile = x.SourceFile,
+@@ -97,7 +95,50 @@ public static Feature[] ToFeatures(this IEnumerable<ReqNRollScenarioInfo> scenar
+             }).ToArray();
+     }
+ 
+-    private static ScenarioStep[] MapSteps(List<ReqNRollStepInfo> steps, ScenarioStep[]? collectedSteps = null)
++    /// <summary>
++    /// What ran, in the order it ran: each Gherkin step on the step its hooks opened, and a step method that ran with no
++    /// Gherkin step open (a hook's) as itself. Steps built by hand through the public record carry no frame, and pair by
++    /// position, as they did.
++    /// </summary>
++    private static ScenarioStep[]? MapSteps(List<ReqNRollStepInfo> steps, ScenarioStep[] collectedSteps)
++    {
++        if (steps.Count > 0 && steps.All(s => s.FrameId is null))
++            return MapStepsByPosition(steps, collectedSteps);
++
++        var byFrame = steps.ToDictionary(s => s.FrameId!.Value);
++        var mapped = new List<ScenarioStep>();
++        var priorFailure = false;
++        foreach (var collected in collectedSteps)
++        {
++            if (collected.CollectedId is not { } id || !byFrame.TryGetValue(id, out var step))
++            {
++                mapped.Add(collected);
++                continue;
++            }
++
++            mapped.Add(MapStep(step, collected, priorFailure));
++            if (step.Status == ScenarioExecutionStatus.TestError || step.Status == ScenarioExecutionStatus.BindingError)
++                priorFailure = true;
++        }
++
++        return mapped.Count > 0 ? mapped.ToArray() : null;
++    }
++
++    private static ScenarioStep MapStep(ReqNRollStepInfo step, ScenarioStep collected, bool priorFailure) => new()
++    {
++        CollectedId = collected.CollectedId,
++        Keyword = step.Keyword,
++        Text = step.Text,
++        Status = step.Status.ToStepResult(priorFailure),
++        Duration = step.Duration,
++        DocString = step.DocString,
++        Parameters = ParseTableText(step.TableText),
++        TextSegments = BuildTextSegments(step),
++        SubSteps = collected.SubSteps,
++        Attachments = collected.Attachments,
++    };
++
++    private static ScenarioStep[] MapStepsByPosition(List<ReqNRollStepInfo> steps, ScenarioStep[]? collectedSteps = null)
+     {
+         var mapped = new ScenarioStep[steps.Count];
+         var priorFailure = false;
+diff --git a/src/Kronikol/Reports/BackgroundStepsDetector.cs b/src/Kronikol/Reports/BackgroundStepsDetector.cs
+index e8998220..70164fbe 100644
+--- a/src/Kronikol/Reports/BackgroundStepsDetector.cs
++++ b/src/Kronikol/Reports/BackgroundStepsDetector.cs
+@@ -46,6 +46,7 @@ public static void DetectAndExtract(Scenario[] scenarios)
+ 
+             foreach (var scenario in members)
+             {
++                scenario.OwnBackgroundSteps = scenario.Steps!.Take(commonPrefixLength).ToArray();
+                 scenario.BackgroundSteps = backgroundSteps;
+                 scenario.Steps = scenario.Steps!.Skip(commonPrefixLength).ToArray();
+             }
+diff --git a/src/Kronikol/Reports/ReportGenerator.cs b/src/Kronikol/Reports/ReportGenerator.cs
+index 6afff5da..a806ab6e 100644
+--- a/src/Kronikol/Reports/ReportGenerator.cs
++++ b/src/Kronikol/Reports/ReportGenerator.cs
+@@ -5390,9 +5390,17 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+             .GroupBy(s => s.Id)
+             .ToDictionary(g => g.Key, g => OrderedStepPaths(g.First()));
+ 
++        var collectedByTestId = features
++            .SelectMany(f => f.Scenarios)
++            .GroupBy(s => s.Id)
++            .Select(g => (g.Key, Paths: CollectedStepPaths(g.First())))
++            .Where(x => x.Paths is not null)
++            .ToDictionary(x => x.Key, x => x.Paths!);
++
+         foreach (var perTest in trackedLogs.GroupBy(l => l.TestId))
+         {
+             var ordered = stepsByTestId.TryGetValue(perTest.Key, out var s) ? s : [];
++            var collected = collectedByTestId.GetValueOrDefault(perTest.Key);
+             var paths = new List<string?>();
+             var found = new List<ScenarioAnnotation>();
+             string? current = null;
+@@ -5403,7 +5411,10 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+             {
+                 if (!log.IsDiagramMarker)
+                 {
+-                    paths.Add(current);
++                    // The step open when the call was logged, where this scenario's steps carry their ids; else by the bars.
++                    paths.Add(collected is not null && log.OpenStep is { } open
++                        ? collected.GetValueOrDefault(open)
++                        : current);
+                     interactionIndex++;
+                     continue;
+                 }
+@@ -5414,6 +5425,10 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+ 
+                 switch (log.MarkerKind)
+                 {
++                    // A bar a collected step drew only draws: the calls name their own step.
++                    case DiagramMarkerKind.Step when collected is not null && log.OpenStep is not null:
++                        break;
++
+                     case DiagramMarkerKind.Step:
+                         current = stepMarkerCount < ordered.Count && StepMarkerMatches(log.PlantUml, ordered[stepMarkerCount].Text)
+                             ? ordered[stepMarkerCount].Path
+@@ -5455,6 +5470,30 @@ private static (Dictionary<string, List<string?>> StepPaths, Dictionary<string,
+         return ordered;
+     }
+ 
++    /// <summary>
++    /// The address a call under each collected step gets: the top-level step it is in. Null for a scenario whose steps
++    /// carry no ids (built by hand through the public model), whose calls are read against the bars.
++    /// </summary>
++    private static Dictionary<int, string?>? CollectedStepPaths(Scenario scenario)
++    {
++        var paths = new Dictionary<int, string?>();
++
++        void Add(ScenarioStep step, string path)
++        {
++            if (step.CollectedId is { } id)
++                paths.TryAdd(id, path);
++            foreach (var sub in step.SubSteps ?? [])
++                Add(sub, path);
++        }
++
++        var background = scenario.OwnBackgroundSteps ?? scenario.BackgroundSteps ?? [];
++        for (var i = 0; i < background.Length; i++)
++            Add(background[i], $"b{i}");
++        for (var i = 0; i < (scenario.Steps?.Length ?? 0); i++)
++            Add(scenario.Steps![i], $"{i}");
++        return paths.Count > 0 ? paths : null;
++    }
++
+     /// <summary>
+     /// Whether a step delimiter's PlantUML belongs to a given step. The bar's label is the step text, but
+     /// possibly with the keyword prepended and the first letter capitalised, so this compares loosely: the
+diff --git a/src/Kronikol/Reports/Scenario.cs b/src/Kronikol/Reports/Scenario.cs
+index 2ecdf10b..35c3fdd0 100644
+--- a/src/Kronikol/Reports/Scenario.cs
++++ b/src/Kronikol/Reports/Scenario.cs
+@@ -79,6 +79,12 @@ public record Scenario
+     /// </summary>
+     public DateTimeOffset? EndedAt { get; set; }
+ 
++    /// <summary>
++    /// This scenario's own copies of the steps <see cref="BackgroundStepsDetector"/> took as its background, which holds
++    /// the first scenario's: the ids of the steps this scenario's calls happened under are on these.
++    /// </summary>
++    internal ScenarioStep[]? OwnBackgroundSteps { get; set; }
++
+     /// <summary>
+     /// True when <see cref="Result"/> was not reported by the runner but defaulted — a scenario that
+     /// started and never ended, given <c>IngestRequest.ResultWhenUnknown</c>. The report's
+diff --git a/src/Kronikol/Reports/ScenarioStep.cs b/src/Kronikol/Reports/ScenarioStep.cs
+index 62c3e941..e07209d9 100644
+--- a/src/Kronikol/Reports/ScenarioStep.cs
++++ b/src/Kronikol/Reports/ScenarioStep.cs
+@@ -5,6 +5,9 @@ namespace Kronikol.Reports;
+ /// </summary>
+ public record ScenarioStep
+ {
++    /// <summary>The id <see cref="Tracking.StepCollector"/> gave the step, within its test; never written to a report.</summary>
++    internal int? CollectedId { get; init; }
++
+     public string? Keyword { get; set; }
+ 
+     /// <summary>
+diff --git a/src/Kronikol/Tracking/RequestResponseLog.cs b/src/Kronikol/Tracking/RequestResponseLog.cs
+index 6eaf5bb3..8b365ee6 100644
+--- a/src/Kronikol/Tracking/RequestResponseLog.cs
++++ b/src/Kronikol/Tracking/RequestResponseLog.cs
+@@ -33,6 +33,12 @@ public record RequestResponseLog(
+     /// </summary>
+     internal bool NamedByRemoteHostFallback { get; init; }
+ 
++    /// <summary>
++    /// The step open when this was logged (<see cref="StepCollector.OpenStepOf"/>): 0 for none, null where the test has no
++    /// collected steps. Never written to a report; a call's stepPath is worked out from it.
++    /// </summary>
++    internal int? OpenStep { get; init; }
++
+     /// <summary>
+     /// The call as its tracker recorded it before #192 R1 changed how it records it, when that differs: a SQL Server
+     /// batch opening with two SET statements, which the classifier read as neither a statement nor a table. History's
+diff --git a/src/Kronikol/Tracking/RequestResponseLogger.cs b/src/Kronikol/Tracking/RequestResponseLogger.cs
+index 9e3294e1..50e3889a 100644
+--- a/src/Kronikol/Tracking/RequestResponseLogger.cs
++++ b/src/Kronikol/Tracking/RequestResponseLogger.cs
+@@ -83,6 +83,10 @@ public static void Log(RequestResponseLog log)
+         if (log.Timestamp is null)
+             log = log with { Timestamp = DateTimeOffset.UtcNow };
+ 
++        // Which step this happened under is known now and only now; before a hold, which can release it much later.
++        if (log.OpenStep is null && StepCollector.OpenStepOf(log.TestId) is { } openStep)
++            log = log with { OpenStep = openStep };
++
+         // A call the owner window answered for (DocumentOwnership) is held by its flow until an operation on
+         // the owner's document confirms it; a foreign operation or a query drops it instead.
+         if (log.AttributionSource == AttributionSource.DocumentFlow && TestIdentityScope.CurrentFlow is { } flow)
+diff --git a/src/Kronikol/Tracking/StepCollector.cs b/src/Kronikol/Tracking/StepCollector.cs
+index 4946362e..fecf4d3b 100644
+--- a/src/Kronikol/Tracking/StepCollector.cs
++++ b/src/Kronikol/Tracking/StepCollector.cs
+@@ -15,6 +15,9 @@ public static class StepCollector
+ {
+     private static readonly ConcurrentDictionary<string, TestStepState> States = new();
+ 
++    /// <summary>The step this flow last opened through the weaver's pair.</summary>
++    private static readonly AsyncLocal<CollectedStep?> FlowStep = new();
++
+     /// <summary>
+     /// Configuration options for step tracking behavior.
+     /// Set in test base class constructor or DI initialization.
+@@ -27,7 +30,11 @@ public static class StepCollector
+     /// </summary>
+     public static void StartStep(string? keyword, string text, string[]? paramNames, object?[]? paramValues)
+     {
+-        StartStep(ResolveTestId(), keyword, text, paramNames, paramValues);
++        var testId = ResolveTestId();
++        var id = OpenStep(testId, keyword, text, paramNames, paramValues, table: null, docString: null);
++        if (id is not null && testId is not null && States.TryGetValue(testId, out var state))
++            lock (state)
++                FlowStep.Value = state.StepStack.FirstOrDefault(s => s.Id == id);
+     }
+ 
+     /// <summary>
+@@ -36,7 +43,22 @@ public static void StartStep(string? keyword, string text, string[]? paramNames,
+     /// </summary>
+     public static void CompleteStep(bool passed, string? errorMessage = null)
+     {
+-        CompleteStep(ResolveTestId(), passed, errorMessage);
++        var testId = ResolveTestId();
++        // A step method its parent's step ended without has no frame left on the stack: this is that step finishing,
++        // and popping the stack would close whatever step is open now.
++        if (FlowStep.Value is { LeftRunning: true } left && testId is not null && States.TryGetValue(testId, out var state))
++        {
++            lock (state)
++            {
++                left.EndTime = Stopwatch.GetTimestamp();
++                left.Passed = passed;
++                left.ErrorMessage = errorMessage;
++                left.LeftRunning = false;
++            }
++            return;
++        }
++
++        CompleteStep(testId, passed, errorMessage);
+     }
+ 
+     /// <summary>
+@@ -53,10 +75,72 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+     /// </summary>
+     public static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
+         string[][]? table, string? docString)
++        => OpenStep(testId, keyword, text, paramNames, paramValues, table, docString);
++
++    /// <summary>
++    /// Starts a step that a framework's adapter opens for a step of the framework's own, and returns the id the adapter
++    /// closes it by (<see cref="CompleteFrame"/>) and finds it by (<see cref="ScenarioStep.CollectedId"/>). A step method
++    /// that runs with no frame open is not a framework step, whatever the order of the top-level steps says.
++    /// </summary>
++    internal static int? StartFrame(string? testId, string? keyword, string text, string[][]? table = null, string? docString = null)
++        => OpenStep(testId, keyword, text, null, null, table, docString);
++
++    /// <summary>
++    /// Closes the frame <paramref name="frameId"/>. A step still open above it was left running: it keeps its place under
++    /// its parent, and its own completion, when it comes, closes that step and no other.
++    /// </summary>
++    internal static void CompleteFrame(string? testId, int? frameId, bool passed, string? errorMessage = null)
+     {
+-        if (testId is null)
++        if (testId is null || frameId is null || !States.TryGetValue(testId, out var state))
+             return;
+ 
++        lock (state)
++        {
++            if (state.StepStack.All(s => s.Id != frameId))
++                return;
++
++            while (state.StepStack.Count > 0)
++            {
++                var open = state.StepStack.Pop();
++                var isFrame = open.Id == frameId;
++                if (isFrame)
++                {
++                    open.EndTime = Stopwatch.GetTimestamp();
++                    open.Passed = passed;
++                    open.ErrorMessage = errorMessage;
++                }
++                else
++                {
++                    open.Passed = true;
++                    open.LeftRunning = true;
++                }
++
++                (state.StepStack.Count > 0 ? state.StepStack.Peek().SubSteps : state.CompletedSteps).Add(open);
++                if (isFrame)
++                    return;
++            }
++        }
++    }
++
++    /// <summary>
++    /// The step a call logged now happened under: its id, 0 when this test has steps and none is open, null when this test
++    /// has none, where the call is read against the bars instead (a capture replayed by an ingest, a test without steps).
++    /// </summary>
++    internal static int? OpenStepOf(string? testId)
++    {
++        if (testId is null || !States.TryGetValue(testId, out var state))
++            return null;
++
++        lock (state)
++            return state.StepStack.Count > 0 ? state.StepStack.Peek().Id : 0;
++    }
++
++    private static int? OpenStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
++        string[][]? table, string? docString)
++    {
++        if (testId is null)
++            return null;
++
+         var state = States.GetOrAdd(testId, _ => new TestStepState());
+ 
+         var step = new CollectedStep
+@@ -70,6 +154,8 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+         var isTopLevel = false;
+         lock (state)
+         {
++            step.Id = ++state.LastStepId;
++
+             // Resolve effective keyword (Given/And/And sequencing)
+             step.EffectiveKeyword = ResolveKeyword(state, keyword);
+ 
+@@ -116,6 +202,8 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+                     break;
+             }
+         }
++
++        return step.Id;
+     }
+ 
+     /// <summary>
+@@ -479,6 +567,7 @@ private static ScenarioStep ToScenarioStep(CollectedStep step)
+ 
+         return new ScenarioStep
+         {
++            CollectedId = step.Id == 0 ? null : step.Id,
+             Keyword = step.EffectiveKeyword,
+             IsAssertion = step.IsAssertion,
+             Text = step.Text,
+@@ -540,11 +629,14 @@ private class TestStepState
+         public Stack<CollectedStep> StepStack { get; } = new();
+         public List<CollectedStep> CompletedSteps { get; } = new();
+         public string? LastKeywordCategory { get; set; }
++        public int LastStepId { get; set; }
+         public List<FileAttachment>? ScenarioAttachments { get; set; }
+     }
+ 
+     private class CollectedStep
+     {
++        public int Id { get; set; }
++        public bool LeftRunning { get; set; }
+         public bool IsAssertion { get; set; }
+         public string? OriginalKeyword { get; set; }
+         public string? EffectiveKeyword { get; set; }

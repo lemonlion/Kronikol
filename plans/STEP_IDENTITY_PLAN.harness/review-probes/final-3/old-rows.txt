@@ -1,0 +1,222 @@
+=== AN4 an async step whose step methods inner step fails
+0 Given a registered customer
+  0.0 A customer is registered
+1 When a facades inner step fails [Failed]
+  1.0 A facade whose inner step fails [Failed]
+2 Then the order is confirmed [SkippedAfterFailure]
+3 Inner that fails [Failed]
+calls: 0 /customers, 1 /facade, 3 /inner-fails
+all files: 
+scenario files: 
+=== HS3 inner
+calls: - /customers, - /orders/1
+all files: inner-file
+scenario files: inner-file
+=== OR2 a then fails with a when and a then left
+0 Given the start
+  0.0 A customer is registered
+1 When one
+2 When three [Skipped]
+3 Then one
+4 When two
+5 When three [Skipped]
+6 Then two fails [Failed]
+7 Then three [SkippedAfterFailure]
+calls: 0 /customers, 1 /w1, 3 /t1, 4 /w2, 6 /t2
+all files: 
+scenario files: 
+=== RV1 a rebuilt row and a file in a tear down
+0 Given a registered customer
+  0.0 A customer is registered
+1 Then the order is ***
+  1.0 The order is read back
+calls: 0 /customers, - /orders/1
+all files: rv1-teardown-file
+scenario files: rv1-teardown-file
+=== RV10 the first then fails with a when and a then left
+0 Given the start
+  0.0 A customer is registered
+1 When one
+2 When two [Skipped]
+3 Then one fails [Failed]
+4 Then two [SkippedAfterFailure]
+calls: 0 /customers, 1 /w1, 3 /t1
+all files: 
+scenario files: 
+=== RV12 a step that never suspends
+0 Given a registered customer
+  0.0 A customer is registered
+1 When it never suspends
+2 Then the order is confirmed
+  2.0 The order is read back
+calls: 0 /customers, 1 /no-suspend, 2 /orders/1
+all files: 
+scenario files: 
+=== RV13 a step that throws without suspending
+0 Given a registered customer
+  0.0 A customer is registered
+1 When it throws without suspending [Failed]
+2 Then the order is confirmed [SkippedAfterFailure]
+calls: 0 /customers, 1 /throws-no-suspend
+all files: 
+scenario files: 
+=== RV14 an async step not implemented
+0 Given a registered customer
+  0.0 A customer is registered
+1 When it is not implemented [Skipped]
+2 Then the order is confirmed [Skipped]
+calls: 0 /customers
+all files: 
+scenario files: 
+=== RV15 an async step cancelled
+0 Given a registered customer
+  0.0 A customer is registered
+1 When it is cancelled [Failed]
+2 Then the order is confirmed [SkippedAfterFailure]
+calls: 0 /customers
+all files: 
+scenario files: 
+=== RV16 an async step running two step methods together
+0 Given a registered customer
+  0.0 A customer is registered
+1 When two run together
+  1.0 Inner one
+    1.0.0 Inner two
+2 Then the order is confirmed
+  2.0 The order is read back
+calls: 0 /customers, 1 /inner-1, 1 /inner-2, 2 /orders/1
+all files: 
+scenario files: 
+=== RV17 an async step leaving a step method running
+0 Given a registered customer
+  0.0 A customer is registered
+1 When one is left running
+  1.0 A slow background check
+2 Inner two
+3 Then the order is confirmed
+  3.0 The order is read back
+calls: 0 /customers, 1 /left-running, 2 /inner-2, 3 /orders/1
+all files: 
+scenario files: 
+=== RV1b a hidden setup and a rebuilt row with a file
+0 Given a registered customer
+  0.0 Reference data is seeded
+1 Then the order is ***
+  1.0 A customer is registered
+calls: - /seed, - /customers, - /orders/1
+all files: rv1b-rebuilt-row-file
+scenario files: rv1b-rebuilt-row-file
+=== RV2 two hidden setups the second throws
+0 Given a registered customer [Skipped]
+calls: 
+all files: rv2-context-file, rv2-context-file, rv2-setup-file
+scenario files: rv2-context-file, rv2-setup-file
+=== RV23 an inner executor that blocks
+0 Given a registered customer
+  0.0 A customer is registered
+1 When inner blocks step runs
+  1.0 Inner one
+2 Then the order is confirmed
+  2.0 The order is read back
+calls: 0 /customers, 1 /inner-1, 2 /orders/1
+all files: 
+scenario files: 
+=== RV24 an inner executor that blocks and the step fails
+0 Given a registered customer
+  0.0 A customer is registered
+1 When inner blocks step fails [Failed]
+  1.0 Inner one
+2 Then the order is confirmed [SkippedAfterFailure]
+calls: 0 /customers, 1 /inner-1
+all files: 
+scenario files: 
+=== RV25 a test that passes on its second attempt over an async step
+0 Given a registered customer
+  0.0 A customer is registered
+1 When a flaky step runs [Failed]
+  1.0 Inner one
+2 Then the order is read back [SkippedAfterFailure]
+calls: 0 /customers, 1 /inner-1
+all files: 
+scenario files: 
+=== RV3 a rebuilt row and a file in a later example row
+0 Given a file named after <customer>
+1 Then the order is ***
+  1.0 The order is read back
+calls: - /orders/1, - /orders/1
+all files: rv3-row-alice, rv3-row-bob
+scenario files: rv3-row-bob
+=== RV4 a step returning a task of a value
+0 Given a registered customer
+  0.0 A customer is registered
+1 When a value is read
+2 Inner one
+3 Then the order is confirmed
+  3.0 The order is read back
+calls: 0 /customers, 1 /value-before, 2 /inner-1, 3 /orders/1
+all files: rv4-file
+scenario files: rv4-file
+=== RV4b a step returning a finished task of a value
+0 Given a registered customer
+  0.0 A customer is registered
+1 When a value is read at once
+2 Then the order is confirmed
+  2.0 The order is read back
+calls: 0 /customers, 1 /value-now, 2 /orders/1
+all files: 
+scenario files: 
+=== RV5 an outer executor that drops the task
+0 Given a registered customer
+  0.0 A customer is registered
+1 When dropped step runs
+2 Then the order is confirmed
+  2.0 The order is read back
+calls: 0 /customers, 2 /orders/1
+all files: rv5-before-file
+scenario files: 
+=== RV6 an outer time limit on a step that hangs
+0 Given a registered customer
+  0.0 A customer is registered
+1 When timed out step hangs [Failed]
+  1.0 Inner one
+2 Then the order is confirmed [SkippedAfterFailure]
+calls: 0 /customers, 1 /inner-1
+all files: rv6-file
+scenario files: rv6-file
+=== RV6b a then over the time limit and a then after it
+0 Given a registered customer
+  0.0 A customer is registered
+1 Then timed out step hangs [Failed]
+  1.0 Inner one
+2 And then the order is confirmed
+  2.0 The order is read back
+calls: 0 /customers, 1 /inner-1, 2 /orders/1
+all files: rv6b-later-step-file
+scenario files: 
+=== RV7 an outer executor that waits itself
+0 Given a registered customer
+  0.0 A customer is registered
+1 When waits itself step runs
+  1.0 Inner one
+2 Then the order is confirmed
+  2.0 The order is read back
+calls: 0 /customers, 1 /inner-1, 2 /orders/1
+all files: 
+scenario files: 
+=== RV8 inner
+0 Given the inner step runs
+  0.0 A customer is registered
+1 Then the inner step ends
+  1.0 The order is read back
+calls: - /outer-before, 0 /customers, 1 /orders/1
+all files: rv8-inner-file, rv8-outer-file
+scenario files: rv8-outer-file
+=== RV9 an async step in an example table
+0 Given the customer is named later <customer>
+1 Inner one
+2 Then the order is confirmed
+  2.0 The order is read back
+3 Inner one
+calls: 0 /named/alice, 1 /inner-1, 2 /orders/1, - /named/bob, 3 /inner-1, - /orders/1
+all files: 
+scenario files: 

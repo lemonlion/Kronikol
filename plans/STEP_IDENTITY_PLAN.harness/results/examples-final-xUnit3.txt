@@ -1,0 +1,69 @@
+
+### s0 steps
+s0  Cake Feature › Calling create cake endpoint returns cake  [Passed]  0.84s
+stableId b0c05133381869d9
+open: TestRunReport.html#sid-b0c05133381869d9
+
+   6 calls belong to no step (before the first step, or attribution was not trusted)
+6 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method                 path          calls errors   median      max bodies     bytes
+-     GET                    /milk             2      0   371 ms   371 ms      1      52 B
+-     GET                    /eggs             1      0     6 ms     6 ms      1      20 B
+-     GET                    /flour            1      0     5 ms     5 ms      1      22 B
+-     POST                   /cake             1      0    59 ms    59 ms      1     175 B
+-     Send (Event Protocol)  /cake_events      1      0     2 ms     2 ms      1     109 B
+5 buckets
+
+### s1 steps
+s1  Cake Feature › Calling create cake endpoint without eggs returns bad request  [Passed]  0.04s
+stableId a37bfc23d9dea757
+open: TestRunReport.html#sid-a37bfc23d9dea757
+
+   5 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path    calls errors   median      max bodies     bytes
+-     GET     /milk       2      0    13 ms    13 ms      1      52 B
+-     GET     /eggs       1      0     1 ms     1 ms      1      20 B
+-     GET     /flour      1      0     0 ms     0 ms      1      22 B
+-     POST    /cake       1      1    25 ms    25 ms      1     301 B
+4 buckets
+
+### s2 steps
+s2  Parameterized Diagnostic Feature › Different muffin recipes should produce the expected batch [recipeName: "Classic", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Plain Flour, Apples = Granny Smith, Cinnamon = Ceylon }, Baking = BakingProfileData { Temperature = 180, Dur…]  [Passed]  0.01s
+stableId b8aa5405f2e909cb
+open: TestRunReport.html#sid-b8aa5405f2e909cb
+example: recipeName=Classic, recipe=MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Plain Flour, Apples = Granny Smith, Cinnamon = Ceylon }, Baking = BakingProfileData { Temperature = 180, DurationMinutes = 25, PanType = Standard }, Toppings = System.Collections.Generic.List`1[Example.Api.Tests.Component.xUnit3.Scenarios.ToppingData] }, expected=MuffinBatchExpectation { ExpectedIngredientCount = 5, ExpectedToppingCount = 2, HasBakingInfo = True }
+
+0 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s3 steps
+s3  Parameterized Diagnostic Feature › Different muffin recipes should produce the expected batch [recipeName: "Rustic Wholesome", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Whole Wheat, Apples = Honeycrisp, Cinnamon = Cassia }, Baking = BakingProfileData { Temperature = 1…]  [Passed]  0s
+stableId f67ac70e4e8c4e4b
+open: TestRunReport.html#sid-f67ac70e4e8c4e4b
+example: recipeName=Rustic Wholesome, recipe=MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Whole Wheat, Apples = Honeycrisp, Cinnamon = Cassia }, Baking = BakingProfileData { Temperature = 175, DurationMinutes = 30, PanType = Cast Iron }, Toppings = System.Collections.Generic.List`1[Example.Api.Tests.Component.xUnit3.Scenarios.ToppingData] }, expected=MuffinBatchExpectation { ExpectedIngredientCount = 5, ExpectedToppingCount = 2, HasBakingInfo = True }
+
+0 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s4 steps
+s4  Parameterized Diagnostic Feature › Different muffin recipes should produce the expected batch [recipeName: "Spiced Deluxe", recipe: MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Almond Flour, Apples = Pink Lady, Cinnamon = Saigon }, Baking = BakingProfileData { Temperature = 190,…]  [Passed]  0s
+stableId 051e67a5bb983333
+open: TestRunReport.html#sid-051e67a5bb983333
+example: recipeName=Spiced Deluxe, recipe=MuffinRecipeTestData { Ingredients = IngredientSet { Flour = Almond Flour, Apples = Pink Lady, Cinnamon = Saigon }, Baking = BakingProfileData { Temperature = 190, DurationMinutes = 20, PanType = Silicone }, Toppings = System.Collections.Generic.List`1[Example.Api.Tests.Component.xUnit3.Scenarios.ToppingData] }, expected=MuffinBatchExpectation { ExpectedIngredientCount = 5, ExpectedToppingCount = 2, HasBakingInfo = True }
+
+0 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total

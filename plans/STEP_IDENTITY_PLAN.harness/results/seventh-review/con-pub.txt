@@ -1,0 +1,80 @@
+control                            on   /given=0 /when=1  mismatch=0
+control                            off  /given=- /when=-  mismatch=0
+open-at-report                     on   /given=0 /open=-  mismatch=0
+open-at-report                     off  /given=- /open=-  mismatch=0
+open-then-nested                   on   /given=0 /nested=- /after-nested=-  mismatch=0
+open-then-nested                   off  /given=- /nested=- /after-nested=-  mismatch=0
+open-text-of-next-row              on   /given=0 /open=1  mismatch=0
+open-text-of-next-row              off  /given=- /open=-  mismatch=0
+dropped-row                        on   /a=0 /dropped=- /c=-  mismatch=1
+dropped-row                        off  /a=- /dropped=- /c=-  mismatch=0
+dropped-row-text-inside            on   /a=0 /dropped=1 /c=-  mismatch=0
+dropped-row-text-inside            off  /a=- /dropped=- /c=-  mismatch=0
+dropped-first-row                  on   /dropped=- /b=-  mismatch=1
+dropped-first-row                  off  /dropped=- /b=-  mismatch=0
+dropped-sub                        on   /parent=0 /sub=0 /parent-after=0 /next=1  mismatch=0
+dropped-sub                        off  /parent=- /sub=- /parent-after=- /next=-  mismatch=0
+mix-new-row                        on   /given=0 /when=1 /then=2  mismatch=0
+mix-new-row                        off  /given=- /when=- /then=-  mismatch=0
+mix-new-row-renamed                on   /given=0 /when=- /then=2  mismatch=1
+mix-new-row-renamed                off  /given=- /when=- /then=-  mismatch=0
+mix-first-row-rebuilt              on   /given=0 /when=1  mismatch=0
+mix-first-row-rebuilt              off  /given=- /when=-  mismatch=0
+mix-last-row-rebuilt               on   /given=0 /when=1  mismatch=0
+mix-last-row-rebuilt               off  /given=- /when=-  mismatch=0
+mix-sub-under-rebuilt              on   /given=0 /parent=1 /sub=1 /parent-after=1 /then=2  mismatch=0
+mix-sub-under-rebuilt              off  /given=- /parent=- /sub=- /parent-after=- /then=-  mismatch=0
+mix-background                     on   /shop=b0 /basket=0 /check=1  mismatch=0
+mix-background                     off  /shop=- /basket=- /check=-  mismatch=0
+mix-background-after-hook          on   /hook=- /shop=- /basket=1 /check=2  mismatch=2
+mix-background-after-hook          off  /hook=- /shop=- /basket=- /check=-  mismatch=0
+all-rebuilt                        on   /given=0 /when=1  mismatch=0
+all-rebuilt                        off  /given=- /when=-  mismatch=0
+all-rebuilt-over-subs              on   /sub=0 /when=1  mismatch=0
+all-rebuilt-over-subs              off  /sub=- /when=-  mismatch=0
+with-copy                          on   /given=- /when=-  mismatch=2
+with-copy                          off  /given=- /when=-  mismatch=0
+with-copy-twice                    on   /given=0 /when=-  mismatch=1
+with-copy-twice                    off  /given=- /when=-  mismatch=0
+same-row-in-background-and-steps   on   /given=b0 /when=-  mismatch=1
+same-row-in-background-and-steps   off  /given=- /when=-  mismatch=0
+prepend-hand-row                   on   /given=- /when=-  mismatch=2
+prepend-hand-row                   off  /given=- /when=-  mismatch=0
+prepend-hand-row-with-text         on   /given=0 /when=-  mismatch=1
+prepend-hand-row-with-text         off  /given=- /when=-  mismatch=0
+rows-reversed                      on   /a=- /b=1 /c=-  mismatch=2
+rows-reversed                      off  /a=- /b=- /c=-  mismatch=0
+rows-reversed-one-rebuilt          on   /a=- /b=1 /c=-  mismatch=2
+rows-reversed-one-rebuilt          off  /a=- /b=- /c=-  mismatch=0
+rebuilt-sorted-first               on   /a=- /b=- /c=2  mismatch=2
+rebuilt-sorted-first               off  /a=- /b=- /c=-  mismatch=0
+own-row-bar-after-collected        on   /c0=- /own1=- /own2=2  mismatch=2
+own-row-bar-after-collected        off  /c0=- /own1=0 /own2=-  mismatch=1
+own-rows-bars-in-order             on   /own1=0 /c0=1 /own2=2  mismatch=0
+own-rows-bars-in-order             off  /own1=0 /c0=0 /own2=-  mismatch=1
+bar-unstamped-mid                  on   /a=0 /cleanup=- /b=-  mismatch=1
+bar-unstamped-mid                  off  /a=- /cleanup=- /b=-  mismatch=1
+bar-unstamped-mid-text             on   /a=0 /manual=1 /b=-  mismatch=0
+bar-unstamped-mid-text             off  /a=- /manual=- /b=-  mismatch=1
+bar-inside-a-step                  on   /a=0 /part2=- /b=-  mismatch=1
+bar-inside-a-step                  off  /a=- /part2=- /b=-  mismatch=1
+bar-inside-a-rebuilt-step          on   /a=0 /b=1 /part2=- /c=-  mismatch=1
+bar-inside-a-rebuilt-step          off  /a=- /b=- /part2=- /c=-  mismatch=1
+empty-text-row-at-place            on   /a=0 /dropped=1 /c=2  mismatch=0
+empty-text-row-at-place            off  /a=- /dropped=- /c=-  mismatch=0
+after-the-steps                    on   /a=0 /between=0 /b=1 /after-last=1  mismatch=0
+after-the-steps                    off  /a=- /between=- /b=- /after-last=-  mismatch=0
+before-the-steps                   on   /before=- /a=0  mismatch=0
+before-the-steps                   off  /before=- /a=-  mismatch=0
+named-bar-moves-place-back         on   /r0=- /hook=- /r1=2  mismatch=2
+named-bar-moves-place-back         off  /r0=- /hook=- /r1=-  mismatch=0
+hook-listed-last-rebuilt-rows-first on   /hook=- /r0=- /r1=-  mismatch=3
+hook-listed-last-rebuilt-rows-first off  /hook=- /r0=- /r1=-  mismatch=0
+rebuilt-long-label                 on   /a=0 /long=- /c=2  mismatch=1
+rebuilt-long-label                 off  /a=- /long=- /c=-  mismatch=0
+background-with-ids-rebuilt-steps  on   /shop=b0 /basket=0 /check=1  mismatch=0
+background-with-ids-rebuilt-steps  off  /shop=- /basket=- /check=-  mismatch=0
+all-rows-empty-text                on   /a=0 /b=1  mismatch=0
+all-rows-empty-text                off  /a=- /b=-  mismatch=0
+cleared-then-run-again             on   /a1=0 /b1=1 /a2=- /b2=-  mismatch=0
+cleared-then-run-again             off  /a1=- /b1=- /a2=- /b2=-  mismatch=0

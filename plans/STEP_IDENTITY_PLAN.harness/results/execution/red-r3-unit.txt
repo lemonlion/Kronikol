@@ -1,0 +1,8 @@
+FAIL x1 Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Step_fetcher_that_throws_costs_the_call_nothing_and_no
+    System.InvalidOperationException : Not in scenario context
+FAIL x1 Kronikol.Tests.Tracking.TestTrackingMessageHandlerTests.Step_fetcher_that_throws_between_steps_reads_as_no_ste
+    System.InvalidOperationException : Not in scenario context
+FAIL x1 Kronikol.Tests.LightBDD.FeatureResultExtensionsTests.A_scenario_ends_with_its_last_step_where_LightBDDs_own_ti
+    Assert.Equal() Failure: Values differ
+    Expected: 2026-11-04T23:00:41.8885808+00:00
+    Actual:   2026-11-04T23:00:41.8835808+00:00

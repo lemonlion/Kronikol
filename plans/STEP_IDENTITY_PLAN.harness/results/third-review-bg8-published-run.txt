@@ -1,0 +1,9 @@
+Test run for C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq\bin\Debug\net10.0\HookSteps.Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Testhost process for source(s) 'C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\6c95b3da-8d7f-4468-aabd-55a1f293cc1f\scratchpad\review-4\z-rq\bin\Debug\net10.0\HookSteps.Repro.dll' exited with error: Error:
+  An assembly specified in the application dependencies manifest (HookSteps.Repro.deps.json) was not found:
+    package: 'Cucumber.CucumberExpressions', version: '17.1.0'
+    path: 'lib/netstandard2.0/CucumberExpressions.dll'
+. Please check the diagnostic logs for more information.
+
+Test Run Aborted.

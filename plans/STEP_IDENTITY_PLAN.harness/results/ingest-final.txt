@@ -1,0 +1,13 @@
+# review-probes/fourth/ingest-probe on the final code: as published, as R1, R2 and R3 leave the walk and the flags alone. F28 is why these calls read no step, and #129 is why nothing says so.
+degraded {}
+s0  F explicit background › With background one  [Passed]  0.5s
+  b0    Given a shop  0.1s
+  b1    And a customer  0.1s
+  0     When a basket  0.1s
+  1     Then it is empty  0.1s
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+s4  H odd text › Odd step text  [Passed]  0.5s
+  0     Given a value <b>bold</b> and "quoted"  0.1s  [i0]
+  1     When x...�
+  2     Then line one line two  0.1s
+   2 calls belong to no step (before the first step, or attribution was not trusted)

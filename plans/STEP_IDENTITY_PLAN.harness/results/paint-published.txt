@@ -1,0 +1,22 @@
+=== published: 27 details.scenario, 27 with a stable id
+--- published 5e3162beb9846a25: T01 a step method in BeforeScenario t01 3ms📋🔗
+  row  ✓ Given a registered customer
+  row  ✓ When the customer places the order
+  row    ✓  A customer is registered
+  row  ✓ Then the order is confirmed
+  row    ✓  An order is submitted
+  bars ["Reference","Given","When","Then"]
+--- published fcba0f353814a7b7: T05 a step method that fails in BeforeScenario t05 4ms📋🔗
+  bars ["Seeding"]
+--- published 9d80c3f0405791ec: T08 a failing step with steps after it 3ms📋🔗
+  row  ✓ Given a registered customer
+  row    ✓  A customer is registered
+  row  ✕ When the payment fails
+  bars ["Given","When"]
+--- published 169369e296076216: T11 a Given step method in BeforeScenario t11 2ms📋🔗
+  row  ✓ Given a registered customer
+  row  ✓ When the customer places the order
+  row    ✓  A customer is registered
+  row  ✓ Then the order is confirmed
+  row    ✓  An order is submitted
+  bars ["Given","And","When","Then"]

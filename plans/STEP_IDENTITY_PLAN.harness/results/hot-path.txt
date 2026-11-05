@@ -1,0 +1,24 @@
+=== round 1 pub
+no step state, one thread        2.624
+state, no step open, one thread  2.126
+a step open, one thread          1.865
+a step open, 8 threads, one test 1.939
+a step open, 8 threads, own test 1.876
+=== round 1 proto
+no step state, one thread        2.259
+state, no step open, one thread  1.962
+a step open, one thread          3.447
+a step open, 8 threads, one test 3.544
+a step open, 8 threads, own test 3.383
+=== round 2 pub
+no step state, one thread        1.929
+state, no step open, one thread  1.408
+a step open, one thread          1.434
+a step open, 8 threads, one test 1.618
+a step open, 8 threads, own test 1.730
+=== round 2 proto
+no step state, one thread        2.827
+state, no step open, one thread  2.436
+a step open, one thread          3.429
+a step open, 8 threads, one test 3.097
+a step open, 8 threads, own test 2.920

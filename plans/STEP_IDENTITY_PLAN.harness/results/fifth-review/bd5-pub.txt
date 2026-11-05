@@ -1,0 +1,336 @@
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl TestRunReport.labs.html 
+degraded: {'UnattributedInteractions': 1}
+! 1 call carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (1) under 'a5212c102e7…
+35 scenarios · 3 failed · 202 interactions · 1 distinct bodies
+  UnattributedInteractions ×1  1 call carried a test id that no scenario of this run has, so no scenario and no backgroun…
+s0  Bd 5 › P P01 T1  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s0 · flow s0
+    call 0 /P01/given 1
+    call 1 /P01/when 1
+    call 2 /P01/then 1
+    call 3 buckets 
+s1  Bd 5 › P P01 T2  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s1 · flow s1
+    call 0 /P01/given 1
+    call 1 /P01/when 1
+    call 2 /P01/then 1
+    call 3 buckets 
+s2  Bd 5 › P P01 T3 1 [n: 1]  [Passed]
+example: n=1
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s2 · flow s2
+    call 0 /P01/given 1
+    call 1 /P01/when 1
+    call 2 /P01/then 1
+    call 3 buckets 
+s3  Bd 5 › P P01 T3 2 [n: 2]  [Passed]
+example: n=2
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s3 · flow s3
+    call 0 /P01/given 1
+    call 1 /P01/when 1
+    call 2 /P01/then 1
+    call 3 buckets 
+s4  Bd 5 › P P02 T1  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s4 · flow s4
+    call 0 /P02/given 1
+    call 1 /P02/when 1
+    call 2 /P02/then 1
+    call 3 buckets 
+s5  Bd 5 › P P02 T2  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s5 · flow s5
+    call 0 /P02/given 1
+    call 1 /P02/when 1
+    call 2 /P02/then 1
+    call 3 buckets 
+s6  Bd 5 › P P02 T3 1 [n: 1]  [Passed]
+example: n=1
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s6 · flow s6
+    call 0 /P02/given 1
+    call 1 /P02/when 1
+    call 2 /P02/then 1
+    call 3 buckets 
+s7  Bd 5 › P P02 T3 2 [n: 2]  [Passed]
+example: n=2
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s7 · flow s7
+    call 0 /P02/given 1
+    call 1 /P02/when 1
+    call 2 /P02/then 1
+    call 3 buckets 
+s8  Bd 5 › P P03 T1  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s8 · flow s8
+    call 0 /P03/given 1
+    call 1 /P03/when 1
+    call 2 /P03/then 1
+    call 3 buckets 
+s9  Bd 5 › P P03 T2  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s9 · flow s9
+    call 0 /P03/given 1
+    call 1 /P03/when 1
+    call 2 /P03/then 1
+    call 3 buckets 
+s10  Bd 5 › P P03 T3 1 [n: 1]  [Passed]
+example: n=1
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s10 · flow s10
+    call 0 /P03/given 1
+    call 1 /P03/when 1
+    call 2 /P03/then 1
+    call 3 buckets 
+s11  Bd 5 › P P03 T3 2 [n: 2]  [Passed]
+example: n=2
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s11 · flow s11
+    call 0 /P03/given 1
+    call 1 /P03/when 1
+    call 2 /P03/then 1
+    call 3 buckets 
+s12  Bd 5 › P P04 T1  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s12 · flow s12
+    call 0 /P04/given 1
+    call 1 /P04/when 1
+    call 2 /P04/then 1
+    call 3 buckets 
+s13  Bd 5 › P P04 T2  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s13 · flow s13
+    call 0 /P04/given 1
+    call 1 /P04/when 1
+    call 2 /P04/then 1
+    call 3 buckets 
+s14  Bd 5 › P P04 T3 1 [n: 1]  [Passed]
+example: n=1
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s14 · flow s14
+    call 0 /P04/given 1
+    call 1 /P04/when 1
+    call 2 /P04/then 1
+    call 3 buckets 
+s15  Bd 5 › P P04 T3 2 [n: 2]  [Passed]
+example: n=2
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s15 · flow s15
+    call 0 /P04/given 1
+    call 1 /P04/when 1
+    call 2 /P04/then 1
+    call 3 buckets 
+s16  Bd 5 › P P05 T1  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s16 · flow s16
+    call 0 /P05/given 1
+    call 1 /P05/when 1
+    call 2 /P05/then 1
+    call 3 buckets 
+s17  Bd 5 › P P05 T2  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s17 · flow s17
+    call 0 /P05/given 1
+    call 1 /P05/when 1
+    call 2 /P05/then 1
+    call 3 buckets 
+s18  Bd 5 › P P05 T3 1 [n: 1]  [Passed]
+example: n=1
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s18 · flow s18
+    call 0 /P05/given 1
+    call 1 /P05/when 1
+    call 2 /P05/then 1
+    call 3 buckets 
+s19  Bd 5 › P P05 T3 2 [n: 2]  [Passed]
+example: n=2
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s19 · flow s19
+    call 0 /P05/given 1
+    call 1 /P05/when 1
+    call 2 /P05/then 1
+    call 3 buckets 
+s20  Bd 5 › P P06 T1  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s20 · flow s20
+    call 0 /P06/given 1
+    call 1 /P06/when 1
+    call 2 /P06/then 1
+    call 3 buckets 
+s21  Bd 5 › P P06 T2  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s21 · flow s21
+    call 0 /P06/given 1
+    call 1 /P06/when 1
+    call 2 /P06/then 1
+    call 3 buckets 
+s22  Bd 5 › P P06 T3 1 [n: 1]  [Passed]
+example: n=1
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s22 · flow s22
+    call 0 /P06/given 1
+    call 1 /P06/when 1
+    call 2 /P06/then 1
+    call 3 buckets 
+s23  Bd 5 › P P06 T3 2 [n: 2]  [Passed]
+example: n=2
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s23 · flow s23
+    call 0 /P06/given 1
+    call 1 /P06/when 1
+    call 2 /P06/then 1
+    call 3 buckets 
+s24  Bd 5 › P P07 T1  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s24 · flow s24
+    call 0 /P07/given 1
+    call 1 /P07/when 1
+    call 2 /P07/then 1
+    call 3 buckets 
+s25  Bd 5 › P P07 T2  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s25 · flow s25
+    call 0 /P07/given 1
+    call 1 /P07/when 1
+    call 2 /P07/then 1
+    call 3 buckets 
+s26  Bd 5 › P P07 T3 1 [n: 1]  [Passed]
+example: n=1
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s26 · flow s26
+    call 0 /P07/given 1
+    call 1 /P07/when 1
+    call 2 /P07/then 1
+    call 3 buckets 
+s27  Bd 5 › P P07 T3 2 [n: 2]  [Passed]
+example: n=2
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s27 · flow s27
+    call 0 /P07/given 1
+    call 1 /P07/when 1
+    call 2 /P07/then 1
+    call 3 buckets 
+s28  Bd 5 › P P08 T1  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s28 · flow s28
+    call 0 /P08/given 1
+    call 1 /P08/when 1
+    call 2 /P08/then 1
+    call 3 buckets 
+s29  Bd 5 › P P08 T2  [Passed]
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s29 · flow s29
+    call 0 /P08/given 1
+    call 1 /P08/when 1
+    call 2 /P08/then 1
+    call 3 buckets 
+s30  Bd 5 › P P08 T3 1 [n: 1]  [Passed]
+example: n=1
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s30 · flow s30
+    call 0 /P08/given 1
+    call 1 /P08/when 1
+    call 2 /P08/then 1
+    call 3 buckets 
+s31  Bd 5 › P P08 T3 2 [n: 2]  [Passed]
+example: n=2
+  0     Given a customer  [i0]
+  1     When an order  [i2]
+  2     Then it is confirmed  [i4]
+3 calls · interactions s31 · flow s31
+    call 0 /P08/given 1
+    call 1 /P08/when 1
+    call 2 /P08/then 1
+    call 3 buckets 
+s32  Bd 5 › X1 setup fails  [Failed]
+  0     Given a customer
+  1     When an order
+  2     Then it is confirmed
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+1 calls · interactions s32 · flow s32
+    call - /setup 1
+    call 1 buckets 
+s33  Bd 5 › X2 setup with a step fails  [Failed]
+  0     Given a customer
+    0.0   Seeded
+        · by
+        · setup
+  1     Then it is confirmed
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+1 calls · interactions s33 · flow s33
+    call - /seed-setup 1
+    call 1 buckets 
+s34  Bd 5 › X4 teardown fails  [Failed]
+  0     Given a customer  [i0]
+  1     Then it is confirmed  [i2]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s34 · flow s34
+    call 0 /given 1
+    call 1 /then 1
+    call - /teardown 1
+    call 3 buckets 

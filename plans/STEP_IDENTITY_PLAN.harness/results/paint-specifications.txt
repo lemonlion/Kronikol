@@ -1,0 +1,11 @@
+=== specifications: 6 details.scenario, 8 with a stable id
+--- specifications 8831e95995d04206: E16 a hook step and a background step that runs another seeded 1ms📋🔗
+  row  ✓  Reference data is seeded
+  row  ✓ Given a step that runs another
+  row    ✓ Given a registered customer
+  row      ✓  A customer is registered
+  row  ✓ And a registered customer
+  row    ✓  A customer is registered
+  row  ✓ When an order of 40 is placed
+  row  ✓ Then the order is confirmed
+  bars ["Reference","Given","And","When","Then"]

@@ -1,0 +1,12 @@
+s0  BG10 screenshot on failure inside the shared opening failing first › A fails at its When with 
+  b0    Given the shop is ready  0.07s  [i0]
+    b0.0  A customer is registered  0.04s
+      attachment: z-failure-shot-835d5522c0564ee9a19960d2293257be.txt → C:\Users\cex\AppData\Local
+    b1.0  An order is submitted  0s
+- 0     Then the order is listed
+s1  BG10 screenshot on failure inside the shared opening failing first › B passes  [Passed]  0s
+  b0    Given the shop is ready  0s  [i0]
+    b0.0  A customer is registered
+  b1    When the customer orders  [i2]
+    b1.0  An order is submitted
+  0     Then the receipt is sent  0s  [i4]

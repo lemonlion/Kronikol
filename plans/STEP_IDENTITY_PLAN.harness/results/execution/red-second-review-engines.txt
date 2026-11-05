@@ -1,0 +1,75 @@
+Failed!  - Failed:    12, Passed:   270, Skipped:     0, Total:   282, Duration: 1 m 15 s - Kronikol.Tests.RealEngines.dll (net10.0)
+Engine.Reqnroll.xUnit2: passed 51, failed 0
+Engine.Reqnroll.xUnit3: passed 51, failed 0
+Engine.Reqnroll.TUnit: passed 51, failed 0
+Engine.Reqnroll.Floor: passed 51, failed 0
+BddfySteps: passed 24, failed 12
+LightBddSteps: passed 7, failed 0
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.AN2_an_async_step_keeps_an_assertion_made_after_a_call_that_suspend
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 113)
+    Expected: ···".0 A facade that asserts\n    1.0.0 Assert.Equal(2,"···
+    Actual:   ···".0 A facade that asserts\n2 Then the order is confi"···
+                                            ↑ (pos 113)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.HS3_a_scenario_run_inside_a_step_of_another_keeps_its_rows_and_its_
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 Given the inner step runs\n  0.0 A customer is re"···
+    Actual:   "calls: - /customers, - /orders/1"
+               ↑ (pos 0)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.AN4_an_async_step_reads_failed_over_its_failed_inner_step_and_what_
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 151)
+    Expected: ···"nner step fails [Failed]\n    1.0.0 Inner that fail"···
+    Actual:   ···"nner step fails [Failed]\n2 Then the order is confi"···
+                                            ↑ (pos 151)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.OR2_a_list_not_in_run_order_lists_each_row_once_and_what_did_not_ru
+    Assert.Equal() Failure: Strings differ
+                                             ↓ (pos 62)
+    Expected: ···" registered\n1 When one\n2 Then one\n3 When two\n4 The"···
+    Actual:   ···" registered\n1 When one\n2 When three [Skipped]\n3 Th"···
+                                             ↑ (pos 62)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.HS1_a_hidden_setup_that_throws_lists_its_files_once
+    Assert.Equal() Failure: Collections differ at index 1
+                 ↓ (pos 2)
+    Expected: "setup-file"
+    Actual:   "seed-file"
+                 ↑ (pos 2)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.HS2_a_row_a_consumer_rebuilt_lists_its_file_once
+    Assert.Empty() Failure: Collection was not empty
+    Collection: ["rebuilt-row-file"]
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.AN7_an_async_step_keeps_what_runs_when_nothing_suspended_first
+    Assert.Equal() Failure: Strings differ
+                                             ↓ (pos 171)
+    Expected: ···"step\n    1.0.0 Inner one\n    1.0.1 Inner two\n2 The"···
+    Actual:   ···"step\n    1.0.0 Inner one\n2 Inner two\n3 Then the or"···
+                                             ↑ (pos 171)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.AN9_the_digest_names_an_assertion_that_fails_after_a_call_that_susp
+    Assert.Contains() Failure: Sub-string not found
+    String:    "# Failures — 8 of 30 scenarios\n\nWritten by Kroniko"···
+    Not found: "Assert.Equal(3, 1 + 1)"
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.AN1_an_async_step_keeps_what_its_step_method_runs_after_a_call_that
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 127)
+    Expected: ···"cade that runs two steps\n    1.0.0 Inner one\n    1"···
+    Actual:   ···"cade that runs two steps\n2 Inner one\n3 Inner two\n4"···
+                                            ↑ (pos 127)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.AN3_an_async_step_keeps_a_file_attached_after_a_call_that_suspends
+    Assert.Empty() Failure: Collection was not empty
+    Collection: ["facade-file"]
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.AN10_a_hidden_async_tear_down_lists_no_row_for_what_its_step_method
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 120)
+    Expected: ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+    Actual:   ···"0 The order is read back\n2 Inner one\n3 Inner two\nc"···
+                                            ↑ (pos 120)
+FAIL x1 Kronikol.Tests.RealEngines.BddfyStepsTests.AN8_the_last_step_keeps_what_its_step_method_runs
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 127)
+    Expected: ···"cade that runs two steps\n    1.0.0 Inner one\n    1"···
+    Actual:   ···"cade that runs two steps\n2 Inner one\n3 Inner two\nc"···
+                                            ↑ (pos 127)
+FAIL x4 Kronikol.Tests.RealEngines.ReqnrollStepsTests.Q4_a_step_with_no_frame_stands_after_a_block_hooks_step_method_t
+    Assert.StartsWith() Failure: String start does not match
+    String:         "0 Block prepared\n1 Given a registered customer\n  1"···
+    Expected start: "0 Block prepared\n1 Given a registered customer\n  1"···

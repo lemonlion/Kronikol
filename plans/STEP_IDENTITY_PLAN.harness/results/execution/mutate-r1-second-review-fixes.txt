@@ -1,0 +1,18 @@
+caught M47 a file under a step not listed is lost: by 1 on a real engine, ['F3_a_hidden_setups_files_stay_in_the_report_and_it_lists_no_row'] (249s)
+caught M58 an async step closes at its first await: by 3 unit, ['A_faulted_task_fails_the_step_and_still_throws', 'An_async_step_stays_open_until_its_task_ends', 'What_an_async_step_opens_after_its_first_await_is_under_it'] (56s)
+caught M59 with async void support off it still waits: by 1 unit, ['With_async_void_support_off_an_async_step_closes_as_it_returns'] (74s)
+caught M60 a faulted task closes as passed: by 1 unit, ['A_faulted_task_fails_the_step_and_still_throws'] (68s)
+caught M61 a nested step takes a place of its own by position: by 1 unit, ['A_row_rebuilt_beside_a_step_that_ran_another_pairs_the_top_level_rows_'] (77s)
+caught M62 a list not in run order is read as if it were: by 1 unit, ['A_list_not_in_the_order_its_steps_ran_lists_each_row_once_in_the_order'] (73s)
+caught M63 a held call moves the walk's place: by 2 unit, ['A_held_call_moves_nothing_past_a_bar_with_no_call_under_it', 'A_held_call_keeps_its_step_and_what_follows_it_reads_the_step_before_i'] (65s)
+caught M64 a bar leaves the walk's place where it was: by 1 unit, ['A_held_call_moves_nothing_past_a_bar_with_no_call_under_it'] (53s)
+caught M66 BDDfy hands the scenario files its rows hold by position: by 2 on a real engine, ['HS1_a_hidden_setup_that_throws_lists_its_files_once', 'HS2_a_row_a_consumer_rebuilt_lists_its_file_once'] (266s)
+caught M67 what a frame no row names holds stays hidden: by 1 unit, ['What_a_frame_no_row_names_holds_stands_in_its_place'] (73s)
+caught M68 a listed frame's files go to the scenario too: by 1 on a real engine, ['HS3_a_scenario_run_inside_a_step_of_another_keeps_its_rows_and_its_fil'] (208s)
+caught M69 the guess reads a row no framework step opened: by 1 unit, ['A_row_no_framework_step_opened_is_no_part_of_what_a_feature_shares'] (36s)
+caught M70 the guess reads a row that did not run: by 1 unit, ['A_row_that_did_not_run_is_no_part_of_what_a_feature_shares'] (31s)
+caught M71 what did not run follows the last frame whatever its id says: by 1 unit, ['What_did_not_run_waits_for_a_step_method_that_opened_before_it'] (40s)
+done
+caught M61 a nested step takes a place of its own by position: by 1 unit, ['A_row_rebuilt_beside_a_step_that_ran_another_pairs_the_top_level_rows_'] (40s)
+caught M72 a nested step's table is lost by position: by 1 unit, ['A_row_rebuilt_beside_a_step_that_ran_another_pairs_the_top_level_rows_'] (46s)
+done

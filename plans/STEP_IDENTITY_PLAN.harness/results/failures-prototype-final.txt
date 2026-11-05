@@ -1,0 +1,77 @@
+s5  Hook steps › T05 a step method that fails in BeforeScenario
+  at Features/Triggers.feature:33
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T05AStepMethodThatFailsInBeforeScenario() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T05AStepMethodThatFailsInBeforeScenario"
+  open: TestRunReport.html#sid-202fca2708f2635e
+  seeding failed
+  ✗ s5/0  Seeding fails
+    seeding failed
+    1 calls in this step:
+      s5/i0  Shop  POST /seed
+
+s6  Hook steps › T06 an AfterStep hook that throws
+  at Features/Triggers.feature:39
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T06AnAfterStepHookThatThrows() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T06AnAfterStepHookThatThrows"
+  open: TestRunReport.html#sid-59ce507ca5c9b99a
+  after step hook failed
+  ✗ s6/0  Given a registered customer
+    1 calls in this step:
+      s6/i0  Shop  POST /customers
+
+s7  Hook steps › T07 a BeforeStep hook that throws
+  at Features/Triggers.feature:45
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T07ABeforeStepHookThatThrows() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T07ABeforeStepHookThatThrows"
+  open: TestRunReport.html#sid-1e8d40b293efbdb4
+  before step hook failed
+  ✗ s7/0  Given a registered customer
+
+s8  Hook steps › T08 a failing step with steps after it
+  at Features/Triggers.feature:50
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T08AFailingStepWithStepsAfterIt() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T08AFailingStepWithStepsAfterIt"
+  open: TestRunReport.html#sid-9c2ee5bb50041909
+  payment declined
+  ✗ s8/1  When the payment fails
+    1 calls in this step:
+      s8/i2  Shop  POST /payments
+
+s13  Hook steps › T13 a step method in BeforeScenario and a failing step
+  at Features/Triggers.feature:80
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T13AStepMethodInBeforeScenarioAndAFailingStep() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T13AStepMethodInBeforeScenarioAndAFailingStep"
+  open: TestRunReport.html#sid-e7ec82cdea4531d6
+  payment declined
+  ✗ s13/2  When the payment fails
+    1 calls in this step:
+      s13/i4  Shop  POST /payments
+
+s15  Hook steps › T15 an AfterScenario hook that throws
+  at Features/Triggers.feature:92
+  thrown at HookSteps.Repro.Hooks.T15() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Hooks.T15"
+  open: TestRunReport.html#sid-a61642b72f13567f
+  after scenario hook failed
+  (no step is marked failed — the failure was outside a tracked step)
+
+s22  Hook steps › T22 a BeforeScenarioBlock hook that throws on the second block
+  at Features/Triggers.feature:131
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T22ABeforeScenarioBlockHookThatThrowsOnTheSecondBlock() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T22ABeforeScenarioBlockHookThatThrowsOnTheSecondBlock"
+  open: TestRunReport.html#sid-44aec08cd2e367e0
+  block hook failed
+  (no step is marked failed — the failure was outside a tracked step)
+
+s26  Hook steps › T26 a step that runs two steps, the first failing
+  at Features/Triggers.feature:152
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T26AStepThatRunsTwoStepsTheFirstFailing() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T26AStepThatRunsTwoStepsTheFirstFailing"
+  open: TestRunReport.html#sid-5b0424ec3f54772a
+  inner step failed
+  ✗ s26/0  Given a step that runs two steps, the first failing
+    1 calls in this step:
+      s26/i0  Shop  POST /inner
+    ✗ s26/0.0  Given an inner step fails
+
+8 failed · steps s? for the whole tree · grep "<value>" --values to trace a number

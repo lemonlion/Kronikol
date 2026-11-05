@@ -1,0 +1,257 @@
+=================== A-bg-text-in-first-bar (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 2 does not match step 'a customer places order 0'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  F › Order 0  [Passed]  0.5s
+  b0    Given a customer  0.1s  [i0]
+  0     When a customer places order 0  0.1s
+  1     Then it is confirmed  0.1s
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+b0    POST    /orders       1      0     5 ms     5 ms      1       4 B
+-     POST    /confirm      1      0     5 ms     5 ms      1       4 B
+2 buckets
+s1  F › Order 1  [Passed]  0.5s
+  b0    Given a customer  0.1s  [i0]
+  0     When a customer places order 1  0.1s
+  1     Then it is confirmed  0.1s
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s1 · flow s1
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+b0    POST    /orders       1      0     5 ms     5 ms      1       4 B
+-     POST    /confirm      1      0     5 ms     5 ms      1       4 B
+2 buckets
+=================== B-assertion-before-first-step (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step '✓ The stack is up'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  F › Assertion first  [Passed]  0.5s
+· 0     ✓ The stack is up
+  1     When a basket  0.1s
+  2     Then it is empty  0.1s
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /basket      1      0     5 ms     5 ms      1       4 B
+-     POST    /check       1      0     5 ms     5 ms      1       4 B
+2 buckets
+=================== C-retry (this)
+degraded: {}
+! 2 interaction record(s) of earlier attempts of retried tests left out: a retried test's scenario shows its last attempt, its retry badge counting the earlier on…
+s0  F › Retried  [Passed]  0.5s
+  0     When a basket  0.1s  [i0]
+  1     Then it is empty  0.1s  [i2]
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /basket      1      0     5 ms     5 ms      1       4 B
+1     POST    /check       1      0     5 ms     5 ms      1       4 B
+2 buckets
+=================== D-step-with-no-text (this)
+degraded: {'StepAttributionMismatch': 1}
+! Step marker 1 does not match step '(step)'; interactions after it carry no stepPath.
+s0  F › No text  [Passed]  0.5s
+  0     When (step)  0.1s
+  1     Then it is empty  0.1s  [i2]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path  calls errors   median      max bodies     bytes
+-     POST    /a        1      0     5 ms     5 ms      1       4 B
+1     POST    /b        1      0     5 ms     5 ms      1       4 B
+2 buckets
+=================== E-capture-own-bars-hook-bar (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'a basket'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  F › Hook bar  [Passed]  0.5s
+  0     When a basket  0.1s
+  1     Then it is empty  0.1s
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /seed        1      0     5 ms     5 ms      1       4 B
+-     POST    /basket      1      0     5 ms     5 ms      1       4 B
+-     POST    /check       1      0     5 ms     5 ms      1       4 B
+3 buckets
+=================== F-untimed-rows-own-bars-one-bar-differs (this)
+degraded: {}
+s0  F › Untimed  [Passed]  0.5s
+  0     Given a basket  0.1s  [i0]
+  1     When an order with <amount>  0.1s
+  2     Then it is confirmed  0.1s
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+0     POST    /basket       1      0     5 ms     5 ms      1       4 B
+-     POST    /order        1      0     5 ms     5 ms      1       4 B
+-     POST    /confirm      1      0     5 ms     5 ms      1       4 B
+3 buckets
+=================== G-shared-first-line-one-out (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'the order is placed for cash'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  F › Shared first line  [Passed]  0.5s
+  0     When the order is placed for cash  0.1s
+  1     And the order is placed for card  0.1s  [i2]
+  2     Then it is confirmed  0.1s
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /seed         1      0     5 ms     5 ms      1       4 B
+1     POST    /cash         1      0     5 ms     5 ms      1       4 B
+-     POST    /card         1      0     5 ms     5 ms      1       4 B
+-     POST    /confirm      1      0     5 ms     5 ms      1       4 B
+4 buckets
+=================== H-shared-400-chars-one-out (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'the customer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx… (×2; summary --json lists all 2)
+s0  F › Shared opening  [Passed]  0.5s
+  0     When the customer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…  0.1s
+  1     And the customer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…  0.1s  [
+  2     Then it is confirmed  0.1s
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /seed         1      0     5 ms     5 ms      1       4 B
+1     POST    /cash         1      0     5 ms     5 ms      1       4 B
+-     POST    /card         1      0     5 ms     5 ms      1       4 B
+-     POST    /confirm      1      0     5 ms     5 ms      1       4 B
+4 buckets
+=================== I-raw-bars-unescaped (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'the file C:\temp\new is read'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  F › Unescaped  [Passed]  0.5s
+  0     When the file C:\temp\new is read  0.1s
+  1     And a value <$name> is sent  0.1s
+  2     Then it is confirmed  0.1s  [i4]
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /read         1      0     5 ms     5 ms      1       4 B
+-     POST    /send         1      0     5 ms     5 ms      1       4 B
+2     POST    /confirm      1      0     5 ms     5 ms      1       4 B
+3 buckets
+=================== J-fold-false-match-one-out (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step 'a new order'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  F › Fold  [Passed]  0.5s
+  0     When a new order  0.1s
+  1     And anew order  0.1s  [i2]
+  2     Then it is confirmed  0.1s
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+-     POST    /seed         1      0     5 ms     5 ms      1       4 B
+1     POST    /n            1      0     5 ms     5 ms      1       4 B
+-     POST    /m            1      0     5 ms     5 ms      1       4 B
+-     POST    /confirm      1      0     5 ms     5 ms      1       4 B
+4 buckets
+=================== K-control (this)
+degraded: {}
+s0  F › Control  [Passed]  0.5s
+  0     When a basket  0.1s  [i0]
+  1     Then it is empty  0.1s  [i2]
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /basket      1      0     5 ms     5 ms      1       4 B
+1     POST    /check       1      0     5 ms     5 ms      1       4 B
+2 buckets
+=================== L-store-bars-with-background (this)
+degraded: {}
+s0  F › Store 0  [Passed]  0.5s
+  b0    Given a shop  0.1s  [i0]
+  0     When a basket  0.1s  [i2]
+  1     Then it is empty  0.1s  [i4]
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+b0    POST    /shop        1      0     5 ms     5 ms      1       4 B
+0     POST    /basket      1      0     5 ms     5 ms      1       4 B
+1     POST    /check       1      0     5 ms     5 ms      1       4 B
+3 buckets
+s1  F › Store 1  [Passed]  0.5s
+  b0    Given a shop  0.1s  [i0]
+  0     When a basket  0.1s  [i2]
+  1     Then it is empty  0.1s  [i4]
+3 calls · interactions s1 · flow s1
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+b0    POST    /shop        1      0     5 ms     5 ms      1       4 B
+0     POST    /basket      1      0     5 ms     5 ms      1       4 B
+1     POST    /check       1      0     5 ms     5 ms      1       4 B
+3 buckets
+=================== M-store-hook-bar-and-background (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 2 does not match step 'a basket'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  F › Store hook  [Passed]  0.5s
+  b0    Given a shop  0.1s
+  0     When a basket  0.1s
+  1     Then it is empty  0.1s
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /seed        1      0     5 ms     5 ms      1       4 B
+-     POST    /shop        1      0     5 ms     5 ms      1       4 B
+-     POST    /basket      1      0     5 ms     5 ms      1       4 B
+-     POST    /check       1      0     5 ms     5 ms      1       4 B
+4 buckets
+=================== N-nested-doc-table (this)
+degraded: {}
+s0  F › Nested  [Passed]  0.5s
+  0     Given a basket  0.1s  [i0-i2] 2 calls
+      · table
+      · a
+      · b
+      · 1
+      · 2
+    0.0   An inner step  0.1s
+  1     When it is sent  0.1s  [i4]
+      """{ "a": 1 }"""
+  2     Then it is empty  0.1s  [i6]
+4 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+0     POST    /basket      1      0     5 ms     5 ms      1       4 B
+0     POST    /inner       1      0     5 ms     5 ms      1       4 B
+1     POST    /send        1      0     5 ms     5 ms      1       4 B
+2     POST    /check       1      0     5 ms     5 ms      1       4 B
+4 buckets
+=================== O-heuristic-bg-other-outcome (this)
+degraded: {}
+s0  F › Outcome 0  [Passed]  0.5s
+  b0    Given a shop  0.1s  [i0]
+  0     Then it works 0  0.1s  [i2]
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path    calls errors   median      max bodies     bytes
+b0    POST    /shop       1      0     5 ms     5 ms      1       4 B
+0     POST    /check      1      0     5 ms     5 ms      1       4 B
+2 buckets
+s1  F › Outcome 1  [Failed]  0.5s
+✗ b0    Given a shop  0.15s  [i0]
+      no shop
+  0     Then it works 1  0.1s  [i2]
+2 calls · interactions s1 · flow s1
+  -- calls by step:
+step  method  path    calls errors   median      max bodies     bytes
+b0    POST    /shop       1      0     5 ms     5 ms      1       4 B
+0     POST    /check      1      0     5 ms     5 ms      1       4 B
+2 buckets
+s2  F › Outcome 2  [Passed]  0.5s
+  b0    Given a shop  0.2s  [i0]
+  0     Then it works 2  0.1s  [i2]
+2 calls · interactions s2 · flow s2
+  -- calls by step:
+step  method  path    calls errors   median      max bodies     bytes
+b0    POST    /shop       1      0     5 ms     5 ms      1       4 B
+0     POST    /check      1      0     5 ms     5 ms      1       4 B
+2 buckets

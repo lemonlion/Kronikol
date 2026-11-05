@@ -1,0 +1,6 @@
+Build succeeded.
+  Failed Kronikol.Tests.ReqNRoll.ReqNRollStepPairingTests.Rows_that_read_alike_keep_their_own_sub_steps_by_position [4 ms]
+  Failed Kronikol.Tests.ReqNRoll.ReqNRollStepPairingTests.Rows_that_read_alike_are_each_listed_by_position [1 ms]
+  Failed Kronikol.Tests.BDDfy.BDDfyAsyncFrameTests.A_step_still_running_when_the_steps_are_read_keeps_what_it_opened_and_its_late_end_changes_nothing [199 ms]
+  Failed Kronikol.Tests.BDDfy.BDDfyAsyncFrameTests.A_step_left_running_by_an_executor_around_this_one_is_over_when_the_next_step_starts [< 1 ms]
+Failed!  - Failed:     4, Passed:   100, Skipped:     0, Total:   104, Duration: 1 s - Kronikol.Tests.dll (net10.0)

@@ -1,0 +1,135 @@
+    0 Error(s)
+=================== S1-file-in-background-step-hook-everywhere (proto)
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 134 ms - Rq6.dll (net10.0)
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl 
+s0  S1 a file in a background step, a hook step in every scenario, all green › S1a  [Passed]  0s
+attachments: 1 on its steps · attachments s0
+  b0    Given a customer with a screenshot  [i2]
+      attachment: rq6-file-8d3c264847bd4f118e67b8030d3e1f18.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered
+  0     Reference data is seeded  [i0]
+  1     And an order of 1 is placed  [i4]
+  2     Then the order is confirmed  [i6]
+s1  S1 a file in a background step, a hook step in every scenario, all green › S1b  [Passed]  0.12s
+attachments: 1 on its steps · attachments s1
+  b0    Given a customer with a screenshot  0.02s  [i2]
+      attachment: rq6-file-125c8f5e58884fd9baf0584977e0ccf1.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered
+  0     Reference data is seeded  0.05s  [i0]
+  1     And an order of 2 is placed  0s  [i4]
+  2     Then the order is confirmed  0s  [i6]
+No scenario s2 — the report has 2 (s0-s1).
+=================== S2-file-after-every-step-hook-everywhere (proto)
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 91 ms - Rq6.dll (net10.0)
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl 
+s0  S2 a file after every step, a hook step in every scenario, all green › S2a  [Passed]  0.01s
+attachments: 3 on its steps · attachments s0
+  b0    Given a registered customer  [i2]
+      attachment: rq6-file-f054df84ecbd4cc799b5883e3188581a.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered
+  0     Reference data is seeded  [i0]
+  1     And an order of 1 is placed  [i4]
+      attachment: rq6-file-81c00db5dd7c4f86a944c86bb0e41c1b.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+  2     Then the order is confirmed  0.01s  [i6]
+      attachment: rq6-file-060bb9e1b2cb4bdb9a54911fc1e74849.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+s1  S2 a file after every step, a hook step in every scenario, all green › S2b  [Passed]  0.07s
+attachments: 3 on its steps · attachments s1
+  b0    Given a registered customer  0.01s  [i2]
+      attachment: rq6-file-4e9a71a1dbbb47649b7cc4d58b67c00a.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered
+  0     Reference data is seeded  0.03s  [i0]
+  1     And an order of 2 is placed  0s  [i4]
+      attachment: rq6-file-45f432130c5c473fa24e86b8404c9ab9.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+  2     Then the order is confirmed  0s  [i6]
+      attachment: rq6-file-68564499f9d44013b596d0f8aac13274.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+No scenario s2 — the report has 2 (s0-s1).
+=================== S3-file-in-background-step-no-hook (proto)
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 59 ms - Rq6.dll (net10.0)
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl 
+s0  S3 the control a file in a background step, no hook step › S3a  [Passed]  0s
+attachments: 1 on its steps · attachments s0
+  b0    Given a customer with a screenshot  0s  [i0]
+      attachment: rq6-file-d5402df7a81d4bedbeb68e4e6256137a.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered
+  0     And an order of 1 is placed  [i2]
+  1     Then the order is confirmed  [i4]
+s1  S3 the control a file in a background step, no hook step › S3b  [Passed]  0.05s
+attachments: 1 on its steps · attachments s1
+  b0    Given a customer with a screenshot  0.03s  [i0]
+      attachment: rq6-file-299c20bc723c4fb2a67707327735381b.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered  0.01s
+  0     And an order of 2 is placed  0s  [i2]
+  1     Then the order is confirmed  [i4]
+No scenario s2 — the report has 2 (s0-s1).
+=================== S4-file-in-background-hook-first-scenario-only (proto)
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 138 ms - Rq6.dll (net10.0)
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl 
+s0  S4 a file in a background step, a hook step on the first scenario only › S4a  [Passed]  0.01s
+attachments: 1 on its steps · attachments s0
+  b0    Given a customer with a screenshot  0s  [i2]
+      attachment: rq6-file-0619fc08994141d1827d4ca351286e42.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered
+  0     Reference data is seeded  0s  [i0]
+  1     And an order of 1 is placed  [i4]
+  2     Then the order is confirmed  [i6]
+s1  S4 a file in a background step, a hook step on the first scenario only › S4b  [Passed]  0.11s
+attachments: 1 on its steps · attachments s1
+  b0    Given a customer with a screenshot  0.06s  [i0]
+      attachment: rq6-file-56541f21d6e84979ad5c3f213c1bf4eb.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered  0.03s
+  0     And an order of 2 is placed  0s  [i2]
+  1     Then the order is confirmed  0s  [i4]
+No scenario s2 — the report has 2 (s0-s1).
+=================== S5-screenshot-on-failure-first-scenario-hook (proto)
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 125 ms - Rq6.dll (net10.0)
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl 
+s0  S5 a failure screenshot in an AfterStep hook, the first scenario fails in its opening step, a hook step in it › S5
+attachments: 1 on its steps · attachments s0
+✗ b0    Given a customer that fails when tagged  0.01s  [i2]
+      attachment: rq6-shot-7b4195a22f4b4b8cab44fef1c7f88ef1.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered
+  0     Reference data is seeded  [i0]
+- 1     And an order of 1 is placed
+- 2     Then the order is confirmed
+s1  S5 a failure screenshot in an AfterStep hook, the first scenario fails in its opening step, a hook step in it › S5
+  b0    Given a customer that fails when tagged  0.04s  [i0]
+    b0.0  A customer is registered  0.02s
+  0     And an order of 2 is placed  0s  [i2]
+  1     Then the order is confirmed  0s  [i4]
+No scenario s2 — the report has 2 (s0-s1).
+=================== S6-no-background-keyword-shared-first-given (proto)
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 149 ms - Rq6.dll (net10.0)
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl 
+s0  S6 no Background written, two scenarios open with the same Given, a file after every step, a hook step › S6a  [Pas
+attachments: 3 on its steps · attachments s0
+  b0    Given a registered customer  0.02s  [i2]
+      attachment: rq6-file-fb237a517d40493ca441613d525e75e3.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered
+  0     Reference data is seeded  0.04s  [i0]
+  1     And an order of 1 is placed  0s  [i4]
+      attachment: rq6-file-034b9350a4144956ac29c438a2399fdb.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+  2     Then the order is confirmed  0s  [i6]
+      attachment: rq6-file-4d8e1ce7060f497a9f57f55c401b7c39.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+s1  S6 no Background written, two scenarios open with the same Given, a file after every step, a hook step › S6b  [Pas
+attachments: 2 on its steps · attachments s1
+  b0    Given a registered customer  0s  [i2]
+      attachment: rq6-file-802d49852713498d992154afdd91ee6e.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered
+  0     Reference data is seeded  [i0]
+  1     Then the order is confirmed  0.01s  [i4]
+      attachment: rq6-file-af558bddb4014f9db03b0e09c2d837a6.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+No scenario s2 — the report has 2 (s0-s1).
+=================== S7-aftersteps-hook-attaches-then-throws (proto)
+Failed!  - Failed:     1, Passed:     1, Skipped:     0, Total:     2, Duration: 143 ms - Rq6.dll (net10.0)
+files: Failures.md Run.json TestRunReport.html TestRunReport.krkl 
+s0  S7 an AfterStep hook attaches a file then throws in the first scenario, its opening step shared › S7a the hook thr
+attachments: 1 on its steps · attachments s0
+✗ b0    Given a registered customer  0.07s  [i0]
+      attachment: rq6-shot-e9edfd453e5d464b81334fcdda458907.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kroni
+    b0.0  A customer is registered  0.03s
+s1  S7 an AfterStep hook attaches a file then throws in the first scenario, its opening step shared › S7b passes  [Pas
+  b0    Given a registered customer  0s  [i0]
+    b0.0  A customer is registered
+  0     And an order of 2 is placed  0s  [i2]
+  1     Then the order is confirmed  0s  [i4]
+No scenario s2 — the report has 2 (s0-s1).

@@ -1,0 +1,31 @@
+=== prototype: 28 details.scenario, 28 with a stable id
+--- prototype 79d771e3a33f2891: T01 a step method in BeforeScenario t01 2ms📋🔗
+  row  ✓  Reference data is seeded
+  row  ✓ Given a registered customer
+  row    ✓  A customer is registered
+  row  ✓ When the customer places the order
+  row    ✓  An order is submitted
+  row  ✓ Then the order is confirmed
+  row    ✓  The order is read back
+  bars ["Reference","Given","When","Then"]
+--- prototype 202fca2708f2635e: T05 a step method that fails in BeforeScenario t05 11ms📋🔗
+  row  ✕  Seeding fails
+  row  ! Given a registered customer
+  row  ! When the customer places the order
+  row  ! Then the order is confirmed
+  bars ["Seeding"]
+--- prototype 9c2ee5bb50041909: T08 a failing step with steps after it 1ms📋🔗
+  row  ✓ Given a registered customer
+  row    ✓  A customer is registered
+  row  ✕ When the payment fails
+  row  ! Then the order is confirmed
+  bars ["Given","When"]
+--- prototype 8545141e78b371a0: T11 a Given step method in BeforeScenario t11 1ms📋🔗
+  row  ✓ Given A tenant exists
+  row  ✓ And a registered customer
+  row    ✓  A customer is registered
+  row  ✓ When the customer places the order
+  row    ✓  An order is submitted
+  row  ✓ Then the order is confirmed
+  row    ✓  The order is read back
+  bars ["Given","And","When","Then"]

@@ -1,0 +1,35 @@
+FAIL x1 Kronikol.Tests.LightBDD.FeatureResultExtensionsTests.A_step_whose_decorator_ran_ran_though_nothing_collected_i
+    Assert.False() Failure
+    Expected: False
+    Actual:   True
+FAIL x1 Kronikol.Tests.Tracking.StepFrameTests.A_step_method_that_skips_an_xUnit_test_reads_skipped_with_the_reason_al
+    Assert.Equal() Failure: Values differ
+    Expected: Skipped
+    Actual:   Failed
+FAIL x1 Kronikol.Tests.ReqNRoll.ReqNRollStepPairingTests.A_row_a_consumer_removed_does_not_come_back
+    Assert.Single() Failure: The collection contained 2 items
+    Collection: [ScenarioStep { Keyword = Given, IsAssertion = False, Text = a basket, Status = Passed, BypassReason = , Duration = , SubSteps = Kronikol.
+FAIL x1 Kronikol.Tests.Tracking.StepPairingTests.A_frame_no_framework_step_names_lists_no_row
+    Assert.Equal() Failure: Collections differ
+    Expected: <generated>                              ["kept"]
+    Actual:   ListSelectIterator<ScenarioStep, string> ["kept", "removed"]
+                                                                ↑ (pos 1)
+FAIL x1 Kronikol.Tests.Tracking.StepFrameTests.A_frame_says_it_was_one_and_a_step_method_does_not
+    Assert.True() Failure
+    Expected: True
+    Actual:   False
+FAIL x1 Kronikol.Tests.ReqNRoll.ReqNRollStepPairingTests.A_row_that_ran_is_not_read_as_a_row_that_did_not_when_its_ste
+    Assert.All() Failure: 2 out of 2 items in the collection did not pass.
+    [0]: Item:  ScenarioStep { Keyword = Given, IsAssertion = False, Text = a basket, Status = Passed, BypassReason = , Duration = , SubSteps = , Paramete
+         Error: Assert.False() Failure
+                Expected: False
+                Actual:   True
+    [1]: Item:  ScenarioStep { Keyword = When, IsAssertion = False, Text = the customer pays, Status = Passed, BypassReason = , Duration = , SubSteps = , 
+         Error: Assert.False() Failure
+                Expected: False
+                Actual:   True
+FAIL x1 Kronikol.Tests.ReqNRoll.ReqNRollStepPairingTests.A_row_rebuilt_by_hand_among_the_hooks_rows_leaves_the_list_pa
+    Assert.Equal() Failure: Collections differ
+    Expected: <generated>                               ["a basket", "the customer pays ***"]
+    Actual:   ArraySelectIterator<ScenarioStep, string> ["a basket", "the customer pays ***", "the customer pays"]
+                                                                                              ↑ (pos 2)

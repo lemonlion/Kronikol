@@ -1,0 +1,29 @@
+    0 Error(s)
+=================== S1-file-in-background-step-hook-everywhere (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 520 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:08.55]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S2-file-after-every-step-hook-everywhere (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 424 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.21]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S3-file-in-background-step-no-hook (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 428 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.38]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S4-file-in-background-hook-first-scenario-only (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 439 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.22]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S5-screenshot-on-failure-first-scenario-hook (proto)
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 429 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.31]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S6-no-background-keyword-shared-first-given (proto)
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 402 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.32]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 
+=================== S7-aftersteps-hook-attaches-then-throws (proto)
+Failed!  - Failed:     3, Passed:     1, Skipped:     0, Total:     4, Duration: 368 ms - Rq6.dll (net10.0)
+[xUnit.net 00:00:01.19]     [Test Assembly Cleanup Failure (Rq6.dll)] System.Collections.Generic.KeyNotFoundException
+files: 

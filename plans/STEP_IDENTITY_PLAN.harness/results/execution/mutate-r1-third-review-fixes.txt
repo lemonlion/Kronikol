@@ -1,0 +1,13 @@
+caught M73 rows that read alike are one row by position: by 2 unit, ['Rows_that_read_alike_keep_their_own_sub_steps_by_position', 'Rows_that_read_alike_are_each_listed_by_position'] (38s)
+caught M74 a step that did not run between two that did says nothing about the order: by 1 on a real engine, ['OR3_a_step_that_did_not_run_between_two_that_did_stands_after_the_last'] (204s)
+SURVIVED M75 a step placed by its id counts as out of order too: ['Passed!  - Failed:     0, Passed:   284, Skipped:     0, Total:   284, Duration: 1 m 37 s - Kronikol.Tests.RealEngines.dll (net10.0)'] (165s)
+caught M76 by position a file past the last row is lost: by 1 on a real engine, ['HS4_a_file_on_a_hidden_step_past_the_last_row_stays_in_the_report_once'] (170s)
+caught M77 by position every frame's files go on the scenario as well: by 3 on a real engine, ['HS1_a_hidden_setup_that_throws_lists_its_files_once', 'HS4_a_file_on_a_hidden_step_past_the_last_row_stays_in_the_report_once', 'HS2_a_row_a_consumer_rebuilt_lists_its_file_once'] (116s)
+caught M78 a step left running stays open at the next step: by 1 unit, ['A_step_left_running_by_an_executor_around_this_one_is_over_when_the_ne'] (45s)
+caught M79 the next step closes one it runs inside: by 3 unit, ['An_async_story_inside_an_async_step_nests_and_the_next_step_stands_bes', 'A_step_two_stories_down_keeps_both_open', 'A_story_run_inside_an_async_step_stays_under_it_after_an_await'] (51s)
+caught M80 a step still running at the read is lost: by 1 unit, ['A_step_still_running_when_the_report_reads_the_scenario_keeps_what_it_'] (56s)
+caught M81 a flow stays inside a step after its call returned: by 1 unit, ['A_step_left_running_by_an_executor_around_this_one_is_over_when_the_ne'] (52s)
+caught M83 only the innermost step counts as what a flow is inside: by 1 unit, ['A_step_two_stories_down_keeps_both_open'] (45s)
+done
+caught M75 a step placed by its id counts as out of order too: by 1 unit, ['A_step_placed_by_the_id_before_it_between_two_that_ran_leaves_the_list'] (37s)
+done

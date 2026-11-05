@@ -1,0 +1,3 @@
+Build succeeded.
+Failed!  - Failed:     1, Passed:  2141, Skipped:    28, Total:  2170, Duration: 23 m 47 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+BackForwardRestoreTests.R16 alone, all three engines, three runs: Passed 3 of 3 each. BackForwardRestoreTests alone: Passed 25 of 25.

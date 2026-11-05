@@ -1,0 +1,119 @@
+=== prototype, feature tagged every
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 135 ms - HookSteps.Every.dll (net10.0)
+s0  A hook step in every scenario, with a background › E0 with a coupon  [Passed]  0.11s
+  b0    Reference data is seeded  0.04s  [i0]
+  b1    Given a registered customer  0.01s  [i2]
+    b1.0  A customer is registered
+  0     And the customer has a coupon  0s  [i4]
+    0.0   A coupon is added
+  1     When the customer places the order  0s  [i6]
+    1.0   An order is submitted
+  2     Then the order is confirmed  0s  [i8]
+    2.0   The order is read back
+      call> b0 /seed
+      call> b1 /customers
+      call> 0 /coupons
+      call> 1 /orders
+      call> 2 /orders/1
+      call> 5 buckets
+s1  A hook step in every scenario, with a background › E1 with a voucher  [Passed]  0s
+  b0    Reference data is seeded  0.04s  [i0]
+  b1    Given a registered customer  0.01s  [i2]
+    b1.0  A customer is registered
+  0     And the customer has a voucher  0s  [i4]
+    0.0   A voucher is added
+  1     When the customer places the order  [i6]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i8]
+    2.0   The order is read back
+      call> b0 /seed
+      call> b1 /customers
+      call> 0 /vouchers
+      call> 1 /orders
+      call> 2 /orders/1
+      call> 5 buckets
+
+=== prototype, feature tagged some
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 142 ms - HookSteps.Every.dll (net10.0)
+s0  A hook step in one scenario, with a background › S0 with a coupon  [Passed]  0.01s
+  0     Reference data is seeded  0s  [i0]
+  1     Given a registered customer  [i2]
+    1.0   A customer is registered
+  2     And the customer has a coupon  0s  [i4]
+    2.0   A coupon is added
+  3     When the customer places the order  [i6]
+    3.0   An order is submitted
+  4     Then the order is confirmed  [i8]
+    4.0   The order is read back
+      call> 0 /seed
+      call> 1 /customers
+      call> 2 /coupons
+      call> 3 /orders
+      call> 4 /orders/1
+      call> 5 buckets
+s1  A hook step in one scenario, with a background › S1 with a voucher  [Passed]  0.11s
+  0     Given a registered customer  0.07s  [i0]
+    0.0   A customer is registered  0.03s
+  1     And the customer has a voucher  0s  [i2]
+    1.0   A voucher is added
+  2     When the customer places the order  0s  [i4]
+    2.0   An order is submitted
+  3     Then the order is confirmed  0s  [i6]
+    3.0   The order is read back
+      call> 0 /customers
+      call> 1 /vouchers
+      call> 2 /orders
+      call> 3 /orders/1
+      call> 4 buckets
+
+=== prototype, feature tagged whenfirst
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 114 ms - HookSteps.Every.dll (net10.0)
+s0  A hook step in every scenario, each starting with a When › W0 confirmed  [Passed]  0
+  0     Reference data is seeded  0.04s  [i0]
+  1     When the customer places the order  0.01s  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  0s  [i4]
+    2.0   The order is read back
+      call> 0 /seed
+      call> 1 /orders
+      call> 2 /orders/1
+      call> 3 buckets
+s1  A hook step in every scenario, each starting with a When › W1 read back  [Passed]  0
+  0     Reference data is seeded  [i0]
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is read back  [i4]
+    2.0   The order is read back
+      call> 0 /seed
+      call> 1 /orders
+      call> 2 /orders/1
+      call> 3 buckets
+
+=== prototype, feature tagged whenfirstgiven
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 120 ms - HookSteps.Every.dll (net10.0)
+s0  A Given step method in a hook, each scenario starting with a When › G0 confirmed  [P
+  0     Given A tenant exists  [i0]
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+      call> 0 /tenant
+      call> 1 /orders
+      call> 2 /orders/1
+      call> 3 buckets
+s1  A Given step method in a hook, each scenario starting with a When › G1 read back  [P
+  0     Given A tenant exists  0.04s  [i0]
+  1     When the customer places the order  0.01s  [i2]
+    1.0   An order is submitted
+  2     Then the order is read back  0s  [i4]
+    2.0   The order is read back
+      call> 0 /tenant
+      call> 1 /orders
+      call> 2 /orders/1
+      call> 3 buckets
+
+=== prototype, feature tagged everyfile
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 475 ms - HookSteps.Every.dll (net10.0)
+[xUnit.net 00:00:01.31]     [Test Assembly Cleanup Failure (HookSteps.Every.dll)] System.Collections.Generic.KeyNotFoundException
+NO REPORT was written
+

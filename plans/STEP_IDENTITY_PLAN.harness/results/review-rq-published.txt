@@ -1,0 +1,224 @@
+Diagnostics (2):
+  BackgroundCalls ×1  1 call arrived after 'R03 a hook leaves a step method running and the first step is undefi…
+  UnattributedInteractions ×1  3 calls carried a test id that no scenario of this run has, so no scenario and no backgrou…
+next: scenarios · services
+
+### s0 steps
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+s0  Review probes › R00 a forwarding step method awaited normally is the control  [Passed]  0.81s
+stableId f34b427222057c66
+at Features/Review.feature:3
+open: TestRunReport.html#sid-f34b427222057c66
+
+  0     Given a forwarding step method is awaited  0.31s  [i0]
+    0.0   A forwarding check  0.31s
+      0.0.0 A slow inner check  0.31s
+  1     When the order takes a while and is then read back  0.5s  [i2-i4] 2 calls
+    1.0   An order is submitted slowly  0.5s
+    1.1   The order is read back
+  2     Then the order is confirmed  [i6]
+    2.0   The order is read back
+4 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+step  method  path         calls errors   median      max bodies     bytes
+0     POST    /background      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders          1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s1 steps
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+s1  Review probes › R01 a forwarding step method left running  [Passed]  0.51s
+stableId 1c64e86de9ec1704
+at Features/Review.feature:8
+open: TestRunReport.html#sid-1c64e86de9ec1704
+
+  0     Given a forwarding step method is left running  [i0-i6] 4 calls
+    0.0   A forwarding check  0.5s
+      0.0.0 A slow inner check
+      0.0.1 When the order takes a while and is then read back  0.31s
+        0.0.1.0 An order is submitted slowly  0.31s
+    0.1   The order is read back
+  1     When the order takes a while and is then read back  0.5s
+    1.0   The order is read back
+  2     Then the order is confirmed
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+step  method  path         calls errors   median      max bodies     bytes
+0     POST    /started         1      0     0 ms     0 ms      1       4 B
+0     POST    /background      1      0     0 ms     0 ms      1       4 B
+0     POST    /orders          1      0     0 ms     0 ms      1       4 B
+0     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s2 steps
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+s2  Review probes › R02 a sync step method that leaves one running  [Passed]  0.56s
+stableId 758bd05c5e3de550
+at Features/Review.feature:13
+open: TestRunReport.html#sid-758bd05c5e3de550
+
+  0     Given a sync step method leaves one running  0.03s  [i0-i6] 4 calls
+    0.0   A sync wrapper  0.02s
+      0.0.0 A slow inner check  0s
+    0.1   When the order takes a while and is then read back  0.51s
+      0.1.0 An order is submitted slowly  0.29s
+    0.2   The order is read back
+  1     When the order takes a while and is then read back  0.51s
+    1.0   The order is read back
+  2     Then the order is confirmed
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+step  method  path         calls errors   median      max bodies     bytes
+0     POST    /started         1      0     1 ms     1 ms      1       4 B
+0     POST    /background      1      0     0 ms     0 ms      1       4 B
+0     POST    /orders          1      0     0 ms     0 ms      1       4 B
+0     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s3 steps
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+s3  Review probes › R03 a hook leaves a step method running and the first step is undefined  [Skipped]  0.02s
+stableId 18ce79fa2445c445
+at Features/Review.feature:24
+open: TestRunReport.html#sid-18ce79fa2445c445
+
+0 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s4 steps
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+s4  Review probes › R05 a hook's step method runs a Gherkin step and then makes a call  [Passed]  0.01s
+stableId 7cfb78d4b929196d
+at Features/Review.feature:35
+open: TestRunReport.html#sid-7cfb78d4b929196d
+
+  0     Given a registered customer
+    0.0   Given a registered customer
+      0.0.0 A customer is registered
+  1     Given a registered customer  [i4]
+    1.0   A customer is registered
+  2     When the customer places the order  [i6]
+    2.0   An order is submitted
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+step  method  path         calls errors   median      max bodies     bytes
+-     POST    /customers       1      0     0 ms     0 ms      1       4 B
+-     POST    /seed-after      1      0     0 ms     0 ms      1       4 B
+1     POST    /customers       1      0     0 ms     0 ms      1       4 B
+2     POST    /orders          1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s5 steps
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+s5  Review probes › R06 two step methods in parallel in a hook, the first ending first  [Passed]  0.15s
+stableId 5be9663f83bdd08c
+at Features/Review.feature:40
+open: TestRunReport.html#sid-5be9663f83bdd08c
+
+  0     Given a registered customer  0s
+    0.0   A slow parallel  0.02s
+  1     When the customer places the order  0s
+    1.0   A customer is registered
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s5 · flow s5
+
+### s5 calls: step, method, path
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /fast           1      0     0 ms     0 ms      1       4 B
+-     POST    /slow           1      0     0 ms     0 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders         1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s6 steps
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+s6  Review probes › R17 the control for R01, the plan's T17 shape on the same later steps  [Passed]  0.52s
+stableId 05e60b5f36a3d700
+at Features/Review.feature:18
+open: TestRunReport.html#sid-05e60b5f36a3d700
+
+  0     Given a step method is left running  [i0-i6] 4 calls
+    0.0   A slow background check
+    0.1   When the order takes a while and is then read back  0.51s
+      0.1.0 An order is submitted slowly  0.31s
+    0.2   The order is read back
+  1     When the order takes a while and is then read back  0.51s
+    1.0   The order is read back
+  2     Then the order is confirmed
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s6 · flow s6
+
+### s6 calls: step, method, path
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+step  method  path         calls errors   median      max bodies     bytes
+0     POST    /started         1      0     0 ms     0 ms      1       4 B
+0     POST    /background      1      0     0 ms     0 ms      1       4 B
+0     POST    /orders          1      0     0 ms     0 ms      1       4 B
+0     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+5 buckets
+
+### s7 steps
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+s7  Review probes › R18 a failing forwarding step method left running, in a scenario that passes  [Passed]  0.52s
+stableId 132871d80210ee49
+at Features/Review.feature:49
+open: TestRunReport.html#sid-132871d80210ee49
+
+  0     Given a failing forwarding step method is left running  0s  [i0-i4] 3 calls
+    0.0   A failing forwarding check  0.51s
+      0.0.0 A failing inner check
+    ✗ 0.0.1 When the order takes a while and is then read back  0.11s
+          background check failed
+      ✗ 0.0.1.0 An order is submitted slowly  0.11s
+            background check failed
+    0.1   The order is read back
+  1     When the order takes a while and is then read back  0.51s
+    1.0   The order is read back
+  2     Then the order is confirmed
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s7 · flow s7
+
+### s7 calls: step, method, path
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /started       1      0     0 ms     0 ms      1       4 B
+0     POST    /orders        1      0     0 ms     0 ms      1       4 B
+0     POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s8 steps
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+s8  Review probes › R99 keeps the run alive past the left-running steps  [Passed]  1.51s
+stableId a844b82c476e1144
+at Features/Review.feature:54
+open: TestRunReport.html#sid-a844b82c476e1144
+
+  0     Given the run waits a while  1.51s
+0 calls · interactions s8 · flow s8
+
+### s8 calls: step, method, path
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'ab94ebbc-f…
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total

@@ -1,0 +1,23 @@
+=== published
+exit code: 0
+Passed!  - Failed:     0, Passed:     1, Skipped:     1, Total:     2, Duration: 88 ms - HookSteps.Repro.dll (net10.0)
+AGENTS.md CLAUDE.md Failures.jsonl Failures.md Run.json Specifications.html Specifications.yml TestRunReport.html TestRunReport.krkl attachments query.cs service.json 
+s0  BG12 a green run, a file after every step, one scenario skips itself in a hook › A passes  [Passed]  0.0
+attachments: 3 on its steps · attachments s0
+  0     Given the shop is ready  0.06s  [i0]
+      attachment: z-step-log-07afc7fc0c6d4c038989afad03abb118.txt → C:\Users\cex\AppData\Local\Temp\claude\c
+    0.0   A customer is registered  0.03s
+  1     When the customer orders  0s  [i2]
+      attachment: z-step-log-5aee6a263a334ce7a7ce8213f4a6bbe0.txt → C:\Users\cex\AppData\Local\Temp\claude\c
+    1.0   An order is submitted  0s
+  2     Then the order is listed  0s  [i4]
+      attachment: z-step-log-ed18e3c207ca4c45928530d135d233a2.txt → C:\Users\cex\AppData\Local\Temp\claude\c
+    2.0   The order is read back
+3 calls · interactions s0 · flow s0
+s1  BG12 a green run, a file after every step, one scenario skips itself in a hook › B needs a GPU  [Skipped
+0 calls · interactions s1 · flow s1
+=== proto
+exit code: 1
+[xUnit.net 00:00:01.74]     [Test Assembly Cleanup Failure (HookSteps.Repro.dll)] System.Collections.Generic.KeyNotFoundException
+Failed!  - Failed:     2, Passed:     1, Skipped:     1, Total:     4, Duration: 375 ms - HookSteps.Repro.dll (net10.0)
+attachments 

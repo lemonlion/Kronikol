@@ -1,0 +1,46 @@
+--- tests/Kronikol.Tests.xUnit2
+Passed!  - Failed:     0, Passed:   111, Skipped:     0, Total:   111, Duration: 3 m 45 s - Kronikol.Tests.xUnit2.dll (net10.0)
+--- tests/Kronikol.Tests.xUnit3
+Passed!  - Failed:     0, Passed:    33, Skipped:     0, Total:    33, Duration: 2 s - Kronikol.Tests.xUnit3.dll (net10.0)
+--- tests/Kronikol.Tests.NUnit4
+Passed!  - Failed:     0, Passed:    49, Skipped:     0, Total:    49, Duration: 2 s - Kronikol.Tests.NUnit4.dll (net10.0)
+--- tests/Kronikol.Tests.MSTest
+Passed!  - Failed:     0, Passed:    85, Skipped:     0, Total:    85, Duration: 2 s - Kronikol.Tests.MSTest.dll (net10.0)
+--- tests/Kronikol.Tests.TUnit
+   Kronikol.Tests.TUnit  Total: 50, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0 (an xunit.v3 in-process runner, whose summary the script's filter does not match: run again by hand and read)
+--- examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 925 ms - Example.Api.Tests.Component.ReqNRoll.xUnit3.dll (net10.0)
+--- examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 1 s - Example.Api.Tests.Component.ReqNRoll.xUnit2.dll (net10.0)
+--- examples/Example.Api/tests/Example.Api.Tests.Component.BDDfy.xUnit3
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 940 ms - Example.Api.Tests.Component.BDDfy.xUnit3.dll (net10.0)
+--- examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 1 s - Example.Api.Tests.Component.LightBDD.xUnit3.dll (net10.0)
+--- examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit2
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 1 s - Example.Api.Tests.Component.LightBDD.xUnit2.dll (net10.0)
+--- examples/Example.Api/tests/Example.Api.Tests.Component.xUnit3
+Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5, Duration: 590 ms - Example.Api.Tests.Component.xUnit3.dll (net10.0)
+--- examples/Example.Api/tests/Example.Api.Tests.Component.xUnit2
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 796 ms - Example.Api.Tests.Component.xUnit2.dll (net10.0)
+--- examples/Example.Api/tests/Example.Api.Tests.Component.NUnit4
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 544 ms - Example.Api.Tests.Component.NUnit4.dll (net10.0)
+--- examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit
+Test run summary: Passed!
+  total: 2
+  failed: 0
+  succeeded: 2
+  skipped: 0
+--- examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.TUnit
+Test run summary: Passed!
+  total: 3
+  failed: 0
+  succeeded: 3
+  skipped: 0
+--- examples/Example.Api/tests/Example.Api.Tests.Component.TUnit
+Test run summary: Passed!
+  total: 12
+  failed: 0
+  succeeded: 12
+  skipped: 0
+--- examples/Example.Api/tests/Example.Api.Tests.Integration
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 40 s - Example.Api.Tests.Integration.dll (net10.0)

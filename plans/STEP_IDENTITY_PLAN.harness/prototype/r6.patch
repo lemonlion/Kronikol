@@ -1,0 +1,225 @@
+diff --git a/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs b/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs
+index d40f0e36..e5551bf9 100644
+--- a/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs
++++ b/src/Kronikol.LightBDD.Core/FeatureResultExtensions.cs
+@@ -218,8 +218,10 @@ internal static (string BaseName, Dictionary<string, string> Parameters) Extract
+         var stepArray = steps.ToArray();
+         if (stepArray.Length == 0) return null;
+         var priorFailure = false;
+-        // No step decorator ran (or the results were built by hand): no frames, and they pair by position.
+-        if (stepArray.All(s => StepTrackingStepDecorator.FrameOf(s.Info.RuntimeId) is null))
++        // No step decorator ran (or the results were built by hand): no frames, and they pair by position. Steps that never
++        // ran are not that: a step method ahead of them (a scenario decorator's) stands as itself.
++        if (stepArray.All(s => StepTrackingStepDecorator.FrameOf(s.Info.RuntimeId) is null)
++            && stepArray.Any(s => s.Status != ExecutionStatus.NotRun))
+         {
+             var byPosition = new ScenarioStep[stepArray.Length];
+             for (var i = 0; i < stepArray.Length; i++)
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
+index 2eb8c637..3d56e996 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollStepInfo.cs
+@@ -20,7 +20,7 @@ public record ReqNRollStepInfo(
+     /// <summary>For a step that did not run (skipped, undefined): the id of the step opened last before it.</summary>
+     internal int? NotRunAfter { get; init; }
+ 
+-    /// <summary>For a step that did not run with a step open (a Gherkin step that runs another): the id of that step.</summary>
++    /// <summary>For a step that did not run with a Gherkin step open (one that runs another): the id of that step.</summary>
+     internal int? NotRunUnder { get; init; }
+ }
+ 
+diff --git a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+index 1965e047..ece5e186 100644
+--- a/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
++++ b/src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs
+@@ -84,17 +84,17 @@ public void BeforeScenario()
+                 eventPublisher.AddHandler<HookFinishedEvent>(evt =>
+                 {
+                     if (evt.HookType == HookType.AfterStep && evt.ScenarioContext is ScenarioContext scenario)
+-                        CloseStep(scenario);
++                        Quietly(() => CloseStep(scenario));
+                 });
+                 eventPublisher.AddHandler<StepFinishedEvent>(evt =>
+                 {
+                     if (evt.ScenarioContext is ScenarioContext scenario)
+-                        NoteStepThatDidNotRun(scenario);
++                        Quietly(() => NoteStepThatDidNotRun(scenario));
+                 });
+                 eventPublisher.AddHandler<ScenarioFinishedEvent>(evt =>
+                 {
+                     if (evt.ScenarioContext is ScenarioContext scenario && evt.FeatureContext is FeatureContext feature)
+-                        CollectScenario(scenario, feature);
++                        Quietly(() => CollectScenario(scenario, feature));
+                 });
+             }
+         }
+@@ -104,6 +104,19 @@ public void BeforeScenario()
+         }
+     }
+ 
++    // Reqnroll runs an event's handlers inline, so a throw here would fail the step it reports on.
++    private static void Quietly(Action handle)
++    {
++        try
++        {
++            handle();
++        }
++        catch
++        {
++            // What the report loses is not worth the test
++        }
++    }
++
+     [BeforeStep(Order = int.MinValue)]
+     public void BeforeStep()
+     {
+@@ -192,7 +205,7 @@ private static void NoteStepThatDidNotRun(ScenarioContext scenario)
+             stepContext.StepInfo.MultilineText)
+         {
+             NotRunAfter = StepCollector.LastStepIdOf(scenarioId),
+-            NotRunUnder = StepCollector.OpenStepOf(scenarioId),
++            NotRunUnder = StepCollector.OpenFrameOf(scenarioId),
+         });
+     }
+ 
+diff --git a/src/Kronikol/Tracking/StepCollector.cs b/src/Kronikol/Tracking/StepCollector.cs
+index f6d228f3..b7c42d12 100644
+--- a/src/Kronikol/Tracking/StepCollector.cs
++++ b/src/Kronikol/Tracking/StepCollector.cs
+@@ -17,9 +17,6 @@ public static class StepCollector
+ 
+     private static int _lastStepId;
+ 
+-    /// <summary>The step this flow last opened through the weaver's pair.</summary>
+-    private static readonly AsyncLocal<CollectedStep?> FlowStep = new();
+-
+     /// <summary>
+     /// Configuration options for step tracking behavior.
+     /// Set in test base class constructor or DI initialization.
+@@ -32,11 +29,7 @@ public static class StepCollector
+     /// </summary>
+     public static void StartStep(string? keyword, string text, string[]? paramNames, object?[]? paramValues)
+     {
+-        var testId = ResolveTestId();
+-        var id = OpenStep(testId, keyword, text, paramNames, paramValues, table: null, docString: null);
+-        if (id is not null && testId is not null && States.TryGetValue(testId, out var state))
+-            lock (state)
+-                FlowStep.Value = state.StepStack.FirstOrDefault(s => s.Id == id);
++        StartStep(ResolveTestId(), keyword, text, paramNames, paramValues);
+     }
+ 
+     /// <summary>
+@@ -45,43 +38,7 @@ public static void StartStep(string? keyword, string text, string[]? paramNames,
+     /// </summary>
+     public static void CompleteStep(bool passed, string? errorMessage = null)
+     {
+-        var testId = ResolveTestId();
+-        if (FlowStep.Value is { } flow && testId is not null && States.TryGetValue(testId, out var state))
+-        {
+-            lock (state)
+-            {
+-                // A step method its parent's step ended without has no frame left on the stack: this is that step finishing,
+-                // and popping the stack would close whatever step is open now.
+-                if (flow.LeftRunning)
+-                {
+-                    flow.EndTime = Stopwatch.GetTimestamp();
+-                    flow.Passed = passed;
+-                    flow.ErrorMessage = errorMessage;
+-                    flow.LeftRunning = false;
+-                    return;
+-                }
+-
+-                // Steps opened after this one are still open (two not awaited): this one closes, and they stay.
+-                if (state.StepStack.Count > 0 && !ReferenceEquals(state.StepStack.Peek(), flow) && state.StepStack.Contains(flow))
+-                {
+-                    var above = new Stack<CollectedStep>();
+-                    while (!ReferenceEquals(state.StepStack.Peek(), flow))
+-                        above.Push(state.StepStack.Pop());
+-
+-                    state.StepStack.Pop();
+-                    flow.EndTime = Stopwatch.GetTimestamp();
+-                    flow.Passed = passed;
+-                    flow.ErrorMessage = errorMessage;
+-                    (state.StepStack.Count > 0 ? state.StepStack.Peek().SubSteps : state.CompletedSteps).Add(flow);
+-
+-                    while (above.Count > 0)
+-                        state.StepStack.Push(above.Pop());
+-                    return;
+-                }
+-            }
+-        }
+-
+-        CompleteStep(testId, passed, errorMessage);
++        CompleteStep(ResolveTestId(), passed, errorMessage);
+     }
+ 
+     /// <summary>
+@@ -110,7 +67,7 @@ public static void StartStep(string? testId, string? keyword, string text, strin
+ 
+     /// <summary>
+     /// Closes the frame <paramref name="frameId"/>. A step still open above it was left running: it keeps its place under
+-    /// its parent, and its own completion, when it comes, closes that step and no other.
++    /// its parent, and reads as passed with no duration until a completion finds no step of its own to close (<see cref="CompleteStep(string?, bool, string?)"/>).
+     /// </summary>
+     internal static void CompleteFrame(string? testId, int? frameId, bool passed, string? errorMessage = null)
+     {
+@@ -157,10 +114,20 @@ internal static void CompleteFrame(string? testId, int? frameId, bool passed, st
+             return state.StepStack.Count > 0 ? state.StepStack.Peek().Id : null;
+     }
+ 
++    /// <summary>The framework step open for this test now, if any: a step that did not run while one is open is that step's.</summary>
++    internal static int? OpenFrameOf(string? testId)
++    {
++        if (testId is null || !States.TryGetValue(testId, out var state))
++            return null;
++
++        lock (state)
++            return state.StepStack.FirstOrDefault(s => s.IsFrame)?.Id;
++    }
++
+     private static void LeaveRunning(TestStepState state, CollectedStep open)
+     {
+         open.Passed = true;
+-        open.LeftRunning = true;
++        state.LeftRunning.Add(open);
+         (state.StepStack.Count > 0 ? state.StepStack.Peek().SubSteps : state.CompletedSteps).Add(open);
+     }
+ 
+@@ -267,8 +234,20 @@ public static void CompleteStep(string? testId, bool passed, string? errorMessag
+         CollectedStep? completed;
+         lock (state)
+         {
+-            if (state.StepStack.Count == 0)
++            // Only CompleteFrame closes a frame. A completion that finds one on top, or nothing, is a step the frame's close
++            // left running finishing; which one is the flow's to know (#225), so it takes the one left last.
++            if (state.StepStack.Count == 0 || state.StepStack.Peek().IsFrame)
++            {
++                if (state.LeftRunning.Count > 0)
++                {
++                    var finished = state.LeftRunning[^1];
++                    state.LeftRunning.RemoveAt(state.LeftRunning.Count - 1);
++                    finished.EndTime = Stopwatch.GetTimestamp();
++                    finished.Passed = passed;
++                    finished.ErrorMessage = errorMessage;
++                }
+                 return;
++            }
+ 
+             completed = state.StepStack.Pop();
+             completed.EndTime = Stopwatch.GetTimestamp();
+@@ -675,6 +654,7 @@ private class TestStepState
+     {
+         public Stack<CollectedStep> StepStack { get; } = new();
+         public List<CollectedStep> CompletedSteps { get; } = new();
++        public List<CollectedStep> LeftRunning { get; } = new();
+         public string? LastKeywordCategory { get; set; }
+         public int LastStepId { get; set; }
+         public List<FileAttachment>? ScenarioAttachments { get; set; }
+@@ -683,7 +663,6 @@ private class TestStepState
+     private class CollectedStep
+     {
+         public int Id { get; set; }
+-        public bool LeftRunning { get; set; }
+         public bool IsFrame { get; set; }
+         public bool IsAssertion { get; set; }
+         public string? OriginalKeyword { get; set; }

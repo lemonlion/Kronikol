@@ -1,0 +1,86 @@
+=================== P-store-bg-bar-in-other-words (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 3 does not match step 'a basket'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  F › Store  [Passed]  0.5s
+  b0    Given a shop named <name>  0.1s
+  b1    And a customer  0.1s
+  0     When a basket  0.1s
+  1     Then it is empty  0.1s
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path       calls errors   median      max bodies     bytes
+-     POST    /shop          1      0     5 ms     5 ms      1       4 B
+-     POST    /customer      1      0     5 ms     5 ms      1       4 B
+-     POST    /basket        1      0     5 ms     5 ms      1       4 B
+-     POST    /check         1      0     5 ms     5 ms      1       4 B
+4 buckets
+=================== Q-store-own-step-bar-in-other-words (this)
+degraded: {'StepAttributionMismatch': 1}
+! Step marker 1 does not match step 'a shop named <name>'; interactions after it carry no stepPath.
+s0  F › Store  [Passed]  0.5s
+  0     Given a shop named <name>  0.1s
+  1     When a basket  0.1s  [i2]
+  2     Then it is empty  0.1s  [i4]
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /shop        1      0     5 ms     5 ms      1       4 B
+1     POST    /basket      1      0     5 ms     5 ms      1       4 B
+2     POST    /check       1      0     5 ms     5 ms      1       4 B
+3 buckets
+=================== R-bg-first-line-is-a-steps (this)
+degraded: {'StepAttributionMismatch': 1}
+! Step marker 2 does not match step 'the order is placed for card'; interactions after it carry no stepPath.
+s0  F › First line  [Passed]  0.5s
+  b0    Given the order is placed for cash  0.1s  [i0]
+  0     When the order is placed for card  0.1s
+  1     Then it is confirmed  0.1s
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+b0    POST    /card         1      0     5 ms     5 ms      1       4 B
+-     POST    /confirm      1      0     5 ms     5 ms      1       4 B
+2 buckets
+=================== S-bg-text-in-a-bar-once-folded (this)
+degraded: {'StepAttributionMismatch': 1}
+! Step marker 2 does not match step 'a car takes the order'; interactions after it carry no stepPath.
+s0  F › Folded  [Passed]  0.5s
+  b0    Given a cart  0.1s  [i0]
+  0     When a car takes the order  0.1s
+  1     Then it is confirmed  0.1s
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path      calls errors   median      max bodies     bytes
+b0    POST    /order        1      0     5 ms     5 ms      1       4 B
+-     POST    /confirm      1      0     5 ms     5 ms      1       4 B
+2 buckets
+=================== U-assertions-before-the-first-step (this)
+degraded: {'StepAttributionMismatch': 2}
+! Step marker 1 does not match step '✓ The stack is up'; interactions after it carry no stepPath. (×2; summary --json lists all 2)
+s0  F › Assertions  [Passed]  0.5s
+· 0     ✓ The stack is up
+· 1     ✓ The page is open
+  2     When a basket  0.1s
+  · 2.0   ✓ It answered
+  3     Then it is empty  0.1s
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+2 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /basket      1      0     5 ms     5 ms      1       4 B
+-     POST    /check       1      0     5 ms     5 ms      1       4 B
+2 buckets
+=================== V-assertions-and-no-steps (this)
+degraded: {}
+s0  F › No steps  [Passed]  0.5s
+· 0     ✓ The stack is up
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+1 calls · interactions s0 · flow s0
+  -- calls by step:
+step  method  path     calls errors   median      max bodies     bytes
+-     POST    /basket      1      0     5 ms     5 ms      1       4 B
+1 buckets

@@ -1,0 +1,199 @@
+TestRunReport.krkl  7.9 KB on disk, 79.9 KB as JSON  Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f
+2026-11-03T11:07:04Z → 2026-11-03T11:07:05Z
+11 scenarios · 1 failed · 74 interactions · 1 distinct bodies
+
+Bddfy  6 passed, 1 FAILED
+Probes  4 passed
+
+Failed:
+  s6  Z8 examples the first row fails at its given  — alice is refused
+  → failures
+
+Slowest:
+
+### s0 steps
+s0  Bddfy › B4 a step method in the constructor  [Passed]  0s
+
+  0     Given a registered customer
+  1     When the customer places the order
+    1.0   A customer is registered
+  2     Then the order is confirmed
+    2.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s0 · flow s0
+--- s0 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     0 ms     0 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders         1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s1 steps
+s1  Bddfy › B5 examples in one test  [Passed]  0.02s
+
+  0     Given the customer is named <customer>  0.02s  [i0]
+    0.0   Customer named  0.02s
+        · name
+        · alice
+  1     Then the order is confirmed  [i2]
+    1.0   The order is read back
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s1 · flow s1
+--- s1 calls
+step  method  path              calls errors   median      max bodies     bytes
+0     POST    /customers/alice      1      0     1 ms     1 ms      1       4 B
+1     POST    /orders/1             1      0     0 ms     0 ms      1       4 B
+-     POST    /customers/bob        1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1             1      0     0 ms     0 ms      1       4 B
+
+### s2 steps
+s2  Bddfy › B6 an async step with a call after its first await  [Passed]  0.02s
+
+  0     Given a registered customer  0.02s  [i0]
+    0.0   A customer is registered  0.02s
+  1     When the customer places the order later  [i2]
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s2 · flow s2
+--- s2 calls
+step  method  path                 calls errors   median      max bodies     bytes
+0     POST    /customers               1      0     1 ms     1 ms      1       4 B
+1     POST    /orders-after-await      1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1                1      0     0 ms     0 ms      1       4 B
+
+### s3 steps
+s3  Bddfy › B7 a teardown step the report does not list  [Passed]  0s
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     Then the order is confirmed  [i2]
+    1.0   The order is read back
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s3 · flow s3
+--- s3 calls
+step  method  path            calls errors   median      max bodies     bytes
+0     POST    /customers          1      0     0 ms     0 ms      1       4 B
+1     POST    /orders/1           1      0     0 ms     0 ms      1       4 B
+-     POST    /teardown-with      1      0     0 ms     0 ms      1       4 B
+
+### s4 steps
+s4  Bddfy › First of two  [Passed]  0.02s
+
+  0     Given a registered customer  0.02s  [i0]
+    0.0   A customer is registered  0.02s
+  1     Then the order is confirmed  [i2]
+    1.0   The order is read back
+2 calls · interactions s4 · flow s4
+--- s4 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     1 ms     1 ms      1       4 B
+1     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s5 steps
+s5  Bddfy › Z10 reflective setup and teardown  [Passed]  0.02s
+
+  0     Given a registered customer
+    0.0   Reference data is seeded  0.02s
+  1     When the customer places the order
+    1.0   A customer is registered
+  2     Then the order is confirmed
+    2.0   An order is submitted
+   5 calls belong to no step (before the first step, or attribution was not trusted)
+5 calls · interactions s5 · flow s5
+--- s5 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     1 ms     1 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders         1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+-     POST    /clean          1      0     0 ms     0 ms      1       4 B
+
+### s6 steps
+s6  Bddfy › Z8 examples the first row fails at its given  [Failed]  0.02s
+
+✗ 0     Given the customer is named <customer>  0.02s  [i0]
+    0.0   Customer named  0.02s
+        · name
+        · alice
+  1     Then the order is confirmed
+    1.0   Customer named
+        · name
+        · bob
+   2 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s6 · flow s6
+--- s6 calls
+step  method  path              calls errors   median      max bodies     bytes
+0     POST    /customers/alice      1      0     1 ms     1 ms      1       4 B
+-     POST    /customers/bob        1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1             1      0     0 ms     0 ms      1       4 B
+
+### s7 steps
+s7  Probes › B0 control  [Passed]  0s
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s7 · flow s7
+--- s7 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s8 steps
+s8  Probes › B1 a step method before BDDfy  [Passed]  0s
+
+  0     Given a registered customer
+  1     When the customer places the order
+    1.0   A customer is registered
+  2     Then the order is confirmed
+    2.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s8 · flow s8
+--- s8 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     0 ms     0 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders         1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s9 steps
+s9  Probes › B2 a step method after BDDfy  [Passed]  0s
+
+  0     Given a registered customer  [i0]
+    0.0   A customer is registered
+  1     When the customer places the order  [i2]
+    1.0   An order is submitted
+  2     Then the order is confirmed  [i4]
+    2.0   The order is read back
+3 calls · interactions s9 · flow s9
+--- s9 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s10 steps
+s10  Probes › B3 a step method left running  [Passed]  0.02s
+
+  0     Given a step is left running  0.02s  [i0-i4] 3 calls
+  1     When the customer places the order
+  2     Then the order is confirmed
+3 calls · interactions s10 · flow s10
+--- s10 calls
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /started       1      0     1 ms     1 ms      1       4 B
+0     POST    /orders        1      0     0 ms     0 ms      1       4 B
+0     POST    /orders/1      1      0     0 ms     0 ms      1       4 B
+
+### failures
+s6  Bddfy › Z8 examples the first row fails at its given
+  alice is refused
+  ✗ s6/0  Given the customer is named <customer>
+    1 calls in this step:
+      s6/i0  Shop  POST /customers/alice
+
+1 failed · steps s? for the whole tree · grep "<value>" --values to trace a number

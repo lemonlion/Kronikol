@@ -1,0 +1,10 @@
+--- Kronikol.Tests
+Passed!  - Failed:     0, Passed: 11578, Skipped:     2, Total: 11580, Duration: 13 m 50 s - Kronikol.Tests.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit3
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 6 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit2
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 6 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+--- Kronikol.Tests.LightBDD.TUnit
+Passed!  - Failed:     0, Passed:    26, Skipped:     0, Total:    26, Duration: 7 s - Kronikol.Tests.LightBDD.TUnit.dll (net10.0)
+--- Kronikol.Tests.StepTracking
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 14 s - Kronikol.Tests.StepTracking.dll (net10.0)

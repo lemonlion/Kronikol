@@ -1,0 +1,107 @@
+Title: Service Specifications
+Features:
+  - Feature: A background that runs steps
+    Scenarios:
+      - Scenario: E16 a hook step and a background step that runs another
+        IsHappyPath: false
+        Tags:
+          - seeded
+        Steps:
+          - Reference data is seeded
+          - Step: Given a step that runs another
+            SubSteps:
+              - Step: Given a registered customer
+                SubSteps:
+                  - A customer is registered
+          - Step: And a registered customer
+            SubSteps:
+              - A customer is registered
+          - When an order of 40 is placed
+          - Then the order is confirmed
+
+      - Scenario: E16b its sibling
+        IsHappyPath: false
+        Steps:
+          - Step: Given a step that runs another
+            SubSteps:
+              - Step: Given a registered customer
+                SubSteps:
+                  - A customer is registered
+          - Step: And a registered customer
+            SubSteps:
+              - A customer is registered
+          - When an order of 41 is placed
+          - Then the order is confirmed
+
+  - Feature: Outlines
+    Scenarios:
+      - Scenario: E01 an outline with a hook step on every row
+        IsHappyPath: false
+        Tags:
+          - seeded
+        Steps:
+          - Reference data is seeded
+          - Step: Given a registered customer
+            SubSteps:
+              - A customer is registered
+          - When an order of 10 is placed
+          - Then the order is confirmed
+
+      - Scenario: E01 an outline with a hook step on every row
+        IsHappyPath: false
+        Tags:
+          - seeded
+        Steps:
+          - Reference data is seeded
+          - Step: Given a registered customer
+            SubSteps:
+              - A customer is registered
+          - When an order of 20 is placed
+          - Then the order is confirmed
+
+      - Scenario: E02 an outline with a hook step on one row
+        IsHappyPath: false
+        Tags:
+          - seededrow
+        Steps:
+          - Step: Given a registered customer
+            SubSteps:
+              - A customer is registered
+          - When an order of 10 is placed
+          - Then the order is confirmed
+
+      - Scenario: E02 an outline with a hook step on one row
+        IsHappyPath: false
+        Tags:
+          - seededrow
+        Steps:
+          - Reference data is seeded
+          - Step: Given a registered customer
+            SubSteps:
+              - A customer is registered
+          - When an order of 20 is placed
+          - Then the order is confirmed
+
+  - Feature: Rules
+    Scenarios:
+      - Scenario: E03 a hook step in a rule with a background
+        IsHappyPath: false
+        Tags:
+          - seeded
+        Steps:
+          - Reference data is seeded
+          - Step: Given a registered customer
+            SubSteps:
+              - A customer is registered
+          - When an order of 30 is placed
+          - Then the order is confirmed
+
+      - Scenario: E03b its sibling with no hook
+        IsHappyPath: false
+        Steps:
+          - Step: Given a registered customer
+            SubSteps:
+              - A customer is registered
+          - When an order of 31 is placed
+          - Then the order is confirmed
+

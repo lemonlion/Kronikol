@@ -1,0 +1,151 @@
+
+### s0 steps
+s0  Cake Feature › Calling Create Cake Endpoint Successfully  [Passed]  0.05s
+stableId 1c0306043dbf02ae
+open: TestRunReport.html#sid-1c0306043dbf02ae
+
+  0     GIVEN A valid post request for the Cake endpoint  0.02s  [i0-i6] 4 calls
+    0.0   A valid request body  0.02s
+      0.0.0 The body specifies milk  0.01s
+        0.0.0.0 Milk is retrieved from the get milk endpoint  0s
+        0.0.0.1 Retrieved milk is set on the body
+      0.0.1 The body specifies eggs  0s
+        0.0.1.0 Eggs is retrieved from the get eggs endpoint
+        0.0.1.1 Retrieved eggs is set on the body
+      0.0.2 The body specifies flour  0s
+        0.0.2.0 Flour is retrieved from the get flour endpoint
+        0.0.2.1 Retrieved flour is set on the body
+  1     WHEN The request is sent to the cake post endpoint  0.02s  [i8-i9] 2 calls
+  2     THEN The response should be successful  0.02s
+    2.0   The response http status should be ok
+    2.1   The response should be valid json  0.01s
+    2.2   The response ingredients should include milk  0s
+    2.3   The response ingredients should include eggs
+    2.4   The response ingredients should include flour
+6 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method                 path          calls errors   median      max bodies     bytes
+0     GET                    /milk             2      0     4 ms     4 ms      1      52 B
+0     GET                    /eggs             1      0     1 ms     1 ms      1      20 B
+0     GET                    /flour            1      0     1 ms     1 ms      1      22 B
+1     POST                   /cake             1      0    15 ms    15 ms      1     175 B
+1     Send (Event Protocol)  /cake_events      1      0     1 ms     1 ms      1     109 B
+5 buckets
+
+### s1 steps
+s1  Cake Feature › Calling Create Cake Endpoint Without Eggs  [Passed]  0.03s
+stableId 5487bbfefd43a5d1
+open: TestRunReport.html#sid-5487bbfefd43a5d1
+
+  0     GIVEN A valid post request for the Cake endpoint  0.02s  [i0-i6] 4 calls
+    0.0   A valid request body  0.02s
+      0.0.0 The body specifies milk  0.01s
+        0.0.0.0 Milk is retrieved from the get milk endpoint  0.01s
+        0.0.0.1 Retrieved milk is set on the body
+      0.0.1 The body specifies eggs  0s
+        0.0.1.0 Eggs is retrieved from the get eggs endpoint
+        0.0.1.1 Retrieved eggs is set on the body
+      0.0.2 The body specifies flour  0s
+        0.0.2.0 Flour is retrieved from the get flour endpoint
+        0.0.2.1 Retrieved flour is set on the body
+  1     BUT The request body is missing eggs
+  2     WHEN The request is sent to the cake post endpoint  0s  [i8]
+  3     THEN The response http status should be bad request  0s
+5 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path    calls errors   median      max bodies     bytes
+0     GET     /milk       2      0     7 ms     7 ms      1      52 B
+0     GET     /eggs       1      0     1 ms     1 ms      1      20 B
+0     GET     /flour      1      0     1 ms     1 ms      1      22 B
+2     POST    /cake       1      1     1 ms     1 ms      1     301 B
+4 buckets
+
+### s2 steps
+s2  Cake Feature › Calling Create Cake Endpoint Without Ingredient  [Passed]  0.89s
+stableId c7887fccdd682baa
+open: TestRunReport.html#sid-c7887fccdd682baa
+
+  0     GIVEN A valid post request for the Cake endpoint  0.59s  [i0-i6] 4 calls
+    0.0   A valid request body  0.55s
+      0.0.0 The body specifies milk  0.53s
+        0.0.0.0 Milk is retrieved from the get milk endpoint  0.52s
+        0.0.0.1 Retrieved milk is set on the body
+      0.0.1 The body specifies eggs  0.01s
+        0.0.1.0 Eggs is retrieved from the get eggs endpoint  0.01s
+        0.0.1.1 Retrieved eggs is set on the body
+      0.0.2 The body specifies flour  0.01s
+        0.0.2.0 Flour is retrieved from the get flour endpoint  0.01s
+        0.0.2.1 Retrieved flour is set on the body
+  1     AND The request body is missing a specified ingredient [missingIngredientsFromRequest: "<$…  0.06s
+      · missingIngredientsFromRequest
+      · Ingredient
+      · Eggs
+      · Milk
+      · Flour
+  2     WHEN The requests are sent to the cake post endpoint  0.12s  [i8-i12] 3 calls
+  3     THEN The response http status and error message should be matching [expectedOutputs: "<$ex…  0.03s
+      · expectedOutputs
+      · ErrorMessage
+      · ResponseStatus
+      · The Eggs field is required.
+      · BadRequest
+      · The Milk field is required.
+      · BadRequest
+      · The Flour field is required.
+      … 1 more parameter(s): steps s2/3
+7 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step  method  path    calls errors   median      max bodies     bytes
+2     POST    /cake       3      3     3 ms   104 ms      3     898 B
+0     GET     /milk       2      0   378 ms   378 ms      1      52 B
+0     GET     /eggs       1      0     6 ms     6 ms      1      20 B
+0     GET     /flour      1      0     7 ms     7 ms      1      22 B
+4 buckets
+
+### s3 steps
+s3  Parameterized Diagnostic Feature › Different muffin recipes should produce the expected "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation" batch [recipeName: "Classic"] [recipe: "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData"]  [Passed]  0.27s
+stableId 2a32ed44cc3906d1
+open: TestRunReport.html#sid-2a32ed44cc3906d1
+example: recipeName=Classic, recipe=Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData, expected=Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation
+
+  0     The recipe name is valid [recipeName: "Classic"]  0.17s
+  1     The recipe "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData" da…  0s
+  2     The expected "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation…  0s
+0 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s4 steps
+s4  Parameterized Diagnostic Feature › Different muffin recipes should produce the expected "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation" batch [recipeName: "Rustic Wholesome"] [recipe: "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData"]  [Passed]  0.01s
+stableId 388729a952873fe4
+open: TestRunReport.html#sid-388729a952873fe4
+example: recipeName=Rustic Wholesome, recipe=Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData, expected=Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation
+
+  0     The recipe name is valid [recipeName: "Rustic Wholesome"]
+  1     The recipe "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData" da…
+  2     The expected "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation…
+0 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total
+
+### s5 steps
+s5  Parameterized Diagnostic Feature › Different muffin recipes should produce the expected "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation" batch [recipeName: "Spiced Deluxe"] [recipe: "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData"]  [Passed]  0.01s
+stableId 2ab31d166aea36be
+open: TestRunReport.html#sid-2ab31d166aea36be
+example: recipeName=Spiced Deluxe, recipe=Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData, expected=Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation
+
+  0     The recipe name is valid [recipeName: "Spiced Deluxe"]  0s
+  1     The recipe "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinRecipeTestData" da…
+  2     The expected "Example.Api.Tests.Component.LightBDD.xUnit3.Scenarios.MuffinBatchExpectation…
+0 calls · interactions s5 · flow s5
+
+### s5 calls: step, method, path
+step  method  path  calls errors   median      max bodies     bytes
+buckets: nothing at --offset 0 · 0 buckets in total

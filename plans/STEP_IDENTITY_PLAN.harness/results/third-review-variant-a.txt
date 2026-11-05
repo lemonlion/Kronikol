@@ -1,0 +1,77 @@
+s0  BG1 a Given fails in one scenario, the passing one first › A passes  [Passed]  0.12s
+  0     Given the shop is ready  0.07s  [i0]
+    0.0   A customer is registered  0.05s
+  1     When the customer orders  0s  [i2]
+    1.0   An order is submitted
+  2     Then the order is listed  0s  [i4]
+    2.0   The order is read back
+s1  BG1 a Given fails in one scenario, the passing one first › B fails at its Given  [Failed]  0s
+✗ 0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+s2  BG11 a green run, one scenario skips itself in a hook › A needs a GPU  [Skipped]  0s
+s3  BG11 a green run, one scenario skips itself in a hook › B passes  [Passed]  0s
+  b0    Given the shop is ready  [i0]
+    b0.0  A customer is registered
+  b1    When the customer orders  [i2]
+    b1.0  An order is submitted
+  0     Then the receipt is sent  [i4]
+s4  BG11 a green run, one scenario skips itself in a hook › C passes  [Passed]  0.05s
+  b0    Given the shop is ready  [i0]
+    b0.0  A customer is registered
+  b1    When the customer orders  [i2]
+    b1.0  An order is submitted
+  0     Then the invoice is sent  0s  [i4]
+s5  BG2 a Given fails in one scenario, the failing one first › A fails at its Given  [Failed]  0.0
+✗ 0     Given the shop is ready  0s  [i0]
+    0.0   A customer is registered
+s6  BG2 a Given fails in one scenario, the failing one first › B passes  [Passed]  0s
+  0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+  1     When the customer orders  [i2]
+    1.0   An order is submitted
+  2     Then the receipt is sent  [i4]
+s7  BG3 a plain hook fails in one scenario, the passing ones after it › A hook fails  [Failed]  0.
+s8  BG3 a plain hook fails in one scenario, the passing ones after it › B passes  [Passed]  0s
+  b0    Given the shop is ready  [i0]
+    b0.0  A customer is registered
+  b1    When the customer orders  [i2]
+    b1.0  An order is submitted
+  0     Then the receipt is sent  [i4]
+s9  BG3 a plain hook fails in one scenario, the passing ones after it › C passes  [Passed]  0s
+  b0    Given the shop is ready  [i0]
+    b0.0  A customer is registered
+  b1    When the customer orders  [i2]
+    b1.0  An order is submitted
+  0     Then the invoice is sent  [i4]
+s10  BG7 one hook step, failing in one scenario › A hook step passes  [Passed]  0.04s
+  0     Seeding may fail  0.03s  [i0]
+  1     Given the shop is ready  [i2]
+    1.0   A customer is registered
+  2     When the customer orders  [i4]
+    2.0   An order is submitted
+  3     Then the order is listed  [i6]
+    3.0   The order is read back
+s11  BG7 one hook step, failing in one scenario › B hook step fails  [Failed]  0.02s
+✗ 0     Seeding may fail  [i0]
+      seeding failed
+s12  BG8 screenshot on failure failing first › A fails at its Given with a screenshot  [Failed]  0
+✗ 0     Given the shop is ready  0.01s  [i0]
+      attachment: z-failure-shot-82ce377955624583a077f0fb0f8192ba.txt → C:\Users\cex\AppData\Local
+    0.0   A customer is registered
+s13  BG8 screenshot on failure failing first › B passes  [Passed]  0.12s
+  0     Given the shop is ready  0.08s  [i0]
+    0.0   A customer is registered  0.05s
+  1     When the customer orders  0.01s  [i2]
+    1.0   An order is submitted  0.01s
+  2     Then the receipt is sent  0s  [i4]
+s14  BG9 screenshot on failure failing second › A passes  [Passed]  0.07s
+  0     Given the shop is ready  0.06s  [i0]
+    0.0   A customer is registered  0.05s
+  1     When the customer orders  0s  [i2]
+    1.0   An order is submitted  0s
+  2     Then the order is listed  0s  [i4]
+    2.0   The order is read back
+s15  BG9 screenshot on failure failing second › B fails at its Given with a screenshot  [Failed]  
+✗ 0     Given the shop is ready  0.01s  [i0]
+      attachment: z-failure-shot-73f1dcba15cd4562a5987127d03c5679.txt → C:\Users\cex\AppData\Local
+    0.0   A customer is registered

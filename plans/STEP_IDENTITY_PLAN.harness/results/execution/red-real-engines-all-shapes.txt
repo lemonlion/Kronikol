@@ -1,0 +1,789 @@
+passed 59, failed 114
+  ok  ReqnrollStepsTests.T20_a_plain_call_in_AfterScenario_stays_under_the_last_step(lane: "Engine.Reqnroll.xUnit3")
+  ok  ReqnrollStepsTests.T16_a_hook_ahead_of_the_scenarios_identity_records_nothing(lane: "Engine.Reqnroll.xUnit3")
+  ok  PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P0", barsHidden: False, ca
+  ok  ReqnrollStepsTests.T19_two_step_methods_in_parallel_read_under_their_step(lane: "Engine.Reqnroll.TUnit")
+  ok  ReqnrollStepsTests.T20_a_plain_call_in_AfterScenario_stays_under_the_last_step(lane: "Engine.Reqnroll.xUnit2")
+  ok  PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P1", barsHidden: False, ca
+  ok  ReqnrollStepsTests.T19_two_step_methods_in_parallel_read_under_their_step(lane: "Engine.Reqnroll.Floor")
+  ok  ReqnrollStepsTests.T14_an_attachment_and_a_plain_call_in_a_hook_stay_on_the_scenario(lane: "Engine.Reqnroll.xU
+  ok  ReqnrollStepsTests.T14_an_attachment_and_a_plain_call_in_a_hook_stay_on_the_scenario(lane: "Engine.Reqnroll.TU
+  ok  ReqnrollStepsTests.T22_a_block_hook_that_throws_leaves_what_ran(lane: "Engine.Reqnroll.Floor")
+  ok  ReqnrollStepsTests.T12_a_step_method_in_AfterStep_nests_under_the_step_it_found_open(lane: "Engine.Reqnroll.xU
+  ok  P8_a_step_still_open_at_report_time_is_in_no_list_as_it_never_was
+  ok  ReqnrollStepsTests.T09_a_plain_call_in_a_hook_reads_no_step(lane: "Engine.Reqnroll.Floor")
+  ok  ReqnrollStepsTests.T20_a_plain_call_in_AfterScenario_stays_under_the_last_step(lane: "Engine.Reqnroll.Floor")
+  ok  B0_the_control
+  ok  ReqnrollStepsTests.T23_two_step_methods_left_running_keep_their_place(lane: "Engine.Reqnroll.TUnit")
+  ok  V1_plain_calls_read_their_step
+  ok  B5_an_example_table_lists_its_first_row_and_later_rows_calls_read_no_step
+  ok  ReqnrollStepsTests.T09_a_plain_call_in_a_hook_reads_no_step(lane: "Engine.Reqnroll.xUnit3")
+  ok  ReqnrollStepsTests.T09_a_plain_call_in_a_hook_reads_no_step(lane: "Engine.Reqnroll.xUnit2")
+  ok  ReqnrollStepsTests.T00_no_hook_is_the_control(lane: "Engine.Reqnroll.xUnit2")
+  ok  PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P7", barsHidden: False, ca
+  ok  ReqnrollStepsTests.T10_a_step_method_in_BeforeStep_nests_under_the_step_it_found_open(lane: "Engine.Reqnroll.x
+  ok  ReqnrollStepsTests.T27_a_hook_that_runs_a_step_lists_it_as_a_step(lane: "Engine.Reqnroll.TUnit")
+  ok  PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P8", barsHidden: False, ca
+  ok  PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P2", barsHidden: False, ca
+  ok  ReqnrollStepsTests.T27_a_hook_that_runs_a_step_lists_it_as_a_step(lane: "Engine.Reqnroll.xUnit3")
+  ok  ReqnrollStepsTests.T22_a_block_hook_that_throws_leaves_what_ran(lane: "Engine.Reqnroll.xUnit2")
+  ok  ReqnrollStepsTests.T20_a_plain_call_in_AfterScenario_stays_under_the_last_step(lane: "Engine.Reqnroll.TUnit")
+  ok  PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P3", barsHidden: False, ca
+  ok  ReqnrollStepsTests.T19_two_step_methods_in_parallel_read_under_their_step(lane: "Engine.Reqnroll.xUnit2")
+  ok  ReqnrollStepsTests.T12_a_step_method_in_AfterStep_nests_under_the_step_it_found_open(lane: "Engine.Reqnroll.Fl
+  ok  B7_a_teardown_the_report_does_not_list_takes_no_row_and_its_call_no_step
+  ok  L0_the_control
+  ok  B6_a_call_after_an_async_steps_first_await_stays_under_it
+  ok  ReqnrollStepsTests.T09_a_plain_call_in_a_hook_reads_no_step(lane: "Engine.Reqnroll.TUnit")
+  ok  ReqnrollStepsTests.T10_a_step_method_in_BeforeStep_nests_under_the_step_it_found_open(lane: "Engine.Reqnroll.T
+  ok  ReqnrollStepsTests.T00_no_hook_is_the_control(lane: "Engine.Reqnroll.TUnit")
+  ok  ReqnrollStepsTests.T16_a_hook_ahead_of_the_scenarios_identity_records_nothing(lane: "Engine.Reqnroll.xUnit2")
+  ok  ReqnrollStepsTests.T19_two_step_methods_in_parallel_read_under_their_step(lane: "Engine.Reqnroll.xUnit3")
+  ok  ReqnrollStepsTests.T16_a_hook_ahead_of_the_scenarios_identity_records_nothing(lane: "Engine.Reqnroll.Floor")
+  ok  ReqnrollStepsTests.T14_an_attachment_and_a_plain_call_in_a_hook_stay_on_the_scenario(lane: "Engine.Reqnroll.xU
+  ok  ReqnrollStepsTests.T14_an_attachment_and_a_plain_call_in_a_hook_stay_on_the_scenario(lane: "Engine.Reqnroll.Fl
+  ok  ReqnrollStepsTests.T12_a_step_method_in_AfterStep_nests_under_the_step_it_found_open(lane: "Engine.Reqnroll.TU
+  ok  Z9_a_second_BDDfy_call_in_one_test_lists_the_first
+  ok  ReqnrollStepsTests.T27_a_hook_that_runs_a_step_lists_it_as_a_step(lane: "Engine.Reqnroll.Floor")
+  ok  ReqnrollStepsTests.T16_a_hook_ahead_of_the_scenarios_identity_records_nothing(lane: "Engine.Reqnroll.TUnit")
+  ok  P5_two_step_methods_in_parallel_nest_as_they_always_have
+  ok  ReqnrollStepsTests.T27_a_hook_that_runs_a_step_lists_it_as_a_step(lane: "Engine.Reqnroll.xUnit2")
+  ok  L3_a_failing_composite_sub_step_is_listed_with_what_did_not_run
+  ok  ReqnrollStepsTests.T00_no_hook_is_the_control(lane: "Engine.Reqnroll.Floor")
+  ok  PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P5", barsHidden: False, ca
+  ok  PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P4", barsHidden: False, ca
+  ok  ReqnrollStepsTests.T22_a_block_hook_that_throws_leaves_what_ran(lane: "Engine.Reqnroll.xUnit3")
+  ok  ReqnrollStepsTests.T10_a_step_method_in_BeforeStep_nests_under_the_step_it_found_open(lane: "Engine.Reqnroll.F
+  ok  ReqnrollStepsTests.T22_a_block_hook_that_throws_leaves_what_ran(lane: "Engine.Reqnroll.TUnit")
+  ok  ReqnrollStepsTests.T00_no_hook_is_the_control(lane: "Engine.Reqnroll.xUnit3")
+  ok  ReqnrollStepsTests.T12_a_step_method_in_AfterStep_nests_under_the_step_it_found_open(lane: "Engine.Reqnroll.xU
+  ok  ReqnrollStepsTests.T10_a_step_method_in_BeforeStep_nests_under_the_step_it_found_open(lane: "Engine.Reqnroll.x
+FAIL ReqnrollStepsTests.E02_a_hook_step_on_one_row_leaves_the_other_row_as_it_was(lane: "Engine.Reqnroll.TUnit")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When an order of 2"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T17_a_step_method_left_running_leaves_every_later_step_its_own(lane: "Engine.Reqnroll.Floor
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 68)
+    Expected: ···" A slow background check\n1 When the customer place"···
+    Actual:   ···" A slow background check\n  0.1 When the customer p"···
+                                            ↑ (pos 68)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P2", barsHidden: True, cal
+    Assert.Equal() Failure: Strings differ
+                          ↓ (pos 11)
+    Expected: "- /before, 0 /customers, 0 /after"
+    Actual:   "- /before, - /customers, - /after"
+                          ↑ (pos 11)
+FAIL L1_a_step_method_in_a_scenario_decorator_stands_first_and_no_step_that_never_ran_takes_its_failure
+    Assert.StartsWith() Failure: String start does not match
+    String:         "0 GIVEN Given a registered customer [SkippedAfterF"···
+    Expected start: "0 Reference data is seeded [Failed]\n1 GIVEN Given "···
+FAIL ReqnrollStepsTests.T02_a_step_method_in_BeforeScenarioBlock_stands_before_each_block(lane: "Engine.Reqnroll.xU
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Block prepared\n1 Given a registered customer\n  1"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P6", barsHidden: False, ca
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 /long, 1 /orders"
+    Actual:   "- /long, 1 /orders"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.T03_a_step_method_in_AfterScenarioBlock_stands_after_each_block(lane: "Engine.Reqnroll.TUni
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 63)
+    Expected: ···"customer is registered\n1 Block prepared\n2 When the"···
+    Actual:   ···"customer is registered\n1 When the customer places "···
+                                            ↑ (pos 63)
+FAIL ReqnrollStepsTests.T23_two_step_methods_left_running_keep_their_place(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 96)
+    Expected: ···" A slow background check\n1 When the order takes a "···
+    Actual:   ···" A slow background check\n  0.1 When the order take"···
+                                            ↑ (pos 96)
+FAIL ReqnrollStepsTests.T01_a_step_method_in_BeforeScenario_stands_first_and_each_step_keeps_its_own(lane: "Engine.
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.E06_a_step_method_in_an_argument_transformation_stands_before_its_step(lane: "Engine.Reqnro
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 63)
+    Expected: ···"customer is registered\n1 Reference data is seeded\n"···
+    Actual:   ···"customer is registered\n1 When a transformed value "···
+                                            ↑ (pos 63)
+FAIL ReqnrollStepsTests.T05_a_step_method_that_fails_in_BeforeScenario_is_the_failed_row(lane: "Engine.Reqnroll.Flo
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 Seeding fails [Failed]\ncalls: 0 /seed"
+    Actual:   "calls: - /seed"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.T24_a_step_method_a_hook_left_running_keeps_its_row(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 A slow background check\n1 Given a registered cus"···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T21_a_step_that_runs_another_lists_it_under_itself(lane: "Engine.Reqnroll.TUnit")
+    Assert.Equal() Failure: Strings differ
+                         ↓ (pos 10)
+    Expected: "0 Given a step that runs another step\n  0.0 Given "···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                         ↑ (pos 10)
+FAIL BddfyStepsTests.With_the_bars_hidden_a_call_keeps_what_it_reads_with_them(scenario: "B1", calls: "0 /seed, 1 /
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···"lls: - /seed, - /customers, - /orders, - /orders/1"
+    Expected end: "calls: 0 /seed, 1 /customers, 2 /orders, 3 /orders"···
+FAIL ReqnrollStepsTests.T05_a_step_method_that_fails_in_BeforeScenario_is_the_failed_row(lane: "Engine.Reqnroll.xUn
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 Seeding fails [Failed]\ncalls: 0 /seed"
+    Actual:   "calls: - /seed"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.T24_a_step_method_a_hook_left_running_keeps_its_row(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 A slow background check\n1 Given a registered cus"···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T25_a_nested_step_carries_its_table_and_doc_string(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                       ↓ (pos 8)
+    Expected: "0 Given a step that runs steps with arguments\n  0."···
+    Actual:   "0 Given the basket is listed {table sku count APPL"···
+                       ↑ (pos 8)
+FAIL ReqnrollStepsTests.E01_an_outlines_rows_each_have_the_hook_step(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When an order of 1"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T25_a_nested_step_carries_its_table_and_doc_string(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                       ↓ (pos 8)
+    Expected: "0 Given a step that runs steps with arguments\n  0."···
+    Actual:   "0 Given the basket is listed {table sku count APPL"···
+                       ↑ (pos 8)
+FAIL ReqnrollStepsTests.E06_a_step_method_in_an_argument_transformation_stands_before_its_step(lane: "Engine.Reqnro
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 63)
+    Expected: ···"customer is registered\n1 Reference data is seeded\n"···
+    Actual:   ···"customer is registered\n1 When a transformed value "···
+                                            ↑ (pos 63)
+FAIL ReqnrollStepsTests.T11_a_Given_step_method_in_BeforeScenario_keeps_its_keyword(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                       ↓ (pos 8)
+    Expected: "0 Given A tenant exists\n1 Given a registered custo"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                       ↑ (pos 8)
+FAIL ReqnrollStepsTests.T02_a_step_method_in_BeforeScenarioBlock_stands_before_each_block(lane: "Engine.Reqnroll.TU
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Block prepared\n1 Given a registered customer\n  1"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T21_a_step_that_runs_another_lists_it_under_itself(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                         ↓ (pos 10)
+    Expected: "0 Given a step that runs another step\n  0.0 Given "···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                         ↑ (pos 10)
+FAIL ReqnrollStepsTests.E06_a_step_method_in_an_argument_transformation_stands_before_its_step(lane: "Engine.Reqnro
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 63)
+    Expected: ···"customer is registered\n1 Reference data is seeded\n"···
+    Actual:   ···"customer is registered\n1 When a transformed value "···
+                                            ↑ (pos 63)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P1", barsHidden: True, cal
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 /customers, 0 /between, 1 /orders"
+    Actual:   "- /customers, - /between, - /orders"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.E02_a_hook_step_on_one_row_leaves_the_other_row_as_it_was(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When an order of 2"···
+                 ↑ (pos 2)
+FAIL Z10_a_reflective_setup_and_teardown_list_no_row_and_their_calls_no_step
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 36)
+    Expected: ···"egistered customer\n  0.0 A customer is registered\n"···
+    Actual:   ···"egistered customer\n  0.0 Reference data is seeded\n"···
+                                            ↑ (pos 36)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P7", barsHidden: True, cal
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 /own, 0 /slow, 1 /orders"
+    Actual:   "- /own, - /slow, - /orders"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.T25_a_nested_step_carries_its_table_and_doc_string(lane: "Engine.Reqnroll.TUnit")
+    Assert.Equal() Failure: Strings differ
+                       ↓ (pos 8)
+    Expected: "0 Given a step that runs steps with arguments\n  0."···
+    Actual:   "0 Given the basket is listed {table sku count APPL"···
+                       ↑ (pos 8)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P4", barsHidden: True, cal
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 /customers, 0 /teardown"
+    Actual:   "- /customers, - /teardown"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.T11_a_Given_step_method_in_BeforeScenario_keeps_its_keyword(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                       ↓ (pos 8)
+    Expected: "0 Given A tenant exists\n1 Given a registered custo"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                       ↑ (pos 8)
+FAIL B4_a_step_method_in_the_constructor_stands_first
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T21_a_step_that_runs_another_lists_it_under_itself(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                         ↓ (pos 10)
+    Expected: "0 Given a step that runs another step\n  0.0 Given "···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                         ↑ (pos 10)
+FAIL ReqnrollStepsTests.T13_a_hook_step_and_a_failing_step_leave_the_failing_step_its_own_call(lane: "Engine.Reqnro
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the payment f"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T26_a_step_over_a_failed_inner_step_reads_failed(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                        ↓ (pos 9)
+    Expected: "0 Given a step that runs two steps, the first fail"···
+    Actual:   "0 Given an inner step fails [Failed]\n  0.0 Given a"···
+                        ↑ (pos 9)
+FAIL BddfyStepsTests.With_the_bars_hidden_a_call_keeps_what_it_reads_with_them(scenario: "B5", calls: "0 /customers
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···"/alice, - /orders/1, - /customers/bob, - /orders/1"
+    Expected end: "calls: 0 /customers/alice, 1 /orders/1, - /custome"···
+FAIL ReqnrollStepsTests.T25_a_nested_step_carries_its_table_and_doc_string(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                       ↓ (pos 8)
+    Expected: "0 Given a step that runs steps with arguments\n  0."···
+    Actual:   "0 Given the basket is listed {table sku count APPL"···
+                       ↑ (pos 8)
+FAIL B2_a_step_method_after_BDDfy_stands_last
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 185)
+    Expected: ···"0 The order is read back\n3 Reference data is clean"···
+    Actual:   ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+                                            ↑ (pos 185)
+FAIL ReqnrollStepsTests.E09_a_step_method_in_a_hook_at_Kronikols_own_order_stands_last(lane: "Engine.Reqnroll.Floor
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 120)
+    Expected: ···"0 The order is read back\n2 Reference data is clean"···
+    Actual:   ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+                                            ↑ (pos 120)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P6", barsHidden: True, cal
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 /long, 1 /orders"
+    Actual:   "- /long, - /orders"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.T03_a_step_method_in_AfterScenarioBlock_stands_after_each_block(lane: "Engine.Reqnroll.xUni
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 63)
+    Expected: ···"customer is registered\n1 Block prepared\n2 When the"···
+    Actual:   ···"customer is registered\n1 When the customer places "···
+                                            ↑ (pos 63)
+FAIL S7_a_hook_that_attaches_then_throws_writes_a_report
+    System.InvalidOperationException : Engine.Reqnroll.Files wrote no report, exit code 1.
+    Test run for C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines\bin\Debug\net10.0\real-engines\bin\Engine.Reqnroll.Files\debug\Engine.Reqnroll.Files.dll (.NETCoreApp,Version=v10.0)
+    A total of 1 test files matched the specified pattern.
+    [xUnit.net 00:00:08.57]     S5a fails in the background [FAIL]
+    [xUnit.net 00:00:08.57]     S7a the hook throws after the opening step [FAIL]
+    [xUnit.net 00:00:08.87]     [Test Assembly Cleanup Failure (Engine.Reqnroll.Files.dll)] System.Collections.Generic.KeyNotFoundException
+      Failed S5a fails in the background [15 ms]
+      Error Message:
+       System.InvalidOperationException : background failed
+      Stack Trace:
+         at EngineFixtures.FileBindings.CustomerFailsWhenTagged() in C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines.Fixtures\Engine.Reqnroll.Files\Bindings.cs:line 57
+       at Reqnroll.Bindings.AsyncMethodHelper.ConvertTaskOfT(Task task, Boolean getValue)
+       at Reqnroll.Bindings.BindingDelegateInvoker.InvokeDelegateAsync(Delegate bindingDelegate, Object[] invokeArgs, ExecutionContextHolder executionContext)
+       at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatc
+FAIL ReqnrollStepsTests.T03_a_step_method_in_AfterScenarioBlock_stands_after_each_block(lane: "Engine.Reqnroll.Floo
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 63)
+    Expected: ···"customer is registered\n1 Block prepared\n2 When the"···
+    Actual:   ···"customer is registered\n1 When the customer places "···
+                                            ↑ (pos 63)
+FAIL ReqnrollStepsTests.T05_a_step_method_that_fails_in_BeforeScenario_is_the_failed_row(lane: "Engine.Reqnroll.xUn
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 Seeding fails [Failed]\ncalls: 0 /seed"
+    Actual:   "calls: - /seed"
+               ↑ (pos 0)
+FAIL M4_a_row_that_did_not_run_leaves_the_rows_that_ran_read_by_their_ids
+    Assert.Contains() Failure: Item not found in collection
+    Collection: ["0 /long", "1 /fails"]
+    Not found:  "- /long"
+FAIL S4_a_file_in_a_background_step_with_a_hook_step_on_the_first_scenario_only
+    System.InvalidOperationException : Engine.Reqnroll.Files wrote no report, exit code 1.
+    Test run for C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines\bin\Debug\net10.0\real-engines\bin\Engine.Reqnroll.Files\debug\Engine.Reqnroll.Files.dll (.NETCoreApp,Version=v10.0)
+    A total of 1 test files matched the specified pattern.
+    [xUnit.net 00:00:08.57]     S5a fails in the background [FAIL]
+    [xUnit.net 00:00:08.57]     S7a the hook throws after the opening step [FAIL]
+    [xUnit.net 00:00:08.87]     [Test Assembly Cleanup Failure (Engine.Reqnroll.Files.dll)] System.Collections.Generic.KeyNotFoundException
+      Failed S5a fails in the background [15 ms]
+      Error Message:
+       System.InvalidOperationException : background failed
+      Stack Trace:
+         at EngineFixtures.FileBindings.CustomerFailsWhenTagged() in C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines.Fixtures\Engine.Reqnroll.Files\Bindings.cs:line 57
+       at Reqnroll.Bindings.AsyncMethodHelper.ConvertTaskOfT(Task task, Boolean getValue)
+       at Reqnroll.Bindings.BindingDelegateInvoker.InvokeDelegateAsync(Delegate bindingDelegate, Object[] invokeArgs, ExecutionContextHolder executionContext)
+       at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatc
+FAIL ReqnrollStepsTests.T01_a_step_method_in_BeforeScenario_stands_first_and_each_step_keeps_its_own(lane: "Engine.
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.E09_a_step_method_in_a_hook_at_Kronikols_own_order_stands_last(lane: "Engine.Reqnroll.TUnit
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 120)
+    Expected: ···"0 The order is read back\n2 Reference data is clean"···
+    Actual:   ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+                                            ↑ (pos 120)
+FAIL S3_a_file_in_a_background_step_with_no_hook_step_at_all
+    System.InvalidOperationException : Engine.Reqnroll.Files wrote no report, exit code 1.
+    Test run for C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines\bin\Debug\net10.0\real-engines\bin\Engine.Reqnroll.Files\debug\Engine.Reqnroll.Files.dll (.NETCoreApp,Version=v10.0)
+    A total of 1 test files matched the specified pattern.
+    [xUnit.net 00:00:08.57]     S5a fails in the background [FAIL]
+    [xUnit.net 00:00:08.57]     S7a the hook throws after the opening step [FAIL]
+    [xUnit.net 00:00:08.87]     [Test Assembly Cleanup Failure (Engine.Reqnroll.Files.dll)] System.Collections.Generic.KeyNotFoundException
+      Failed S5a fails in the background [15 ms]
+      Error Message:
+       System.InvalidOperationException : background failed
+      Stack Trace:
+         at EngineFixtures.FileBindings.CustomerFailsWhenTagged() in C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines.Fixtures\Engine.Reqnroll.Files\Bindings.cs:line 57
+       at Reqnroll.Bindings.AsyncMethodHelper.ConvertTaskOfT(Task task, Boolean getValue)
+       at Reqnroll.Bindings.BindingDelegateInvoker.InvokeDelegateAsync(Delegate bindingDelegate, Object[] invokeArgs, ExecutionContextHolder executionContext)
+       at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatc
+FAIL ReqnrollStepsTests.E02_a_hook_step_on_one_row_leaves_the_other_row_as_it_was(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When an order of 2"···
+                 ↑ (pos 2)
+FAIL L4_a_step_method_left_running_keeps_its_place
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 44)
+    Expected: ···"p method is left running\n  0.0 A slow background c"···
+    Actual:   ···"p method is left running\n1 WHEN When the customer "···
+                                            ↑ (pos 44)
+FAIL ReqnrollStepsTests.T05_a_step_method_that_fails_in_BeforeScenario_is_the_failed_row(lane: "Engine.Reqnroll.TUn
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 Seeding fails [Failed]\ncalls: 0 /seed"
+    Actual:   "calls: - /seed"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.E09_a_step_method_in_a_hook_at_Kronikols_own_order_stands_last(lane: "Engine.Reqnroll.xUnit
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 120)
+    Expected: ···"0 The order is read back\n2 Reference data is clean"···
+    Actual:   ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+                                            ↑ (pos 120)
+FAIL ReqnrollStepsTests.E09_a_step_method_in_a_hook_at_Kronikols_own_order_stands_last(lane: "Engine.Reqnroll.xUnit
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 120)
+    Expected: ···"0 The order is read back\n2 Reference data is clean"···
+    Actual:   ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+                                            ↑ (pos 120)
+FAIL ReqnrollStepsTests.T04_a_step_method_in_AfterScenario_stands_last(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 185)
+    Expected: ···"0 The order is read back\n3 Reference data is clean"···
+    Actual:   ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+                                            ↑ (pos 185)
+FAIL ReqnrollStepsTests.E01_an_outlines_rows_each_have_the_hook_step(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When an order of 1"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T01_a_step_method_in_BeforeScenario_stands_first_and_each_step_keeps_its_own(lane: "Engine.
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.E01_an_outlines_rows_each_have_the_hook_step(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When an order of 1"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.E06_a_step_method_in_an_argument_transformation_stands_before_its_step(lane: "Engine.Reqnro
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 63)
+    Expected: ···"customer is registered\n1 Reference data is seeded\n"···
+    Actual:   ···"customer is registered\n1 When a transformed value "···
+                                            ↑ (pos 63)
+FAIL ReqnrollStepsTests.T03_a_step_method_in_AfterScenarioBlock_stands_after_each_block(lane: "Engine.Reqnroll.xUni
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 63)
+    Expected: ···"customer is registered\n1 Block prepared\n2 When the"···
+    Actual:   ···"customer is registered\n1 When the customer places "···
+                                            ↑ (pos 63)
+FAIL ReqnrollStepsTests.With_the_bars_hidden_every_call_inside_a_step_keeps_it(scenario: "T20", calls: "0 /customer
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···" - /customers, - /orders, - /orders/1, - /teardown"
+    Expected end: "calls: 0 /customers, 1 /orders, 2 /orders/1, 2 /te"···
+FAIL B3_a_step_method_left_running_keeps_its_place
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 31)
+    Expected: ···"n a step is left running\n  0.0 A slow background c"···
+    Actual:   ···"n a step is left running\n1 When the customer place"···
+                                            ↑ (pos 31)
+FAIL ReqnrollStepsTests.T13_a_hook_step_and_a_failing_step_leave_the_failing_step_its_own_call(lane: "Engine.Reqnro
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the payment f"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T02_a_step_method_in_BeforeScenarioBlock_stands_before_each_block(lane: "Engine.Reqnroll.xU
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Block prepared\n1 Given a registered customer\n  1"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL S5_a_failure_screenshot_stays_on_the_scenario_that_failed
+    System.InvalidOperationException : Engine.Reqnroll.Files wrote no report, exit code 1.
+    Test run for C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines\bin\Debug\net10.0\real-engines\bin\Engine.Reqnroll.Files\debug\Engine.Reqnroll.Files.dll (.NETCoreApp,Version=v10.0)
+    A total of 1 test files matched the specified pattern.
+    [xUnit.net 00:00:08.57]     S5a fails in the background [FAIL]
+    [xUnit.net 00:00:08.57]     S7a the hook throws after the opening step [FAIL]
+    [xUnit.net 00:00:08.87]     [Test Assembly Cleanup Failure (Engine.Reqnroll.Files.dll)] System.Collections.Generic.KeyNotFoundException
+      Failed S5a fails in the background [15 ms]
+      Error Message:
+       System.InvalidOperationException : background failed
+      Stack Trace:
+         at EngineFixtures.FileBindings.CustomerFailsWhenTagged() in C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines.Fixtures\Engine.Reqnroll.Files\Bindings.cs:line 57
+       at Reqnroll.Bindings.AsyncMethodHelper.ConvertTaskOfT(Task task, Boolean getValue)
+       at Reqnroll.Bindings.BindingDelegateInvoker.InvokeDelegateAsync(Delegate bindingDelegate, Object[] invokeArgs, ExecutionContextHolder executionContext)
+       at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatc
+FAIL ReqnrollStepsTests.T17_a_step_method_left_running_leaves_every_later_step_its_own(lane: "Engine.Reqnroll.xUnit
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 68)
+    Expected: ···" A slow background check\n1 When the customer place"···
+    Actual:   ···" A slow background check\n  0.1 When the customer p"···
+                                            ↑ (pos 68)
+FAIL BddfyStepsTests.With_the_bars_hidden_a_call_keeps_what_it_reads_with_them(scenario: "Z10", calls: "- /seed, 0 
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···"ed, - /customers, - /orders, - /orders/1, - /clean"
+    Expected end: "calls: - /seed, 0 /customers, 1 /orders, 2 /orders"···
+FAIL ReqnrollStepsTests.T17_a_step_method_left_running_leaves_every_later_step_its_own(lane: "Engine.Reqnroll.xUnit
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 68)
+    Expected: ···" A slow background check\n1 When the customer place"···
+    Actual:   ···" A slow background check\n  0.1 When the customer p"···
+                                            ↑ (pos 68)
+FAIL ReqnrollStepsTests.T17_a_step_method_left_running_leaves_every_later_step_its_own(lane: "Engine.Reqnroll.TUnit
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 68)
+    Expected: ···" A slow background check\n1 When the customer place"···
+    Actual:   ···" A slow background check\n  0.1 When the customer p"···
+                                            ↑ (pos 68)
+FAIL ReqnrollStepsTests.T23_two_step_methods_left_running_keep_their_place(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 96)
+    Expected: ···" A slow background check\n1 When the order takes a "···
+    Actual:   ···" A slow background check\n  0.1 When the order take"···
+                                            ↑ (pos 96)
+FAIL ReqnrollStepsTests.With_the_bars_hidden_every_call_inside_a_step_keeps_it(scenario: "T00", calls: "0 /customer
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···"d back\ncalls: - /customers, - /orders, - /orders/1"
+    Expected end: "calls: 0 /customers, 1 /orders, 2 /orders/1"
+FAIL BddfyStepsTests.With_the_bars_hidden_a_call_keeps_what_it_reads_with_them(scenario: "B0", calls: "0 /customers
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···"d back\ncalls: - /customers, - /orders, - /orders/1"
+    Expected end: "calls: 0 /customers, 1 /orders, 2 /orders/1"
+FAIL ReqnrollStepsTests.T21_a_step_that_runs_another_lists_it_under_itself(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                         ↓ (pos 10)
+    Expected: "0 Given a step that runs another step\n  0.0 Given "···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                         ↑ (pos 10)
+FAIL ReqnrollStepsTests.T01_a_step_method_in_BeforeScenario_stands_first_and_each_step_keeps_its_own(lane: "Engine.
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T05_the_digest_names_the_hook_step_as_the_failing_step_and_lists_its_call(lane: "Engine.Req
+    Assert.Matches() Failure: Pattern not found in value
+    Regex: "\\*\\*Failing step\\*\\* — `s\\d+/0` Seeding fails"
+    Value: "T05 a step method that fails in BeforeScenario\n\n"···
+FAIL ReqnrollStepsTests.T26_a_step_over_a_failed_inner_step_reads_failed(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                        ↓ (pos 9)
+    Expected: "0 Given a step that runs two steps, the first fail"···
+    Actual:   "0 Given an inner step fails [Failed]\n  0.0 Given a"···
+                        ↑ (pos 9)
+FAIL ReqnrollStepsTests.T28_the_public_stopwatch_key_stays_on_the_scenario(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                         ↓ (pos 10)
+    Expected: "0 Given a step that runs another step\n  0.0 Given "···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                         ↑ (pos 10)
+FAIL ReqnrollStepsTests.E02_a_hook_step_on_one_row_leaves_the_other_row_as_it_was(lane: "Engine.Reqnroll.xUnit3")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When an order of 2"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.With_the_bars_hidden_every_call_inside_a_step_keeps_it(scenario: "T09", calls: "- /seed, 0 
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···"lls: - /seed, - /customers, - /orders, - /orders/1"
+    Expected end: "calls: - /seed, 0 /customers, 1 /orders, 2 /orders"···
+FAIL B1_a_step_method_before_BDDfy_stands_first
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T04_a_step_method_in_AfterScenario_stands_last(lane: "Engine.Reqnroll.TUnit")
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 185)
+    Expected: ···"0 The order is read back\n3 Reference data is clean"···
+    Actual:   ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+                                            ↑ (pos 185)
+FAIL S6_a_file_after_every_step_where_no_Background_is_written
+    System.InvalidOperationException : Engine.Reqnroll.Files wrote no report, exit code 1.
+    Test run for C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines\bin\Debug\net10.0\real-engines\bin\Engine.Reqnroll.Files\debug\Engine.Reqnroll.Files.dll (.NETCoreApp,Version=v10.0)
+    A total of 1 test files matched the specified pattern.
+    [xUnit.net 00:00:08.57]     S5a fails in the background [FAIL]
+    [xUnit.net 00:00:08.57]     S7a the hook throws after the opening step [FAIL]
+    [xUnit.net 00:00:08.87]     [Test Assembly Cleanup Failure (Engine.Reqnroll.Files.dll)] System.Collections.Generic.KeyNotFoundException
+      Failed S5a fails in the background [15 ms]
+      Error Message:
+       System.InvalidOperationException : background failed
+      Stack Trace:
+         at EngineFixtures.FileBindings.CustomerFailsWhenTagged() in C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines.Fixtures\Engine.Reqnroll.Files\Bindings.cs:line 57
+       at Reqnroll.Bindings.AsyncMethodHelper.ConvertTaskOfT(Task task, Boolean getValue)
+       at Reqnroll.Bindings.BindingDelegateInvoker.InvokeDelegateAsync(Delegate bindingDelegate, Object[] invokeArgs, ExecutionContextHolder executionContext)
+       at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatc
+FAIL ReqnrollStepsTests.E01_an_outlines_rows_each_have_the_hook_step(lane: "Engine.Reqnroll.TUnit")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When an order of 1"···
+                 ↑ (pos 2)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P5", barsHidden: True, cal
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 /fast, 0 /slow, 1 /orders"
+    Actual:   "- /fast, - /slow, - /orders"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.T26_a_step_over_a_failed_inner_step_reads_failed(lane: "Engine.Reqnroll.TUnit")
+    Assert.Equal() Failure: Strings differ
+                        ↓ (pos 9)
+    Expected: "0 Given a step that runs two steps, the first fail"···
+    Actual:   "0 Given an inner step fails [Failed]\n  0.0 Given a"···
+                        ↑ (pos 9)
+FAIL ReqnrollStepsTests.T28_the_public_stopwatch_key_stays_on_the_scenario(lane: "Engine.Reqnroll.TUnit")
+    Assert.Equal() Failure: Strings differ
+                         ↓ (pos 10)
+    Expected: "0 Given a step that runs another step\n  0.0 Given "···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                         ↑ (pos 10)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P8", barsHidden: True, cal
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 /customers, - /open, - /after-open, - /orders, -"···
+    Actual:   "- /customers, - /open, - /after-open, - /orders, -"···
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.T11_a_Given_step_method_in_BeforeScenario_keeps_its_keyword(lane: "Engine.Reqnroll.TUnit")
+    Assert.Equal() Failure: Strings differ
+                       ↓ (pos 8)
+    Expected: "0 Given A tenant exists\n1 Given a registered custo"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                       ↑ (pos 8)
+FAIL Z8_an_example_table_whose_first_row_stopped_early_lists_that_row_and_the_next_rows_frames_take_nothing
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 136)
+    Expected: ···"ed [SkippedAfterFailure]\ncalls: 0 /customers/alice"···
+    Actual:   ···"ed [SkippedAfterFailure]\n  1.0 Customer named {nam"···
+                                            ↑ (pos 136)
+FAIL ReqnrollStepsTests.T05_the_digest_names_the_hook_step_as_the_failing_step_and_lists_its_call(lane: "Engine.Req
+    Assert.Matches() Failure: Pattern not found in value
+    Regex: "\\*\\*Failing step\\*\\* — `s\\d+/0` Seeding fails"
+    Value: "T05 a step method that fails in BeforeScenario\n\n"···
+FAIL ReqnrollStepsTests.T23_two_step_methods_left_running_keep_their_place(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 96)
+    Expected: ···" A slow background check\n1 When the order takes a "···
+    Actual:   ···" A slow background check\n  0.1 When the order take"···
+                                            ↑ (pos 96)
+FAIL ReqnrollStepsTests.T11_a_Given_step_method_in_BeforeScenario_keeps_its_keyword(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                       ↓ (pos 8)
+    Expected: "0 Given A tenant exists\n1 Given a registered custo"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                       ↑ (pos 8)
+FAIL S1_a_file_in_a_background_step_with_a_hook_step_in_every_scenario
+    System.InvalidOperationException : Engine.Reqnroll.Files wrote no report, exit code 1.
+    Test run for C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines\bin\Debug\net10.0\real-engines\bin\Engine.Reqnroll.Files\debug\Engine.Reqnroll.Files.dll (.NETCoreApp,Version=v10.0)
+    A total of 1 test files matched the specified pattern.
+    [xUnit.net 00:00:08.57]     S5a fails in the background [FAIL]
+    [xUnit.net 00:00:08.57]     S7a the hook throws after the opening step [FAIL]
+    [xUnit.net 00:00:08.87]     [Test Assembly Cleanup Failure (Engine.Reqnroll.Files.dll)] System.Collections.Generic.KeyNotFoundException
+      Failed S5a fails in the background [15 ms]
+      Error Message:
+       System.InvalidOperationException : background failed
+      Stack Trace:
+         at EngineFixtures.FileBindings.CustomerFailsWhenTagged() in C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines.Fixtures\Engine.Reqnroll.Files\Bindings.cs:line 57
+       at Reqnroll.Bindings.AsyncMethodHelper.ConvertTaskOfT(Task task, Boolean getValue)
+       at Reqnroll.Bindings.BindingDelegateInvoker.InvokeDelegateAsync(Delegate bindingDelegate, Object[] invokeArgs, ExecutionContextHolder executionContext)
+       at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatc
+FAIL ReqnrollStepsTests.T13_a_hook_step_and_a_failing_step_leave_the_failing_step_its_own_call(lane: "Engine.Reqnro
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the payment f"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T28_the_public_stopwatch_key_stays_on_the_scenario(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                         ↓ (pos 10)
+    Expected: "0 Given a step that runs another step\n  0.0 Given "···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                         ↑ (pos 10)
+FAIL ReqnrollStepsTests.T24_a_step_method_a_hook_left_running_keeps_its_row(lane: "Engine.Reqnroll.TUnit")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 A slow background check\n1 Given a registered cus"···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T04_a_step_method_in_AfterScenario_stands_last(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 185)
+    Expected: ···"0 The order is read back\n3 Reference data is clean"···
+    Actual:   ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+                                            ↑ (pos 185)
+FAIL ReqnrollStepsTests.T05_the_digest_names_the_hook_step_as_the_failing_step_and_lists_its_call(lane: "Engine.Req
+    Assert.Matches() Failure: Pattern not found in value
+    Regex: "\\*\\*Failing step\\*\\* — `s\\d+/0` Seeding fails"
+    Value: "T05 a step method that fails in BeforeScenario\n\n"···
+FAIL BddfyStepsTests.With_the_bars_hidden_a_call_keeps_what_it_reads_with_them(scenario: "Z8", calls: "0 /customers
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···" - /customers/alice, - /customers/bob, - /orders/1"
+    Expected end: "calls: 0 /customers/alice, - /customers/bob, - /or"···
+FAIL ReqnrollStepsTests.T26_a_step_over_a_failed_inner_step_reads_failed(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                        ↓ (pos 9)
+    Expected: "0 Given a step that runs two steps, the first fail"···
+    Actual:   "0 Given an inner step fails [Failed]\n  0.0 Given a"···
+                        ↑ (pos 9)
+FAIL ReqnrollStepsTests.T04_a_step_method_in_AfterScenario_stands_last(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 185)
+    Expected: ···"0 The order is read back\n3 Reference data is clean"···
+    Actual:   ···"0 The order is read back\ncalls: 0 /customers, 1 /o"···
+                                            ↑ (pos 185)
+FAIL Z12_a_retried_test_lists_its_first_attempt_and_no_later_attempts_rows
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 175)
+    Expected: ···"ck [SkippedAfterFailure]\ncalls: 0 /customers, 1 /o"···
+    Actual:   ···"ck [SkippedAfterFailure]\n  2.0 A customer is regis"···
+                                            ↑ (pos 175)
+FAIL L2_a_step_method_before_a_composite_steps_own_steps_stands_first_among_them
+    Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 54)
+    Expected: ···"p that seeds first\n  0.0 Reference data is seeded\n"···
+    Actual:   ···"p that seeds first\n  0.0 Native sub step one\n  0.1"···
+                                            ↑ (pos 54)
+FAIL S2_a_file_after_every_step_with_a_hook_step_in_every_scenario
+    System.InvalidOperationException : Engine.Reqnroll.Files wrote no report, exit code 1.
+    Test run for C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines\bin\Debug\net10.0\real-engines\bin\Engine.Reqnroll.Files\debug\Engine.Reqnroll.Files.dll (.NETCoreApp,Version=v10.0)
+    A total of 1 test files matched the specified pattern.
+    [xUnit.net 00:00:08.57]     S5a fails in the background [FAIL]
+    [xUnit.net 00:00:08.57]     S7a the hook throws after the opening step [FAIL]
+    [xUnit.net 00:00:08.87]     [Test Assembly Cleanup Failure (Engine.Reqnroll.Files.dll)] System.Collections.Generic.KeyNotFoundException
+      Failed S5a fails in the background [15 ms]
+      Error Message:
+       System.InvalidOperationException : background failed
+      Stack Trace:
+         at EngineFixtures.FileBindings.CustomerFailsWhenTagged() in C:\Code\Kronikol-223s\tests\Kronikol.Tests.RealEngines.Fixtures\Engine.Reqnroll.Files\Bindings.cs:line 57
+       at Reqnroll.Bindings.AsyncMethodHelper.ConvertTaskOfT(Task task, Boolean getValue)
+       at Reqnroll.Bindings.BindingDelegateInvoker.InvokeDelegateAsync(Delegate bindingDelegate, Object[] invokeArgs, ExecutionContextHolder executionContext)
+       at Reqnroll.Bindings.BindingInvoker.InvokeBindingAsync(IBinding binding, IContextManager contextManager, Object[] arguments, ITestTracer testTracer, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatchAsync(BindingMatch match, Object[] arguments, DurationHolder durationHolder)
+       at Reqnroll.Infrastructure.TestExecutionEngine.ExecuteStepMatc
+FAIL ReqnrollStepsTests.With_the_bars_hidden_every_call_inside_a_step_keeps_it(scenario: "T01", calls: "0 /seed, 1 
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···"lls: - /seed, - /customers, - /orders, - /orders/1"
+    Expected end: "calls: 0 /seed, 1 /customers, 2 /orders, 3 /orders"···
+FAIL ReqnrollStepsTests.T24_a_step_method_a_hook_left_running_keeps_its_row(lane: "Engine.Reqnroll.xUnit2")
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 A slow background check\n1 Given a registered cus"···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                 ↑ (pos 2)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P3", barsHidden: True, cal
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 /customers, 0 /after-empty-step"
+    Actual:   "- /customers, - /after-empty-step"
+               ↑ (pos 0)
+FAIL Z11_a_row_that_did_not_run_leaves_the_rows_that_ran_read_by_their_ids
+    Assert.Equal() Failure: Strings differ
+                                                    ↓ (pos 242)
+    Expected: ···"med [SkippedAfterFailure]\ncalls: 0 /long, 1 /fails"
+    Actual:   ···"med [SkippedAfterFailure]\ncalls: - /long, 1 /fails"
+                                                    ↑ (pos 242)
+FAIL PlainLaneTests.Each_call_reads_the_step_it_read_before_there_were_stamps(scenario: "P0", barsHidden: True, cal
+    Assert.Equal() Failure: Strings differ
+               ↓ (pos 0)
+    Expected: "0 /customers, 1 /orders"
+    Actual:   "- /customers, - /orders"
+               ↑ (pos 0)
+FAIL ReqnrollStepsTests.T05_the_digest_names_the_hook_step_as_the_failing_step_and_lists_its_call(lane: "Engine.Req
+    Assert.Matches() Failure: Pattern not found in value
+    Regex: "\\*\\*Failing step\\*\\* — `s\\d+/0` Seeding fails"
+    Value: "T05 a step method that fails in BeforeScenario\n\n"···
+FAIL BddfyStepsTests.With_the_bars_hidden_a_call_keeps_what_it_reads_with_them(scenario: "B7", calls: "0 /customers
+    Assert.EndsWith() Failure: String end does not match
+    String:       ···"calls: - /customers, - /orders/1, - /teardown-with"
+    Expected end: "calls: 0 /customers, 1 /orders/1, - /teardown-with"
+FAIL ReqnrollStepsTests.T28_the_public_stopwatch_key_stays_on_the_scenario(lane: "Engine.Reqnroll.Floor")
+    Assert.Equal() Failure: Strings differ
+                         ↓ (pos 10)
+    Expected: "0 Given a step that runs another step\n  0.0 Given "···
+    Actual:   "0 Given a registered customer\n  0.0 Given a regist"···
+                         ↑ (pos 10)
+FAIL ReqnrollStepsTests.T02_a_step_method_in_BeforeScenarioBlock_stands_before_each_block(lane: "Engine.Reqnroll.Fl
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Block prepared\n1 Given a registered customer\n  1"···
+    Actual:   "0 Given a registered customer\n1 When the customer "···
+                 ↑ (pos 2)
+FAIL ReqnrollStepsTests.T13_a_hook_step_and_a_failing_step_leave_the_failing_step_its_own_call(lane: "Engine.Reqnro
+    Assert.Equal() Failure: Strings differ
+                 ↓ (pos 2)
+    Expected: "0 Reference data is seeded\n1 Given a registered cu"···
+    Actual:   "0 Given a registered customer\n1 When the payment f"···
+                 ↑ (pos 2)

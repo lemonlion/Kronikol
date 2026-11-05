@@ -1,0 +1,2 @@
+Passed!  - Failed:     0, Passed: 11817, Skipped:     2, Total: 11819, Duration: 18 m 14 s - Kronikol.Tests.dll (net10.0)
+9b85227f proto R10: a BDDfy test's later runs are not listed

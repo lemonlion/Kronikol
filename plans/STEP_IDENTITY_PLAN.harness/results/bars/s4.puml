@@ -1,0 +1,76 @@
+@startuml
+!pragma teoz true
+skinparam defaultFontName system-ui
+skinparam shadowing false
+skinparam SequenceMessagePadding 4
+skinparam sequenceMessageAlignment center
+<style>
+sequenceDiagram { participant { RoundCorner 12; Padding 8 14; Margin 0 10; LineThickness 1 } }
+sequenceDiagram { actor, database, queue, collections, boundary, control, entity { Margin 0 10; LineThickness 1 } }
+sequenceDiagram { lifeLine { LineStyle 0; LineThickness 1 } }
+sequenceDiagram { note { LineThickness 1 } }
+sequenceDiagram { group { RoundCorner 16; LineThickness 1; LineColor #CDD5E0; BackgroundColor #F4F7FB; FontStyle plain } }
+sequenceDiagram { groupHeader { LineThickness 1; LineColor #CDD5E0; BackgroundColor #E9EEF6 } }
+sequenceDiagram { partition { RoundCorner 16; LineThickness 1; LineColor #D5DBE4 } }
+</style>
+
+
+skinparam wrapWidth 800
+autonumber 1
+
+actor "Tests" as tests
+participant "Shop" as shop
+
+
+hnote across <<stepDelimiter>> #black:<color:white>Given a registered customer
+
+tests -[#438DD5]> shop: POST: /customers
+note left
+<color:#686868>[traceparent=00-5db8bcc4d25f14f3c8ee81d722ed2a9b-401227e11bd19a05-00]
+
+{}
+end note
+shop -[#438DD5]-> tests: OK
+note right
+{}
+end note
+
+hnote across <<stepDelimiter>> #black:<color:white>When the customer places the order
+
+tests -[#438DD5]> shop: POST: /orders
+note left
+<color:#686868>[traceparent=00-f836e32b15db718325e87fc360ca9010-ac8dee98497598b0-00]
+
+{}
+end note
+shop -[#438DD5]-> tests: OK
+note right
+{}
+end note
+
+hnote across <<stepDelimiter>> #black:<color:white>Then the order is confirmed
+
+tests -[#438DD5]> shop: POST: /orders/1
+note left
+<color:#686868>[traceparent=00-b29e892ff74c7f2f5fb4e3ff3fd2b24e-50ac5a8e097ee656-00]
+
+{}
+end note
+shop -[#438DD5]-> tests: OK
+note right
+{}
+end note
+
+hnote across <<stepDelimiter>> #black:<color:white>Reference data is cleaned
+
+tests -[#438DD5]> shop: POST: /clean
+note left
+<color:#686868>[traceparent=00-011813646d74676719a79aace60b5750-ed8e53ac7af3544a-00]
+
+{}
+end note
+shop -[#438DD5]-> tests: OK
+note right
+{}
+end note
+@enduml

@@ -1,0 +1,457 @@
+### summary
+TestRunReport.krkl  10.2 KB on disk, 117 KB as JSON  Kronikol 5.28.2+9b85227fbe9a8c5045d70e875d63067c4c1a6020
+2026-11-03T12:41:40Z → 2026-11-03T12:41:41Z
+22 scenarios · 6 failed · 90 interactions · 1 distinct bodies
+
+A hook then background  0 passed, 3 skipped
+B a failing hook  0 passed, 2 skipped, 1 FAILED
+C block hooks inside the background  0 passed, 2 skipped
+D background step fails in one  0 passed, 2 skipped, 2 FAILED
+E after hooks  0 passed, 2 skipped, 1 FAILED
+F a suite after-scenario hook throws then a feature hook runs a step  0 passed, 1 FAILED
+G outline with a table and a failing row  2 passed, 1 FAILED
+H keyword hooks and undefined  0 passed, 3 skipped
+
+Failed:
+  s3  B1 the hook fails  — seeding failed
+  s9  D2 background fails  — background failed
+  s10  D3 hook then background fails  — background failed
+  s13  E2 after hook step fails  — cleaning failed
+  s15  F1 suite hook throws  — suite hook threw
+  s17  G1 table row fails  — unlucky
+  → failures
+
+Slowest:
+  s18  0.47s  G1 table row fails
+  s6  0.14s  C1 block hook
+  s2  0.14s  A3 no hook
+next: failures
+
+### s0 steps
+s0  A hook then background › A1 hook before background own step fails  [Skipped]  0s
+stableId 5ec8f5d699e5610b
+at Features/A.feature:8
+open: TestRunReport.html#sid-5ec8f5d699e5610b
+
+  b0    Given a registered customer  [i2]
+    b0.0  A customer is registered
+  b1    And a second fixture  [i4]
+  0     Reference data is seeded  [i0]
+  1     And an order of 1 is placed
+  2     Then the order fails
+3 calls · interactions s0 · flow s0
+
+### s0 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /seed           1      0     0 ms     0 ms      1       4 B
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+b1    POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s1 steps
+s1  A hook then background › A2 hook before background passes  [Skipped]  0s
+stableId 5c1b167a52616d0f
+at Features/A.feature:13
+open: TestRunReport.html#sid-5c1b167a52616d0f
+
+  b0    Given a registered customer  [i2]
+    b0.0  A customer is registered
+  b1    And a second fixture  [i4]
+  0     Reference data is seeded  [i0]
+  1     And an order of 2 is placed
+  2     Then the order is confirmed
+3 calls · interactions s1 · flow s1
+
+### s1 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /seed           1      0     0 ms     0 ms      1       4 B
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+b1    POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s2 steps
+s2  A hook then background › A3 no hook  [Skipped]  0.14s
+stableId 28b1a21d451be412
+at Features/A.feature:17
+open: TestRunReport.html#sid-28b1a21d451be412
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  b1    And a second fixture  [i2]
+  0     And an order of 3 is placed
+  1     Then the order is confirmed
+2 calls · interactions s2 · flow s2
+
+### s2 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+b1    POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s3 steps
+s3  B a failing hook › B1 the hook fails  [Failed]  0.01s
+stableId 8df5ca383db306d9
+at Features/B.feature:7
+open: TestRunReport.html#sid-8df5ca383db306d9
+
+✗ 0     Seeding fails  [i0]
+      seeding failed
+  1     Given a registered customer
+  2     And an order of 1 is placed
+  3     Then the order is confirmed
+1 calls · interactions s3 · flow s3
+
+### s3 calls: step, method, path
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /seedfail      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s4 steps
+s4  B a failing hook › B2 sibling  [Skipped]  0s
+stableId 930b5377480baaab
+at Features/B.feature:11
+open: TestRunReport.html#sid-930b5377480baaab
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 2 is placed
+  1     Then the order is confirmed
+1 calls · interactions s4 · flow s4
+
+### s4 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s5 steps
+s5  B a failing hook › B3 sibling  [Skipped]  0.14s
+stableId 64e885d6571b21c9
+at Features/B.feature:15
+open: TestRunReport.html#sid-64e885d6571b21c9
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 3 is placed
+  1     Then the order is confirmed
+1 calls · interactions s5 · flow s5
+
+### s5 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+1 buckets
+
+### s6 steps
+s6  C block hooks inside the background › C1 block hook  [Skipped]  0.14s
+stableId b7b2e5a86d5838f9
+at Features/C.feature:8
+open: TestRunReport.html#sid-b7b2e5a86d5838f9
+
+  b0    Given a registered customer  0.01s  [i2]
+    b0.0  A customer is registered
+  b1    And a second fixture  0s  [i4]
+  0     Block prepared  0.06s  [i0]
+  1     And an order of 1 is placed
+  2     Then the order is confirmed
+3 calls · interactions s6 · flow s6
+
+### s6 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /block          1      0     1 ms     1 ms      1       4 B
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+b1    POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s7 steps
+s7  C block hooks inside the background › C2 block hook  [Skipped]  0s
+stableId 0daeb0f80496ac36
+at Features/C.feature:12
+open: TestRunReport.html#sid-0daeb0f80496ac36
+
+  b0    Given a registered customer  0.01s  [i2]
+    b0.0  A customer is registered
+  b1    And a second fixture  0s  [i4]
+  0     Block prepared  [i0]
+  1     And an order of 2 is placed
+  2     Then the order fails
+3 calls · interactions s7 · flow s7
+
+### s7 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /block          1      0     0 ms     0 ms      1       4 B
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+b1    POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+3 buckets
+
+### s8 steps
+s8  D background step fails in one › D1 passes first by title  [Skipped]  0s
+stableId c96e60e12b4b1e78
+at Features/D.feature:7
+open: TestRunReport.html#sid-c96e60e12b4b1e78
+
+  b0    Given a customer that fails when tagged  [i0]
+  0     And a second fixture  [i2]
+  1     And an order of 1 is placed
+  2     Then the order is confirmed
+2 calls · interactions s8 · flow s8
+
+### s8 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s9 steps
+s9  D background step fails in one › D2 background fails  [Failed]  0.14s
+stableId e0de4b6820247a2a
+at Features/D.feature:12
+open: TestRunReport.html#sid-e0de4b6820247a2a
+
+  b0    Given a customer that fails when tagged  [i0]
+  0     And a second fixture
+  1     And an order of 2 is placed
+  2     Then the order is confirmed
+1 calls · interactions s9 · flow s9
+
+### s9 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+1 buckets
+
+### s10 steps
+s10  D background step fails in one › D3 hook then background fails  [Failed]  0s
+stableId 51d37717b6b99e81
+at Features/D.feature:17
+open: TestRunReport.html#sid-51d37717b6b99e81
+
+  b0    Given a customer that fails when tagged  [i2]
+  0     Reference data is seeded  [i0]
+  1     And a second fixture
+  2     And an order of 3 is placed
+  3     Then the order is confirmed
+2 calls · interactions s10 · flow s10
+
+### s10 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /seed           1      0     0 ms     0 ms      1       4 B
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s11 steps
+s11  D background step fails in one › D4 passes last by title  [Skipped]  0s
+stableId 845806be584bfe13
+at Features/D.feature:21
+open: TestRunReport.html#sid-845806be584bfe13
+
+  b0    Given a customer that fails when tagged  [i0]
+  0     And a second fixture  [i2]
+  1     And an order of 4 is placed
+  2     Then the order is confirmed
+2 calls · interactions s11 · flow s11
+
+### s11 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+0     POST    /fixture2       1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s12 steps
+s12  E after hooks › E1 after hook step passes  [Skipped]  0s
+stableId 6904d101c9f8211c
+at Features/E.feature:7
+open: TestRunReport.html#sid-6904d101c9f8211c
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 1 is placed
+  1     Then the order is confirmed
+  2     Reference data is cleaned  [i2]
+2 calls · interactions s12 · flow s12
+
+### s12 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     POST    /clean          1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s13 steps
+s13  E after hooks › E2 after hook step fails  [Failed]  0s
+stableId 53b22cf54899ec2e
+at Features/E.feature:12
+open: TestRunReport.html#sid-53b22cf54899ec2e
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 2 is placed
+  1     Then the order is confirmed
+✗ 2     Cleaning fails  [i2]
+      cleaning failed
+2 calls · interactions s13 · flow s13
+
+### s13 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+2     POST    /cleanfail      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s14 steps
+s14  E after hooks › E3 no hook  [Skipped]  0.14s
+stableId eb18c710f99cd192
+at Features/E.feature:16
+open: TestRunReport.html#sid-eb18c710f99cd192
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 3 is placed
+  1     Then the order is confirmed
+1 calls · interactions s14 · flow s14
+
+### s14 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+1 buckets
+
+### s15 steps
+s15  F a suite after-scenario hook throws then a feature hook runs a step › F1 suite hook throws  [Failed]  0.11s
+stableId 93e75a68c07e61b4
+at Features/F.feature:5
+open: TestRunReport.html#sid-93e75a68c07e61b4
+
+  0     Given a registered customer  0.06s  [i0]
+    0.0   A customer is registered  0.03s
+  1     Then the order is confirmed  0s  [i2]
+2 calls · interactions s15 · flow s15
+
+### s15 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     1 ms     1 ms      1       4 B
+1     POST    /confirm        1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s16 steps
+s16  G outline with a table and a failing row › G1 table row fails  [Passed]  0s
+stableId 95d307836b56309d
+at Features/G.feature:4
+open: TestRunReport.html#sid-95d307836b56309d
+example: amount=1, Table=item: a, qty: 2
+
+  0     Reference data is seeded  [i0]
+  1     When the amount 1 is checked  [i2]
+  2     Given a step with a table:  [i4]
+      · table
+      · item
+      · qty
+      · a
+      · 2
+  3     Then the order is confirmed  [i6]
+4 calls · interactions s16 · flow s16
+
+### s16 calls: step, method, path
+step  method  path      calls errors   median      max bodies     bytes
+0     POST    /seed         1      0     0 ms     0 ms      1       4 B
+1     POST    /check/1      1      0     0 ms     0 ms      1       4 B
+2     POST    /table/1      1      0     0 ms     0 ms      1       4 B
+3     POST    /confirm      1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s17 steps
+s17  G outline with a table and a failing row › G1 table row fails  [Failed]  0s
+stableId a44dead24ecee691
+at Features/G.feature:4
+open: TestRunReport.html#sid-a44dead24ecee691
+example: amount=13, Table=item: b, qty: 3
+
+  0     Reference data is seeded  [i0]
+✗ 1     When the amount 13 is checked  [i2]
+  2     Given a step with a table:
+      · table
+      · item
+      · qty
+      · b
+      · 3
+  3     Then the order is confirmed
+2 calls · interactions s17 · flow s17
+
+### s17 calls: step, method, path
+step  method  path       calls errors   median      max bodies     bytes
+0     POST    /seed          1      0     0 ms     0 ms      1       4 B
+1     POST    /check/13      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s18 steps
+s18  G outline with a table and a failing row › G1 table row fails  [Passed]  0.47s
+stableId c9646fb872d6c0fc
+at Features/G.feature:4
+open: TestRunReport.html#sid-c9646fb872d6c0fc
+example: amount=2, Table=item: c, qty: 4
+
+  0     Reference data is seeded  0s  [i0]
+  1     When the amount 2 is checked  0.01s  [i2]
+  2     Given a step with a table:  0.01s  [i4]
+      · table
+      · item
+      · qty
+      · c
+      · 4
+  3     Then the order is confirmed  [i6]
+4 calls · interactions s18 · flow s18
+
+### s18 calls: step, method, path
+step  method  path      calls errors   median      max bodies     bytes
+0     POST    /seed         1      0     2 ms     2 ms      1       4 B
+1     POST    /check/2      1      0     0 ms     0 ms      1       4 B
+2     POST    /table/1      1      0     0 ms     0 ms      1       4 B
+3     POST    /confirm      1      0     0 ms     0 ms      1       4 B
+4 buckets
+
+### s19 steps
+s19  H keyword hooks and undefined › H1 a Given keyword hook  [Skipped]  0s
+stableId 2904ec62b0b6fd29
+at Features/H.feature:7
+open: TestRunReport.html#sid-2904ec62b0b6fd29
+
+  b0    Given a registered customer  [i2]
+    b0.0  A customer is registered
+  0     Given A tenant exists  [i0]
+  1     And an order of 1 is placed
+  2     Then the order is confirmed
+2 calls · interactions s19 · flow s19
+
+### s19 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /tenant         1      0     0 ms     0 ms      1       4 B
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+2 buckets
+
+### s20 steps
+s20  H keyword hooks and undefined › H2 sibling  [Skipped]  0s
+stableId c9e6558e581a5b8e
+at Features/H.feature:11
+open: TestRunReport.html#sid-c9e6558e581a5b8e
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And an order of 2 is placed
+  1     Then the order is confirmed
+1 calls · interactions s20 · flow s20
+
+### s20 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+1 buckets
+
+### s21 steps
+s21  H keyword hooks and undefined › H3 undefined step  [Skipped]  0.14s
+stableId 96e7c6748735502a
+at Features/H.feature:15
+open: TestRunReport.html#sid-96e7c6748735502a
+
+  b0    Given a registered customer  [i0]
+    b0.0  A customer is registered
+  0     And nothing binds this step
+  1     Then the order is confirmed
+1 calls · interactions s21 · flow s21
+
+### s21 calls: step, method, path
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     1 ms     1 ms      1       4 B
+1 buckets

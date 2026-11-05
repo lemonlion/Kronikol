@@ -1,0 +1,288 @@
+TestRunReport.krkl  9.4 KB on disk, 105.6 KB as JSON  Kronikol 5.27.13+c58d98c0f8c841a0e1432e6c753ed9afa2a6977f
+2026-11-03T08:57:00Z → 2026-11-03T08:57:01Z
+17 scenarios · 6 failed · 90 interactions · 1 distinct bodies
+
+BG1 a Given fails in one scenario, the passing one first  1 passed, 1 FAILED
+BG2 a Given fails in one scenario, the failing one first  1 passed, 1 FAILED
+BG3 a plain hook fails in one scenario, the passing ones after it  2 passed, 1 FAILED
+BG4 a hook step on one scenario of a feature with a shared opening  2 passed
+BG5 a hook step in every scenario with its own argument  2 passed
+BG6 a hook step that fails in one scenario  1 passed, 1 FAILED
+N1 a hook swallows a step method failure  1 passed, 1 FAILED
+N2 outline rows sharing text, one failing at its Given  1 passed, 1 FAILED
+
+### s0 steps
+s0  BG1 a Given fails in one scenario, the passing one first › A passes  [Passed]  0.09s
+
+  0     Given the shop is ready  0.06s  [i0]
+    0.0   A customer is registered  0.04s
+  1     When the customer orders  0s  [i2]
+    1.0   An order is submitted
+  2     Then the order is listed  0s  [i4]
+    2.0   The order is read back
+3 calls · interactions s0 · flow s0
+--- s0 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     2 ms     2 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s1 steps
+s1  BG1 a Given fails in one scenario, the passing one first › B fails at its Given  [Failed]  0s
+
+✗ 0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+1 calls · interactions s1 · flow s1
+--- s1 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+
+### s2 steps
+s2  BG2 a Given fails in one scenario, the failing one first › A fails at its Given  [Failed]  0.09s
+
+✗ 0     Given the shop is ready  0.06s  [i0]
+    0.0   A customer is registered  0.04s
+1 calls · interactions s2 · flow s2
+--- s2 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     2 ms     2 ms      1       4 B
+
+### s3 steps
+s3  BG2 a Given fails in one scenario, the failing one first › B passes  [Passed]  0s
+
+  0     Given the shop is ready  [i0]
+    0.0   A customer is registered
+  1     When the customer orders  [i2]
+    1.0   An order is submitted
+  2     Then the receipt is sent  [i4]
+3 calls · interactions s3 · flow s3
+--- s3 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /receipt        1      0     0 ms     0 ms      1       4 B
+
+### s4 steps
+s4  BG3 a plain hook fails in one scenario, the passing ones after it › A hook fails  [Failed]  0.08s
+
+0 calls · interactions s4 · flow s4
+--- s4 calls
+step  method  path  calls errors   median      max bodies     bytes
+
+### s5 steps
+s5  BG3 a plain hook fails in one scenario, the passing ones after it › B passes  [Passed]  0s
+
+  b0    Given the shop is ready  [i0]
+    b0.0  A customer is registered
+  b1    When the customer orders  [i2]
+    b1.0  An order is submitted
+  0     Then the receipt is sent  [i4]
+3 calls · interactions s5 · flow s5
+--- s5 calls
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+b1    POST    /orders         1      0     0 ms     0 ms      1       4 B
+0     POST    /receipt        1      0     0 ms     0 ms      1       4 B
+
+### s6 steps
+s6  BG3 a plain hook fails in one scenario, the passing ones after it › C passes  [Passed]  0s
+
+  b0    Given the shop is ready  [i0]
+    b0.0  A customer is registered
+  b1    When the customer orders  [i2]
+    b1.0  An order is submitted
+  0     Then the invoice is sent  [i4]
+3 calls · interactions s6 · flow s6
+--- s6 calls
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+b1    POST    /orders         1      0     0 ms     0 ms      1       4 B
+0     POST    /invoice        1      0     0 ms     0 ms      1       4 B
+
+### s7 steps
+s7  BG4 a hook step on one scenario of a feature with a shared opening › A seeded  [Passed]  0.09s
+
+  b0    Given the shop is ready  0s
+  b1    When the customer orders  0s
+    b1.0  A customer is registered
+  0     Then the order is listed  0s
+    0.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s7 · flow s7
+--- s7 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     2 ms     2 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders         1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s8 steps
+s8  BG4 a hook step on one scenario of a feature with a shared opening › B not seeded  [Passed]  0s
+
+  b0    Given the shop is ready  0s  [i0]
+  b1    When the customer orders  0s  [i2]
+    b1.0  A customer is registered
+  0     Then the receipt is sent  [i4]
+3 calls · interactions s8 · flow s8
+--- s8 calls
+step  method  path        calls errors   median      max bodies     bytes
+b0    POST    /customers      1      0     0 ms     0 ms      1       4 B
+b1    POST    /orders         1      0     0 ms     0 ms      1       4 B
+0     POST    /receipt        1      0     0 ms     0 ms      1       4 B
+
+### s9 steps
+s9  BG5 a hook step in every scenario with its own argument › A seeds alice  [Passed]  0s
+
+  b0    Given the shop is ready
+  b1    When the customer orders
+    b1.0  A customer is registered
+  0     Then the order is listed
+    0.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s9 · flow s9
+--- s9 calls
+step  method  path         calls errors   median      max bodies     bytes
+-     POST    /seed/alice      1      0     0 ms     0 ms      1       4 B
+-     POST    /customers       1      0     0 ms     0 ms      1       4 B
+-     POST    /orders          1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1        1      0     0 ms     0 ms      1       4 B
+
+### s10 steps
+s10  BG5 a hook step in every scenario with its own argument › B seeds bob  [Passed]  0.09s
+
+  b0    Given the shop is ready
+  b1    When the customer orders
+    b1.0  A customer is registered
+  0     Then the receipt is sent
+    0.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s10 · flow s10
+--- s10 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed/bob       1      0     2 ms     2 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders         1      0     0 ms     0 ms      1       4 B
+-     POST    /receipt        1      0     0 ms     0 ms      1       4 B
+
+### s11 steps
+s11  BG6 a hook step that fails in one scenario › A hook step passes  [Passed]  0.09s
+
+  0     Given the shop is ready  0s
+  1     When the customer orders  0s
+    1.0   A customer is registered
+  2     Then the order is listed  0s
+    2.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s11 · flow s11
+--- s11 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /seed           1      0     2 ms     2 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders         1      0     0 ms     0 ms      1       4 B
+-     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s12 steps
+s12  BG6 a hook step that fails in one scenario › B hook step fails  [Failed]  0s
+
+   1 calls belong to no step (before the first step, or attribution was not trusted)
+1 calls · interactions s12 · flow s12
+--- s12 calls
+step  method  path   calls errors   median      max bodies     bytes
+-     POST    /seed      1      0     0 ms     0 ms      1       4 B
+
+### s13 steps
+s13  N1 a hook swallows a step method failure › A swallowed hook failure and a real failure  [Failed]  0s
+
+  0     Given the shop is ready
+✗ 1     When the payment fails  0s
+    1.0   A customer is registered
+   3 calls belong to no step (before the first step, or attribution was not trusted)
+3 calls · interactions s13 · flow s13
+--- s13 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /optional       1      0     0 ms     0 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /payments       1      0     0 ms     0 ms      1       4 B
+
+### s14 steps
+s14  N1 a hook swallows a step method failure › B swallowed hook failure and a pass  [Passed]  0.09s
+
+  0     Given the shop is ready  0s
+  1     When the customer orders  0s
+    1.0   A customer is registered
+  2     Then the receipt is sent
+    2.0   An order is submitted
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s14 · flow s14
+--- s14 calls
+step  method  path        calls errors   median      max bodies     bytes
+-     POST    /optional       1      0     2 ms     2 ms      1       4 B
+-     POST    /customers      1      0     0 ms     0 ms      1       4 B
+-     POST    /orders         1      0     0 ms     0 ms      1       4 B
+-     POST    /receipt        1      0     0 ms     0 ms      1       4 B
+
+### s15 steps
+s15  N2 outline rows sharing text, one failing at its Given › Row one  [Passed]  0.51s
+example: row=one
+
+  0     Given the shop is ready for one  0.01s  [i0]
+    0.0   A customer is registered
+  1     When the customer orders  [i2]
+    1.0   An order is submitted
+  2     Then the order is listed  [i4]
+    2.0   The order is read back
+3 calls · interactions s15 · flow s15
+--- s15 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+1     POST    /orders         1      0     0 ms     0 ms      1       4 B
+2     POST    /orders/1       1      0     0 ms     0 ms      1       4 B
+
+### s16 steps
+s16  N2 outline rows sharing text, one failing at its Given › Row two  [Failed]  0.01s
+example: row=two
+
+✗ 0     Given the shop is ready for two  0.01s  [i0]
+    0.0   A customer is registered
+1 calls · interactions s16 · flow s16
+--- s16 calls
+step  method  path        calls errors   median      max bodies     bytes
+0     POST    /customers      1      0     0 ms     0 ms      1       4 B
+
+### failures
+s1  BG1 a Given fails in one scenario, the passing one first › B fails at its Given
+  at Features/Z.feature:9
+  the shop did not start
+  ✗ s1/0  Given the shop is ready
+    1 calls in this step:
+      s1/i0  Shop  POST /customers
+
+s2  BG2 a Given fails in one scenario, the failing one first › A fails at its Given
+  at Features/Z2.feature:4
+  the shop did not start
+  ✗ s2/0  Given the shop is ready
+    1 calls in this step:
+      s2/i0  Shop  POST /customers
+
+s4  BG3 a plain hook fails in one scenario, the passing ones after it › A hook fails
+  at Features/Z3.feature:4
+  the hook failed
+
+s12  BG6 a hook step that fails in one scenario › B hook step fails
+  at Features/Z6.feature:10
+  seeding failed
+
+s13  N1 a hook swallows a step method failure › A swallowed hook failure and a real failure
+  at Features/Z7.feature:4
+  payment declined
+  ✗ s13/1  When the payment fails
+
+s16  N2 outline rows sharing text, one failing at its Given › Row two
+  example: row=two
+  at Features/Z8.feature:4
+  row two did not start
+  ✗ s16/0  Given the shop is ready for two
+    1 calls in this step:
+      s16/i0  Shop  POST /customers
+
+6 failed · steps s? for the whole tree · grep "<value>" --values to trace a number

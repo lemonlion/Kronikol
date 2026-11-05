@@ -1,0 +1,53 @@
+! 3 calls carried a test id that no scenario of this run has, so no scenario and no background section shows them: 1 test id, the most calls (3) under 'a1cfb7e6-0…
+s5  Hook steps › T05 a step method that fails in BeforeScenario
+  at Features/Triggers.feature:33
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T05AStepMethodThatFailsInBeforeScenario() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T05AStepMethodThatFailsInBeforeScenario"
+  open: TestRunReport.html#sid-202fca2708f2635e
+  history: unknown — no earlier run in this stream to compare against · F
+  seeding failed
+  ✗ s5/0  Seeding fails
+    seeding failed
+    1 calls in this step:
+      s5/i0  Shop  POST /seed
+
+s6  Hook steps › T06 an AfterStep hook that throws
+  at Features/Triggers.feature:39
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T06AnAfterStepHookThatThrows() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T06AnAfterStepHookThatThrows"
+  open: TestRunReport.html#sid-59ce507ca5c9b99a
+  history: unknown — no earlier run in this stream to compare against · F
+  after step hook failed
+
+s7  Hook steps › T07 a BeforeStep hook that throws
+  at Features/Triggers.feature:45
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T07ABeforeStepHookThatThrows() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T07ABeforeStepHookThatThrows"
+  open: TestRunReport.html#sid-1e8d40b293efbdb4
+  history: unknown — no earlier run in this stream to compare against · F
+  before step hook failed
+  ✗ s7/0  Given a registered customer
+
+s8  Hook steps › T08 a failing step with steps after it
+  at Features/Triggers.feature:50
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T08AFailingStepWithStepsAfterIt() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T08AFailingStepWithStepsAfterIt"
+  open: TestRunReport.html#sid-9c2ee5bb50041909
+  history: unknown — no earlier run in this stream to compare against · F
+  payment declined
+  ✗ s8/1  When the payment fails
+    1 calls in this step:
+      s8/i2  Shop  POST /payments
+
+s13  Hook steps › T13 a step method in BeforeScenario and a failing step
+  at Features/Triggers.feature:80
+  thrown at HookSteps.Repro.Features.HookStepsFeature.T13AStepMethodInBeforeScenarioAndAFailingStep() — <scratch>
+  rerun: dotnet test --filter "FullyQualifiedName~HookSteps.Repro.Features.HookStepsFeature.T13AStepMethodInBeforeScenarioAndAFailingStep"
+  open: TestRunReport.html#sid-e7ec82cdea4531d6
+  history: unknown — no earlier run in this stream to compare against · F
+  payment declined
+  ✗ s13/2  When the payment fails
+    1 calls in this step:
+      s13/i4  Shop  POST /payments
+
+5 failed · steps s? for the whole tree · grep "<value>" --values to trace a number

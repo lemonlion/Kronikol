@@ -1,0 +1,2 @@
+Build succeeded.
+Passed!  - Failed:     0, Passed:  2142, Skipped:    28, Total:  2170, Duration: 31 m 52 s - Kronikol.Tests.EndToEnd.dll (net10.0)
