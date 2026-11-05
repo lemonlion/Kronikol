@@ -429,6 +429,76 @@ public class StepWalkTests : IDisposable
     [InlineData("text/K5-no-text-keyword-row-bar-with-none", "s0 /own=0 /ship=1")]
     public void The_other_kept_cases_read_as_they_were_measured(string name, string reads) => AssertReads(name, reads);
 
+    // ─── A mismatch reaches the report (#129, the plan's R5) ───────────
+
+    [Fact]
+    public void A_bar_that_does_not_fit_its_row_reaches_every_output()
+    {
+        var (_, reports) = Ingest("review/J15-capture-case-only");
+
+        using (var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(reports, "TestRunReport.json"))))
+        {
+            var entry = Assert.Single(data.RootElement.GetProperty("diagnostics").EnumerateArray(),
+                d => d.GetProperty("kind").GetString() == nameof(DiagnosticKind.StepAttributionMismatch));
+            Assert.Contains("up to the next marker that matches", entry.GetProperty("message").GetString());
+        }
+
+        using (var card = JsonDocument.Parse(File.ReadAllText(Path.Combine(reports, "service.json"))))
+            Assert.True(card.RootElement.GetProperty("run").GetProperty("degraded").GetProperty(nameof(DiagnosticKind.StepAttributionMismatch)).GetInt32() > 0);
+
+        var summary = new StringWriter();
+        Assert.Equal(0, QueryCommand.Run(["summary", reports], summary, new StringWriter()));
+        Assert.Contains(nameof(DiagnosticKind.StepAttributionMismatch), summary.ToString());
+
+        var answer = new StringWriter();
+        Assert.Equal(0, QueryCommand.Run(["failures", reports], answer, new StringWriter()));
+        Assert.Contains(answer.ToString().Split('\n'), line => line.StartsWith('!') && line.Contains("does not match step"));
+
+        Assert.True(File.Exists(Path.Combine(reports, "TestRunReport.labs.html")));
+    }
+
+    [Fact]
+    public void A_run_whose_bars_all_fit_lists_no_mismatch_and_writes_no_labs_page_for_it()
+    {
+        // pin
+        var (_, reports) = Ingest("position/Y4-plain");
+
+        using (var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(reports, "TestRunReport.json"))))
+            if (data.RootElement.TryGetProperty("diagnostics", out var diagnostics))
+                Assert.DoesNotContain(diagnostics.EnumerateArray(), d => d.GetProperty("kind").GetString() == nameof(DiagnosticKind.StepAttributionMismatch));
+
+        Assert.False(File.Exists(Path.Combine(reports, "TestRunReport.labs.html")));
+    }
+
+    [Fact]
+    public void A_mismatch_reaches_the_data_file_with_the_digest_off()
+    {
+        var (_, reports) = Ingest("review/J15-capture-case-only", options => options.GenerateFailuresDigest = false);
+
+        using var data = JsonDocument.Parse(ReportFile.ReadAny(Path.Combine(reports, "TestRunReport.json")));
+        Assert.Contains(data.RootElement.GetProperty("diagnostics").EnumerateArray(), d => d.GetProperty("kind").GetString() == nameof(DiagnosticKind.StepAttributionMismatch));
+    }
+
+    [Fact]
+    public void A_mismatch_reaches_the_labs_page_with_the_data_file_off()
+    {
+        var (_, reports) = Ingest("review/J15-capture-case-only", options => options.GenerateTestRunReportData = false);
+
+        Assert.False(File.Exists(Path.Combine(reports, "TestRunReport.json")));
+        Assert.True(File.Exists(Path.Combine(reports, "TestRunReport.labs.html")));
+    }
+
+    [Fact]
+    public void A_mismatch_is_listed_once_and_says_where_the_walk_picks_up_again()
+    {
+        // A hook's bar first: the bars are one out, and the last bar has no row. The message used to say every call after it
+        // lost its step, which is false past the next bar that matches.
+        var (result, _) = Ingest("review/J15-capture-case-only");
+
+        var entry = Assert.Single(result.Diagnostics, e => e.Kind == DiagnosticKind.StepAttributionMismatch);
+        Assert.DoesNotContain("interactions after it carry no stepPath", entry.Message);
+    }
+
     // ─── Helpers ───────────
 
     private void AssertReads(string name, string reads)
@@ -447,7 +517,7 @@ public class StepWalkTests : IDisposable
         return options;
     }
 
-    private (IngestResult Result, string Reports) Ingest(string name)
+    private (IngestResult Result, string Reports) Ingest(string name, Action<ReportConfigurationOptions>? configure = null)
     {
         var source = Path.Combine(AppContext.BaseDirectory, "TestData", "StepWalk", name.Replace('/', Path.DirectorySeparatorChar));
         var flagsFile = Path.Combine(source, "flags.txt");
@@ -460,6 +530,7 @@ public class StepWalkTests : IDisposable
             options.CapitaliseTitles = false;
         }
 
+        configure?.Invoke(options);
         var result = IngestPipeline.Run(new IngestRequest
         {
             InteractionFiles = [.. Directory.GetFiles(Path.Combine(source, "captures"))],

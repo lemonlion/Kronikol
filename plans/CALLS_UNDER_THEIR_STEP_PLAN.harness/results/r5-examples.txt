@@ -1,0 +1,44 @@
+# 14 projects in C:\Code\Kronikol-225r2
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllFailing/Example.Api.Tests.CiPreview.AllFailing.csproj (26 s) exit 1
+  Failed!  - Failed:    11, Passed:     0, Skipped:     0, Total:    11
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/Example.Api.Tests.CiPreview.AllPassing.csproj (15 s) exit 0
+  Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.FailingWithSteps/Example.Api.Tests.CiPreview.FailingWithSteps.csproj (17 s) exit 1
+  Failed!  - Failed:     5, Passed:     1, Skipped:     0, Total:     6
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.Mixed/Example.Api.Tests.CiPreview.Mixed.csproj (13 s) exit 1
+  Failed!  - Failed:    15, Passed:     5, Skipped:     0, Total:    20
+examples/Example.Api/tests/Example.Api.Tests.Component.BDDfy.xUnit3/Example.Api.Tests.Component.BDDfy.xUnit3.csproj (15 s) exit 0
+  Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2
+examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit2/Example.Api.Tests.Component.LightBDD.xUnit2.csproj (20 s) exit 0
+  Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3
+examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3/Example.Api.Tests.Component.LightBDD.xUnit3.csproj (19 s) exit 0
+  Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6
+examples/Example.Api/tests/Example.Api.Tests.Component.NUnit4/Example.Api.Tests.Component.NUnit4.csproj (14 s) exit 0
+  Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2
+examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Example.Api.Tests.Component.ReqNRoll.xUnit2.csproj (17 s) exit 0
+  Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2
+examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Example.Api.Tests.Component.ReqNRoll.xUnit3.csproj (19 s) exit 0
+  Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11
+examples/Example.Api/tests/Example.Api.Tests.Component.Shared/Example.Api.Tests.Component.Shared.csproj (1 s) exit 0
+examples/Example.Api/tests/Example.Api.Tests.Component.xUnit2/Example.Api.Tests.Component.xUnit2.csproj (13 s) exit 0
+  Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2
+examples/Example.Api/tests/Example.Api.Tests.Component.xUnit3/Example.Api.Tests.Component.xUnit3.csproj (15 s) exit 0
+  Passed!  - Failed:     0, Passed:     5, Skipped:     0, Total:     5
+examples/Example.Api/tests/Example.Api.Tests.Integration/Example.Api.Tests.Integration.csproj (1018 s) exit 0
+  Passed!  - Failed:     0, Passed:   259, Skipped:     0, Total:   259
+# done, 3 failures
+=== TUnit
+Test run summary: Passed! - C:\Code\Kronikol-225r2\examples\Example.Api\tests\Example.Api.Tests.Comp
+  total: 12
+  failed: 0
+  succeeded: 12
+=== LightBDD.TUnit
+Test run summary: Passed! - C:\Code\Kronikol-225r2\examples\Example.Api\tests\Example.Api.Tests.Comp
+  total: 3
+  failed: 0
+  succeeded: 3
+=== ReqNRoll.TUnit
+Test run summary: Passed! - C:\Code\Kronikol-225r2\examples\Example.Api\tests\Example.Api.Tests.Comp
+  total: 2
+  failed: 0
+  succeeded: 2

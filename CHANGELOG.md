@@ -4,7 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [5.28.4] - 2026-11-04
+## [5.28.5] - 2026-11-05
+
+The patch part moves (5.28.4 to 5.28.5): a bug fix, with no new option and no new public member (`plans/CALLS_UNDER_THEIR_STEP_PLAN.md`
+R5, #129). A run whose step bars do not fit its rows now says so, where it said nothing, which a reader can see in the ways listed below.
+
+### Fixed
+
+- **A `StepAttributionMismatch` reaches the report (#129).** It was recorded the first time an output read the attribution, which came
+  after the report had copied its diagnostics, so no output heard of it. The attribution is now read before that copy. So a run whose
+  bars do not fit its rows says so in the data file's diagnostics, in `kronikol query summary`, in `run.degraded` on its service card,
+  as a `!` line on every `query` answer, and with a `TestRunReport.labs.html` it would not otherwise have written, as any diagnostic
+  gives that page content. This costs no extra work, as both outputs it is read for read the attribution anyway. Behaviour change: a run
+  that had such bars now shows all of that, with no call read differently. A hook's bar in a capture does it, and so does a LightBDD
+  step with an object parameter, whose bar draws `[TypeName]` where its row lists the value: 20 bars in 10 scenarios on one real suite,
+  and 7 of those scenarios make no call under such a bar.
+- **That diagnostic's message says what it means.** "Interactions after it carry no stepPath" was false past the next bar that
+  matches. It now says "interactions up to the next marker that matches carry no stepPath".
+
+## [5.28.4] - 2026-11-05
 
 The patch part moves (5.28.3 to 5.28.4): bug fixes in how a call finds its step, with no new option and no new public member
 (`plans/CALLS_UNDER_THEIR_STEP_PLAN.md` R2, #128). A reader sees each change, as a call that read no step, or the wrong one, now reads its own.

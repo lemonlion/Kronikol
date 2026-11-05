@@ -531,8 +531,6 @@ public static class ReportGenerator
         foreach (var finding in parties.Diagnostics)
             ReportDiagnosticsScope.Record(finding.Kind, finding.Message);
 
-        var reportDiagnostics = ReportDiagnosticsScope.Current?.Entries ?? [];
-
         // Which call happened under which step, and the annotations worth exporting: read by the data file
         // (standard or mergeable) and by Failures.md, and deriving it records a StepAttributionMismatch.
         // Derived once per run, here, rather than once per reader, which printed every mismatch twice.
@@ -540,6 +538,12 @@ public static class ReportGenerator
         // never pays for it.
         var attribution = new Lazy<(Dictionary<string, List<string?>> StepPaths, Dictionary<string, List<ScenarioAnnotation>> Annotations)>(
             () => AttributeInteractionsToSteps(dataLogs, features));
+
+        // Before the one copy of the diagnostics every output reads, or a mismatch reaches none of them (#129).
+        if (options.GenerateTestRunReportData || options.GenerateFailuresDigest)
+            _ = attribution.Value;
+
+        var reportDiagnostics = ReportDiagnosticsScope.Current?.Entries ?? [];
 
         var actions = new List<(string Name, Action Run)>();
         void Add(string name, Action run) => actions.Add((name, run));
@@ -5426,7 +5430,7 @@ public static class ReportGenerator
 
                         if (current is null && stepMarkerCount < ordered.Count)
                             ReportDiagnosticsScope.Record(DiagnosticKind.StepAttributionMismatch,
-                                $"Step marker {stepMarkerCount + 1} does not match step '{ordered[stepMarkerCount].Text}'; interactions after it carry no stepPath.",
+                                $"Step marker {stepMarkerCount + 1} does not match step '{ordered[stepMarkerCount].Text}'; interactions up to the next marker that matches carry no stepPath.",
                                 perTest.Key);
 
                         stepMarkerCount++;

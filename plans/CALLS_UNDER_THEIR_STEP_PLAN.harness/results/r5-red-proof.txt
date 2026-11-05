@@ -1,0 +1,6 @@
+# R5's facts on R2 alone, 676aadfd. The first failed reading the data file's diagnostics, which it does not write with nothing to say, the second on the old message, and the pin passed.
+Passed Kronikol.Tests.Ingestion.StepWalkTests.A_run_whose_bars_all_fit_lists_no_mismatch_and_writes_no_labs_page_for_it [1 s]
+Failed Kronikol.Tests.Ingestion.StepWalkTests.A_bar_that_does_not_fit_its_row_reaches_every_output [193 ms]
+Failed Kronikol.Tests.Ingestion.StepWalkTests.A_mismatch_is_listed_once_and_says_where_the_walk_picks_up_again [228 ms]
+
+# The read's condition taken with && in place of ||: A_mismatch_reaches_the_data_file_with_the_digest_off and A_mismatch_reaches_the_labs_page_with_the_data_file_off failed, and A_bar_that_does_not_fit_its_row_reaches_every_output passed.

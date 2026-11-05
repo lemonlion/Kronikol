@@ -5,6 +5,7 @@ Leaves out the Playwright project and the example projects unless asked: each of
 """
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -52,5 +53,7 @@ with OUT.open("a", encoding="utf-8", newline="\n") as out:
         for error in errors:
             out.write(f"  ERROR {error}\n")
         out.flush()
+        # Keeps the disk free for other sessions: only this test project's own output goes, so a later project still builds on the rest.
+        shutil.rmtree(WT / pathlib.Path(project).parent / "bin" / "Release", ignore_errors=True)
     out.write(f"# done, {failures} failures\n")
 print("done", failures)
