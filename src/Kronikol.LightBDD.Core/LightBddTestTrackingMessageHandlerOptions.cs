@@ -33,7 +33,12 @@ public record LightBddTestTrackingMessageHandlerOptions : TestTrackingMessageHan
             info = parentStep;
 
         var stepType = info.Name?.StepTypeName?.Name;
-        TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
+
+        // Only for a suite with no step decorator (ReportWritersConfiguration's CreateStandardReportsWithDiagrams registers
+        // none): where the decorator runs, the phase is the test's, and a top-level AND is not a setup step.
+        if (stepType is not null && !StepCollector.FrameworkStepsSetPhase())
+            TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
+
         return stepType;
     }
 }

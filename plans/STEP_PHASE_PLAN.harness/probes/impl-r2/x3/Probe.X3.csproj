@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Kronikol.xUnit3" Version="$(KronikolVersion)" />
+    <PackageReference Include="Kronikol.StepTracking" Version="$(StepTrackingVersion)" PrivateAssets="all" />
+    <PackageReference Include="xRetry.v3" Version="1.0.0-rc3" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\shared\*.cs" />
+  </ItemGroup>
+</Project>

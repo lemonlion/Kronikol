@@ -91,6 +91,7 @@ public static class DefaultTrackingDiagramOverride
     public static void StartAction(string testId)
     {
         TestPhaseContext.Current = TestPhase.Action;
+        StepCollector.NotePhase(testId, TestPhase.Action);
         var log = new RequestResponseLog(
             testId,
             testId,
@@ -114,6 +115,7 @@ public static class DefaultTrackingDiagramOverride
     public static void StartSetup(string testId)
     {
         TestPhaseContext.Current = TestPhase.Setup;
+        StepCollector.NotePhase(testId, TestPhase.Setup);
     }
 
     // Delegate-based overloads for framework adapters

@@ -1,0 +1,5 @@
+# 23:40 3 mutants
+m34	KILLED	core	1	224s	the variant check dropped from heldBoundary	With_SeparateSetup_off_a_call_with_a_phase_variant_keeps_its_marker
+m35	KILLED	core	1	179s	lastTrace back to tracesForTest[^1]	A_diagram_split_just_before_the_marker_leaves_no_empty_diagram
+n06	KILLED	core	1	114s	N6: NeedsStepTypeFromHandler ignores ClientsPastBoundary	A_client_past_its_boundary_no_longer_asks_its_fetcher
+# 23:48 done

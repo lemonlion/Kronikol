@@ -1,0 +1,15 @@
+# 00:20 12 mutants
+m15c	KILLED	core	1	59s	bypass check dropped: LeaveCompletedStep's walk no longer skips a bypassed step	A_stubs_completion_leaves_its_own_step_past_a_step_bypassed_by_hand
+m15e	KILLED	core	1	56s	bypass check dropped: OutlivedStepSaysPhase's !Bypassed	A_step_bypassed_on_another_flow_does_not_make_this_flow_one_that_outli
+hn09	ABSENT	the ReferenceEquals(node.Step, completed) loop dropped
+rv01	KILLED	core	1	105s	Without by recursion again	0)
+
+rv02	SURVIVED		0	168s	BypassStep leaves its node on this flow	
+rv03	KILLED	core	1	42s	ClearSteps does not close what it clears	ClearSteps_on_another_flow_leaves_no_step_open_on_this_one
+rv04	KILLED	core	1	88s	ClearSteps leaves this flow's nodes	ClearSteps_with_a_Given_open_leaves_the_next_keyword_to_decide
+rv05	KILLED	lightbdd	1	130s	LightBDD's catch closes the stack's top alone	A_failing_step_with_a_step_left_open_above_it_closes_both
+rv06	KILLED	core	1	41s	BDDfy's catch closes the stack's top alone	A_failing_step_with_a_step_left_open_above_it_closes_both
+rv07	KILLED	core	1	52s	TakeOffFlow drops what is above the step	A_close_the_stack_gave_another_step_leaves_another_tests_step_on_this_
+rv08	KILLED	core	1	49s	TakeOffFlow does nothing	A_hand_step_closed_on_another_flow_leaves_nothing_of_the_framework_ste
+rv09	KILLED	core	1	46s	CompleteDownTo closes one step too many	A_failing_step_inside_a_woven_parent_closes_itself_alone
+# 00:34 done

@@ -1,0 +1,13 @@
+# 11:07 6 mutants
+baseline	green
+pm15e2	SURVIVED		0	77s	OutlivedStepSaysPhase's !IsOpen dropped	
+pp06	KILLED	core	1	32s	!FlowHolds(boundary) removed	A_StartAction_on_a_flow_outside_that_open_step_logs_nothing
+pp06b	KILLED	core	1	31s	!boundary.IsOpen removed	A_StartAction_on_a_flow_that_outlived_that_step_logs_nothing
+q04	KILLED	core	1	28s	a close under another test's step leaves the closed step on the flow	A_close_under_another_tests_step_lets_the_next_keyword_decide
+q13	SURVIVED		0	71s	the walkers stop at another test's step	
+q19	KILLED	core	1	29s	BDDfy's frame says no word	A_step_keeps_its_phase_with_WhenTriggersAction_off
+# 11:13 done
+# 11:13 1 mutants
+baseline	green
+q13	KILLED	core	1	28s	the walkers stop at another test's step	A_keyword_above_another_tests_step_above_an_open_When_is_a_label
+# 11:15 done

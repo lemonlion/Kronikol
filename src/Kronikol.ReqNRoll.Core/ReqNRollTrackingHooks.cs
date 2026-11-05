@@ -128,7 +128,6 @@ public class ReqNRollTrackingHooks
 
         var stepType = _scenarioContext.StepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString();
         ReqNRollTestContext.CurrentStepType = stepType;
-        TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
         _scenarioContext[ReqNRollConstants.StepStopwatchKey] = Open(stepType).Stopwatch;
     }
 
@@ -141,8 +140,11 @@ public class ReqNRollTrackingHooks
         // an outline step already has its <placeholders> substituted.
         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
         var stepInfo = _scenarioContext.StepContext.StepInfo;
+        // The keyword as written is the step's label. Its phase is the type Reqnroll resolved, And and But to the keyword
+        // they continue (#195).
         var frame = StepCollector.StartFrame(scenarioId, stepType, stepInfo.Text,
-            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText);
+            phaseKeyword: stepInfo.StepDefinitionType.ToString(),
+            table: ReqNRollStepArguments.ToBarRows(stepInfo.Table), docString: stepInfo.MultilineText);
 
         var opened = new OpenStep(stopwatch, InnermostOpenStep, stepInfo, frame);
         _scenarioContext[ReqNRollConstants.OpenStepKey] = opened;

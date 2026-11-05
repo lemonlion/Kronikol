@@ -1,0 +1,160 @@
+--- wt/src/Kronikol/Tracking/StepCollector.cs	2026-11-04 22:35:49.000000000 +0000
++++ wt-fix/src/Kronikol/Tracking/StepCollector.cs	2026-11-04 23:22:42.796544000 +0000
+@@ -62,7 +62,7 @@
+     /// <see cref="StepTrackingOptions.WhenTriggersAction"/> says, which is about step attributes.
+     /// </summary>
+     internal static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
+-        string[][]? table, string? docString, string? phaseKeyword, bool frameworkStep = true)
++        string[][]? table, string? docString, string? phaseKeyword, bool frameworkStep = true, object? owner = null)
+     {
+         if (testId is null)
+             return;
+@@ -71,6 +71,7 @@
+ 
+         var step = new CollectedStep
+         {
++            Owner = owner,
+             OriginalKeyword = keyword,
+             Text = text,
+             StartTime = Stopwatch.GetTimestamp(),
+@@ -504,6 +505,18 @@
+         }
+     }
+ 
++    /// <summary>The collected top-level steps with what the adapter said owns each, for an adapter whose own list of steps is not this one.</summary>
++    internal static (object? Owner, ScenarioStep Step)[] GetOwnedSteps(string? testId)
++    {
++        if (testId is null || !States.TryGetValue(testId, out var state))
++            return [];
++
++        lock (state)
++        {
++            return state.CompletedSteps.Select(s => (s.Owner, ToScenarioStep(s))).ToArray();
++        }
++    }
++
+     /// <summary>
+     /// Clears all collected steps for a test.
+     /// </summary>
+@@ -741,6 +754,7 @@
+ 
+     private class CollectedStep
+     {
++        public object? Owner { get; set; }
+         public bool IsAssertion { get; set; }
+         public string? OriginalKeyword { get; set; }
+         public string? EffectiveKeyword { get; set; }
+--- wt/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs	2026-11-04 22:35:49.000000000 +0000
++++ wt-fix/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs	2026-11-04 23:22:42.797567600 +0000
+@@ -41,7 +41,7 @@
+ 
+         var stepText = ExtractStepText(step.Title, keyword);
+         if (testId is not null)
+-            StepCollector.StartStep(testId, keyword, stepText, null, null, table: null, docString: null, phaseKeyword: keyword);
++            StepCollector.StartStep(testId, keyword, stepText, null, null, table: null, docString: null, phaseKeyword: keyword, owner: step.Id);
+ 
+         var closed = false;
+         try
+--- wt/src/Kronikol.BDDfy.xUnit3/BDDfyScenarioInfo.cs	2026-11-04 22:35:49.000000000 +0000
++++ wt-fix/src/Kronikol.BDDfy.xUnit3/BDDfyScenarioInfo.cs	2026-11-04 23:22:42.810082300 +0000
+@@ -62,4 +62,8 @@
+ /// <summary>
+ /// Captures information about an individual BDDfy step execution, including its keyword, text, result, and duration.
+ /// </summary>
+-public record BDDfyStepInfo(string Keyword, string Text, TestStack.BDDfy.Result Result = TestStack.BDDfy.Result.NotExecuted, TimeSpan? Duration = null);
+\ No newline at end of file
++public record BDDfyStepInfo(string Keyword, string Text, TestStack.BDDfy.Result Result = TestStack.BDDfy.Result.NotExecuted, TimeSpan? Duration = null)
++{
++    /// <summary>BDDfy's id of the step, which pairs it with the step the executor collected for it.</summary>
++    internal string? StepId { get; init; }
++}
+\ No newline at end of file
+--- wt/src/Kronikol.BDDfy.xUnit3/StepExtensions.cs	2026-11-04 22:35:49.000000000 +0000
++++ wt-fix/src/Kronikol.BDDfy.xUnit3/StepExtensions.cs	2026-11-04 23:22:42.812100300 +0000
+@@ -16,9 +16,9 @@
+         {
+             var firstWord = title[..firstSpace];
+             if (Keywords.Any(k => k.Equals(firstWord, StringComparison.OrdinalIgnoreCase)))
+-                return new BDDfyStepInfo(firstWord, title[(firstSpace + 1)..], step.Result, duration);
++                return new BDDfyStepInfo(firstWord, title[(firstSpace + 1)..], step.Result, duration) { StepId = step.Id };
+         }
+ 
+-        return new BDDfyStepInfo("Step", title, step.Result, duration);
++        return new BDDfyStepInfo("Step", title, step.Result, duration) { StepId = step.Id };
+     }
+ }
+--- wt/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs	2026-11-04 22:35:49.000000000 +0000
++++ wt-fix/src/Kronikol.BDDfy.xUnit3/ScenarioInfoExtensions.cs	2026-11-04 23:22:42.840773900 +0000
+@@ -76,7 +76,7 @@
+                                 Duration = x.Duration != TimeSpan.Zero ? x.Duration : null,
+                                 EndedAt = x.EndedAt,
+                                 Steps = x.Steps.Count > 0
+-                                    ? MapSteps(x.Steps, StepCollector.GetSteps(x.TestId))
++                                    ? MapSteps(x.Steps, StepCollector.GetOwnedSteps(x.TestId))
+                                     : StepCollector.GetSteps(x.TestId) is { Length: > 0 } collectedSteps ? collectedSteps : null,
+                                 Tags = classified.Tags.Length > 0 ? classified.Tags : null,
+                                 OutlineId = outlineId,
+@@ -84,7 +84,7 @@
+                                 OutlineTitleGenerated = outlineId is not null && (x.TestMethodName is not null || x.TitleGenerated),
+                                 ExampleValues = exampleValues is { Count: > 0 } ? exampleValues : null,
+                                 ExampleRawValues = exampleRawValues,
+-                                Attachments = StepCollector.GetScenarioAttachments(x.TestId),
++                                Attachments = ScenarioAttachments(x),
+                             };
+                         }).ToArray());
+ 
+@@ -101,24 +101,21 @@
+             }).ToArray();
+     }
+ 
+-    private static ScenarioStep[] MapSteps(List<BDDfyStepInfo> steps, ScenarioStep[]? collectedSteps = null)
++    private static ScenarioStep[] MapSteps(List<BDDfyStepInfo> steps, (object? Owner, ScenarioStep Step)[] collected)
+     {
+         var mapped = new ScenarioStep[steps.Count];
+         var priorFailure = false;
+         for (var i = 0; i < steps.Count; i++)
+         {
++            var own = OwnStep(steps[i], collected);
+             mapped[i] = new ScenarioStep
+             {
+                 Keyword = steps[i].Keyword,
+                 Text = steps[i].Text,
+                 Status = steps[i].Result.ToStepResult(priorFailure),
+                 Duration = steps[i].Duration,
+-                SubSteps = collectedSteps is not null && i < collectedSteps.Length
+-                    ? collectedSteps[i].SubSteps
+-                    : null,
+-                Attachments = collectedSteps is not null && i < collectedSteps.Length
+-                    ? collectedSteps[i].Attachments
+-                    : null,
++                SubSteps = own?.SubSteps,
++                Attachments = own?.Attachments,
+             };
+             if (steps[i].Result == TestStack.BDDfy.Result.Failed)
+                 priorFailure = true;
+@@ -126,6 +123,25 @@
+         return mapped;
+     }
+ 
++    // The first step collected for a reported step: a later row of its examples, or a retry, shares its id.
++    private static ScenarioStep? OwnStep(BDDfyStepInfo step, (object? Owner, ScenarioStep Step)[] collected)
++    {
++        foreach (var candidate in collected)
++            if (candidate.Owner is not null && Equals(candidate.Owner, step.StepId))
++                return candidate.Step;
++        return null;
++    }
++
++    // What landed on a step no reported step shows (a tear down, a Setup, a later row, a second story) has nowhere else to be.
++    private static FileAttachment[]? ScenarioAttachments(BDDfyScenarioInfo info)
++    {
++        var scenario = StepCollector.GetScenarioAttachments(info.TestId) ?? [];
++        var collected = StepCollector.GetOwnedSteps(info.TestId);
++        var shown = info.Steps.Select(s => OwnStep(s, collected)).Where(s => s is not null).ToHashSet();
++        FileAttachment[] all = [.. scenario, .. collected.Where(c => !shown.Contains(c.Step)).SelectMany(c => c.Step.Attachments ?? [])];
++        return all.Length > 0 ? all : null;
++    }
++
+     /// <summary>
+     /// Numbers the titles a story repeats, ` [1]`, ` [2]`, in the story's order. The suffix is in the id, so the ids
+     /// number the titles 5.16.4 showed alike (each scenario's recorded key), as it did; a title shown takes its number

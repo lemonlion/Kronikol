@@ -41,12 +41,13 @@ public class TestCountTests
 
     [Fact]
     public void An_assembly_is_the_sum_of_its_scenario_methods() =>
-        Assert.Equal(1 + 2 + 3 + 2 + 4 + 1, typeof(CountedScenarios).Assembly.CountNumberOfTestsInAssembly());
+        Assert.Equal(1 + 2 + 3 + 2 + 4 + 1 + typeof(StepPhaseNoDecoratorTests).GetMethods().Count(m => m.GetCustomAttributes(typeof(ScenarioAttribute), false).Length > 0),
+            typeof(CountedScenarios).Assembly.CountNumberOfTestsInAssembly());
 }
 
 /// <summary>
-/// The scenario methods the count reads, and the only ones in this assembly. The class is abstract, so xUnit never runs
-/// them: a scenario runs only in a LightBDD scope, which this suite does not set up.
+/// The scenario methods the count reads. The class is abstract, so xUnit never runs them. The only others in this assembly
+/// are <see cref="StepPhaseNoDecoratorTests"/>'s, which the scope beside them runs.
 /// </summary>
 public abstract class CountedScenarios
 {

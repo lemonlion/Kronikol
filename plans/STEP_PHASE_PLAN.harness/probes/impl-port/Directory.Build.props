@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);CS1591;CS4014;xUnit1041;CA2024;CS0618;xUnit1051;CS1998;NU1603;NU1605;xUnit1031;xUnit1030;CS0162</NoWarn>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">5.29.2</KronikolVersion>
+    <StepTrackingVersion Condition="'$(StepTrackingVersion)' == ''">$(KronikolVersion)</StepTrackingVersion>
+    <MixSuffix Condition="'$(CoreVersion)' != ''">-$(CoreVersion)</MixSuffix>
+    <BaseIntermediateOutputPath>$(MSBuildProjectDirectory)\obj-$(KronikolVersion)-$(StepTrackingVersion)$(MixSuffix)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildProjectDirectory)\bin-$(KronikolVersion)-$(StepTrackingVersion)$(MixSuffix)\</BaseOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin-*/**;obj-*/**;out*/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(CoreVersion)' != ''">
+    <PackageReference Include="Kronikol" Version="$(CoreVersion)" />
+  </ItemGroup>
+</Project>

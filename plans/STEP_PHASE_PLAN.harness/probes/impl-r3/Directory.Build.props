@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);CS1591;CS4014;CS1998;CS0618;CS0162;xUnit1041;xUnit1031;xUnit1030;xUnit1051;CA2024</NoWarn>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">5.28.2</KronikolVersion>
+    <StepTrackingVersion Condition="'$(StepTrackingVersion)' == ''">$(KronikolVersion)</StepTrackingVersion>
+    <AssertionTrackingVersion Condition="'$(AssertionTrackingVersion)' == ''">$(KronikolVersion)</AssertionTrackingVersion>
+    <BDDfyVersion Condition="'$(BDDfyVersion)' == ''">8.0.1.3</BDDfyVersion>
+  </PropertyGroup>
+</Project>

@@ -8,9 +8,9 @@ public enum TestPhase
     /// <summary>No phase detection active — phase-specific overrides are ignored.</summary>
     Unknown = 0,
 
-    /// <summary>The setup phase (BDD Given/And/But steps, or before <c>StartAction()</c>).</summary>
+    /// <summary>The setup phase (BDD Given steps and the steps that continue them, or before <c>StartAction()</c>).</summary>
     Setup = 1,
 
-    /// <summary>The action phase (BDD When/Then steps, or after <c>StartAction()</c>).</summary>
+    /// <summary>The action phase (BDD When/Then steps and the steps that continue them, or after <c>StartAction()</c>).</summary>
     Action = 2
 }

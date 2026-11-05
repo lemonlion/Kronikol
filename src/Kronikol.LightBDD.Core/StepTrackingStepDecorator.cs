@@ -32,7 +32,9 @@ internal sealed class StepTrackingStepDecorator : IStepDecorator
         try { testId = ScenarioExecutionContext.CurrentScenario.Info.RuntimeId.ToString(); }
         catch { /* not in scenario context */ }
 
-        var frame = StepCollector.StartFrame(testId, keyword, text);
+        // A suite's BUT continues the step before it, as LightBDD's own AND does.
+        var phaseKeyword = string.Equals(keyword, "BUT", StringComparison.OrdinalIgnoreCase) ? "AND" : keyword;
+        var frame = StepCollector.StartFrame(testId, keyword, text, phaseKeyword: phaseKeyword);
         if (frame is { } opened)
             Frames[step.Info.RuntimeId] = opened;
 

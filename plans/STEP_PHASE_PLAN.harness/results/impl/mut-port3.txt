@@ -1,0 +1,15 @@
+# 11:32 12 mutants
+baseline	green
+pm04	KILLED	core	4	27s	OutlivedStepSaysPhase dropped	A_flow_that_outlived_a_step_it_was_forked_in_can_read_its_own_phase_wi, A_flow_forked_in_a_Given_keeps_each_of_its_keywords_to_itself, A_keyword_on_a_flow_forked_inside_a_closed_step_moves_nothing_of_the_t, A_keyword_on_a_flow_that_outlived_its_step_draws_none_and_a_When_on_th
+q23	KILLED	core	6	28s	a framework's step on a flow holding a closed step keeps its phase to itself	An_async_Given_that_finished_at_once_leaves_the_When_to_decide, An_async_Given_that_finished_at_once_leaves_the_When_to_draw_the_bound, An_async_When_after_an_async_Given_draws_the_boundary_once, An_async_Given_that_has_ended_leaves_the_When_to_decide
+pm13	KILLED	core	1	27s	flowPhase dropped, always state.Phase	An_And_reads_a_phase_its_flow_wrote
+pm13b	KILLED	core	51	27s	state.Phase dropped, always flowPhase	A_keyword_under_a_keyword_is_a_label_while_it_runs_and_after(outer:, A_keyword_under_a_keyword_is_a_label_while_it_runs_and_after(outer:, A_keyword_under_a_keyword_is_a_label_while_it_runs_and_after(outer:, A_keyword_under_a_keyword_is_a_label_while_it_runs_and_after(outer:
+q25	KILLED	core	2	28s	the flow's word over the test's steps	An_And_continues_the_tests_steps_and_not_what_the_flow_held_before_the, An_And_continues_the_tests_steps_and_not_what_the_flow_held_before_the
+pn01	KILLED	core	1	27s	(isFrame || !StepsSetPhase) dropped from the decision	A_woven_When_after_a_frameworks_steps_began_draws_none
+q18	KILLED	core	2	27s	Reqnroll's frame reads the word as written	A_first_position_And_reads_the_type_Reqnroll_resolved, Every_keyword_as_written_reads_the_type_Reqnroll_resolved_and_the_step
+q20	KILLED	lightbdd	1	45s	LightBDD's handler writes under a framework's steps	The_fetcher_writes_nothing_once_a_step_has_decided
+q24	KILLED	core	1	17s	the signature an adapter of 5.29.3 binds to is gone	StartFrame(string?, string?, string, string?, string
+q27	KILLED	core	1	44s	a flow that outlived a step forgets it once it leaves a step of its own	A_flow_forked_in_a_Given_keeps_each_of_its_keywords_to_itself
+q28	SURVIVED		0	90s	a step bypassed on the flow counts as one it outlived	
+q29	KILLED	lightbdd	1	85s	LightBDD's fetcher writes a keyword-free step's Unknown	A_step_with_no_type_leaves_its_step_attributes_to_decide
+# 11:41 done

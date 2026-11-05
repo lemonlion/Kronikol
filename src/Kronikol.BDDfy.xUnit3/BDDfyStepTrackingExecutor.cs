@@ -92,18 +92,25 @@ internal class BDDfyStepTrackingExecutor(IStepExecutor inner) : IStepExecutor
         };
 
         CurrentStepTypeLocal.Value = keyword?.ToUpperInvariant();
-        TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(keyword);
 
         // Resolve the xUnit test ID for StepCollector
         string? testId = null;
         try { testId = Xunit.TestContext.Current.Test?.UniqueID; } catch { /* not in xUnit context */ }
+
+        // StartFrame decides a keyword's phase, but for a story with no test id, which it skips. A step with no keyword at the top of a
+        // story reads Unknown, whatever the flow held before the story. Under a step that said a phase, a story is a label, and
+        // the step gets back what its flow held.
+        var underKeyword = testId is not null && StepCollector.UnderOpenKeyword(testId);
+        var phaseBefore = underKeyword ? TestPhaseContext.Current : TestPhase.Unknown;
+        if (testId is null || (keyword is null && !underKeyword))
+            TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(keyword);
 
         // BDDfy waits on a step's task before the next step, so a step still waiting here was left by an executor around this one, and is over.
         // A story run inside that step runs in its flow, and stays under it.
         CloseWaiting(testId, waiting => !RunsInside(waiting));
 
         var stepText = ExtractStepText(step.Title, keyword);
-        var frame = StepCollector.StartFrame(testId, keyword, stepText);
+        var frame = StepCollector.StartFrame(testId, keyword, stepText, phaseKeyword: keyword);
         var outer = RunningIn.Value;
         if (frame is { } running)
             RunningIn.Value = new Running(running, outer);
@@ -151,7 +158,7 @@ internal class BDDfyStepTrackingExecutor(IStepExecutor inner) : IStepExecutor
                 StepCollector.CompleteFrame(testId, frame, passed: true);
             RunningIn.Value = outer;
             CurrentStepTypeLocal.Value = null;
-            TestPhaseContext.Current = TestPhase.Unknown;
+            TestPhaseContext.Current = phaseBefore;
         }
     }
 

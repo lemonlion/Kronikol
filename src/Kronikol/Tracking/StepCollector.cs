@@ -72,8 +72,16 @@ public static class StepCollector
     /// Starts a step that a framework's adapter opens for a step of the framework's own, and returns the id the adapter
     /// closes it by (<see cref="CompleteFrame"/>) and finds it by (<see cref="ScenarioStep.CollectedId"/>).
     /// </summary>
+    /// <remarks>
+    /// <paramref name="phaseKeyword"/> names the step's phase, and stands in for <paramref name="keyword"/> there, so Reqnroll's And and But are written as they
+    /// are and take the phase of the keyword they continue (#195). It holds whatever <see cref="StepTrackingOptions.WhenTriggersAction"/> says, which is about step attributes.
+    /// </remarks>
+    internal static int? StartFrame(string? testId, string? keyword, string text, string? phaseKeyword, string[][]? table = null, string? docString = null)
+        => OpenStep(testId, keyword, text, null, null, table, docString, isFrame: true, phaseKeyword: phaseKeyword);
+
+    /// <summary>The same with no word for its phase, as an adapter of 5.29.3 calls it: a package can move ahead of another.</summary>
     internal static int? StartFrame(string? testId, string? keyword, string text, string[][]? table = null, string? docString = null)
-        => OpenStep(testId, keyword, text, null, null, table, docString, isFrame: true);
+        => StartFrame(testId, keyword, text, phaseKeyword: null, table, docString);
 
     /// <summary>Closes the frame <paramref name="frameId"/>, by id. A step still running under it finishes by itself.</summary>
     internal static void CompleteFrame(string? testId, int? frameId, bool passed, string? errorMessage = null)
@@ -91,8 +99,7 @@ public static class StepCollector
             Complete(state, frame, passed, errorMessage);
         }
 
-        if (ReferenceEquals(FlowStep.Value, frame))
-            FlowStep.Value = FlowAfter(frame);
+        LeaveInThisFlow(frame);
     }
 
     /// <summary>The step a call logged now happened under.</summary>
@@ -139,7 +146,7 @@ public static class StepCollector
     private static CollectedStep? LastOpenFrame(TestStepState state) => state.Open.LastOrDefault(s => s.IsFrame);
 
     private static int? OpenStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
-        string[][]? table, string? docString, bool isFrame = false, bool byHand = false)
+        string[][]? table, string? docString, bool isFrame = false, bool byHand = false, string? phaseKeyword = null)
     {
         if (testId is null)
             return null;
@@ -147,6 +154,9 @@ public static class StepCollector
         var state = States.GetOrAdd(testId, _ => new TestStepState());
         // Not under the lock: a resolver is a consumer's code.
         var isTheTestsFlow = !isFrame && FlowStep.Value?.State != state && FlowIsTheTests(testId, state);
+        var named = phaseKeyword is not null || FrameworkNamesThisFlow();
+        var flowPhase = TestPhaseContext.Current;
+        var phaseNow = TestPhase.Unknown;
 
         var step = new CollectedStep
         {
@@ -161,7 +171,9 @@ public static class StepCollector
         lock (state)
         {
             var parent = isFrame ? ParentOfNewFrame(state) : ParentOfNewStep(state, isTheTestsFlow);
-            if (parent is null && FlowStep.Value is { } cameFrom && !ReferenceEquals(cameFrom.State, state))
+            // Another test's step stays on this flow beneath this one, and so does the step this flow outlived: leaving this step leaves it still that flow.
+            if (parent is null && FlowStep.Value is { } cameFrom
+                && (!ReferenceEquals(cameFrom.State, state) || (!isFrame && cameFrom is { SaysPhase: true, Bypassed: false, IsOpen: false })))
                 step.CameFrom = cameFrom;
             // A framework's step with none open: what a hook left open is under no step of the scenario, and holds no row.
             if (isFrame && parent is null)
@@ -182,6 +194,25 @@ public static class StepCollector
 
             // Resolve effective keyword (Given/And/And sequencing)
             step.EffectiveKeyword = ResolveKeyword(state, keyword, isSubStep: parent is not null);
+
+            // The outermost open step that says anything about phases decides the test's phase, and a keyword under it is a
+            // label (#224). A step with no keyword says nothing, so the keywords under it still decide.
+            var says = phaseKeyword is not null
+                ? PhaseConfiguration.PhaseOfStep(phaseKeyword, !state.StepsSetPhase && flowPhase != TestPhase.Unknown ? flowPhase : state.Phase)
+                : Options.WhenTriggersAction ? PhaseConfiguration.PhaseOfAttribute(keyword) : null;
+            step.SaysPhase = says is not (null or TestPhase.Unknown);
+            if (step.SaysPhase && !OpenStepSaysPhase(state))
+            {
+                phaseNow = says!.Value;
+
+                // A flow the framework does not name, or one that outlived the step it was forked inside, runs for the test and is
+                // not the test: its step keeps its phase to itself. A framework's own step is the test wherever it runs.
+                if (named && (isFrame || !OutlivedStepSaysPhase(state)))
+                {
+                    state.StepsSetPhase |= isFrame;
+                    state.Phase = phaseNow;
+                }
+            }
 
             isTopLevel = parent is null;
             // Its place among its siblings is kept from the start, so steps read in the order they began.
@@ -214,24 +245,112 @@ public static class StepCollector
             DefaultTrackingDiagramOverride.InsertPlantUml(testId, bar, DiagramMarkerKind.Step);
         }
 
-        // Phase transitions: set ambient test phase based on keyword
-        if (Options.WhenTriggersAction && keyword is not null)
-        {
-            switch (keyword)
-            {
-                case "Given":
-                case "But":
-                    TestPhaseContext.Current = TestPhase.Setup;
-                    break;
-                case "When":
-                case "Then":
-                case "ButWhen":
-                    TestPhaseContext.Current = TestPhase.Action;
-                    break;
-            }
-        }
+        // This flow reads its own step's phase from here on, and so does a flow the framework cannot name.
+        if (phaseNow != TestPhase.Unknown)
+            TestPhaseContext.Current = phaseNow;
 
         return step.Ordinal;
+    }
+
+    /// <summary>
+    /// Whether the framework itself says this flow is running a test. A <see cref="TestIdentityScope"/> alone, on a thread or on the
+    /// server's side of a call, runs for the test and is not the test.
+    /// </summary>
+    private static bool FrameworkNamesThisFlow()
+    {
+        // A detached flow inherits the framework's context and is nobody's test, as TestInfoResolver reads it.
+        if (TestIdentityScope.IsDetached)
+            return false;
+
+        if (Track.TestIdResolver is not { } resolver)
+            return true;
+
+        try
+        {
+            return resolver() is not null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Notes a phase the test set itself, with <c>StartSetup()</c> or <c>StartAction()</c>, so a step that continues the one
+    /// before it continues that.
+    /// </summary>
+    internal static void NotePhase(string? testId, TestPhase phase)
+    {
+        if (testId is null)
+            return;
+
+        var state = States.GetOrAdd(testId, _ => new TestStepState());
+        lock (state)
+        {
+            state.Phase = phase;
+        }
+    }
+
+    /// <summary>Whether a step of this test open in this flow says a phase: a story or a step under it is a label.</summary>
+    internal static bool UnderOpenKeyword(string testId) => States.TryGetValue(testId, out var state) && OpenStepSaysPhase(state);
+
+    // Walks this flow's steps, another test's among them, and reads only this test's.
+    private static bool OpenStepSaysPhase(TestStepState state)
+    {
+        for (var step = FlowStep.Value; step is not null; step = step.Parent ?? step.CameFrom)
+            if (ReferenceEquals(step.State, state) && step.SaysPhase && step.IsOpen)
+                return true;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Whether this flow was forked inside a step that said a phase and has ended, so it outlived that step. A bypassed step has ended by
+    /// the time its stub returns, and says nothing of this flow.
+    /// </summary>
+    private static bool OutlivedStepSaysPhase(TestStepState state)
+    {
+        for (var step = FlowStep.Value; step is not null; step = step.Parent ?? step.CameFrom)
+            if (ReferenceEquals(step.State, state) && step.SaysPhase && !step.Bypassed && !step.IsOpen)
+                return true;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Whether this test's framework has started a step that decided its phase, so the phase an HTTP handler's fetcher reports for a
+    /// call has nothing to add.
+    /// </summary>
+    internal static bool FrameworkStepsSetPhase()
+    {
+        if (ResolveTestId() is not { } testId || !States.TryGetValue(testId, out var state))
+            return false;
+
+        lock (state)
+            return state.StepsSetPhase;
+    }
+
+    /// <summary>
+    /// A step closed by someone's completion is no longer what this flow is in, though it may be under what this flow entered after it: a step left
+    /// open above it, closed on another flow, or another test's, which stays.
+    /// </summary>
+    private static void LeaveInThisFlow(CollectedStep closed)
+    {
+        CollectedStep? anotherTests = null;
+        for (var step = FlowStep.Value; step is not null; step = step.Parent ?? step.CameFrom)
+        {
+            if (ReferenceEquals(step, closed))
+            {
+                if (anotherTests is null)
+                    FlowStep.Value = FlowAfter(closed);
+                else
+                    anotherTests.CameFrom = FlowAfter(closed);
+                return;
+            }
+
+            if (!ReferenceEquals(step.State, closed.State))
+                anotherTests = step;
+        }
     }
 
     /// <summary>
@@ -262,8 +381,7 @@ public static class StepCollector
             Complete(state, completed, passed, errorMessage);
         }
 
-        if (ReferenceEquals(FlowStep.Value, completed))
-            FlowStep.Value = FlowAfter(completed);
+        LeaveInThisFlow(completed);
     }
 
     private static void Complete(TestStepState state, CollectedStep step, bool passed, string? errorMessage)
@@ -873,6 +991,9 @@ public static class StepCollector
     private static CollectedStep? LeaveFlowStep()
     {
         var step = FlowStep.Value;
+        // A step bypassed on another flow has closed, and stays on this one: the stub leaving is the one under it.
+        while (step is { IsOpen: false, Bypassed: true })
+            step = step.Parent;
         if (step is null || !step.IsOpen)
             return null;
         // A stub whose StartStep found no test opened nothing: the flow's step is someone else's.
@@ -919,6 +1040,12 @@ public static class StepCollector
     {
         public TestStepState() => OutOfItsSteps = new CollectedStep { State = this, EndTime = 1 };
 
+        /// <summary>The phase the test holds: the last that a step deciding it, or the test itself, set.</summary>
+        public TestPhase Phase { get; set; }
+
+        /// <summary>A framework's step has decided this test's phase, so what an HTTP handler's fetcher says of it has nothing to add.</summary>
+        public bool StepsSetPhase { get; set; }
+
         /// <summary>Which identity scope the test's steps began under. A flow under another began its own.</summary>
         public object? IdentityMark { get; } = TestIdentityScope.Mark;
         public ConcurrentDictionary<Guid, (CollectedStep Step, Guid Request)> CallsInFlight { get; } = new();
@@ -940,6 +1067,9 @@ public static class StepCollector
         public bool IsFrame { get; set; }
         public bool ByHand { get; set; }
         public bool StubStillToComplete { get; set; }
+
+        // It said a phase, whether or not it decided the test's.
+        public bool SaysPhase { get; set; }
 
         // The step of another test this flow was in when this one opened with no parent of its own.
         public CollectedStep? CameFrom { get; set; }

@@ -9,8 +9,8 @@ public static class PhaseConfiguration
 {
     /// <summary>
     /// Returns <c>true</c> if tracking should occur for the current phase.
-    /// When the phase is <see cref="TestPhase.Unknown"/> (no phase detection),
-    /// tracking is always allowed.
+    /// When the phase is <see cref="TestPhase.Unknown"/> (no phase detection, or a flow no step's phase has
+    /// reached), tracking is always allowed.
     /// </summary>
     public static bool ShouldTrack(bool trackDuringSetup, bool trackDuringAction)
     {
@@ -49,12 +49,39 @@ public static class PhaseConfiguration
             ? [defaultVerbosity, setupVerbosity ?? defaultVerbosity, actionVerbosity ?? defaultVerbosity]
             : [GetEffectiveVerbosity(defaultVerbosity, setupVerbosity, actionVerbosity)];
 
+    /// <summary>The phase a step attribute's keyword, or a hand-made step's, says. Exact case: a word it does not know says nothing.</summary>
+    internal static TestPhase? PhaseOfAttribute(string? keyword) => keyword switch
+    {
+        "Given" or "But" => TestPhase.Setup,
+        "When" or "Then" or "ButWhen" => TestPhase.Action,
+        _ => null
+    };
+
     /// <summary>
-    /// Maps a BDD step-type string (e.g. "Given", "When", "Then") to a <see cref="TestPhase"/>.
+    /// What a step's keyword says about its test's phase: the phase it moves the test to, <paramref name="previous"/> for
+    /// a keyword that continues the step before it, or null for no keyword or a word that says nothing about phases
+    /// (a LightBDD step type of the suite's own). <c>But</c> is <c>[ButStep]</c>'s, a setup step; an adapter gives a
+    /// framework's <c>But</c>, which continues the step before it, as the keyword it continues.
+    /// </summary>
+    internal static TestPhase? PhaseOfStep(string? keyword, TestPhase previous) => keyword?.ToUpperInvariant() switch
+    {
+        "GIVEN" or "SETUP" or "BUT" => TestPhase.Setup,
+        "WHEN" or "THEN" or "BUTWHEN" => TestPhase.Action,
+        "AND" => previous,
+        _ => null
+    };
+
+    /// <summary>
+    /// Maps a BDD step-type string (e.g. "Given", "When", "Then") to a <see cref="TestPhase"/>. It reads one word with
+    /// nothing before it, so <c>And</c> and <c>But</c>, which continue a step, read as <see cref="TestPhase.Setup"/>; a
+    /// test's steps go through <see cref="StepCollector"/>, which knows the step before.
     /// </summary>
     public static TestPhase ResolvePhaseFromStepType(string? stepType)
     {
         if (stepType is null) return TestPhase.Unknown;
+
+        if (stepType.StartsWith("BUTWHEN", StringComparison.OrdinalIgnoreCase))
+            return TestPhase.Action;
 
         if (stepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
             || stepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)

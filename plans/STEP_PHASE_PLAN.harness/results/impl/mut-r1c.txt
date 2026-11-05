@@ -1,0 +1,3 @@
+# 23:59 1 mutants
+hn09	KILLED	core	1	63s	the ReferenceEquals(node.Step, completed) loop dropped	A_hand_step_closed_on_another_flow_leaves_nothing_of_the_framework_ste
+# 00:00 done

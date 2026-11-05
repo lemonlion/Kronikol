@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);CS1591;CS4014;xUnit1041;CA2024;NU1603;CS8602;CS8618;xUnit1031;xUnit1051</NoWarn>
+    <KronikolVersion Condition="'$(KronikolVersion)' == ''">5.28.2</KronikolVersion>
+    <WeaverVersion Condition="'$(WeaverVersion)' == ''">$(KronikolVersion)</WeaverVersion>
+    <RestoreNoCache>false</RestoreNoCache>
+  </PropertyGroup>
+</Project>

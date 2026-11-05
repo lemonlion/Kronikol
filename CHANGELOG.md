@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.30.3] - 2026-11-05
+
+The patch part moves (5.30.2 to 5.30.3): a fix of what moves a test's phase, with no new option and no new public member
+(`plans/STEP_PHASE_PLAN.md` R1). It closes #195 and #224. Behaviour changes a report's readers will see are listed below, since a phase decides what
+`TrackDuringSetup`, `TrackDuringAction`, `SetupVerbosity` and `ActionVerbosity` do to a call. There is no rule version and no history mark: a call's phase is not in its
+fingerprint, so only a suite with a per-phase option can see a change of calls, and that one run is the fix doing what the option says.
+
+### Fixed
+
+- **A keyword under a step with a keyword no longer moves the phase (#224), on every adapter.** The outermost step open in a flow
+  that says anything about phases decides, and a keyword under it is a label. So a `[GivenStep]` inside a When step leaves the rest of
+  the When reading Action, and its own calls too, where the action under test used to read Setup and a `TrackDuringSetup = false` client
+  dropped it. A `[WhenStep]` inside a Given leaves the Given reading Setup. The same holds after a BDDfy async step's first `await`, as 5.29.3 keeps that step open.
+  A step with no keyword says nothing, so a `[Step]` wrapping a `[GivenStep]` and a `[WhenStep]` still has them decide, and a Given left running beside a When, as in
+  `Task.WhenAll(Given(), When())`, is not above it. This moves a call's `phase`, `--phase`, `--group-by phase`, the service card's phases, and what the per-phase options do.
+- **`And`, `But` and `*` on Reqnroll read as the step they continue (#195),** where the wiki documented Setup. Calls that
+  `TrackDuringSetup = false` hid in an `And` after a When now appear, and the reverse. `[ButStep]` stays Setup, as documented.
+- **LightBDD's calls in a typed step carry a phase,** `setup` included, where every call in a plain scenario but an HTTP call before
+  the first When's read `Unknown`. So its trackers' phase options begin to apply: a suite with `TrackDuringSetup = false` on a non-HTTP tracker
+  sees those calls go, as it asked. A step with no type still reads `Unknown`, unless a step attribute inside it says otherwise. An `AND` with nothing before it still takes its HTTP phase
+  from the fetcher. A step type of a suite's own that only starts with a keyword, `WHENEVER` for one, reads `Unknown`, where it read Action.
+- **A step on a flow that is not the test's keeps its phase to itself.** A keyword step on a detached flow, on a thread or a server's flow
+  with only a `TestIdentityScope`, or on a flow that outlived the step it was forked in, reads its phase in that flow, as it did, and moves
+  nothing else.
+- **`PhaseConfiguration.ResolvePhaseFromStepType("ButWhen")` is Action,** as the step attribute's phase always was. It read Setup, as the
+  word starts with `But`.
+
+### Changed
+
+- **A keyword step started by hand and never completed now pins its flow,** so every later keyword on that flow is a label. A step opened in a constructor and closed in `Dispose` reads as a step around
+  the whole test, so the keywords inside it are labels too. With `TrackDuringSetup = false` a Given left open costs the report the calls after it, with no message. A left-open step is a bug in the consumer's code, which went unseen, as the
+  next keyword corrected the phase: close the step, or give a step around a whole test no keyword. `ClearSteps` ends it: no step stays open past it.
+- **A phase set by hand inside a keyword step lasts until that step ends,** as an inner keyword is a label. A When that sets Setup by hand then runs an inner When reads Setup through it, and
+  a Given that calls `StartAction()` then runs an inner Given reads Action. A Given that reuses a When to arrange reads Setup through it, so `TrackDuringSetup = false` drops those calls. A save and
+  restore around the inner step holds.
+- A BDDfy story run inside a When step is a label, so its steps read Action, and so does what follows it, where the story's Given read Setup and what followed read `Unknown`.
+- **What the rule moves for a BDDfy async step on a per-phase option.** A woven `[GivenStep]` under an async When reads Action, so with `TrackDuringSetup = false` its calls are recorded where they were dropped,
+  and with `TrackDuringAction = false` they are dropped where they were recorded. A woven `[WhenStep]` under an async Given reads Setup, the other way round.
+- **Update the Kronikol packages together.** An older `Kronikol.StepTracking` with this core leaves a step open after a getter or a Task stub that
+  throws, and an open step now pins its flow. An adapter of 5.29.3 still runs on this core; `Kronikol.ReqNRoll.xUnit3` 5.29.2 fails with a `MissingMethodException` on any core from 5.29.3.
+- **On an HTTP client the implicit boundary still reads the step's word, until the boundary moves to the step in the next minor** (`plans/STEP_PHASE_PLAN.md` R2). So a nested When under a Given draws
+  the boundary, its first call reads Action and the calls after it Setup, and a When with only a message, then an And, draws the And's call inside the Setup partition while `query` says Action.
+- The wiki's `Phase-Aware-Tracking`, `Step-Tracking`, `Diagram-Customisation` and `Tracking-Custom-Dependencies` say all this, and its rule "Use `[Step]` for a sub-step" is gone.
+
+### Known
+
+- A keyword step opened by hand in a `[BeforeScenario]` hook and still open makes the scenario's first step a label, and the next one decides, as the first has no way to tell that step from one it runs inside. Give such a step no keyword.
+- Two contrived shapes cost more than they did, as a keyword step walks what its flow is inside: 5,000 keyword steps under 20,000 steps left open took 2.6 s, and 20,000 tests that each leave a keyword step on one flow took 6.4 s. A long test took what it took.
+
 ## [5.30.2] - 2026-11-05
 
 The patch part moves (5.30.1 to 5.30.2): two LightBDD bug fixes, with no new option and no new public member (`plans/STEP_IDENTITY_PLAN.md` R3).

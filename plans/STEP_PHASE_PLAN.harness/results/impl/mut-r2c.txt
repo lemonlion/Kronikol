@@ -1,0 +1,16 @@
+# 01:52 14 mutants
+rw01	KILLED	core	3	61s	a woven Then draws the boundary	A_woven_When_after_a_woven_Then_draws_none, A_woven_Then_after_a_Given_draws_none_and_a_frameworks_does, An_act_between_a_woven_Given_and_a_woven_Then_has_no_partition_over_it
+rw02	KILLED	core	2	40s	the last marker always the boundary	A_retry_that_clears_its_steps_keeps_the_first_attempts_boundary, A_capture_with_markers_that_do_not_replace_keeps_its_first
+rw03	KILLED	core	1	38s	the first marker always the boundary	An_explicit_StartAction_in_the_step_that_drew_the_boundary_moves_the_p
+rw04	KILLED	core	1	35s	a store drops a marker's flag	A_marker_that_replaces_another_stays_one_through_a_store
+rw05	ABSENT	a step's marker never says it replaces
+rw06	KILLED	core	2	42s	an explicit marker never says it replaces	A_marker_says_whether_it_replaces_an_earlier_boundary, An_explicit_StartAction_in_the_step_that_drew_the_boundary_moves_the_p
+rw07	KILLED	core	1	37s	the client draws the boundary after the lock	Clients_in_parallel_at_the_first_act_log_no_call_ahead_of_the_boundary
+rw08	KILLED	core	1	54s	the handler's null id guard dropped	A_fetcher_with_no_test_id_does_not_fail_the_call
+rw09	KILLED	core	1	40s	StartAction's null id guard dropped	StartAction_with_no_test_id_logs_nothing_and_throws_nothing
+rw10	KILLED	core	1	34s	Expire's null id check dropped	A_call_with_no_test_id_is_left_alone
+rw11	KILLED	core	1	37s	the diagnostic page counts markers as requests	Diagram_markers_are_not_unpaired_requests_and_do_not_name_a_test
+rw12	KILLED	core	1	56s	the diagnostic page names a test by a marker	Diagram_markers_are_not_unpaired_requests_and_do_not_name_a_test
+rw13	KILLED	core	1	55s	a scenario with only markers has log entries	A_scenario_with_only_diagram_markers_is_listed_as_having_no_log_entrie
+rw14	KILLED	core	1	37s	a boundary alone makes a scenario	A_test_seen_only_by_its_boundary_is_no_scenario
+# 02:02 done

@@ -225,4 +225,101 @@ public class PhaseConfigurationTests
         Detailed,
         Summarised
     }
+
+    // ─── PhaseOfStep and PhaseOfAttribute (plans/STEP_PHASE_PLAN.md 5.1) ─────────
+
+    [Theory]
+    [InlineData("Given", TestPhase.Setup)]
+    [InlineData("GIVEN", TestPhase.Setup)]
+    [InlineData("given", TestPhase.Setup)]
+    [InlineData("SETUP", TestPhase.Setup)]
+    [InlineData("But", TestPhase.Setup)]
+    [InlineData("When", TestPhase.Action)]
+    [InlineData("WHEN", TestPhase.Action)]
+    [InlineData("Then", TestPhase.Action)]
+    [InlineData("THEN", TestPhase.Action)]
+    [InlineData("ButWhen", TestPhase.Action)]
+    public void PhaseOfStep_reads_a_word_in_any_case(string word, TestPhase expected)
+    {
+        Assert.Equal(expected, PhaseConfiguration.PhaseOfStep(word, TestPhase.Unknown));
+    }
+
+    [Theory]
+    [InlineData("And", TestPhase.Action)]
+    [InlineData("AND", TestPhase.Setup)]
+    [InlineData("and", TestPhase.Unknown)]
+    public void PhaseOfStep_reads_And_as_the_phase_before_it(string word, TestPhase previous)
+    {
+        Assert.Equal(previous, PhaseConfiguration.PhaseOfStep(word, previous));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("*")]
+    [InlineData("Because")]
+    public void PhaseOfStep_says_nothing_for_a_word_it_does_not_know(string? word)
+    {
+        Assert.Null(PhaseConfiguration.PhaseOfStep(word, TestPhase.Action));
+    }
+
+    [Theory]
+    [InlineData("Given", TestPhase.Setup)]
+    [InlineData("But", TestPhase.Setup)]
+    [InlineData("When", TestPhase.Action)]
+    [InlineData("Then", TestPhase.Action)]
+    [InlineData("ButWhen", TestPhase.Action)]
+    public void PhaseOfAttribute_reads_todays_five_words(string word, TestPhase expected)
+    {
+        Assert.Equal(expected, PhaseConfiguration.PhaseOfAttribute(word));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("And")]
+    [InlineData("GIVEN")]
+    [InlineData("given")]
+    [InlineData("Setup")]
+    [InlineData("Because")]
+    public void PhaseOfAttribute_says_nothing_for_any_other_word(string? word)
+    {
+        Assert.Null(PhaseConfiguration.PhaseOfAttribute(word));
+    }
+
+    [Fact]
+    public void ResolvePhaseFromStepType_reads_ButWhen_as_Action()
+    {
+        Assert.Equal(TestPhase.Action, PhaseConfiguration.ResolvePhaseFromStepType("ButWhen"));
+        Assert.Equal(TestPhase.Action, PhaseConfiguration.ResolvePhaseFromStepType("BUTWHEN"));
+        Assert.Equal(TestPhase.Setup, PhaseConfiguration.ResolvePhaseFromStepType("But"));
+    }
+
+    // The in-process table and ingest's agree on these, and their differences are on purpose (plans/STEP_PHASE_PLAN.md 5.8).
+    [Theory]
+    [InlineData("Given", TestPhase.Action)]
+    [InlineData("When", TestPhase.Setup)]
+    [InlineData("Then", TestPhase.Setup)]
+    [InlineData("And", TestPhase.Setup)]
+    [InlineData("And", TestPhase.Action)]
+    [InlineData("ButWhen", TestPhase.Setup)]
+    public void PhaseOfStep_and_ingest_agree(string word, TestPhase previous)
+    {
+        Assert.Equal(Kronikol.Ingestion.IngestAttribution.PhaseForStep(word, null, previous), PhaseConfiguration.PhaseOfStep(word, previous));
+    }
+
+    [Fact]
+    public void PhaseOfStep_and_ingest_differ_on_But_setup_and_a_word_neither_knows_on_purpose()
+    {
+        // But is [ButStep]'s here, a setup step, as a framework's But reaches this table as the keyword it continues. Ingest has only the word.
+        Assert.Equal(TestPhase.Setup, PhaseConfiguration.PhaseOfStep("But", TestPhase.Action));
+        Assert.Equal(TestPhase.Action, Kronikol.Ingestion.IngestAttribution.PhaseForStep("But", null, TestPhase.Action));
+
+        // LightBDD's own step type, which no Gherkin step is.
+        Assert.Equal(TestPhase.Setup, PhaseConfiguration.PhaseOfStep("setup", TestPhase.Action));
+        Assert.Equal(TestPhase.Action, Kronikol.Ingestion.IngestAttribution.PhaseForStep("setup", null, TestPhase.Action));
+
+        // A word neither knows says nothing here, and keeps the step before in ingest.
+        Assert.Null(PhaseConfiguration.PhaseOfStep("Because", TestPhase.Action));
+        Assert.Equal(TestPhase.Action, Kronikol.Ingestion.IngestAttribution.PhaseForStep("Because", null, TestPhase.Action));
+    }
 }

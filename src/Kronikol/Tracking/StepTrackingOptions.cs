@@ -12,7 +12,7 @@ public record StepTrackingOptions
     /// <summary>Whether to include parameter values inline in step text. Default: true.</summary>
     public bool InlineParameters { get; set; } = true;
 
-    /// <summary>Whether [WhenStep] triggers Action phase transition (equivalent to StartAction()). Default: true.</summary>
+    /// <summary>Whether a step attribute's keyword moves the test's phase ([GivenStep] and [ButStep] to Setup, [WhenStep], [ThenStep] and [ButWhenStep] to Action), for a step with no keyword above it that does so. A framework's own steps are not step attributes: Reqnroll's, LightBDD's and BDDfy's move the phase whatever this says. Default: true.</summary>
     public bool WhenTriggersAction { get; set; } = true;
 
     /// <summary>Whether to insert step delimiter hnotes into sequence diagrams when top-level steps start. Default: true.</summary>

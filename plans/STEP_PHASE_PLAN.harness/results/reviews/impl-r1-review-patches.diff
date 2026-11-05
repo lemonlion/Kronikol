@@ -1,0 +1,152 @@
+diff -ru --strip-trailing-cr '--exclude=bin' '--exclude=obj' orig/src/Kronikol/Tracking/StepCollector.cs wt/src/Kronikol/Tracking/StepCollector.cs
+--- orig/src/Kronikol/Tracking/StepCollector.cs	2026-11-04 22:00:29.000000000 +0000
++++ wt/src/Kronikol/Tracking/StepCollector.cs	2026-11-04 23:38:06.948951500 +0000
+@@ -236,8 +236,17 @@
+     }
+ 
+     // Only the step that left: another test's step above it on this flow is still open.
+-    private static FlowStep? Without(FlowStep head, FlowStep node) =>
+-        ReferenceEquals(head, node) ? node.Parent : head with { Parent = Without(head.Parent!, node) };
++    private static FlowStep? Without(FlowStep head, FlowStep node)
++    {
++        // REVIEW PATCH: a loop, not recursion: a loop of skipped steps can put tens of thousands of nodes above the one that left.
++        var above = new List<FlowStep>();
++        for (var at = head; !ReferenceEquals(at, node); at = at.Parent!)
++            above.Add(at);
++        var rebuilt = node.Parent;
++        for (var i = above.Count - 1; i >= 0; i--)
++            rebuilt = above[i] with { Parent = rebuilt };
++        return rebuilt;
++    }
+ 
+     private static void EnterFlow(string testId, CollectedStep step) =>
+         CurrentFlowStep.Value = new FlowStep(testId, step, CurrentFlowStep.Value);
+@@ -252,6 +261,41 @@
+         LeaveCompletedStep(testId);
+     }
+ 
++    // REVIEW PATCH: a framework step that failed closes what it left open above it, and itself, whichever flow those were opened on.
++    internal static int OpenStepCount(string testId)
++    {
++        if (!States.TryGetValue(testId, out var state))
++            return 0;
++        lock (state)
++            return state.StepStack.Count;
++    }
++
++    // REVIEW PATCH
++    internal static void CompleteDownTo(string testId, int depth, bool passed)
++    {
++        if (!States.TryGetValue(testId, out var state))
++            return;
++        lock (state)
++        {
++            while (state.StepStack.Count > depth)
++            {
++                var completed = state.StepStack.Pop();
++                completed.EndTime = Stopwatch.GetTimestamp();
++                completed.Passed = passed;
++                for (var node = CurrentFlowStep.Value; node is not null; node = node.Parent)
++                    if (ReferenceEquals(node.Step, completed))
++                    {
++                        CurrentFlowStep.Value = Without(CurrentFlowStep.Value!, node);
++                        break;
++                    }
++                if (state.StepStack.Count > 0)
++                    state.StepStack.Peek().SubSteps.Add(completed);
++                else
++                    state.CompletedSteps.Add(completed);
++            }
++        }
++    }
++
+     /// <summary>
+     /// Completes the current active step for the given test.
+     /// </summary>
+@@ -329,6 +373,10 @@
+             bypassed.Bypassed = true;
+             bypassed.BypassReason = reason;
+ 
++            // REVIEW PATCH: a skipped step on this flow is over here: it need not stay on the chain for the flow's life.
++            if (CurrentFlowStep.Value is { } head && ReferenceEquals(head.Step, bypassed))
++                CurrentFlowStep.Value = head.Parent;
++
+             if (state.StepStack.Count > 0)
+             {
+                 // Nested: add as sub-step of parent
+@@ -512,7 +560,11 @@
+         if (testId is null)
+             return;
+ 
+-        States.TryRemove(testId, out _);
++        // REVIEW PATCH: a step cleared while open is not open: it must not stay above what this flow starts next.
++        if (States.TryRemove(testId, out var state))
++            lock (state)
++                foreach (var open in state.StepStack)
++                    open.EndTime = Stopwatch.GetTimestamp();
+     }
+ 
+     private static string? ResolveTestId()
+diff -ru --strip-trailing-cr '--exclude=bin' '--exclude=obj' orig/src/Kronikol/Tracking/TestTrackingMessageHandler.cs wt/src/Kronikol/Tracking/TestTrackingMessageHandler.cs
+--- orig/src/Kronikol/Tracking/TestTrackingMessageHandler.cs	2026-11-04 22:00:29.000000000 +0000
++++ wt/src/Kronikol/Tracking/TestTrackingMessageHandler.cs	2026-11-04 23:00:10.218705400 +0000
+@@ -459,9 +459,16 @@
+             return;
+         }
+ 
+-        var isGivenOrAnd = currentStepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
+-                           || currentStepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
+-                           || currentStepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase);
++        // REVIEW PATCH: the boundary reads what the phase rule decided wherever a step has decided it, so a keyword under a step is a
++        // label here too, and And and But continue the step before them. The word alone is only for a flow no step has reached.
++        var isGivenOrAnd = TestPhaseContext.Current switch
++        {
++            TestPhase.Setup => true,
++            TestPhase.Action => false,
++            _ => currentStepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
++                 || currentStepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
++                 || currentStepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase)
++        };
+ 
+         if (isGivenOrAnd)
+         {
+diff -ru --strip-trailing-cr '--exclude=bin' '--exclude=obj' orig/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs wt/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs
+--- orig/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs	2026-11-04 22:00:29.000000000 +0000
++++ wt/src/Kronikol.BDDfy.xUnit3/BDDfyStepTrackingExecutor.cs	2026-11-04 23:38:07.190516100 +0000
+@@ -38,6 +38,7 @@
+         if (testId is null || (keyword is null && !underKeyword))
+             TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(keyword);
+ 
++        var depth = testId is null ? 0 : StepCollector.OpenStepCount(testId); // REVIEW PATCH
+         var stepText = ExtractStepText(step.Title, keyword);
+         if (testId is not null)
+             StepCollector.StartStep(testId, keyword, stepText, null, null, table: null, docString: null, phaseKeyword: keyword);
+@@ -50,7 +51,7 @@
+         catch (Exception)
+         {
+             if (testId is not null)
+-                StepCollector.CompleteStep(testId, passed: false);
++                StepCollector.CompleteDownTo(testId, depth, passed: false); // REVIEW PATCH
+ 
+             // The finally would close the step above it.
+             closed = true;
+diff -ru --strip-trailing-cr '--exclude=bin' '--exclude=obj' orig/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs wt/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs
+--- orig/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs	2026-11-04 22:00:29.000000000 +0000
++++ wt/src/Kronikol.LightBDD.Core/StepTrackingStepDecorator.cs	2026-11-04 23:38:06.949961100 +0000
+@@ -24,6 +24,7 @@
+         try { testId = ScenarioExecutionContext.CurrentScenario.Info.RuntimeId.ToString(); }
+         catch { /* not in scenario context */ }
+ 
++        var depth = testId is null ? 0 : StepCollector.OpenStepCount(testId); // REVIEW PATCH
+         if (testId is not null)
+         {
+             // A suite's BUT continues the step before it, as LightBDD's own AND does.
+@@ -38,7 +39,7 @@
+         catch
+         {
+             if (testId is not null)
+-                StepCollector.CompleteStep(testId, passed: false);
++                StepCollector.CompleteDownTo(testId, depth, passed: false); // REVIEW PATCH
+             throw;
+         }
+ 

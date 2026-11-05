@@ -1,0 +1,40 @@
+--- /c/Code/Kronikol-224rv4/src/Kronikol/Tracking/StepCollector.cs	2026-11-05 10:13:41.410628500 +0000
++++ /c/Code/k224-review4/wt/src/Kronikol/Tracking/StepCollector.cs	2026-11-05 10:49:22.154845600 +0000
+@@ -184,7 +184,7 @@
+             // The outermost open step that says anything about phases decides the test's phase, and a keyword under it is a
+             // label (#224). A step with no keyword says nothing, so the keywords under it still decide.
+             var says = phaseKeyword is not null
+-                ? PhaseConfiguration.PhaseOfStep(phaseKeyword, flowPhase != TestPhase.Unknown ? flowPhase : state.Phase)
++                ? PhaseConfiguration.PhaseOfStep(phaseKeyword, !state.StepsSetPhase && flowPhase != TestPhase.Unknown ? flowPhase : state.Phase)
+                 : Options.WhenTriggersAction ? PhaseConfiguration.PhaseOfAttribute(keyword) : null;
+             step.SaysPhase = says is not (null or TestPhase.Unknown);
+             if (step.SaysPhase && !OpenStepSaysPhase(state))
+@@ -193,7 +193,7 @@
+ 
+                 // A flow the framework does not name, or one that outlived the step it was forked inside, runs for the test and is
+                 // not the test: its step keeps its phase to itself.
+-                if (named && !OutlivedStepSaysPhase(state) && (isFrame || !state.StepsSetPhase))
++                if (named && (isFrame || (!OutlivedStepSaysPhase(state) && !state.StepsSetPhase)))
+                 {
+                     // A framework's steps own the boundary: a woven keyword before its first step does not count as an act, and a
+                     // boundary a woven step drew gives way to the framework's.
+@@ -207,7 +207,7 @@
+                     // The Setup/Action boundary: the first time this test's steps go from Setup to Action, and never once an Action step
+                     // has run, as a Setup partition over it would hide an act. For the same reason not at a step attribute's Then, as a
+                     // test's body can hold its act between a Given and a Then.
+-                    startsAction = says == TestPhase.Action && (state.Phase == TestPhase.Setup || (isFrame && state.CallInSetupStep))
++                    startsAction = says == TestPhase.Action && (state.Phase == TestPhase.Setup || (state.Phase == TestPhase.Unknown && flowPhase == TestPhase.Setup) || (isFrame && state.CallInSetupStep))
+                         && !state.ActionStartDrawn && !state.ActionStepSeen
+                         && (isFrame || keyword != "Then");
+                     state.ActionStepSeen |= says == TestPhase.Action;
+--- /c/Code/Kronikol-224rv4/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs	2026-11-05 10:13:40.909739700 +0000
++++ /c/Code/k224-review4/wt/src/Kronikol.LightBDD.Core/LightBddTestTrackingMessageHandlerOptions.cs	2026-11-05 10:48:51.855471500 +0000
+@@ -36,7 +36,7 @@
+ 
+         // Only for a suite with no step decorator (ReportWritersConfiguration's CreateStandardReportsWithDiagrams registers
+         // none): where the decorator runs, the phase is the test's, and a top-level AND is not a setup step.
+-        if (!StepCollector.FrameworkStepsSetPhase())
++        if (stepType is not null && !StepCollector.FrameworkStepsSetPhase())
+             TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
+ 
+         return stepType;

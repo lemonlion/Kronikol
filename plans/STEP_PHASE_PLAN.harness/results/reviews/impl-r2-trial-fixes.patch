@@ -1,0 +1,169 @@
+diff -ru --strip-trailing-cr -x bin -x obj /c/Code/Kronikol-224rv2/src/Kronikol/Ingestion/InteractionRecord.cs wt/src/Kronikol/Ingestion/InteractionRecord.cs
+--- /c/Code/Kronikol-224rv2/src/Kronikol/Ingestion/InteractionRecord.cs	2026-11-04 22:48:04.729150900 +0000
++++ wt/src/Kronikol/Ingestion/InteractionRecord.cs	2026-11-05 00:57:04.245620700 +0000
+@@ -408,7 +408,10 @@
+             var kind = ResolvedMarkerKind;
+             var half = MarkerLog(name, kind);
+             if (kind == DiagramMarkerKind.Phase)
++            {
+                 half.IsActionStart = true;
++                half.PlantUml = PlantUml;
++            }
+             else
+             {
+                 half.IsOverrideStart = MarkerEnd != true;
+diff -ru --strip-trailing-cr -x bin -x obj /c/Code/Kronikol-224rv2/src/Kronikol/PlantUml/PlantUmlCreator.cs wt/src/Kronikol/PlantUml/PlantUmlCreator.cs
+--- /c/Code/Kronikol-224rv2/src/Kronikol/PlantUml/PlantUmlCreator.cs	2026-11-04 22:48:04.762878200 +0000
++++ wt/src/Kronikol/PlantUml/PlantUmlCreator.cs	2026-11-05 00:57:04.219557000 +0000
+@@ -227,7 +227,9 @@
+         var hasActionStart = separateSetup && tracesForTest.Any(t => t.IsActionStart);
+ 
+         // The last marker wins: at most one a step or a client drew, and the first explicit StartAction() after it.
+-        var actionStartIndex = tracesForTest.FindLastIndex(t => t.IsActionStart);
++        var actionStartIndex = tracesForTest.FindLastIndex(t => t.IsActionStart && t.PlantUml == DefaultTrackingDiagramOverride.OverridesBoundary);
++        if (actionStartIndex < 0)
++            actionStartIndex = tracesForTest.FindIndex(t => t.IsActionStart);
+         var hasSetupTraces = hasActionStart && tracesForTest
+             .Take(actionStartIndex)
+             .Any(t => !t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart);
+diff -ru --strip-trailing-cr -x bin -x obj /c/Code/Kronikol-224rv2/src/Kronikol/Reports/DiagnosticReportGenerator.cs wt/src/Kronikol/Reports/DiagnosticReportGenerator.cs
+--- /c/Code/Kronikol-224rv2/src/Kronikol/Reports/DiagnosticReportGenerator.cs	2026-11-04 22:48:04.801335000 +0000
++++ wt/src/Kronikol/Reports/DiagnosticReportGenerator.cs	2026-11-05 00:57:04.314630000 +0000
+@@ -89,7 +89,7 @@
+             sb.AppendLine("<h3>Entries per Test (top 50)</h3><table><tr><th>Test Name</th><th>Test ID</th><th>Count</th></tr>");
+             foreach (var g in byTest.Take(50))
+             {
+-                var name = g.First().TestName;
++                var name = (g.FirstOrDefault(l => !l.IsDiagramMarker) ?? g.First()).TestName;
+                 sb.AppendLine($"<tr><td>{Escape(name)}</td><td>{Escape(g.Key)}</td><td>{g.Count()}</td></tr>");
+             }
+             sb.AppendLine("</table>");
+@@ -119,7 +119,7 @@
+         }
+ 
+         // Unpaired requests
+-        var requests = logs.Where(l => l.Type == RequestResponseType.Request).ToArray();
++        var requests = logs.Where(l => l.Type == RequestResponseType.Request && !l.IsDiagramMarker).ToArray();
+         var responseIds = logs.Where(l => l.Type == RequestResponseType.Response).Select(l => l.RequestResponseId).ToHashSet();
+         var unpaired = requests.Where(r => !responseIds.Contains(r.RequestResponseId)).ToArray();
+         if (unpaired.Length > 0)
+diff -ru --strip-trailing-cr -x bin -x obj /c/Code/Kronikol-224rv2/src/Kronikol/Tracking/StepCollector.cs wt/src/Kronikol/Tracking/StepCollector.cs
+--- /c/Code/Kronikol-224rv2/src/Kronikol/Tracking/StepCollector.cs	2026-11-05 00:03:19.001050700 +0000
++++ wt/src/Kronikol/Tracking/StepCollector.cs	2026-11-05 01:04:06.828655300 +0000
+@@ -82,6 +82,7 @@
+         var flowPhase = TestPhaseContext.Current;
+         var phaseNow = TestPhase.Unknown;
+         var startsAction = false;
++        var overrides = false;
+         lock (state)
+         {
+             // Resolve effective keyword (Given/And/And sequencing)
+@@ -109,13 +110,16 @@
+                     {
+                         state.ActionStepSeen = false;
+                         if (!state.ExplicitBoundaryDrawn && !state.ClientDrewBoundary)
++                        {
++                            overrides = state.ActionStartDrawn;
+                             state.ActionStartDrawn = false;
++                        }
+                     }
+ 
+                     // The Setup/Action boundary: the first time this test's steps go from Setup to Action, and never once an Action step
+                     // has run, as a Setup partition over it would hide an act.
+                     startsAction = says == TestPhase.Action && (state.Phase == TestPhase.Setup || (frameworkStep && state.CallInSetupStep))
+-                        && !state.ActionStartDrawn && !state.ActionStepSeen;
++                        && !state.ActionStartDrawn && !state.ActionStepSeen && (frameworkStep || keyword != "Then");
+                     state.ActionStepSeen |= says == TestPhase.Action;
+                     state.ActionStartDrawn |= startsAction;
+                     if (startsAction && frameworkStep)
+@@ -159,7 +163,7 @@
+ 
+         // After the step's bar, so the bar closes the Setup partition as the first bar past the setup calls always has.
+         if (startsAction)
+-            DefaultTrackingDiagramOverride.DrawBoundary(testId);
++            DefaultTrackingDiagramOverride.DrawBoundary(testId, overrides);
+     }
+ 
+     /// <summary>
+@@ -168,6 +172,9 @@
+     /// </summary>
+     internal static bool NeedsStepTypeFromHandler(string testId, object client)
+     {
++        if (testId is null)
++            return false;
++
+         if (!States.TryGetValue(testId, out var state))
+             return true;
+ 
+@@ -211,20 +218,26 @@
+ 
+             state.ActionStartDrawn = true;
+             state.ClientDrewBoundary = true;
++            DefaultTrackingDiagramOverride.DrawBoundary(testId);
+         }
+-
+-        DefaultTrackingDiagramOverride.DrawBoundary(testId);
+     }
+ 
+     /// <summary>
+     /// A consumer's <c>StartAction()</c>: whether to log its marker. It overrides a framework step's boundary while that step is open
+     /// in this flow, or a woven step's at any time, and only the first one counts, as a second asks for the same boundary again.
+     /// </summary>
+-    internal static bool NoteExplicitBoundary(string testId)
++    internal static bool NoteExplicitBoundary(string testId, out bool overrides)
+     {
+-        NotePhase(testId, TestPhase.Action);
++        overrides = false;
++        if (testId is null)
++            return false;
++
+         var state = States.GetOrAdd(testId, _ => new TestStepState());
+         lock (state)
++            overrides = state.ActionStartDrawn;
++
++        NotePhase(testId, TestPhase.Action);
++        lock (state)
+         {
+             var superseded = state.ClientDrewBoundary || (state.BoundaryStep is { } boundary && (boundary.EndTime > 0 || !FlowHolds(boundary)));
+             var first = !state.ExplicitBoundaryDrawn && !superseded;
+diff -ru --strip-trailing-cr -x bin -x obj /c/Code/Kronikol-224rv2/src/Kronikol/TrackingDiagramOverride.cs wt/src/Kronikol/TrackingDiagramOverride.cs
+--- /c/Code/Kronikol-224rv2/src/Kronikol/TrackingDiagramOverride.cs	2026-11-04 22:48:04.935658800 +0000
++++ wt/src/Kronikol/TrackingDiagramOverride.cs	2026-11-05 01:04:06.828655300 +0000
+@@ -91,19 +91,22 @@
+     public static void StartAction(string testId)
+     {
+         TestPhaseContext.Current = TestPhase.Action;
+-        if (StepCollector.NoteExplicitBoundary(testId))
+-            LogBoundary(testId);
++        if (StepCollector.NoteExplicitBoundary(testId, out var overrides))
++            LogBoundary(testId, overrides);
+     }
+ 
+     /// <summary>The boundary a step or a client draws, which an explicit <see cref="StartAction(string)"/> overrides.</summary>
+-    internal static void DrawBoundary(string testId)
++    internal static void DrawBoundary(string testId, bool overrides = false)
+     {
+         TestPhaseContext.Current = TestPhase.Action;
+         StepCollector.NotePhase(testId, TestPhase.Action);
+-        LogBoundary(testId);
++        LogBoundary(testId, overrides);
+     }
+ 
+-    private static void LogBoundary(string testId)
++    /// <summary>What a boundary that replaces an earlier one carries in its fragment. A store written before it has none, so its first boundary stands.</summary>
++    internal const string OverridesBoundary = "overrides";
++
++    private static void LogBoundary(string testId, bool overrides)
+     {
+         var log = new RequestResponseLog(
+             testId,
+@@ -120,7 +123,8 @@
+             false)
+         {
+             IsActionStart = true,
+-            MarkerKind = DiagramMarkerKind.Phase
++            MarkerKind = DiagramMarkerKind.Phase,
++            PlantUml = overrides ? OverridesBoundary : null
+         };
+         RequestResponseLogger.Log(log);
+     }

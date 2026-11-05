@@ -97,6 +97,15 @@ A rebuilt prototype needs its copies gone from the package cache, as a package i
 | `results/read-cost-cut8.txt` | The same on the eighth cut, whose getter called the resolver: where a throwing resolver's price comes from |
 | `results/restore-at-complete.txt` | Setting a phase back in `CompleteStepAsync`: the write never reaches the caller |
 
+## What building the plan added
+
+| Folder | What |
+|---|---|
+| `results/reviews/impl-r1-report.md`, `impl-r2-report.md`, `impl-r3-report.md`, `impl-port-report.md` | The independent review of each release, on its own packages, briefed to break it, with its brief and its trial fix beside it; `impl-port` read the releases as ported onto #223's frames and #225's flow |
+| `probes/impl-r1`, `impl-r2`, `impl-r3`, `impl-port` | Those reviews' probes, sources only |
+| `results/impl/mut-*.txt` | The mutation runs on the real code against the repo's facts: `mut-r1` R1's facts, `mut-r2` R2's and R3's, the others what the reviews' fixes and the missing facts changed; `mut-port*` the releases as they landed, in `mut_port.py`'s words |
+| `probes/mutations/tools/impl/` | The runner, and the hand-made namesakes of the mutants whose text the real code words differently |
+
 ## What this harness does not do
 
 Nothing here opens a report file: the dumps come from the probes' own hook, and anything else goes through `query`. The probes write a `Reports/` folder under `bin/`, which is not kept. Screens are not measured, so the paint facts of §6 are still to be written.
