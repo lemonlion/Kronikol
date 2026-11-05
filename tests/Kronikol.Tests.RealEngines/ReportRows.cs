@@ -59,6 +59,24 @@ public sealed class ReportRows
         return lines.ToString();
     }
 
+    private JsonElement Scenario(string name) => _scenarios.First(s => s.Name.StartsWith(name, StringComparison.Ordinal)).Scenario;
+
+    /// <summary>What the report says of the scenario as a whole.</summary>
+    public string? ResultOf(string name) => Text(Scenario(name), "result");
+
+    public string? ErrorOf(string name) => Text(Scenario(name), "errorMessage");
+
+    public TimeSpan? DurationOf(string name) => Duration(Scenario(name));
+
+    /// <summary>How long a scenario's top-level row took, by its place in the list.</summary>
+    public TimeSpan? StepDurationOf(string name, int step) => Duration(Items(Scenario(name), "steps").ElementAt(step));
+
+    /// <summary>The reason a scenario's top-level row gives for not running, by its place in the list.</summary>
+    public string? StepBypassReasonOf(string name, int step) => Text(Items(Scenario(name), "steps").ElementAt(step), "bypassReason");
+
+    private static TimeSpan? Duration(JsonElement owner) =>
+        owner.TryGetProperty("durationSeconds", out var seconds) && seconds.ValueKind == JsonValueKind.Number ? TimeSpan.FromSeconds(seconds.GetDouble()) : null;
+
     /// <summary>The names of every file a scenario holds, on itself or on a row.</summary>
     public IReadOnlyList<string> AllFilesOf(string name)
     {

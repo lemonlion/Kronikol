@@ -109,8 +109,9 @@ internal class BDDfyStepTrackingExecutor(IStepExecutor inner) : IStepExecutor
         // A story run inside that step runs in its flow, and stays under it.
         CloseWaiting(testId, waiting => !RunsInside(waiting));
 
-        var stepText = ExtractStepText(step.Title, keyword);
-        var frame = StepCollector.StartFrame(testId, keyword, stepText, phaseKeyword: keyword);
+        var word = WordOf(step, keyword);
+        var stepText = ExtractStepText(step.Title, word);
+        var frame = StepCollector.StartFrame(testId, word, stepText, phaseKeyword: keyword);
         var outer = RunningIn.Value;
         if (frame is { } running)
             RunningIn.Value = new Running(running, outer);
@@ -160,6 +161,18 @@ internal class BDDfyStepTrackingExecutor(IStepExecutor inner) : IStepExecutor
             CurrentStepTypeLocal.Value = null;
             TestPhaseContext.Current = phaseBefore;
         }
+    }
+
+    // A consecutive step's title keeps BDDfy's own And or But: that is the word it reads by, and its order stays its phase.
+    private static string? WordOf(Step step, string? keyword)
+    {
+        if (step.ExecutionOrder is not (ExecutionOrder.ConsecutiveSetupState or ExecutionOrder.ConsecutiveTransition or ExecutionOrder.ConsecutiveAssertion))
+            return keyword;
+
+        var title = step.Title.TrimStart();
+        return title.StartsWith("And ", StringComparison.OrdinalIgnoreCase) ? "And"
+            : title.StartsWith("But ", StringComparison.OrdinalIgnoreCase) ? "But"
+            : keyword;
     }
 
     private static async Task CloseWhenDone(string? testId, int? frame, Task task)

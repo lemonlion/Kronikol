@@ -580,4 +580,46 @@ public class BDDfyScenarioInfoExtensionsTests
             StepCollector.ClearSteps(testId);
         }
     }
+
+    private static BDDfyScenarioInfo Row(string testId, TestStack.BDDfy.Result result, string? error = null, double seconds = 1, int minute = 0) => new()
+    {
+        TestId = testId,
+        StoryTitle = "A story",
+        ScenarioTitle = "A scenario",
+        Tags = [],
+        Steps = [new BDDfyStepInfo("Given", "a step", result)],
+        Result = result,
+        ErrorMessage = error,
+        Duration = TimeSpan.FromSeconds(seconds),
+        EndedAt = new DateTimeOffset(2026, 11, 5, 10, minute, 0, TimeSpan.Zero),
+    };
+
+    // Rows built by hand have no call number: they read as one call, where any row that failed fails the test.
+    [Fact]
+    public void Of_rows_built_by_hand_any_that_failed_fails_the_test()
+    {
+        var scenario = new[] { Row("hand-1", TestStack.BDDfy.Result.Passed), Row("hand-1", TestStack.BDDfy.Result.Failed, "the row's failure") }
+            .ToFeatures().Single().Scenarios.Single();
+
+        Assert.Equal(ExecutionResult.Failed, scenario.Result);
+        Assert.Equal("the row's failure", scenario.ErrorMessage);
+    }
+
+    [Fact]
+    public void A_test_of_several_rows_ends_with_its_last_and_takes_as_long_as_they_all_did()
+    {
+        var scenario = new[] { Row("hand-2", TestStack.BDDfy.Result.Passed, seconds: 2, minute: 1), Row("hand-2", TestStack.BDDfy.Result.Passed, seconds: 3, minute: 7) }
+            .ToFeatures().Single().Scenarios.Single();
+
+        Assert.Equal(TimeSpan.FromSeconds(5), scenario.Duration);
+        Assert.Equal(new DateTimeOffset(2026, 11, 5, 10, 7, 0, TimeSpan.Zero), scenario.EndedAt);
+    }
+
+    [Fact]
+    public void A_test_with_no_time_anywhere_has_no_duration()
+    {
+        var scenario = new[] { Row("hand-3", TestStack.BDDfy.Result.Passed, seconds: 0) }.ToFeatures().Single().Scenarios.Single();
+
+        Assert.Null(scenario.Duration);
+    }
 }

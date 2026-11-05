@@ -16,6 +16,9 @@ public class DiagramCapturingProcessor : IProcessor
     private static readonly PropertyInfo? ScenarioTitleProperty =
         typeof(Scenario).GetProperty(nameof(Scenario.Title));
 
+    // Each BDDfy call of a run reports here once, in the order they end.
+    private static int _lastCall;
+
     public ProcessType ProcessType => ProcessType.Report;
 
     /// <summary>
@@ -65,6 +68,7 @@ public class DiagramCapturingProcessor : IProcessor
 
     public void Process(Story story)
     {
+        var call = Interlocked.Increment(ref _lastCall);
         var testContext = Xunit.TestContext.Current;
         var testId = testContext.Test?.UniqueID;
         if (testId == null) return;
@@ -129,6 +133,7 @@ public class DiagramCapturingProcessor : IProcessor
                 Tags = TagsOf(scenario.Tags, testContext.Test),
                 Steps = steps,
                 Result = scenario.Result,
+                Call = call,
                 Duration = scenario.Duration,
                 EndedAt = DateTimeOffset.UtcNow,
                 ErrorMessage = failedException?.Message,

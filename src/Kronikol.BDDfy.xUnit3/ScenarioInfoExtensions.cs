@@ -8,7 +8,10 @@ internal static class ScenarioInfoExtensions
 {
     public static Feature[] ToFeatures(this IEnumerable<BDDfyScenarioInfo> scenarios)
     {
-        return scenarios
+        var all = scenarios.ToArray();
+        var ofEachTest = all.GroupBy(x => x.TestId).ToDictionary(test => test.Key, test => test.ToArray());
+
+        return all
             .GroupBy(x => x.StoryTitle)
             .OrderBy(x => x.Key)
             .Select(featureGroup =>
@@ -62,6 +65,10 @@ internal static class ScenarioInfoExtensions
 
                             BDDfyStepTrackingExecutor.CloseLeftRunning(x.TestId);
 
+                            var ofThisTest = ofEachTest[x.TestId];
+                            var deciding = Deciding(ofThisTest);
+                            var skipped = StepExtensions.SkipReasonIn(deciding.ErrorMessage) is not null;
+
                             return new Scenario
                             {
                                 Id = x.TestId,
@@ -70,13 +77,15 @@ internal static class ScenarioInfoExtensions
                                 StableIdKey = ScenarioStableId.KeyWhereChanged(frozenKey, x.ScenarioTitle, outlineId,
                                     exampleValues is { Count: > 0 } ? exampleValues : null),
                                 IsHappyPath = classified.IsHappyPath,
-                                Result = x.Steps.Count == 0 && x.Result == TestStack.BDDfy.Result.NotExecuted
-                                    ? ExecutionResult.Passed
-                                    : x.Result.ToExecutionResult(),
-                                ErrorMessage = x.ErrorMessage,
-                                ErrorStackTrace = x.ErrorStackTrace,
-                                Duration = x.Duration != TimeSpan.Zero ? x.Duration : null,
-                                EndedAt = x.EndedAt,
+                                Result = skipped
+                                    ? ExecutionResult.Skipped
+                                    : deciding.Steps.Count == 0 && deciding.Result == TestStack.BDDfy.Result.NotExecuted
+                                        ? ExecutionResult.Passed
+                                        : deciding.Result.ToExecutionResult(),
+                                ErrorMessage = skipped ? null : deciding.ErrorMessage,
+                                ErrorStackTrace = skipped ? null : deciding.ErrorStackTrace,
+                                Duration = DurationOf(ofThisTest),
+                                EndedAt = ofThisTest.Max(row => row.EndedAt),
                                 Steps = x.Steps.Count > 0
                                     ? MapSteps(x.Steps, StepCollector.GetSteps(x.TestId), x.TestId)
                                     : StepCollector.GetSteps(x.TestId) is { Length: > 0 } collectedSteps ? collectedSteps : null,
@@ -102,6 +111,28 @@ internal static class ScenarioInfoExtensions
                 };
             }).ToArray();
     }
+
+    /// <summary>
+    /// What decides a test's result when it ran more than one story or row. A BDDfy call throws at its end if a row failed, so a later call ran only if the
+    /// ones before it passed or something caught their failure: the last call decides, and in it any row that failed.
+    /// </summary>
+    private static BDDfyScenarioInfo Deciding(BDDfyScenarioInfo[] ofOneTest)
+    {
+        var lastCall = ofOneTest.Max(row => row.Call);
+        return ofOneTest.Where(row => row.Call == lastCall).MaxBy(row => row.Result)!;
+    }
+
+    // BDDfy's stopwatch stops when a step's task comes back, at its first await, so a test takes as long as its steps did when they say longer (#122).
+    private static TimeSpan? DurationOf(BDDfyScenarioInfo[] ofOneTest)
+    {
+        var bdDfys = TimeSpan.FromTicks(ofOneTest.Sum(row => row.Duration.Ticks));
+        var steps = TimeSpan.FromTicks(StepCollector.GetSteps(ofOneTest[0].TestId).Sum(step => step.Duration?.Ticks ?? 0));
+        var longest = steps > bdDfys ? steps : bdDfys;
+        return longest != TimeSpan.Zero ? longest : null;
+    }
+
+    private static TimeSpan? Longest(TimeSpan? bdDfys, TimeSpan? collected) =>
+        collected is { } steps && (bdDfys is not { } own || steps > own) ? steps : bdDfys;
 
     // The scenario's own files, and those of a step the report does not list (a tear down, a later row of an example table).
     private static FileAttachment[]? ScenarioAttachments(BDDfyScenarioInfo info)
@@ -156,12 +187,13 @@ internal static class ScenarioInfoExtensions
                 DidNotRun = BDDfyStepTrackingExecutor.FrameOf(testId, step.StepId) is null,
                 Keyword = step.Keyword,
                 Text = step.Text,
-                Status = step.Result.ToStepResult(priorFailure),
-                Duration = step.Duration,
+                Status = step.SkipReason is not null ? ExecutionResult.Skipped : step.Result.ToStepResult(priorFailure),
+                BypassReason = step.SkipReason,
+                Duration = Longest(step.Duration, collected?.Duration),
                 SubSteps = collected?.SubSteps,
                 Attachments = collected?.Attachments,
             };
-            if (step.Result == TestStack.BDDfy.Result.Failed)
+            if (step.Result == TestStack.BDDfy.Result.Failed && step.SkipReason is null)
                 priorFailure = true;
             return mapped;
         }).ToArray();

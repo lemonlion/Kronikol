@@ -1,0 +1,24 @@
+# 17:00 17 mutants
+baseline	green
+b01	KILLED	engines	1	59s	any failed row of any call decides	O2_a_story_that_passes_when_run_again_passes_the_test
+b02	KILLED	core	1	34s	the last call's first row decides	Of_rows_built_by_hand_any_that_failed_fails_the_test
+b03	KILLED	core	1	34s	the first row decides, as published	Of_rows_built_by_hand_any_that_failed_fails_the_test
+b04	KILLED	engines	2	48s	the steps' time does not count	D1_a_scenario_reads_as_long_as_its_steps_took, D2_a_test_of_two_stories_reads_as_long_as_both_took
+b05	KILLED	core	2	29s	BDDfy's time does not count	ToFeatures_maps_duration_to_scenario_duration, A_test_of_several_rows_ends_with_its_last_and_takes_as_long_as_they_al
+b06	KILLED	engines	1	45s	a step reads BDDfy's time alone	D1_an_async_step_reads_as_long_as_its_task_took
+b07	KILLED	core	1	35s	a test ends with its first row	A_test_of_several_rows_ends_with_its_last_and_takes_as_long_as_they_al
+b08	KILLED	engines	1	49s	a title with no keyword reads Step	K1_a_step_named_by_an_attribute_reads_its_keyword
+b09	KILLED	core	6	28s	a bar draws the word it resolved	A_bar_draws_a_steps_And_or_But_once(order:, A_bar_draws_a_steps_And_or_But_once(order:, A_bar_draws_a_steps_And_or_But_once(order:, A_bar_draws_a_steps_And_or_But_once(order:
+b10	KILLED	core	2	28s	a But reads And	A_bar_draws_a_steps_And_or_But_once(order:, A_bar_draws_a_steps_And_or_But_once(order:
+b11	KILLED	core	2	28s	a step's phase reads its word	A_consecutive_steps_phase_is_its_order_and_not_the_word_in_its_title(o, A_consecutive_steps_phase_is_its_order_and_not_the_word_in_its_title(o
+b12	KILLED	engines	1	45s	every call of a run is one call	O2_a_story_that_passes_when_run_again_passes_the_test
+b13	KILLED	engines	1	45s	a skip reads Failed on the scenario	S1_a_step_that_skips_the_test_reads_Skipped_with_its_reason
+b14	KILLED	engines	1	45s	a skip reads Failed on its step	S1_a_step_that_skips_the_test_reads_Skipped_with_its_reason
+b15	KILLED	engines	1	46s	a skip's reason is dropped	S1_a_step_that_skips_the_test_reads_Skipped_with_its_reason
+b16	SURVIVED		0	44s	a skip counts as a failure for the steps after it	
+b17	KILLED	engines	1	45s	a skip keeps its error on the scenario	S1_a_step_that_skips_the_test_reads_Skipped_with_its_reason
+# 17:13 done
+# 17:13 1 mutants
+baseline	green
+b16	KILLED	engines	1	45s	a skip counts as a failure for the steps after it	S1_a_step_that_skips_the_test_reads_Skipped_with_its_reason
+# 17:15 done

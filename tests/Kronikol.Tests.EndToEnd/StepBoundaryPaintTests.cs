@@ -100,6 +100,90 @@ public class StepBoundaryPaintTests : DiagramNotePlaywrightBase
         Assert.False(await PaintsSetupAsync());
     }
 
+    private static string SourceOfScript(Action<string, MessageTracker> script)
+    {
+        var id = $"step-boundary-paint-{Guid.NewGuid():N}";
+        var tracker = new MessageTracker(new MessageTrackerOptions
+        {
+            CallerName = "Test",
+            ServiceName = "Bus",
+            CurrentTestInfoFetcher = () => ("Collect milk", id),
+        });
+
+        script(id, tracker);
+
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == id).ToList();
+        return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(logs, separateSetup: true, systemUiFont: true).Single().PlantUmls.Single().PlainText;
+    }
+
+    private static void Sends(MessageTracker tracker, string message) => tracker.TrackSendEvent("bus", message, new Uri($"bus://dairy/{message}"));
+
+    private async Task FilterTakesOutAsync(string fileName, string source, string[] gone, string[] kept)
+    {
+        await OpenAsync(fileName, source);
+        Assert.True(await PaintsSetupAsync());
+
+        await ClickToggleAsync("setup");
+        await WaitForPaintedAsync($"/{gone[0]}", false);
+
+        var painted = await PaintedAsync();
+        foreach (var message in gone)
+            Assert.DoesNotContain($"/{message}", painted);
+        foreach (var message in kept)
+            Assert.Contains($"/{message}", painted);
+    }
+
+    // Q5: an explicit StartAction() inside the step that drew the boundary moves it, and the filter goes by where it moved to.
+    [Fact]
+    public async Task A_StartAction_inside_the_When_moves_the_frame_past_what_came_before_it()
+    {
+        var source = SourceOfScript((id, tracker) =>
+        {
+            StepCollector.StartStep(id, "Given", "seeded", null, null);
+            Sends(tracker, "seeded");
+            StepCollector.CompleteStep(id, passed: true);
+            StepCollector.StartStep(id, "When", "acted", null, null);
+            Sends(tracker, "before-explicit");
+            DefaultTrackingDiagramOverride.StartAction(id);
+            Sends(tracker, "after-explicit");
+            StepCollector.CompleteStep(id, passed: true);
+        });
+
+        await FilterTakesOutAsync("StepBoundaryExplicit.html", source, ["seeded", "before-explicit"], ["after-explicit"]);
+    }
+
+    // Q9: a bypassed When moves the phase, so it draws the boundary, and a Given after it stays out of the frame, as a When after that
+    // does not draw it again.
+    [Fact]
+    public async Task A_bypassed_When_closes_the_frame_and_a_Given_after_it_stays_on_the_page()
+    {
+        var source = SourceOfScript((id, tracker) =>
+        {
+            StepCollector.StartStep(id, "Given", "first-given", null, null);
+            Sends(tracker, "first-given");
+            StepCollector.CompleteStep(id, passed: true);
+            StepCollector.StartStep(id, "When", "bypassed", null, null);
+            StepCollector.BypassStep(id, "not today");
+            StepCollector.StartStep(id, "Given", "later-given", null, null);
+            Sends(tracker, "later-given");
+            StepCollector.CompleteStep(id, passed: true);
+            StepCollector.StartStep(id, "When", "real-act", null, null);
+            Sends(tracker, "real-act");
+            StepCollector.CompleteStep(id, passed: true);
+        });
+
+        await FilterTakesOutAsync("StepBoundaryBypassed.html", source, ["first-given"], ["later-given", "real-act"]);
+    }
+
+    // Q13: a When in tear-down, on a plain suite whose body has no When, draws the boundary, so the body sits in the frame.
+    [Fact]
+    public async Task A_When_in_tear_down_after_a_body_with_no_When_closes_the_frame_after_the_body()
+    {
+        var source = SourceOf(("Given", "arranged"), (null, "the-body"), ("When", "torn-down"));
+
+        await FilterTakesOutAsync("StepBoundaryTearDown.html", source, ["arranged", "the-body"], ["torn-down"]);
+    }
+
     // review2/A01: an act in the test's body, between a [GivenStep] and a [ThenStep]: a partition up to the Then would hold it, and the page's Setup filter
     // would hide it. With no frame and no When there is no setup to take out, so the page does not offer the filter.
     [Fact]

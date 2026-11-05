@@ -100,12 +100,12 @@ public class BddfyStepsTests
         """);
 
     [Fact]
-    public void Z9_a_second_BDDfy_call_in_one_test_lists_the_first() => Reads("Z9", """
+    public void Z9_a_second_BDDfy_call_in_one_test_lists_the_first_and_keeps_its_calls() => Reads("Z9", """
         0 Given a registered customer
           0.0 A customer is registered
         1 Then the order is confirmed
           1.0 The order is read back
-        calls: 0 /customers, 1 /orders/1
+        calls: 0 /customers, 1 /orders/1, - /customers, - /orders, - /orders/1
         """);
 
     [Fact]
@@ -134,7 +134,7 @@ public class BddfyStepsTests
         1 When a flaky step runs [Failed]
           1.0 An order is submitted
         2 Then the order is read back [SkippedAfterFailure]
-        calls: 0 /customers, 1 /orders
+        calls: 0 /customers, 1 /orders, - /customers, - /orders, - /orders/1
         """);
 
     [Theory]
@@ -289,7 +289,7 @@ public class BddfyStepsTests
               0.0 A customer is registered
             1 Then the inner step ends
               1.0 The order is read back
-            calls: 0 /customers, 1 /orders/1
+            calls: 0 /customers, 1 /orders/1, - /seed
             """);
         Assert.Equal(["inner-file"], Rows.FilesOn("HS3", "0"));
         Assert.Empty(Rows.ScenarioFilesOf("HS3"));

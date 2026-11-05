@@ -1,0 +1,18 @@
+reqnroll-xunit2    R19 a When with no HTTP call                 r19-when-message               msg   Action   before the marker
+reqnroll-xunit2    R20 a When with no HTTP call, then an And    r20-when-message               msg   Action   before the marker
+reqnroll-xunit2    R20 a When with no HTTP call, then an And    r20-when-and                   http  Action   before the marker
+reqnroll-xunit2    R20 a When with no HTTP call, then an And    r20-when-and                   msg   Action   before the marker
+xunit3-plain       X07_explicit_StartAction_inside_a_Given_step x07-after-step                 http  Setup    after the marker
+xunit3-plain       X07_explicit_StartAction_inside_a_Given_step x07-after-step                 msg   Setup    after the marker
+xunit3-plain       X22_a_When_step_with_a_call_before_an_explic x22-before-explicit            http  Action   before the marker
+xunit3-plain       X22_a_When_step_with_a_call_before_an_explic x22-before-explicit            msg   Action   before the marker
+lightbdd-xunit2    L09 a When with no HTTP call then an And     l09-when-message               msg   Action   before the marker
+lightbdd-xunit2    L09 a When with no HTTP call then an And     l09-when-and                   http  Action   before the marker
+lightbdd-xunit2    L09 a When with no HTTP call then an And     l09-when-and                   msg   Action   before the marker
+lightbdd-xunit2    L12 an untyped step after a typed one        l12-untyped-after-when         http  Unknown  after the marker
+lightbdd-xunit2    L12 an untyped step after a typed one        l12-untyped-after-when         msg   Unknown  after the marker
+bddfy-xunit3       B08_a_When_with_no_HTTP_call                 b08-when-message               msg   Action   before the marker
+bddfy-xunit3       B10_a_teardown_after_the_boundary            b10-teardown                   http  Unknown  after the marker
+bddfy-xunit3       B10_a_teardown_after_the_boundary            b10-teardown                   msg   Unknown  after the marker
+bddfy-xunit3       B11_async_steps_with_AsyncVoidSupport_off    b11-given                      msg   Setup    after the marker
+17 recorded phases disagree with where their call is drawn

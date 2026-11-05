@@ -1,0 +1,12 @@
+TestRunReport.krkl  315.1 KB on disk, 5088.1 KB as JSON  Kronikol 5.31.0+3287826e8a83e32ab62dd1a87d2fac3adca2201c
+2026-11-05T18:46:35Z → 2026-11-05T18:47:34Z
+service: breakfast-provider  under test: Breakfast Provider  (parties lists every party)
+212 scenarios · 0 failed · 2794 interactions · 1335 distinct bodies
+
+Apple Cinnamon Muffins  10 passed
+Audit Logs  5 passed
+Chef Notes  8 passed
+Customer Feedback  1 passed
+Customer Preferences  5 passed
+Daily Specials  9 passed
+Equipment Readings  5 passed

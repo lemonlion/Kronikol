@@ -66,6 +66,78 @@ public class BDDfyStepBarTests
         }
     }
 
+    // A title keeps BDDfy's own And or But: the bar drew the word it resolved in front of it, And And a second.
+    [Theory]
+    [InlineData(ExecutionOrder.ConsecutiveSetupState, "And a second", "And a second")]
+    [InlineData(ExecutionOrder.ConsecutiveSetupState, "But not a third", "But not a third")]
+    [InlineData(ExecutionOrder.ConsecutiveTransition, "And they pay", "And they pay")]
+    [InlineData(ExecutionOrder.ConsecutiveAssertion, "And it arrives", "And it arrives")]
+    [InlineData(ExecutionOrder.ConsecutiveAssertion, "But it is late", "But it is late")]
+    // By a reflective name, where AndGiven keeps its And and the rest of the name.
+    [InlineData(ExecutionOrder.ConsecutiveSetupState, "And given a second", "And given a second")]
+    // A word the step's own text begins with stays, if it is no keyword of a consecutive step.
+    [InlineData(ExecutionOrder.ConsecutiveSetupState, "Android is ready", "And Android is ready")]
+    public void A_bar_draws_a_steps_And_or_But_once(ExecutionOrder order, string title, string drawn)
+    {
+        var testId = TestContext.Current.Test!.UniqueID;
+        StepCollector.ClearSteps(testId);
+        try
+        {
+            var executor = new BDDfyStepTrackingExecutor(new CallingExecutor(testId));
+            var first = order switch
+            {
+                ExecutionOrder.ConsecutiveSetupState => ExecutionOrder.SetupState,
+                ExecutionOrder.ConsecutiveTransition => ExecutionOrder.Transition,
+                _ => ExecutionOrder.Assertion,
+            };
+            executor.Execute(new Step(_ => null!, new StepTitle("The step before"), false, first, true, []), this);
+            executor.Execute(new Step(_ => null!, new StepTitle(title), false, order, true, []), this);
+
+            var bar = RequestResponseLogger.RequestAndResponseLogs
+                .Where(log => log.TestId == testId && log.MarkerKind == DiagramMarkerKind.Step)
+                .Select(log => log.PlantUml).Last(text => text is not null);
+
+            Assert.Contains(drawn, bar);
+            Assert.DoesNotContain($"And {drawn}", bar);
+        }
+        finally
+        {
+            StepCollector.ClearSteps(testId);
+        }
+    }
+
+    // BDDfy's phase is the step's order, whatever word its title keeps.
+    [Theory]
+    [InlineData(ExecutionOrder.ConsecutiveSetupState, "But not a third", TestPhase.Setup)]
+    [InlineData(ExecutionOrder.ConsecutiveTransition, "And they pay", TestPhase.Action)]
+    [InlineData(ExecutionOrder.ConsecutiveAssertion, "But it is late", TestPhase.Action)]
+    public void A_consecutive_steps_phase_is_its_order_and_not_the_word_in_its_title(ExecutionOrder order, string title, TestPhase phase)
+    {
+        var testId = TestContext.Current.Test!.UniqueID;
+        StepCollector.ClearSteps(testId);
+        try
+        {
+            var read = TestPhase.Unknown;
+            new BDDfyStepTrackingExecutor(new ReadingExecutor(() => read = TestPhaseContext.Current))
+                .Execute(new Step(_ => null!, new StepTitle(title), false, order, true, []), this);
+
+            Assert.Equal(phase, read);
+        }
+        finally
+        {
+            StepCollector.ClearSteps(testId);
+        }
+    }
+
+    private sealed class ReadingExecutor(Action body) : IStepExecutor
+    {
+        public object Execute(Step step, object testObject)
+        {
+            body();
+            return null!;
+        }
+    }
+
     /// <summary>A step's body, as BDDfy's own executor would run it: one call.</summary>
     private sealed class CallingExecutor(string testId) : IStepExecutor
     {

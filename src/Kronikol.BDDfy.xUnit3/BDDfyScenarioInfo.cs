@@ -15,6 +15,9 @@ public record BDDfyScenarioInfo
     public required TestStack.BDDfy.Result Result { get; init; }
     public TimeSpan Duration { get; init; }
 
+    /// <summary>Which of the run's BDDfy calls this came from: a later one is a higher number, and rows of one call share it.</summary>
+    internal int Call { get; init; }
+
     /// <summary>When the scenario finished, stamped by the processor that collects it once BDDfy has run it.</summary>
     public DateTimeOffset? EndedAt { get; init; }
     public string? ErrorMessage { get; init; }
@@ -66,4 +69,7 @@ public record BDDfyStepInfo(string Keyword, string Text, TestStack.BDDfy.Result 
 {
     /// <summary>BDDfy's id for the step, which finds the frame the step executor opened for it.</summary>
     internal string? StepId { get; init; }
+
+    /// <summary>The reason a step called xUnit's <c>Assert.Skip</c>: BDDfy reads that as a failure, and the test is skipped.</summary>
+    internal string? SkipReason { get; init; }
 }

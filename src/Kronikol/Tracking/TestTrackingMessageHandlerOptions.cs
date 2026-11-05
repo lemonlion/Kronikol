@@ -46,7 +46,11 @@ public record TestTrackingMessageHandlerOptions
     /// <summary>Callback that returns the current test name and ID. Set automatically by framework adapters.</summary>
     public Func<(string Name, string Id)>? CurrentTestInfoFetcher { get; set; } = null;
 
-    /// <summary>Callback that returns the current test step type (e.g. "Given", "When", "Then"). Set automatically by framework adapters.</summary>
+    /// <summary>
+    /// Callback that returns the current test step type (e.g. "Given", "When", "Then"). Set automatically by framework adapters. The handler reads it for
+    /// where the Setup/Action boundary falls, until the test's own framework steps set its phase, as they draw the boundary from then on, and until
+    /// this handler has passed the boundary.
+    /// </summary>
     public Func<string?>? CurrentStepTypeFetcher { get; set; } = null;
 
     /// <summary>OpenTelemetry activity source names to capture for internal flow diagrams.</summary>

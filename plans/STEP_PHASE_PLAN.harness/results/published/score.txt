@@ -1,0 +1,16 @@
+variant        reqnroll-xunit2      xunit3-plain   lightbdd-xunit2      bddfy-xunit3       all  (cells that differ from the rule's answer, of the total)
+5.28.2                  49/179            28/266            67/112             12/74156/   631
+r3                       0/179             0/266             0/111              0/74  0/   630
+5.30.3                   0/179             0/266             0/111              0/74  0/   630
+5.31.0                   0/179             0/266             0/111              0/74  0/   630
+
+variant        reqnroll-xunit2      xunit3-plain   lightbdd-xunit2      bddfy-xunit3       all  (cells right at 5.28.2 and wrong here: what the variant breaks)
+r3                           0                 0                 0                 0         0
+5.30.3                       0                 0                 0                 0         0
+5.31.0                       0                 0                 0                 0         0
+
+variant        reqnroll-xunit2      xunit3-plain   lightbdd-xunit2      bddfy-xunit3  (tests with a Setup/Action boundary, of the tests)
+5.28.2                   18/22              3/36             12/16              9/11
+r3                       21/22             31/36             15/16             11/11
+5.30.3                   18/22              3/36             12/16              9/11
+5.31.0                   21/22             31/36             15/16             11/11

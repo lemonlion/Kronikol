@@ -1,0 +1,5 @@
+phase   calls errors   median      max bodies     bytes
+-        1393    108     0 ms   2.61 s    654  997.6 KB
+Setup       5      0     2 ms     8 ms      5     751 B
+Action      1      0     9 ms     9 ms      1   22.5 KB
+3 buckets

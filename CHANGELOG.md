@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.31.1] - 2026-11-05
+
+The patch part moves (5.31.0 to 5.31.1): bug fixes in what a BDDfy scenario reads, with nothing new to call. It closes #122, with what 5.29.3 left of it: a step's and a scenario's time.
+
+### Fixed
+
+- **A BDDfy test that runs more than one story or row reads the result xUnit gave it.** The report read the first alone. A second story or a later row of an example table that failed left a failed test reading Passed, with no entry in `Failures.md`, and a story that passed when run again left a passed test reading Failed, with the first attempt's error. A `BDDfy()` call throws at its end if a row failed, so a later call ran only if the ones before it passed or something caught their failure: the last call decides, and in it any row that failed.
+- **An async step's time is its task's, and a scenario's is its steps' (#122).** BDDfy's stopwatch stops when a step's task comes back, at its first `await`, so a slow scenario read under 50 ms, `query scenarios`, the slowest list and `--slower-than` missed it, and a first-call warm-up could fill all of it. A test of several stories or rows takes as long as they all did.
+- **A later story's calls stay on their test.** A test ended at its first story, so what the next story called read as background. They now read no step on that scenario, and the list still shows the first story, as it did.
+- **`Assert.Skip` in a BDDfy step reads Skipped, with the reason you gave.** BDDfy takes it for a failure, so the test xUnit skipped read Failed, with xUnit's internal marker at the head of its message.
+- **A step named by BDDfy's attributes reads its keyword.** `[Given("a thing")]` read `Step a thing`, where its bar read `Given`.
+- **A bar draws a step's And or But once.** Every fluent `.And()` drew `And And a second`, and `.But()` `And But not a third`.
+
+### Changed behaviour
+
+- A test whose first story failed and whose later one passed reads Passed with the first story's rows, one of which reads Failed, as the report lists the first run.
+
+### Known
+
+- A story inside `Assert.Throws` reads Failed where xUnit says Passed, and of two stories started together the last to end decides: the adapter reads BDDfy's word for a story, with no hook on xUnit's result.
+- A step that never ends under `[Fact(Timeout)]` has no scenario, as BDDfy never reports the story. `kronikol query` says its calls carry a test id no scenario has.
+- A `ValueTask` step is not waited for: BDDfy's fluent API discards it before any executor sees it, and waits on a `Task` alone. Return a `Task`.
+- An `OperationCanceledException` of your own in an async step reads "A task was canceled.", in the report as in xUnit, as BDDfy waits on the task with `Wait`.
+
+### Documentation
+
+- `TestTrackingMessageHandlerOptions.CurrentStepTypeFetcher` says when the handler reads it: for where the Setup/Action boundary falls, until the test's own
+  framework steps set its phase, and until the handler has passed the boundary.
+
+### Tests
+
+- The report page's Setup filter is pinned for three answers of the step phase plan: an explicit `StartAction()` inside a When moves the frame past
+  what came before it, a bypassed When draws the boundary, and a When in tear-down after a body with no When closes the frame after the body.
+
 ## [5.31.0] - 2026-11-05
 
 The minor part moves (5.30.3 to 5.31.0): a suite of step attributes gets a Setup partition it has never had, which is a diagram feature, and the highest-ranking change
