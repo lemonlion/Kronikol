@@ -1,0 +1,2 @@
+# The end-to-end facts with Step in their names on R3 as it ships.
+Passed!  - Failed:     0, Passed:   132, Skipped:     0, Total:   132, Duration: 2 m 17 s - Kronikol.Tests.EndToEnd.dll (net10.0)

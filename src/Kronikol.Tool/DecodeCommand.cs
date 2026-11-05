@@ -155,7 +155,7 @@ public static class DecodeCommand
         var buffer = ArrayPool<byte>.Shared.Rent(128 * 1024);
         try
         {
-            var state = new JsonReaderState(new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip });
+            var state = new JsonReaderState(new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip, MaxDepth = Kronikol.Reports.ReportGenerator.DataFileMaxDepth });
             var filled = 0;
             var eof = false;
             while (true)

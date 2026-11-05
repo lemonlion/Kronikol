@@ -428,7 +428,7 @@ public class ReportAttributionTests
     }
 
     [Fact]
-    public void A_stamp_on_a_sub_step_reads_the_top_level_step_it_is_in()
+    public void A_stamp_on_a_sub_step_reads_that_sub_step()
     {
         var features = Collected("t8", new ScenarioStep
         {
@@ -443,7 +443,7 @@ public class ReportAttributionTests
             Real("t8", "deeper") with { OpenStep = 3 },
         };
 
-        Assert.Equal(["0", "0"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t8"]);
+        Assert.Equal(["0.0", "0.0.0"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t8"]);
     }
 
     [Fact]
@@ -726,6 +726,6 @@ public class ReportAttributionTests
             Real("t5b", "between"),
         };
 
-        Assert.Equal(["0", "0", "1"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t5b"]);
+        Assert.Equal(["0", "0.0", "1"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t5b"]);
     }
 }

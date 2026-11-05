@@ -18,7 +18,7 @@ the .NET 10 SDK.
 | scenario | `s3` | ordinal in file order; `stableId` is the cross-run key |
 | interaction | `s3/i47` | ordinal within the scenario, in capture order |
 | step | `s3/2`, `s3/b0` | the same value the report's `stepPath` carries; `b` prefixes a background step |
-| assertion / sub-step | `s3/2.1` | dotted path under its step |
+| assertion / sub-step | `s3/2.1` | dotted path under its step; a call made in a sub-step carries it as its `stepPath` |
 | body | `b:4bdea521` | first 8 hex of SHA-1 of the content — stable across runs and scenarios. `http` and `body` both take this and `s3/i47` |
 | diagram | `s3/d0` | |
 | note within a diagram | `s3/d0/n12` | |

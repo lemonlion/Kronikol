@@ -147,7 +147,7 @@ public static partial class QueryCommand
                 // one step's long list cannot push every other failure past the byte budget.
                 WriteAttachments(writer, index, step.Attachments, $"  {indent}  ", $"attachments {scenario.Address}/{path}");
 
-                var scoped = scenario.Interactions.Where(i => i.StepPath == path && i.Type == "Request").ToArray();
+                var scoped = scenario.Interactions.Where(i => InFailingStep(i, path, failingSteps) && i.Type == "Request").ToArray();
                 if (scoped.Length > 0)
                 {
                     writer.Line($"  {indent}  {scoped.Length} calls in this step:");
@@ -185,6 +185,13 @@ public static partial class QueryCommand
 
         return 0;
     }
+
+    /// <summary>Each call goes under the deepest failing step that covers it, so none is listed twice and none is lost.</summary>
+    private static bool InFailingStep(InteractionEntry call, string failing, (string Path, int Depth, StepEntry Step)[] failingSteps) =>
+        Address.PathCoveredBy(call.StepPath, failing)
+        && !failingSteps.Any(deeper => deeper.Path != failing
+                                       && Address.PathCoveredBy(deeper.Path, failing)
+                                       && Address.PathCoveredBy(call.StepPath, deeper.Path));
 
     /// <summary>
     /// The steps a failure is read from: those marked failed, or with none marked, those with no result, as a hang fails no step and
@@ -252,7 +259,7 @@ public static partial class QueryCommand
                 sourceFile = s.Step.SourceFile,
                 sourceLine = s.Step.SourceLine,
                 calls = scenario.Interactions
-                    .Where(i => i.StepPath == s.Path && i.Type == "Request")
+                    .Where(i => InFailingStep(i, s.Path, failingSteps) && i.Type == "Request")
                     .Take(MaxFailingStepCalls)
                     .Select(i => (Request: i, Response: FindResponse(scenario, i)))
                     .Select(c => new
@@ -265,8 +272,8 @@ public static partial class QueryCommand
                         status = Failed(c.Response) ? c.Response!.StatusCode : null,
                         error = Failed(c.Response) ? c.Response!.Error : null
                     }),
-                // The calls made in the step itself, which the text counts; `flow sN/P` lists them all.
-                callsTotal = scenario.Interactions.Count(i => i.StepPath == s.Path && i.Type == "Request"),
+                // The calls under the step and no deeper failing step, which the text counts; `flow sN/P` lists them all.
+                callsTotal = scenario.Interactions.Count(i => InFailingStep(i, s.Path, failingSteps) && i.Type == "Request"),
                 // As the text prints them under the step, the first and the last five, so the two cannot disagree.
                 attachments = QueryWriter.CutList(s.Step.Attachments, MaxAttachmentsShown, AttachmentsHead).Shown.Select(a => AttachmentObject(a, index)),
                 attachmentsTotal = s.Step.Attachments.Count
@@ -418,6 +425,20 @@ public static partial class QueryCommand
             .GroupBy(i => i.StepPath)
             .ToDictionary(g => g.Key ?? "", g => g.ToArray());
 
+        // A row answers for the step and everything under it, as a step's address does: a call counts at every level above it.
+        var covered = new Dictionary<string, (int First, int Last, int Count)>(StringComparer.Ordinal);
+        foreach (var (stepPath, stepCalls) in byStep)
+        {
+            if (stepPath.Length == 0)
+                continue;
+            var first = stepCalls.Min(c => c.Ordinal);
+            var last = stepCalls.Max(c => c.Ordinal);
+            for (var at = stepPath; at.Length > 0; at = at.LastIndexOf('.') is var dot and > 0 ? at[..dot] : "")
+                covered[at] = covered.TryGetValue(at, out var seen)
+                    ? (Math.Min(seen.First, first), Math.Max(seen.Last, last), seen.Count + stepCalls.Length)
+                    : (first, last, stepCalls.Length);
+        }
+
         // A step address answers for that step and everything under it. The depth is re-based on the
         // scope so a scoped tree reads as a tree rather than as an indented fragment of one.
         var rows = scenario.AllSteps().Where(row => scope is null || Address.PathCoveredBy(row.Path, scope)).ToList();
@@ -434,10 +455,10 @@ public static partial class QueryCommand
             var duration = step.DurationSeconds is { } d and > 0.001 ? $"  {d:0.##}s" : "";
 
             var range = "";
-            if (byStep.TryGetValue(path, out var calls) && calls.Length > 0)
-                range = calls.Length == 1
-                    ? $"  [i{calls[0].Ordinal}]"
-                    : $"  [i{calls[0].Ordinal}-i{calls[^1].Ordinal}] {calls.Length} calls";
+            if (covered.TryGetValue(path, out var calls))
+                range = calls.Count == 1
+                    ? $"  [i{calls.First}]"
+                    : $"  [i{calls.First}-i{calls.Last}] {calls.Count} calls";
 
             writer.Line($"{indent}{mark} {path,-5} {QueryWriter.OneLine(step.Display, 90)}{duration}{range}");
 

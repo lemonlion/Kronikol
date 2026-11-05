@@ -42,7 +42,7 @@ public static class MergeableReportReader
     /// <summary>Parses a mergeable report from a JSON string.</summary>
     public static MergeableReport Parse(string json)
     {
-        using var doc = JsonDocument.Parse(json);
+        using var doc = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = ReportGenerator.DataFileMaxDepth });
         var root = doc.RootElement;
 
         if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("features", out _))

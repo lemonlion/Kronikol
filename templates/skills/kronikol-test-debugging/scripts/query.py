@@ -404,7 +404,7 @@ def cmd_steps(_path, report, args):
         depth = raw_depth - base
         mark = "✗" if step.get("status") == "Failed" else "?" if has_a_result and step.get("status") is None and not step.get("isAssertion") else " "
         keyword = (step.get("keyword") or "").strip()
-        calls = by_step.get(path, [])
+        calls = sorted(i for key, found in by_step.items() if key is not None and covered_by(key, path) for i in found)
         span = f"  [i{calls[0]}-i{calls[-1]}] {len(calls)} calls" if len(calls) > 1 else (f"  [i{calls[0]}]" if calls else "")
         lines.append(f"{'  ' * depth}{mark} {path:<5} {one_line((keyword + ' ' + step.get('text', '')).strip(), 90)}{span}")
         if step.get("failureMessage"):

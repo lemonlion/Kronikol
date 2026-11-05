@@ -169,7 +169,8 @@ matters.
   every `--json` scenario row carries it, and it has no child forms.
 - **A step path covers its sub-steps.** `steps s3/2`, `assertions s3/2` and `flow s3/2` answer for `2` and
   for everything under it, and `--step 2` means the same. The addresses `failures` prints are frequently
-  parents of the step that actually failed, so this is the common case, not the corner.
+  parents of the step that actually failed, so this is the common case, not the corner. A call's own
+  `stepPath` names the deepest step it was made in (`2.1`), so `--group-by step` splits by sub-step.
 - **A body ending `…truncated (N chars total)` was capped at capture time.** The rest was never recorded —
   it is not somewhere else in the file. `query` says so when it prints one.
 - **Attachments are pointers.** `failures`, `steps` and `attachments` print absolute paths for screenshots; `Read`

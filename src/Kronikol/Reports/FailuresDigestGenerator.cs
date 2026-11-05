@@ -394,28 +394,20 @@ public static class FailuresDigestGenerator
 
     /// <summary>
     /// Whether an interaction attributed to <paramref name="attributed"/> happened inside
-    /// <paramref name="failingStep"/> — the same step, or an ancestor of it.
+    /// <paramref name="failingStep"/>: the same step, an ancestor of it, or a step under it.
     ///
-    /// <para>The ancestor case is the whole point. Interactions are attributed to TOP-LEVEL steps
-    /// (<c>ReportGenerator.OrderedStepPaths</c> emits <c>b0..bN</c> and <c>0..N</c> and nothing else) while
-    /// the digest walks the whole tree and names a failing step by its nested path, <c>1.0</c>. Comparing
-    /// those two for equality can never match, so a scenario whose failure was inside a composite step
-    /// could not populate <c>calls</c> at all, whatever it had done. A call attributed to step <c>1</c> is
-    /// the best available answer for a failure in <c>1.0</c>: it is the call that happened while that
-    /// subtree was running.</para>
+    /// <para>A call reads any level, and the digest walks the whole tree and names a failing step by its nested
+    /// path, <c>1.0</c>. A call stamped by its flow reads the step it was made in. One attributed by the walk
+    /// reads the top-level step (<c>ReportGenerator.OrderedStepPaths</c> emits <c>b0..bN</c> and <c>0..N</c> and
+    /// nothing else), and a call attributed to step <c>1</c> is the best available answer for a failure in
+    /// <c>1.0</c>: it is the call that happened while that subtree was running. A failing parent keeps the
+    /// calls of the steps under it, as they happened inside it. Comparing for equality would lose both.</para>
     ///
     /// <para>Compared segment by segment rather than with <c>StartsWith</c>, which would make step
     /// <c>1</c> an ancestor of step <c>10</c>.</para>
     /// </summary>
-    private static bool Covers(string attributed, string failingStep)
-    {
-        if (string.Equals(attributed, failingStep, StringComparison.Ordinal))
-            return true;
-
-        return failingStep.Length > attributed.Length
-               && failingStep[attributed.Length] == '.'
-               && failingStep.AsSpan(0, attributed.Length).SequenceEqual(attributed);
-    }
+    private static bool Covers(string attributed, string failingStep) =>
+        Query.Address.PathCoveredBy(attributed, failingStep) || Query.Address.PathCoveredBy(failingStep, attributed);
 
     // The time the data file writes (ReportGenerator.ComputeInteractionDurations): a capturer's measurement first, then the
     // gap between the two records. Until 4.7.3 the digest read the gap alone, so a call ingested as one record had none.

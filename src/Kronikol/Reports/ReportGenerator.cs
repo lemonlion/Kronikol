@@ -5377,10 +5377,10 @@ public static class ReportGenerator
     /// Walks one test's ordered log stream and works out, for every real interaction, which step it happened
     /// under, plus the annotations worth exporting.
     ///
-    /// <para>A record logged with a step open names that step (<see cref="RequestResponseLog.OpenStep"/>), and reads the
-    /// top-level step it is in, wherever every top-level step that ran carries its id. So a step method that ran with no framework
-    /// step open, or bars hidden, moves no call. A stamp naming no listed step reads no step: the step before it did not make that
-    /// call. A record with no stamp, logged with no step open, reads the step before it.</para>
+    /// <para>A record names the step it was logged under (<see cref="RequestResponseLog.OpenStep"/>), and reads that step at its
+    /// whole path, wherever every top-level step that ran carries its id. So a step method that ran with no framework step open, or
+    /// bars hidden, moves no call. A stamp naming no listed step reads no step: the step before it did not make that call. A record
+    /// with no stamp was logged before the first step, and reads what the bars before it give.</para>
     ///
     /// <para>Everything else (every ingest, a scenario built by hand, a row rebuilt among collected rows) is positional: the
     /// <em>n</em>th step marker opens the <em>n</em>th step in document order (background steps first, and leaving out what
@@ -5429,7 +5429,7 @@ public static class ReportGenerator
             {
                 if (!log.IsDiagramMarker)
                 {
-                    // The step open when the call was logged, where this scenario's steps carry their ids. With none open,
+                    // The step the call was logged under, where this scenario's steps carry their ids. With no stamp,
                     // or no ids to go by, the step before it. A record a hold let through late names a step already passed and moves
                     // nothing, so what follows it reads as it would have.
                     var read = current;
@@ -5548,6 +5548,7 @@ public static class ReportGenerator
     /// address it gets in the data file: <c>b0</c>, <c>b1</c> for background steps, then <c>0</c>, <c>1</c> for the scenario's
     /// own. Only top-level steps appear, as a step delimiter is emitted for those alone, and not those
     /// <see cref="Scenario.BarlessRows"/> names.
+    /// A walk reads no deeper. Only a record's stamp names a sub-step.
     /// </summary>
     private static List<(string Path, string? Keyword, string Text)> OrderedStepPaths(Scenario scenario)
     {
@@ -5567,7 +5568,7 @@ public static class ReportGenerator
     }
 
     /// <summary>
-    /// The address a call under each collected step gets: the top-level step it is in. Null for a scenario with a top-level
+    /// The address a call under each collected step gets: that step's whole path, as <c>ReportIndex.AllSteps</c> gives it. Null for a scenario with a top-level
     /// step that ran and carries no id (built by hand through the public model, paired by position, or rebuilt among collected
     /// steps), whose calls are all read against the bars, as a stamp could not name that step.
     /// </summary>
@@ -5585,8 +5586,9 @@ public static class ReportGenerator
         {
             if (step.CollectedId is { } id)
                 paths.TryAdd(id, path);
+            var index = 0;
             foreach (var sub in step.SubSteps ?? [])
-                Add(sub, path);
+                Add(sub, $"{path}.{index++}");
         }
 
         for (var i = 0; i < background.Length; i++)
@@ -5682,6 +5684,12 @@ public static class ReportGenerator
     }
 
     /// <summary>
+    /// How deep the data file's JSON can go, for its writer and every reader of it. A step holds its sub-steps inside it, two levels each,
+    /// and a JSON reader stops at 64 unless told otherwise, which was a tree 28 steps deep.
+    /// </summary>
+    internal const int DataFileMaxDepth = 1024;
+
+    /// <summary>
     /// How every form of <c>TestRunReport.json</c> is serialized: the standard file, the mergeable one and a merge's
     /// output, which all go through the two writers below. The relaxed encoder writes a quote inside a string as
     /// <c>\"</c> and leaves <c>&lt;</c>, <c>&gt;</c>, <c>&amp;</c>, <c>'</c>, <c>+</c> and non-ASCII text as they
@@ -5693,6 +5701,7 @@ public static class ReportGenerator
     /// </summary>
     private static readonly JsonSerializerOptions TestRunReportJsonOptions = new()
     {
+        MaxDepth = DataFileMaxDepth,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = true,
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -8284,7 +8293,7 @@ public static class ReportGenerator
                             }
                         },
                         ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response: the capturer's own measurement when the record carried one (durationMs on the NDJSON input), otherwise derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered and nothing was measured, when timestamps are absent, or when both records carry the same instant (a call logged after the fact, which measured nothing)." },
-                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, in a step the report does not list, while several steps ran that share none, and whenever attribution could not be trusted: see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } },
+                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...), dotted for a sub-step (0.1). Null before the first step, in a step the report does not list, while several steps ran that share none, and whenever attribution could not be trusted: see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } },
                         ["testDouble"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "What answered the call in its service's place, when its capturer saw a test double answer it (#190): MSW, WireMock, a handler's type name. Written only on a marked call; an unmarked call is unknown, never real.", ["examples"] = new[] { "MSW", "WireMock" } }
                     }
                 }

@@ -85,7 +85,7 @@ internal sealed class ReportSizes
             var filled = 0;
             var eof = false;
             long windowStart = 0;
-            var state = new JsonReaderState(new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip });
+            var state = new JsonReaderState(new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip, MaxDepth = Reports.ReportGenerator.DataFileMaxDepth });
             while (true)
             {
                 if (!eof)

@@ -29,6 +29,18 @@ public sealed class ReportRows
     /// <param name="name">How the scenario's name starts: an outline's rows carry their values after it.</param>
     /// <param name="occurrence">Which of the scenarios with that start, for an outline's rows.</param>
     /// <param name="withoutCalls">Calls left out for racing a delay against the next step, by path.</param>
+    // These facts compare which of a scenario's rows a call belongs to. CallsOf reads the whole path.
+    private static string? TopLevel(string? path) => path?.Split('.')[0];
+
+    /// <summary>The scenario's calls, in order, each with the whole step path it reads: <c>0.0 /customers, 1.0 /orders</c>.</summary>
+    public string CallsOf(string name)
+    {
+        var scenario = _scenarios.First(s => s.Name.StartsWith(name, StringComparison.Ordinal)).Scenario;
+        return string.Join(", ", Items(scenario, "httpInteractions")
+            .Where(call => Text(call, "type") == "Request" && Text(call, "uri") is not null)
+            .Select(call => $"{Text(call, "stepPath") ?? "-"} {new Uri(Text(call, "uri")!).AbsolutePath}"));
+    }
+
     public string Of(string name, int occurrence = 0, params string[] withoutCalls)
     {
         var scenario = _scenarios.Where(s => s.Name.StartsWith(name, StringComparison.Ordinal)).Select(s => s.Scenario).ElementAtOrDefault(occurrence);
@@ -40,7 +52,7 @@ public sealed class ReportRows
         Steps(Items(scenario, "steps"), "", lines, 0);
         var calls = Items(scenario, "httpInteractions")
             .Where(call => Text(call, "type") == "Request" && Text(call, "uri") is not null)
-            .Select(call => (Step: Text(call, "stepPath") ?? "-", Path: new Uri(Text(call, "uri")!).AbsolutePath))
+            .Select(call => (Step: TopLevel(Text(call, "stepPath")) ?? "-", Path: new Uri(Text(call, "uri")!).AbsolutePath))
             .Where(call => !withoutCalls.Contains(call.Path))
             .Select(call => $"{call.Step} {call.Path}");
         lines.Append("calls: ").Append(string.Join(", ", calls));

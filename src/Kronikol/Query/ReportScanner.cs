@@ -98,7 +98,7 @@ internal static class ReportScanner
         var buffer = ArrayPool<byte>.Shared.Rent(InitialWindow);
         try
         {
-            var state = new JsonReaderState(new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip });
+            var state = new JsonReaderState(new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip, MaxDepth = Reports.ReportGenerator.DataFileMaxDepth });
             var filled = 0;
             long windowStart = content.Start;
             var eof = false;

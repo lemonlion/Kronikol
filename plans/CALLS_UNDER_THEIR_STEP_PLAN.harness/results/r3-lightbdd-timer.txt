@@ -1,0 +1,22 @@
+run 1 exit 0
+run 2 exit 0
+run 3 exit 0
+run 4 exit 0
+run 5 exit 0
+run 6 exit 1
+[xUnit.net 00:00:08.70]       Assert.StartsWith() Failure: String start does not match
+[xUnit.net 00:00:08.70]       String:         "0.0 /customers"
+[xUnit.net 00:00:08.70]       Expected start: "0.0 /customers, 1.0 /orders"
+[xUnit.net 00:00:08.70]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.RealEngines\CallPathsTests.cs(19,0): at Kronikol.Tests.RealEngines.CallPathsTests.A_call_in_a_LightBDD_steps_step_method_gives_the_same_path()
+  Failed Kronikol.Tests.RealEngines.CallPathsTests.A_call_in_a_LightBDD_steps_step_method_gives_the_same_path [7 s]
+   Assert.StartsWith() Failure: String start does not match
+String:         "0.0 /customers"
+Expected start: "0.0 /customers, 1.0 /orders"
+     at Kronikol.Tests.RealEngines.CallPathsTests.A_call_in_a_LightBDD_steps_step_method_gives_the_same_path() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.RealEngines\CallPathsTests.cs:line 19
+run 7 exit 0
+run 8 exit 0
+run 9 exit 0
+run 10 exit 0
+run 11 exit 0
+run 12 exit 0
+done

@@ -17,7 +17,7 @@ namespace Kronikol.Compression;
 internal sealed class ReportJsonPruner : Stream
 {
     /// <summary>Deeper than any serializer writes by default, so the reader never refuses what the writer produced.</summary>
-    private const int MaxDepth = 256;
+    private const int MaxDepth = Kronikol.Reports.ReportGenerator.DataFileMaxDepth;
 
     /// <summary>How much the window holds before it is read: tokens are passed on in batches, not on every write.</summary>
     private const int Batch = 32 * 1024;

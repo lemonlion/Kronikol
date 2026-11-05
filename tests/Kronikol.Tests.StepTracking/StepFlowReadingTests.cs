@@ -212,6 +212,30 @@ public class StepFlowReadingTests
             [Step] async Task AChild() => await Task.Yield();
             [Step] async Task BesideIt() { await _childEnded.Task; _both.SetResult(); await _go.Task; }
 
+            // A call made in a sub-step reads it
+            public async Task InSubSteps() { await Outer(); await Later(); }
+            [Step] async Task Outer() { Call("outer-before"); await Inner(); Call("outer-after"); }
+            [Step] async Task Inner() { await Task.Yield(); Call("in-inner"); await Deepest(); }
+            [Step] async Task Deepest() { await Task.Yield(); Call("in-deepest"); }
+            [Step] async Task Later() { await Task.Yield(); Call("in-later"); }
+
+            // A service's thread: the deepest of one chain, the nearest shared of two
+            public async Task ServiceThreadOneChain() => await ChainOuter();
+            [Step] async Task ChainOuter() => await ChainInner();
+            [Step] async Task ChainInner() { await Task.Yield(); await Elsewhere("from-the-service"); }
+
+            public async Task ServiceThreadTwoBranches() => await Shared();
+            [Step] async Task Shared()
+            {
+                var a = BranchA(); var b = BranchB();
+                await _both.Task;
+                await Elsewhere("from-the-service");
+                _go.SetResult();
+                await Task.WhenAll(a, b);
+            }
+            [Step] async Task BranchA() { await _go.Task; }
+            [Step] async Task BranchB() { _both.SetResult(); await _go.Task; }
+
             // The trace join: a service's onward call reads the step of the call it ran inside
             private void Log(string where, string caller, string service, RequestResponseType type, Guid trace, Guid call) =>
                 RequestResponseLogger.Log(new RequestResponseLog(Id, Id, HttpMethod.Get, null, new Uri("http://svc.local/" + where), [], service, caller, type, trace, call, false));
@@ -243,6 +267,26 @@ public class StepFlowReadingTests
             public async Task TraceJoin() { var a = CallsFirst(); var b = CallsSecond(); await Task.WhenAll(a, b); }
             [Step] async Task CallsFirst() { await Task.Yield(); await Through("first", _firstInFlight, _secondInFlight); }
             [Step] async Task CallsSecond() { await Task.Yield(); await Through("second", _secondInFlight, _firstInFlight); }
+
+            // Below the top level
+            public async Task TwoSubStepsThrough() => await BothThrough();
+            [Step] async Task BothThrough() { var a = CallsFirst(); var b = CallsSecond(); await Task.WhenAll(a, b); }
+
+            public async Task ParentsCallWhileAChildRuns() => await JoinParent();
+            public Task ParentsCallUnalignedWhileAChildRuns() { _calledAs = "svc.local"; return ParentsCallWhileAChildRuns(); }
+            [Step] async Task JoinParent()
+            {
+                var trace = Guid.NewGuid();
+                var call = Guid.NewGuid();
+                Log("parent-call", "Tests", _calledAs, RequestResponseType.Request, trace, call);
+                var child = JoinChild();
+                await _firstInFlight.Task;
+                await Onward("parent-onward", "Svc", trace);
+                _go.SetResult();
+                await child;
+                Log("parent-call", "Tests", _calledAs, RequestResponseType.Response, trace, call);
+            }
+            [Step] async Task JoinChild() { _firstInFlight.SetResult(); await _go.Task; }
 
             // Answered already: that call is over, and what ran on is no part of it
             public async Task AnsweredIsNotAParent() { var a = AnsweredFirst(); var b = AnsweredSecond(); await Task.WhenAll(a, b); }
@@ -444,7 +488,7 @@ public class StepFlowReadingTests
         var read = await ReadCalls("AServicesStep");
 
         Assert.Equal("0", read["to-the-service"]);
-        Assert.Equal("0", read["from-the-handler"]);
+        Assert.Equal("0.0", read["from-the-handler"]);
     }
 
     [Fact]
@@ -453,7 +497,7 @@ public class StepFlowReadingTests
         var read = await ReadCalls("AServicesStepAfterTheAnswer");
 
         Assert.Equal("0", read["answered-call"]);
-        Assert.Equal("1", read["from-the-handler"]);
+        Assert.Equal("1.0", read["from-the-handler"]);
     }
 
     [Fact]
@@ -477,6 +521,57 @@ public class StepFlowReadingTests
         var read = await ReadCalls("ServiceThreadAfterAChildEnded");
 
         Assert.Null(read["from-the-service"]);
+    }
+
+    [Fact]
+    public async Task A_call_reads_the_deepest_step_it_was_made_in()
+    {
+        var read = await ReadCalls("InSubSteps");
+
+        Assert.Equal("0", read["outer-before"]);
+        Assert.Equal("0.0", read["in-inner"]);
+        Assert.Equal("0.0.0", read["in-deepest"]);
+        Assert.Equal("0", read["outer-after"]);
+        Assert.Equal("1", read["in-later"]);
+    }
+
+    [Fact]
+    public async Task A_services_thread_with_one_chain_open_reads_the_deepest_step()
+    {
+        Assert.Equal("0.0", (await ReadCalls("ServiceThreadOneChain"))["from-the-service"]);
+    }
+
+    [Fact]
+    public async Task A_services_thread_with_two_branches_open_reads_the_step_they_share()
+    {
+        Assert.Equal("0", (await ReadCalls("ServiceThreadTwoBranches"))["from-the-service"]);
+    }
+
+    [Fact]
+    public async Task Two_sub_steps_at_once_each_services_onward_call_reads_the_sub_step_it_ran_inside()
+    {
+        var read = await ReadCalls("TwoSubStepsThrough");
+
+        Assert.Equal("0.0", read["first-onward"]);
+        Assert.Equal("0.1", read["second-onward"]);
+    }
+
+    [Fact]
+    public async Task A_parents_own_call_keeps_what_the_service_did_for_it_while_a_child_runs_when_the_names_do_not_line_up()
+    {
+        var read = await ReadCalls("ParentsCallUnalignedWhileAChildRuns");
+
+        Assert.Equal("0", read["parent-call"]);
+        Assert.Equal("0", read["parent-onward"]);
+    }
+
+    [Fact]
+    public async Task A_parents_own_call_keeps_what_the_service_did_for_it_while_a_child_runs()
+    {
+        var read = await ReadCalls("ParentsCallWhileAChildRuns");
+
+        Assert.Equal("0", read["parent-call"]);
+        Assert.Equal("0", read["parent-onward"]);
     }
 
     [Fact]

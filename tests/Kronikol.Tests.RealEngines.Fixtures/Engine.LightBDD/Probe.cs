@@ -10,6 +10,7 @@ using LightBDD.Framework;
 using LightBDD.Framework.Configuration;
 using LightBDD.Framework.Scenarios;
 using LightBDD.XUnit3;
+using Xunit;
 using Xunit.v3;
 
 [assembly: TrackSteps]
@@ -105,6 +106,20 @@ public class Probes : FeatureFixture
             _ => Native_sub_step_one(),
             _ => Native_sub_step_two()).Build();
     }
+
+    private async Task<CompositeStep> Given_a_composite_step_that_asserts_first()
+    {
+        await Task.Yield();
+        Track.That(() => Assert.True(true));
+        return CompositeStep.DefineNew().AddAsyncSteps(
+            _ => Native_sub_step_one(),
+            _ => Native_sub_step_two()).Build();
+    }
+
+    [Scenario]
+    public Task L6_an_assertion_before_a_composite_steps_own_steps() => Runner.RunScenarioAsync(
+        given => Given_a_composite_step_that_asserts_first(),
+        then => Then_the_order_is_confirmed());
 
     private Task Native_sub_step_one() => _driver.A_customer_is_registered();
     private Task Native_sub_step_two() => _driver.An_order_is_submitted();

@@ -774,6 +774,10 @@ public static class StepCollector
         }
     }
 
+    // Every walk over a tree on the way to a report is recursive, and a stack overflow takes the test process with it, report and all.
+    // A recursive step method reached that on a thread pool thread's stack at about 415 levels.
+    private const int DeepestListedDepth = 199;
+
     private static ScenarioStep ToScenarioStep(CollectedStep step)
     {
         var duration = step.EndTime > 0
@@ -801,8 +805,11 @@ public static class StepCollector
             SourceLine = step.SourceLine,
             Duration = duration,
             Parameters = step.Parameters,
-            SubSteps = step.SubSteps.Count > 0
+            SubSteps = step.SubSteps.Count > 0 && step.Depth < DeepestListedDepth
                 ? step.SubSteps.Select(ToScenarioStep).ToArray()
+                : null,
+            Comments = step.SubSteps.Count > 0 && step.Depth >= DeepestListedDepth
+                ? [$"steps below this one are not listed: a report lists {DeepestListedDepth + 1} levels of them"]
                 : null,
             Attachments = step.Attachments is { Count: > 0 }
                 ? step.Attachments.ToArray()
