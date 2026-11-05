@@ -169,3 +169,13 @@ Scenario: T28 a suite reads the step stopwatch on the scenario
 Scenario: T29 a hook ahead of Kronikol's throws at the first step, after a hook step
     Given a registered customer
     When the customer places the order
+
+@t30
+Scenario: T30 two step methods at once in a hook
+    Given a registered customer
+    When the customer places the order
+
+@t31
+Scenario: T31 a step opened by hand in an async hook, closed by its test id with its failure
+    Given a registered customer
+    When the customer places the order

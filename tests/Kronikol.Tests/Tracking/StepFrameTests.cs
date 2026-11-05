@@ -61,7 +61,7 @@ public class StepFrameTests
         StepCollector.CompleteFrame(test, frame + 1_000_000, passed: false);
 
         Assert.True(StepCollector.HasActiveStep(test));
-        Assert.Empty(StepCollector.GetSteps(test));
+        Assert.Null(Assert.Single(StepCollector.GetSteps(test)).Status);
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class StepFrameTests
         StepCollector.StartStep(test, null, "A slow check", null, null);
         StepCollector.CompleteFrame(test, first, passed: true);
 
-        Assert.False(StepCollector.HasActiveStep(test));
+        Assert.True(StepCollector.HasActiveStep(test));
         var second = StepCollector.StartFrame(test, "When", "the next step");
         StepCollector.CompleteFrame(test, second, passed: true);
 
@@ -102,7 +102,7 @@ public class StepFrameTests
         Assert.Equal(["a step leaves one running", "the next step"], steps.Select(s => s.Text));
         var leftRunning = Assert.Single(steps[0].SubSteps!);
         Assert.Equal("A slow check", leftRunning.Text);
-        Assert.Equal(ExecutionResult.Passed, leftRunning.Status);
+        Assert.Null(leftRunning.Status);
         Assert.Null(leftRunning.Duration);
         Assert.Null(steps[1].SubSteps);
     }
@@ -243,7 +243,7 @@ public class StepFrameTests
     }
 
     [Fact]
-    public void OpenStepOf_is_the_deepest_step_open_and_null_with_none_open()
+    public void OpenStepOf_is_the_deepest_step_open_then_the_last_top_level_step_and_null_before_the_first()
     {
         var test = NewTest();
 
@@ -261,7 +261,7 @@ public class StepFrameTests
         Assert.Equal(frame, StepCollector.OpenStepOf(test));
 
         StepCollector.CompleteFrame(test, frame, passed: true);
-        Assert.Null(StepCollector.OpenStepOf(test));
+        Assert.Equal(frame, StepCollector.OpenStepOf(test));
 
         Assert.Null(StepCollector.OpenStepOf(null));
         Assert.Null(StepCollector.OpenStepOf(NewTest()));
@@ -348,7 +348,7 @@ public class StepFrameTests
     }
 
     [Fact]
-    public void A_record_is_stamped_with_the_step_open_when_it_is_logged_and_with_none_when_none_is()
+    public void A_record_is_stamped_with_the_step_open_when_it_is_logged_and_between_steps_with_the_one_above_it()
     {
         var test = NewTest();
 
@@ -368,7 +368,7 @@ public class StepFrameTests
         Assert.Null(stamps["before"]);
         Assert.Equal(frame, stamps["inside"]);
         Assert.Equal(deepest, stamps["deeper"]);
-        Assert.Null(stamps["after"]);
+        Assert.Equal(frame, stamps["after"]);
     }
 
     [Fact]

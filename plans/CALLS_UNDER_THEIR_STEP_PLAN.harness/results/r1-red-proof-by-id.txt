@@ -1,0 +1,7 @@
+  Failed Kronikol.Tests.StepTracking.StepFlowTests.A_step_that_bypasses_itself_by_its_id_leaves_its_parent_open [3 s]
+Expected: "Next after the parent"
+Actual:   "After the bypass"
+  Failed Kronikol.Tests.StepTracking.StepFlowTests.A_spare_completion_by_test_id_leaves_a_step_left_running_to_close_itself [6 ms]
+Expected: "Left to itself: Passed"
+Actual:   "Left to itself: Failed"
+Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 3 s - Kronikol.Tests.StepTracking.dll (net10.0)

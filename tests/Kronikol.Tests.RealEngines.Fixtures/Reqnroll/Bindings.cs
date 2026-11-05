@@ -1,5 +1,6 @@
 using Kronikol;
 using Kronikol.ReqNRoll;
+using Kronikol.Tracking;
 using Reqnroll;
 
 namespace EngineFixtures;
@@ -71,6 +72,12 @@ public class Steps(Driver driver, ITestRunner runner)
 [Binding]
 public class Hooks(Driver driver, ScenarioContext scenario)
 {
+    [BeforeScenario("t30")] public Task T30() => Task.WhenAll(driver.First_parallel(), driver.Second_parallel());
+    [BeforeScenario("t31")] public async Task T31Open() { await Task.Yield(); await OpenByHand(); }
+    [AfterScenario("t31")] public void T31Close() => StepCollector.CompleteStep(ScenarioId, false, "the setup failed");
+    private string ScenarioId => (string)scenario[Kronikol.ReqNRoll.ReqNRollConstants.ScenarioRuntimeIdKey];
+    private async Task OpenByHand() { StepCollector.StartStep(ScenarioId, "Given", "a step opened by hand", null, null); await Task.Yield(); }
+
     [BeforeScenario("t01")] public Task T01() => driver.Reference_data_is_seeded();
     [BeforeScenarioBlock("t02")] public Task T02() => driver.Block_prepared();
     [AfterScenarioBlock("t03")] public Task T03() => driver.Block_prepared();

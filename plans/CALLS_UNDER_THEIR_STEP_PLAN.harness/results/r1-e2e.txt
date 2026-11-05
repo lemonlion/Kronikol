@@ -1,0 +1,9 @@
+# First run, with kronikol-fe's examples loading the machine: 1 of 2,172 failed, 2,143 passed, 28 skipped, and the quiet log lost its name.
+# 1 projects in C:\Code\Kronikol-225r1
+tests/Kronikol.Tests.EndToEnd/Kronikol.Tests.EndToEnd.csproj (1640 s) exit 1
+  Failed!  - Failed:     1, Passed:  2143, Skipped:    28, Total:  2172
+# done, 1 failures
+# Second run, the machine otherwise quiet, on the same commit (397e7ecd): exit 0, no failures.
+# 1 projects in C:\Code\Kronikol-225r1
+tests/Kronikol.Tests.EndToEnd/Kronikol.Tests.EndToEnd.csproj (1369 s) exit 0
+# done, 0 failures

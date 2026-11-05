@@ -1,0 +1,10 @@
+  Failed Kronikol.Tests.StepTracking.StepFlowTests.A_flow_comes_back_to_its_step_after_a_stretch_under_another_tests_id [7 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowReportTests.Steps_that_carry_no_results_at_all_read_as_what_they_are [118 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowReportTests.The_digest_names_a_step_that_was_still_running_and_does_not_call_it_failing [98 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowReportTests.A_step_still_running_is_told_apart_from_a_failing_step_in_the_json [130 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowReadingTests.The_party_called_is_told_whatever_the_case_of_its_name [2 s]
+  Failed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_step_on_the_far_side_of_a_call_stands_under_the_step_that_called [3 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_services_onward_call_reads_the_call_it_ran_inside_when_the_names_do_not_line_up [2 ms]
+Failed!  - Failed:     7, Passed:    64, Skipped:     0, Total:    71, Duration: 7 s - Kronikol.Tests.StepTracking.dll (net10.0)
+  Failed Kronikol.Tests.Tracking.TestTrackingContextMiddlewareTests.A_request_carrying_a_trace_runs_with_that_trace_in_its_scope [6 ms]
+Failed!  - Failed:     1, Passed:     6, Skipped:     0, Total:     7, Duration: 83 ms - Kronikol.Tests.dll (net10.0)

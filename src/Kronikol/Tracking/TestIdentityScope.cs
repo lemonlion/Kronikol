@@ -48,6 +48,17 @@ public static class TestIdentityScope
     public static readonly (string Name, string Id) UnknownIdentity = (UnknownTestName, UnknownTestId);
 
     private static readonly AsyncLocal<(string Name, string Id)?> CurrentIdentity = new();
+
+    // Tells one Begin from another with the same identity: a flow that inherited its scope from one that began its own.
+    private static readonly AsyncLocal<object?> CurrentMark = new();
+
+    /// <summary>What marks the scope this flow is in, null with none.</summary>
+    internal static object? Mark => CurrentMark.Value;
+
+    private static readonly AsyncLocal<Guid?> CurrentInboundTrace = new();
+
+    /// <summary>The trace of the call this flow is serving, which <see cref="TestTrackingContextMiddleware"/> read from its headers; null in any other flow.</summary>
+    internal static Guid? InboundTrace => CurrentInboundTrace.Value;
     // The flow's state is an object the slot refers to, not a value in the slot: a tracker deep inside a
     // database SDK's async call can then leave something (the owner window) for the flow that called it.
     private static readonly AsyncLocal<DetachedFlow?> Flow = new();
@@ -153,13 +164,19 @@ public static class TestIdentityScope
     /// </summary>
     /// <param name="testName">The test display name.</param>
     /// <param name="testId">The test unique identifier.</param>
-    public static IDisposable Begin(string testName, string testId)
+    public static IDisposable Begin(string testName, string testId) => Begin(testName, testId, inboundTrace: null);
+
+    internal static IDisposable Begin(string testName, string testId, Guid? inboundTrace)
     {
         var previous = CurrentIdentity.Value;
         var previousFromMessage = FromMessage.Value;
+        var previousMark = CurrentMark.Value;
+        var previousTrace = CurrentInboundTrace.Value;
         CurrentIdentity.Value = (testName, testId);
+        CurrentMark.Value = new object();
+        CurrentInboundTrace.Value = inboundTrace;
         FromMessage.Value = false;
-        return new IdentityScope(previous, previousFromMessage);
+        return new IdentityScope(previous, previousFromMessage, previousMark, previousTrace);
     }
 
     /// <summary>
@@ -173,6 +190,7 @@ public static class TestIdentityScope
     public static void SetFromMessage(string testName, string testId)
     {
         CurrentIdentity.Value = (testName, testId);
+        CurrentMark.Value = new object();
         FromMessage.Value = true;
     }
 
@@ -202,12 +220,14 @@ public static class TestIdentityScope
     /// <summary>True while <see cref="Current"/> was set by <see cref="SetFromMessage"/>.</summary>
     private static readonly AsyncLocal<bool> FromMessage = new();
 
-    private sealed class IdentityScope((string Name, string Id)? previous, bool previousFromMessage) : IDisposable
+    private sealed class IdentityScope((string Name, string Id)? previous, bool previousFromMessage, object? previousMark, Guid? previousTrace) : IDisposable
     {
         public void Dispose()
         {
             CurrentIdentity.Value = previous;
             FromMessage.Value = previousFromMessage;
+            CurrentMark.Value = previousMark;
+            CurrentInboundTrace.Value = previousTrace;
         }
     }
 }

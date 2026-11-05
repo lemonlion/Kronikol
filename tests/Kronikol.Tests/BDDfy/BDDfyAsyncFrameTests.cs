@@ -37,7 +37,7 @@ public class BDDfyAsyncFrameTests : IDisposable
         var returned = ExecuteAsync(async () => await gate.Task);
 
         Assert.True(StepCollector.HasActiveStep(_id));
-        Assert.Empty(StepCollector.GetSteps(_id));
+        Assert.Null(Assert.Single(StepCollector.GetSteps(_id)).Status);
 
         gate.SetResult();
         await returned;
@@ -153,7 +153,7 @@ public class BDDfyAsyncFrameTests : IDisposable
             await gate.Task;
             throw new InvalidOperationException("too late");
         });
-        Assert.Empty(StepCollector.GetSteps(_id));
+        Assert.Null(Assert.Single(StepCollector.GetSteps(_id)).Status);
 
         BDDfyStepTrackingExecutor.CloseLeftRunning(_id);
 

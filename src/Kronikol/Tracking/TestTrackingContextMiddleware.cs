@@ -30,7 +30,10 @@ public class TestTrackingContextMiddleware
             context.Request.Headers.TryGetValue(TestTrackingHttpHeaders.CurrentTestIdHeader, out var id) &&
             name.Count > 0 && id.Count > 0)
         {
-            using (TestIdentityScope.Begin(TrackingHeaderValue.Decode(name[0]!), TrackingHeaderValue.Decode(id[0]!)))
+            var trace = context.Request.Headers.TryGetValue(TestTrackingHttpHeaders.TraceIdHeader, out var traces) && Guid.TryParse(traces.FirstOrDefault(), out var parsed)
+                ? parsed
+                : (Guid?)null;
+            using (TestIdentityScope.Begin(TrackingHeaderValue.Decode(name[0]!), TrackingHeaderValue.Decode(id[0]!), trace))
             {
                 await _next(context);
             }

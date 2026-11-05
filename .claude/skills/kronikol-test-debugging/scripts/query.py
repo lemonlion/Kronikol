@@ -399,9 +399,10 @@ def cmd_steps(_path, report, args):
         lines.append(f"scoped to step {step_scope} and its sub-steps — `steps <report> {address}` for the whole scenario")
         lines.append("")
 
+    has_a_result = any(r[2].get("status") is not None for r in walk_steps(scenario))
     for path, raw_depth, step in rows:
         depth = raw_depth - base
-        mark = "✗" if step.get("status") == "Failed" else " "
+        mark = "✗" if step.get("status") == "Failed" else "?" if has_a_result and step.get("status") is None and not step.get("isAssertion") else " "
         keyword = (step.get("keyword") or "").strip()
         calls = by_step.get(path, [])
         span = f"  [i{calls[0]}-i{calls[-1]}] {len(calls)} calls" if len(calls) > 1 else (f"  [i{calls[0]}]" if calls else "")

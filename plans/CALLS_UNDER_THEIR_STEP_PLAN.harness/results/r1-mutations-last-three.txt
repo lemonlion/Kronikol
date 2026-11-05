@@ -1,0 +1,3 @@
+flow-is-in-a-frame-gone: caught by 1: A_step_that_closes_itself_by_its_id_leaves_the_frame_open
+a-woven-completion-closes-a-frame: caught by 2: A_spare_completion_by_test_id_leaves_the_frame_open, A_step_that_closes_itself_by_its_id_leaves_the_frame_open
+open-children-not-counted-down: caught by 1: A_step_whose_child_has_ended_still_counts_as_one_of_the_steps_running

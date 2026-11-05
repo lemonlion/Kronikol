@@ -84,8 +84,9 @@ public static class RequestResponseLogger
             log = log with { Timestamp = DateTimeOffset.UtcNow };
 
         // Which step this happened under is known now and only now; before a hold, which can release it much later.
-        if (log.OpenStep is null && StepCollector.OpenStepOf(log.TestId) is { } openStep)
-            log = log with { OpenStep = openStep };
+        if (log.OpenStep is null && StepCollector.OpenStepOf(log.TestId, out var isItsFlows) is { } openStep)
+            log = log with { OpenStep = openStep, OpenStepIsItsFlows = isItsFlows };
+        StepCollector.NoteCall(log);
 
         // A call the owner window answered for (DocumentOwnership) is held by its flow until an operation on
         // the owner's document confirms it; a foreign operation or a query drops it instead.

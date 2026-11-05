@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Plain MSTest: a step opened in an async [TestInitialize] is out of the test's flow, as MSTest runs the two apart. -->
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="4.5.2" />
+    <ProjectReference Include="..\..\..\src\Kronikol.MSTest\Kronikol.MSTest.csproj" />
+  </ItemGroup>
+</Project>

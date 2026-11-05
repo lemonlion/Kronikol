@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.29.4] - 2026-11-05
+
+The patch part moves (5.29.3 to 5.29.4): bug fixes, with no new option and no new public member (`plans/CALLS_UNDER_THEIR_STEP_PLAN.md`
+R1, part of #225). Report output moves for a test whose steps overlap, so Kronikol4J's ledger has a line.
+
+### Fixed
+
+- **Steps that overlap keep their own places (#225).** `StepCollector` kept one stack of open steps for each test, so two steps started
+  together (`Task.WhenAll`) were listed one inside the other, a failure landed on the step opened last, a completion closed whichever
+  step was on top, and a step left running took the next step as its child and kept its bar from being drawn. Each flow of execution now
+  knows its own step. Two steps at once are siblings, in the order they began, each with its own result, duration, assertions and
+  attachments, and each draws its bar if it is at the top level.
+- **A call reads the step its flow was in.** A call used to take its step from what was open for the test, which the last step started
+  decides, so with two top-level steps at once the first step's calls read the second's row. It now reads its own flow's step. A record
+  from elsewhere, a service's own thread for one, reads what is open: the one chain when there is one, the step several share when they
+  run at once, and no step when they share none. A service's onward call reads the step of the call it ran inside, known from the trace
+  the call carries, whichever way the two parties are named. A `[Step]` in a service's own handler stands under the step that called it,
+  by the same trace, and a `[Step]` on a thread with no context of the test's, a message consumer's for one, stands under the step running.
+- **A flow comes back to its step after a stretch under another test's id,** where the steps after it were listed as top-level rows.
+
+### Behaviour changes
+
+- Rows move where top-level steps overlap: what was listed nested is now listed side by side, and its bars agree with that.
+- A step still running when the report is drawn is listed with no result, where it was not listed at all or was listed as passed.
+- A call whose step can no longer be known, as two steps with nothing shared were running, reads no step, where it read the wrong one.
+- A spare `CompleteStep(testId, ...)` no longer closes a step left running, which closes by itself with its own result, and a step that
+  bypasses itself by id no longer closes its parent.
+- `kronikol query steps` marks a step with no result `?`, beside a step that has one. Where a scenario failed and no step is marked
+  failed, `failures` and `Failures.md` name such a step as still running when the report was written (`**Still running when the report
+  was written**` in the digest), and in `failures --json` and `Failures.jsonl` each entry of `failingSteps` has a `stillRunning` field
+  that says which it is. The report's step counts leave such a step out of skipped. `flow` prints `── no step` above a call that reads
+  no step, where it printed that call under the step above it.
+- A failed scenario none of whose steps carries a result, as a capture need not say, reads `no step is marked failed: none of its steps
+  carries a result`, where it said the failure was outside a tracked step.
+
+### Known limits, as before
+
+- `CompleteStep(testId, ...)` closes the step last opened by hand on that test, so steps opened by id on two branches at once pair last
+  in, first out.
+- A call beside a step that hung reads that step.
+- A long-lived worker started before the first step, whose handler is a `[Step]`, shares the test's context, so its step is a row of its
+  own with its own bar. Start it under `TestIdentityScope.Detach()`, or from inside a step, and it stands under the step running.
+- New here, and rare: a step opened by hand with the `StartStep` that takes no id, in an async helper, is not found by the next step its
+  caller starts. Open it by id, as a step in a setup or a hook already is.
+
 ## [5.29.3] - 2026-11-05
 
 The patch part moves (5.29.2 to 5.29.3): bug fixes that change what a report says, with no new option and no new public member (`plans/STEP_IDENTITY_PLAN.md` R1, #223). A step now has an identity: a framework's steps, the steps Kronikol collected and the calls were joined by position, so anything that added a step to one list moved everything after it in the others.

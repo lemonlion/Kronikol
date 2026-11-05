@@ -34,10 +34,17 @@ public record RequestResponseLog(
     internal bool NamedByRemoteHostFallback { get; init; }
 
     /// <summary>
-    /// The step open when this was logged (<see cref="StepCollector.OpenStepOf"/>), null when none was. Never written to a
+    /// The step this was logged under (<see cref="StepCollector.OpenStepOf"/>): its flow's, or what was open then, or with
+    /// nothing open the last top-level step. Null before the first step, 0 when several ran that shared none. Never written to a
     /// report; a call's stepPath is worked out from it.
     /// </summary>
     internal int? OpenStep { get; init; }
+
+    /// <summary>
+    /// The flow that logged this was inside <see cref="OpenStep"/>. False: the record came from elsewhere, a service's own thread for one, and
+    /// its step was read from what was open then.
+    /// </summary>
+    internal bool OpenStepIsItsFlows { get; init; }
 
     /// <summary>
     /// The call as its tracker recorded it before #192 R1 changed how it records it, when that differs: a SQL Server

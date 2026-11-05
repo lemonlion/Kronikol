@@ -2980,7 +2980,7 @@ public static class ReportGenerator
         return count;
     }
 
-    private static (int Passed, int Failed, int Skipped) CountStepsByStatusRecursive(ScenarioStep[] steps)
+    internal static (int Passed, int Failed, int Skipped) CountStepsByStatusRecursive(ScenarioStep[] steps)
     {
         var passed = 0;
         var failed = 0;
@@ -2992,7 +2992,8 @@ public static class ReportGenerator
                 case ExecutionResult.Passed: passed++; break;
                 case ExecutionResult.Failed: failed++; break;
                 case ExecutionResult.Skipped or ExecutionResult.Bypassed or ExecutionResult.SkippedAfterFailure: skipped++; break;
-                default: skipped++; break;
+                // A step with no result counts as none of them.
+                default: break;
             }
             if (step.SubSteps is { Length: > 0 })
             {
@@ -5423,7 +5424,6 @@ public static class ReportGenerator
             var latestOpen = 0;
             var stepMarkerCount = 0;
             var interactionIndex = 0;
-            var requestPaths = new Dictionary<Guid, string?>();
 
             foreach (var log in perTest)
             {
@@ -5443,10 +5443,7 @@ public static class ReportGenerator
                         }
                     }
 
-                    // A call in flight across a bar is one call: a response takes the step of the request it answers.
-                    if (log.Type == RequestResponseType.Request)
-                        requestPaths[log.RequestResponseId] = read;
-                    paths.Add(log.Type == RequestResponseType.Response && requestPaths.TryGetValue(log.RequestResponseId, out var ofRequest) ? ofRequest : read);
+                    paths.Add(read);
                     interactionIndex++;
                     continue;
                 }
@@ -5482,11 +5479,68 @@ public static class ReportGenerator
                 }
             }
 
+            ThroughTheirCalls(perTest.Where(l => !l.IsDiagramMarker).ToArray(), paths);
             stepPaths[perTest.Key] = paths;
             annotations[perTest.Key] = found;
         }
 
         return (stepPaths, annotations);
+    }
+
+    /// <summary>
+    /// What a record's own stamp cannot say, read from the call it belongs to. A response takes its request's path, so a call in flight
+    /// across a step is not split. A request logged from no flow of the test's takes the path of the call it ran inside, where it knows
+    /// which that is: the innermost request still waiting for its answer on the same Kronikol trace, made to the party now calling if a name lines up. That
+    /// is what a service's onward call is, and the trace is carried by header (TestTrackingMessageHandler), so two calls at once are told
+    /// apart unless their whole test shares a trace. It takes that path only while what was open when it was logged fits: no step, or a step
+    /// above or below that path. A call whose request has been answered is no longer inside it, and one whose step has ended stays with
+    /// what was open then.
+    /// </summary>
+    private static void ThroughTheirCalls(RequestResponseLog[] records, List<string?> paths)
+    {
+        var requestAt = new Dictionary<Guid, int>();
+        var waiting = new List<int>();
+        for (var i = 0; i < records.Length; i++)
+        {
+            var record = records[i];
+            if (record.Type == RequestResponseType.Request)
+            {
+                if (record.OpenStep is not null && !record.OpenStepIsItsFlows
+                    && CallItRanInside(records, waiting, record) is { } inside
+                    && paths[inside] is { } theirs
+                    && (paths[i] is null || Query.Address.PathCoveredBy(paths[i], theirs) || Query.Address.PathCoveredBy(theirs, paths[i]!)))
+                    paths[i] = theirs;
+
+                requestAt[record.RequestResponseId] = i;
+                waiting.Add(i);
+            }
+            else
+            {
+                if (requestAt.TryGetValue(record.RequestResponseId, out var request))
+                    paths[i] = paths[request];
+                waiting.RemoveAll(w => records[w].RequestResponseId == record.RequestResponseId);
+            }
+        }
+    }
+
+    /// <summary>
+    /// The innermost request waiting on this record's trace that a party other than its caller made: the one made to its caller, or where
+    /// no name lines up, as a client that names no service reads it from the URL, the innermost of them.
+    /// </summary>
+    private static int? CallItRanInside(RequestResponseLog[] records, List<int> waiting, RequestResponseLog record)
+    {
+        int? innermost = null;
+        for (var k = waiting.Count - 1; k >= 0; k--)
+        {
+            var candidate = records[waiting[k]];
+            if (candidate.TraceId != record.TraceId || string.Equals(candidate.CallerName, record.CallerName, StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (string.Equals(candidate.ServiceName, record.CallerName, StringComparison.OrdinalIgnoreCase))
+                return waiting[k];
+            innermost ??= waiting[k];
+        }
+
+        return innermost;
     }
 
     /// <summary>
@@ -8230,7 +8284,7 @@ public static class ReportGenerator
                             }
                         },
                         ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response: the capturer's own measurement when the record carried one (durationMs on the NDJSON input), otherwise derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered and nothing was measured, when timestamps are absent, or when both records carry the same instant (a call logged after the fact, which measured nothing)." },
-                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, in a step the report does not list, and whenever attribution could not be trusted: see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } },
+                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, in a step the report does not list, while several steps ran that share none, and whenever attribution could not be trusted: see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } },
                         ["testDouble"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "What answered the call in its service's place, when its capturer saw a test double answer it (#190): MSW, WireMock, a handler's type name. Written only on a marked call; an unmarked call is unknown, never real.", ["examples"] = new[] { "MSW", "WireMock" } }
                     }
                 }

@@ -17,6 +17,16 @@ public class LightBddStepsTests
             Assert.Contains(call, calls);
     }
 
+    // Its bar draws the type's name where its row lists the value, so a walk loses it (F17). A call's own stamp does not.
+    [Fact]
+    public void L5_a_step_with_an_object_parameter_keeps_its_calls()
+    {
+        var read = EngineLane.Run("Engine.LightBDD").Rows.Of("L5");
+
+        Assert.True(read.Contains("0 /customers", StringComparison.Ordinal), read);
+        Assert.True(read.Contains("1 /orders", StringComparison.Ordinal), read);
+    }
+
     [Fact]
     public void L0_the_control() => Reads("L0", """
         0 GIVEN Given a registered customer

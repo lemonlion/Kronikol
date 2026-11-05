@@ -75,6 +75,16 @@ public class Probes : FeatureFixture
     private Task When_the_customer_places_the_order() => _driver.An_order_is_submitted();
     private Task Then_the_order_is_confirmed() => _driver.The_order_is_read_back();
 
+    public sealed record OrderDetails(string Customer, int Lines);
+
+    private Task Given_a_customer_with_details(OrderDetails details) => _driver.A_customer_is_registered();
+
+    [Scenario]
+    public Task L5_a_step_with_an_object_parameter() => Runner.RunScenarioAsync(
+        given => Given_a_customer_with_details(new OrderDetails("Ann", 2)),
+        when => When_the_customer_places_the_order(),
+        then => Then_the_order_is_confirmed());
+
     [Scenario]
     public Task L0_control() => Runner.RunScenarioAsync(
         given => Given_a_registered_customer(),

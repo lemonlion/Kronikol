@@ -275,6 +275,13 @@ public static class FailuresDigestGenerator
             .Where(x => x.step.Step.Status == ExecutionResult.Failed)
             .Select(x => x.index)
             .ToArray();
+        // A hang fails no step: with none marked, a step with no result, beside one that has one, was still running when the report was written.
+        if (failingIndexes.Length == 0 && ordered.Any(step => step.Step.Status is not null))
+            failingIndexes = ordered
+                .Select((step, index) => (step, index))
+                .Where(x => x.step.Step.Status is null && !x.step.Step.IsAssertion)
+                .Select(x => x.index)
+                .ToArray();
 
         var failing = failingIndexes.Select(i => Line(ordered[i])).ToArray();
         var context = failingIndexes.Length == 0
@@ -772,7 +779,7 @@ public static class FailuresDigestGenerator
 
         foreach (var step in entry.Failing)
         {
-            markdown.Append($"**Failing step** — `{entry.Address}/{step.Path}` {Escape(Truncate(step.Text, 160))}");
+            markdown.Append($"{(step.Status is null ? "**Still running when the report was written**" : "**Failing step**")} — `{entry.Address}/{step.Path}` {Escape(Truncate(step.Text, 160))}");
             if (step.SourceFile is { Length: > 0 } file)
                 markdown.Append($" ({Escape(file)}:{step.SourceLine})");
             markdown.Append("\n\n");
@@ -985,6 +992,7 @@ public static class FailuresDigestGenerator
                 {
                     Path = $"{entry.Address}/{s.Path}",
                     Text = Capped(s.Text),
+                    StillRunning = s.Status is null,
                     Message = Capped(s.Message),
                     s.SourceFile,
                     s.SourceLine

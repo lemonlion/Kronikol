@@ -1,0 +1,25 @@
+Published 5.29.3 first, each round; best of 5. Each block names the version it ran on.
+--- round 1, 5.29.3
+running on 5.29.3.0
+no step in this test                705 ns per record
+step open, this flow inside it      769 ns per record
+the same, each request answered     945 ns per record
+step open, flow not inside it       961 ns per record
+--- round 1, 5.29.4-proto225r1
+running on 5.29.4.0
+no step in this test                801 ns per record
+step open, this flow inside it     1755 ns per record
+the same, each request answered    1383 ns per record
+step open, flow not inside it       741 ns per record
+--- round 2, 5.29.3
+running on 5.29.3.0
+no step in this test                735 ns per record
+step open, this flow inside it      875 ns per record
+the same, each request answered    1062 ns per record
+step open, flow not inside it       845 ns per record
+--- round 2, 5.29.4-proto225r1
+running on 5.29.4.0
+no step in this test                698 ns per record
+step open, this flow inside it     1805 ns per record
+the same, each request answered    1041 ns per record
+step open, flow not inside it       897 ns per record

@@ -1,0 +1,269 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Kronikol.StepTracking -> C:\Code\Kronikol-225r1\src\Kronikol.StepTracking\bin\Release\netstandard2.0\Kronikol.StepTracking.dll
+  Successfully created package 'C:\Code\Kronikol-225r1\src\Kronikol.StepTracking\bin\Release\Kronikol.StepTracking.5.28.4.nupkg'.
+  Kronikol -> C:\Code\Kronikol-225r1\src\Kronikol\bin\Release\net10.0\Kronikol.dll
+  Kronikol.Tests.StepTracking -> C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\bin\Release\net10.0\Kronikol.Tests.StepTracking.dll
+Test run for C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\bin\Release\net10.0\Kronikol.Tests.StepTracking.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.69]   Discovering: Kronikol.Tests.StepTracking
+[xUnit.net 00:00:01.35]   Discovered:  Kronikol.Tests.StepTracking
+[xUnit.net 00:00:01.87]   Starting:    Kronikol.Tests.StepTracking
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_skip_beside_a_step_left_running_leaves_that_step_open(shape: "AsyncSkipWithASiblingRunning", skipped: "Skipped") [4 s]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_skip_beside_a_step_left_running_leaves_that_step_open(shape: "SyncSkipWithASiblingRunning", skipped: "Sync skipped") [1 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_skipped_step_is_a_sibling_the_parent_stays_open_and_the_next_sub_step_is_its_child(shape: "SyncSkipUnderAParent", parent: "Sync parent", skipped: "Sync skipped", kid: "Sync kid", after: "Sync after") [2 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_skipped_step_is_a_sibling_the_parent_stays_open_and_the_next_sub_step_is_its_child(shape: "AsyncSkipUnderAParent", parent: "Skip parent", skipped: "Skipped", kid: "Kid", after: "After skip") [17 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_step_its_parent_gave_up_on_is_listed_with_no_result [16 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.Each_of_two_steps_at_once_reads_its_own_duration [57 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_stub_that_found_no_test_closes_nothing_and_no_step_is_listed_twice [4 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_skip_under_a_frame_leaves_the_frame_open_and_the_next_sub_step_its_child(shape: "AsyncSkipUnderAFrame", skipped: "Skipped", kid: "Kid") [8 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_skip_under_a_frame_leaves_the_frame_open_and_the_next_sub_step_its_child(shape: "SyncSkipUnderAFrame", skipped: "Sync skipped", kid: "Sync kid") [< 1 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_parent_whose_last_act_is_a_skip_closes_and_the_next_step_is_its_sibling(shape: "AsyncLastActSkip", parent: "Last act", skipped: "Skipped", after: "After skip") [3 ms]
+[xUnit.net 00:00:06.77]     Kronikol.Tests.StepTracking.StepFlowTests.The_next_step_is_no_child_of_a_sync_step_running_elsewhere [FAIL]
+[xUnit.net 00:00:06.77]       Assert.Equal() Failure: Collections differ at index 2
+[xUnit.net 00:00:06.78]                  ↓ (pos 0)
+[xUnit.net 00:00:06.78]       Expected: "Second of two: Passed"
+[xUnit.net 00:00:06.78]       Actual:   "    Second of two: Passed"
+[xUnit.net 00:00:06.78]                  ↑ (pos 0)
+[xUnit.net 00:00:06.78]       Stack Trace:
+[xUnit.net 00:00:06.78]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowTests.cs(341,0): at Kronikol.Tests.StepTracking.StepFlowTests.The_next_step_is_no_child_of_a_sync_step_running_elsewhere()
+[xUnit.net 00:00:06.78]         --- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_parent_whose_last_act_is_a_skip_closes_and_the_next_step_is_its_sibling(shape: "SyncLastActSkip", parent: "Sync last act", skipped: "Sync skipped", after: "Sync after") [< 1 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowTests.The_next_step_is_no_child_of_a_sync_step_running_elsewhere [37 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 2
+           ↓ (pos 0)
+Expected: "Second of two: Passed"
+Actual:   "    Second of two: Passed"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowTests.The_next_step_is_no_child_of_a_sync_step_running_elsewhere() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowTests.cs:line 341
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.Two_steps_started_together_are_siblings_in_the_order_they_began_whichever_finishes_first [38 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_new_attempts_steps_are_its_own_whatever_the_last_attempt_left_running [6 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_woven_completion_never_closes_a_frame(shape: "SyncSkipAloneUnderAFrame", skipped: "Sync skipped") [3 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_woven_completion_never_closes_a_frame(shape: "AsyncSkipAloneUnderAFrame", skipped: "Skipped") [1 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.Eight_steps_at_once_each_running_its_own_stay_siblings [86 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_failing_step_left_running_paints_itself_and_not_a_later_sub_step [4 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_step_and_an_assertion_from_a_flow_with_no_step_of_this_test_go_under_the_step_running [13 ms]
+[xUnit.net 00:00:07.00]     Kronikol.Tests.StepTracking.StepFlowTests.Steps_on_threads_of_their_own_from_a_body_with_no_step_yet_are_siblings [FAIL]
+[xUnit.net 00:00:07.00]       Assert.Equal() Failure: Collections differ at index 0
+[xUnit.net 00:00:07.00]                  ↓ (pos 0)
+[xUnit.net 00:00:07.00]       Expected: "Run first: Passed"
+[xUnit.net 00:00:07.00]       Actual:   "  Run first: Passed"
+[xUnit.net 00:00:07.00]                  ↑ (pos 0)
+[xUnit.net 00:00:07.00]       Stack Trace:
+[xUnit.net 00:00:07.00]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowTests.cs(347,0): at Kronikol.Tests.StepTracking.StepFlowTests.Steps_on_threads_of_their_own_from_a_body_with_no_step_yet_are_siblings()
+[xUnit.net 00:00:07.00]         --- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.Top_level_steps_at_once_read_in_the_order_they_began_and_agree_with_their_bars [29 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_step_that_hung_is_listed_with_no_result [2 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_stragglers_step_goes_under_what_is_running_now_even_a_step_left_running [9 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_framework_step_started_from_a_step_method_stands_under_it [3 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_step_opened_by_hand_in_a_sync_hook_does_not_hold_the_rows_under_it [< 1 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowTests.Steps_on_threads_of_their_own_from_a_body_with_no_step_yet_are_siblings [4 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 0
+           ↓ (pos 0)
+Expected: "Run first: Passed"
+Actual:   "  Run first: Passed"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowTests.Steps_on_threads_of_their_own_from_a_body_with_no_step_yet_are_siblings() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowTests.cs:line 347
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_sub_step_left_running_leaves_the_next_step_a_sibling_of_its_parent_with_a_bar_of_its_own [4 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_step_opened_in_a_helper_is_found_and_closed_with_its_failure_by_its_test_id [7 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.Task_of_T_steps_read_as_plain_Task_steps_do [9 ms]
+[xUnit.net 00:00:07.13]     Kronikol.Tests.StepTracking.StepFlowTests.Sync_steps_in_parallel_from_a_body_with_no_step_yet_are_siblings [FAIL]
+[xUnit.net 00:00:07.13]       Assert.Equal() Failure: Collections differ at index 1
+[xUnit.net 00:00:07.13]                  ↓ (pos 0)
+[xUnit.net 00:00:07.13]       Expected: "Parallel step: Passed"
+[xUnit.net 00:00:07.13]       Actual:   "  Parallel step: Passed"
+[xUnit.net 00:00:07.13]                  ↑ (pos 0)
+[xUnit.net 00:00:07.13]       Stack Trace:
+[xUnit.net 00:00:07.13]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowTests.cs(353,0): at Kronikol.Tests.StepTracking.StepFlowTests.Sync_steps_in_parallel_from_a_body_with_no_step_yet_are_siblings()
+[xUnit.net 00:00:07.13]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:07.17]     Kronikol.Tests.StepTracking.StepFlowTests.A_step_a_hook_left_open_holds_no_row_after_the_first_frame [FAIL]
+[xUnit.net 00:00:07.17]       Assert.Equal() Failure: Collections differ at index 1
+[xUnit.net 00:00:07.17]                  ↓ (pos 0)
+[xUnit.net 00:00:07.17]       Expected: "the frame: Passed"
+[xUnit.net 00:00:07.17]       Actual:   "  Next: Passed"
+[xUnit.net 00:00:07.17]                  ↑ (pos 0)
+[xUnit.net 00:00:07.17]       Stack Trace:
+[xUnit.net 00:00:07.17]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowTests.cs(585,0): at Kronikol.Tests.StepTracking.StepFlowTests.A_step_a_hook_left_open_holds_no_row_after_the_first_frame()
+[xUnit.net 00:00:07.17]         --- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.An_assertion_and_an_attachment_belong_to_the_flow_that_made_them [45 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_spare_completion_by_test_id_leaves_the_frame_open [< 1 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_failing_sub_step_leaves_a_frame_open [5 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowTests.Sync_steps_in_parallel_from_a_body_with_no_step_yet_are_siblings [14 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 1
+           ↓ (pos 0)
+Expected: "Parallel step: Passed"
+Actual:   "  Parallel step: Passed"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowTests.Sync_steps_in_parallel_from_a_body_with_no_step_yet_are_siblings() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowTests.cs:line 353
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_stragglers_step_goes_under_the_step_open_now_and_draws_no_bar [13 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_failed_assertion_from_a_flow_whose_step_has_ended_is_listed_under_the_step_open_now [15 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowTests.A_step_a_hook_left_open_holds_no_row_after_the_first_frame [2 ms]
+  Error Message:
+   Assert.Equal() Failure: Collections differ at index 1
+           ↓ (pos 0)
+Expected: "the frame: Passed"
+Actual:   "  Next: Passed"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowTests.A_step_a_hook_left_open_holds_no_row_after_the_first_frame() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowTests.cs:line 585
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_step_that_bypasses_itself_by_its_id_leaves_the_frame_open(shape: "SyncBypassedByItsIdUnderAFrame", step: "Bypasses itself sync") [1 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_step_that_bypasses_itself_by_its_id_leaves_the_frame_open(shape: "BypassedByItsIdUnderAFrame", step: "Bypasses itself") [< 1 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_failure_lands_on_the_step_that_threw_and_the_other_keeps_its_own_result [5 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowTests.A_hand_called_bypass_moves_the_flow_up_and_the_parents_completion_closes_the_parent [15 ms]
+[xUnit.net 00:00:08.92]     Kronikol.Tests.StepTracking.StepFlowReportTests.Steps_marks_a_step_still_running_apart_from_one_that_passed [FAIL]
+[xUnit.net 00:00:08.92]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:08.92]       Collection: ["s0  Overlaps › LeftRunning  [Passed]  0s", "stableId 961722e77245d4ba", "open: TestRunReport.html#sid-961722e77245d4ba", "", "  0     Ends  0s  [i0]", ···]
+[xUnit.net 00:00:08.92]       Stack Trace:
+[xUnit.net 00:00:08.92]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs(120,0): at Kronikol.Tests.StepTracking.StepFlowReportTests.Steps_marks_a_step_still_running_apart_from_one_that_passed()
+[xUnit.net 00:00:08.92]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:08.93]     Kronikol.Tests.StepTracking.StepFlowReportTests.The_features_counts_leave_a_step_with_no_result_out_of_skipped [FAIL]
+[xUnit.net 00:00:08.93]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:08.93]       Expected: Tuple (1, 0, 1)
+[xUnit.net 00:00:08.93]       Actual:   Tuple (1, 0, 2)
+[xUnit.net 00:00:08.93]       Stack Trace:
+[xUnit.net 00:00:08.93]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs(162,0): at Kronikol.Tests.StepTracking.StepFlowReportTests.The_features_counts_leave_a_step_with_no_result_out_of_skipped()
+[xUnit.net 00:00:08.93]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:08.93]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:08.94]     Kronikol.Tests.StepTracking.StepFlowReportTests.Flow_does_not_print_a_call_with_no_step_under_the_step_above_it [FAIL]
+[xUnit.net 00:00:08.94]       System.InvalidOperationException : AsyncFlowControl object must be used on the thread where it was created.
+[xUnit.net 00:00:08.94]       Stack Trace:
+[xUnit.net 00:00:08.94]            at System.Threading.AsyncFlowControl.Undo()
+[xUnit.net 00:00:08.94]         C:\Users\cex\AppData\Local\Temp\KRONIKOL_StepWeaverTests\8533477b\StepFlowReport.cs(27,0): at Steps.NoStepsCall()
+[xUnit.net 00:00:08.94]            at Steps.NoStepsCall()
+[xUnit.net 00:00:08.94]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs(74,0): at Kronikol.Tests.StepTracking.StepFlowReportTests.WriteReport(String shape, ExecutionResult result)
+[xUnit.net 00:00:08.94]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs(146,0): at Kronikol.Tests.StepTracking.StepFlowReportTests.Flow_does_not_print_a_call_with_no_step_under_the_step_above_it()
+[xUnit.net 00:00:08.94]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:09.12]     Kronikol.Tests.StepTracking.StepFlowReportTests.The_digest_names_a_step_that_was_still_running [FAIL]
+[xUnit.net 00:00:09.12]       Assert.Contains() Failure: Sub-string not found
+[xUnit.net 00:00:09.12]       String:    "# Failures — 1 of 1 scenarios\n\nWritten by Kronikol"···
+[xUnit.net 00:00:09.12]       Not found: "Hangs"
+[xUnit.net 00:00:09.12]       Stack Trace:
+[xUnit.net 00:00:09.12]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs(140,0): at Kronikol.Tests.StepTracking.StepFlowReportTests.The_digest_names_a_step_that_was_still_running()
+[xUnit.net 00:00:09.12]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:09.36]     Kronikol.Tests.StepTracking.StepFlowReportTests.Failures_says_a_step_was_still_running_where_none_is_marked_failed(json: True) [FAIL]
+[xUnit.net 00:00:09.36]       Assert.Contains() Failure: Sub-string not found
+[xUnit.net 00:00:09.36]       String:    "{"formatVersion":1,"command":"failures","report":""···
+[xUnit.net 00:00:09.36]       Not found: "Hangs"
+[xUnit.net 00:00:09.36]       Stack Trace:
+[xUnit.net 00:00:09.36]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs(131,0): at Kronikol.Tests.StepTracking.StepFlowReportTests.Failures_says_a_step_was_still_running_where_none_is_marked_failed(Boolean json)
+[xUnit.net 00:00:09.36]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:09.58]     Kronikol.Tests.StepTracking.StepFlowReportTests.Failures_says_a_step_was_still_running_where_none_is_marked_failed(json: False) [FAIL]
+[xUnit.net 00:00:09.58]       Assert.Contains() Failure: Sub-string not found
+[xUnit.net 00:00:09.58]       String:    "! 5 calls carried a test id that no scenario of th"···
+[xUnit.net 00:00:09.58]       Not found: "Hangs"
+[xUnit.net 00:00:09.58]       Stack Trace:
+[xUnit.net 00:00:09.58]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs(131,0): at Kronikol.Tests.StepTracking.StepFlowReportTests.Failures_says_a_step_was_still_running_where_none_is_marked_failed(Boolean json)
+[xUnit.net 00:00:09.58]         --- End of stack trace from previous location ---
+  Failed Kronikol.Tests.StepTracking.StepFlowReportTests.Steps_marks_a_step_still_running_apart_from_one_that_passed [1 s]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: ["s0  Overlaps › LeftRunning  [Passed]  0s", "stableId 961722e77245d4ba", "open: TestRunReport.html#sid-961722e77245d4ba", "", "  0     Ends  0s  [i0]", ···]
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowReportTests.Steps_marks_a_step_still_running_apart_from_one_that_passed() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs:line 120
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.StepTracking.StepFlowReportTests.The_features_counts_leave_a_step_with_no_result_out_of_skipped [6 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Tuple (1, 0, 1)
+Actual:   Tuple (1, 0, 2)
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowReportTests.The_features_counts_leave_a_step_with_no_result_out_of_skipped() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs:line 162
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.StepTracking.StepFlowReportTests.Flow_does_not_print_a_call_with_no_step_under_the_step_above_it [5 ms]
+  Error Message:
+   System.InvalidOperationException : AsyncFlowControl object must be used on the thread where it was created.
+  Stack Trace:
+     at System.Threading.AsyncFlowControl.Undo()
+   at Steps.NoStepsCall() in C:\Users\cex\AppData\Local\Temp\KRONIKOL_StepWeaverTests\8533477b\StepFlowReport.cs:line 27
+   at Steps.NoStepsCall()
+   at Kronikol.Tests.StepTracking.StepFlowReportTests.WriteReport(String shape, ExecutionResult result) in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs:line 74
+   at Kronikol.Tests.StepTracking.StepFlowReportTests.Flow_does_not_print_a_call_with_no_step_under_the_step_above_it() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs:line 146
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.StepTracking.StepFlowReportTests.The_digest_names_a_step_that_was_still_running [176 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "# Failures — 1 of 1 scenarios\n\nWritten by Kronikol"···
+Not found: "Hangs"
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowReportTests.The_digest_names_a_step_that_was_still_running() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs:line 140
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.StepTracking.StepFlowReportTests.Failures_says_a_step_was_still_running_where_none_is_marked_failed(json: True) [240 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "{"formatVersion":1,"command":"failures","report":""···
+Not found: "Hangs"
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowReportTests.Failures_says_a_step_was_still_running_where_none_is_marked_failed(Boolean json) in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs:line 131
+--- End of stack trace from previous location ---
+  Failed Kronikol.Tests.StepTracking.StepFlowReportTests.Failures_says_a_step_was_still_running_where_none_is_marked_failed(json: False) [218 ms]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "! 5 calls carried a test id that no scenario of th"···
+Not found: "Hangs"
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowReportTests.Failures_says_a_step_was_still_running_where_none_is_marked_failed(Boolean json) in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReportTests.cs:line 131
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_call_between_two_steps_stays_with_the_bar_above_it_bars_on_or_off(shown: True) [904 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_call_between_two_steps_stays_with_the_bar_above_it_bars_on_or_off(shown: False) [1 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.Two_top_level_steps_at_once_each_call_reads_its_own_step [4 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_trace_a_whole_test_shares_does_not_move_a_call_to_an_earlier_step [5 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_record_from_a_services_thread_with_two_top_level_steps_at_once_and_nothing_waiting_reads_no_step [5 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_trace_shared_with_the_same_party_is_not_a_parent [4 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.Two_top_level_steps_at_once_each_services_onward_call_reads_the_step_of_the_call_it_ran_inside [4 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_call_already_answered_is_not_the_parent_of_what_ran_on [4 ms]
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_step_whose_child_has_ended_still_counts_as_one_of_the_steps_running [6 ms]
+[xUnit.net 00:00:10.54]     Kronikol.Tests.StepTracking.StepFlowReadingTests.What_a_service_does_after_a_long_open_calls_step_has_ended_reads_the_step_open_then [FAIL]
+[xUnit.net 00:00:10.54]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:10.54]                  ↓ (pos 0)
+[xUnit.net 00:00:10.54]       Expected: "1"
+[xUnit.net 00:00:10.54]       Actual:   "0"
+[xUnit.net 00:00:10.54]                  ↑ (pos 0)
+[xUnit.net 00:00:10.54]       Stack Trace:
+[xUnit.net 00:00:10.54]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReadingTests.cs(301,0): at Kronikol.Tests.StepTracking.StepFlowReadingTests.What_a_service_does_after_a_long_open_calls_step_has_ended_reads_the_step_open_then()
+[xUnit.net 00:00:10.54]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:10.56]     Kronikol.Tests.StepTracking.StepFlowReadingTests.An_onward_call_under_a_request_never_answered_reads_that_requests_step [FAIL]
+[xUnit.net 00:00:10.56]       Assert.Equal() Failure: Strings differ
+[xUnit.net 00:00:10.56]       Expected: "0"
+[xUnit.net 00:00:10.56]       Actual:   null
+[xUnit.net 00:00:10.56]       Stack Trace:
+[xUnit.net 00:00:10.56]         C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReadingTests.cs(307,0): at Kronikol.Tests.StepTracking.StepFlowReadingTests.An_onward_call_under_a_request_never_answered_reads_that_requests_step()
+[xUnit.net 00:00:10.56]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:10.58]   Finished:    Kronikol.Tests.StepTracking (ID = '61378c3b3d98e11e8ec30a519deb2cb2e1ffb1d453de5d7ea4c9126105f67ee7')
+  Failed Kronikol.Tests.StepTracking.StepFlowReadingTests.What_a_service_does_after_a_long_open_calls_step_has_ended_reads_the_step_open_then [6 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+           ↓ (pos 0)
+Expected: "1"
+Actual:   "0"
+           ↑ (pos 0)
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowReadingTests.What_a_service_does_after_a_long_open_calls_step_has_ended_reads_the_step_open_then() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReadingTests.cs:line 301
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_hosts_consumer_loop_reads_the_step_open_when_the_message_is_handled [4 ms]
+  Failed Kronikol.Tests.StepTracking.StepFlowReadingTests.An_onward_call_under_a_request_never_answered_reads_that_requests_step [6 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+Expected: "0"
+Actual:   null
+  Stack Trace:
+     at Kronikol.Tests.StepTracking.StepFlowReadingTests.An_onward_call_under_a_request_never_answered_reads_that_requests_step() in C:\Code\Kronikol-225r1\tests\Kronikol.Tests.StepTracking\StepFlowReadingTests.cs:line 307
+--- End of stack trace from previous location ---
+  Passed Kronikol.Tests.StepTracking.StepFlowReadingTests.A_late_call_reads_the_step_open_at_the_time [5 ms]
+
+Test Run Failed.
+Total tests: 58
+     Passed: 46
+     Failed: 12
+ Total time: 11.9919 Seconds

@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Kronikol" Version="5.27.13" />
+    <PackageReference Include="Kronikol" Version="$(KronikolVersion)" />
   </ItemGroup>
 </Project>

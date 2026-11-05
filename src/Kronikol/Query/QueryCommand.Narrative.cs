@@ -132,11 +132,13 @@ public static partial class QueryCommand
             if (scenario.ErrorMessage is { } message)
                 writer.Line("  " + CutMessage(message, 240, scenario.Address));
 
-            var failingSteps = scenario.AllSteps().Where(s => s.Step.Failed).ToArray();
+            var failingSteps = FailingSteps(scenario);
             foreach (var (path, depth, step) in failingSteps)
             {
                 var indent = new string(' ', depth * 2);
-                writer.Line($"  {indent}✗ {scenario.Address}/{path}  {QueryWriter.OneLine(step.Display, 100)}");
+                writer.Line(step.Failed
+                    ? $"  {indent}✗ {scenario.Address}/{path}  {QueryWriter.OneLine(step.Display, 100)}"
+                    : $"  {indent}? {scenario.Address}/{path}  {QueryWriter.OneLine(step.Display, 100)}  (no result: still running when the report was written)");
                 if (step.FailureMessage is { } stepMessage)
                     writer.Line($"  {indent}  {CutMessage(stepMessage, 200, scenario.Address)}");
                 if (step.SourceFile is { } file)
@@ -159,7 +161,9 @@ public static partial class QueryCommand
             }
 
             if (failingSteps.Length == 0 && scenario.BackgroundSteps.Count + scenario.Steps.Count > 0)
-                writer.Line("  (no step is marked failed — the failure was outside a tracked step)");
+                writer.Line(HasAResult(scenario)
+                    ? "  (no step is marked failed — the failure was outside a tracked step)"
+                    : "  (no step is marked failed: none of its steps carries a result)");
 
             WriteAttachments(writer, index, scenario.Attachments, "  ", $"attachments {scenario.Address}");
 
@@ -183,6 +187,23 @@ public static partial class QueryCommand
     }
 
     /// <summary>
+    /// The steps a failure is read from: those marked failed, or with none marked, those with no result, as a hang fails no step and
+    /// was still running when the report was written. Beside no step that has a result, no result says nothing of a hang: a capture need
+    /// not say how its steps ended.
+    /// </summary>
+    private static (string Path, int Depth, StepEntry Step)[] FailingSteps(ScenarioEntry scenario)
+    {
+        var steps = scenario.AllSteps().ToArray();
+        var failed = steps.Where(s => s.Step.Failed).ToArray();
+        if (failed.Length > 0 || !HasAResult(scenario))
+            return failed;
+
+        return steps.Where(s => s.Step.Status is null && !s.Step.IsAssertion).ToArray();
+    }
+
+    private static bool HasAResult(ScenarioEntry scenario) => scenario.AllSteps().Any(s => s.Step.Status is not null);
+
+    /// <summary>
     /// One failure as an object, in the field names <c>Failures.jsonl</c> already uses
     /// (<c>FailuresDigestGenerator.BuildJsonl</c>). The same concept must not reach a consumer under two
     /// shapes depending on whether it read the digest the run wrote or asked the tool for it afterwards.
@@ -203,7 +224,7 @@ public static partial class QueryCommand
     /// </summary>
     private static object FailureRecord(ReportIndex index, ScenarioEntry scenario, string? deepLink)
     {
-        var failingSteps = scenario.AllSteps().Where(s => s.Step.Failed).ToArray();
+        var failingSteps = FailingSteps(scenario);
         var thrown = FailureText.ThrownAt(scenario.ErrorStackTrace, scenario.SourceFile);
 
         return new
@@ -226,6 +247,7 @@ public static partial class QueryCommand
             {
                 path = $"{scenario.Address}/{s.Path}",
                 text = s.Step.Display,
+                stillRunning = !s.Step.Failed,
                 message = s.Step.FailureMessage,
                 sourceFile = s.Step.SourceFile,
                 sourceLine = s.Step.SourceLine,
@@ -400,13 +422,14 @@ public static partial class QueryCommand
         // scope so a scoped tree reads as a tree rather than as an indented fragment of one.
         var rows = scenario.AllSteps().Where(row => scope is null || Address.PathCoveredBy(row.Path, scope)).ToList();
         var baseDepth = scope is null ? 0 : rows.Min(row => row.Depth);
+        var hasAResult = HasAResult(scenario);
         if (scope is not null)
             writer.Line($"scoped to step {scope} and its sub-steps — `steps {scenario.Address}` for the whole scenario\n");
 
         foreach (var (path, rawDepth, step) in rows)
         {
             var depth = rawDepth - baseDepth;
-            var mark = step.Failed ? "✗" : step.Status is "Bypassed" ? "~" : step.IsAssertion ? "·" : " ";
+            var mark = step.Failed ? "✗" : step.Status is "Bypassed" ? "~" : step.IsAssertion ? "·" : step.Status is null && hasAResult ? "?" : " ";
             var indent = new string(' ', depth * 2);
             var duration = step.DurationSeconds is { } d and > 0.001 ? $"  {d:0.##}s" : "";
 
@@ -441,7 +464,7 @@ public static partial class QueryCommand
         var unattributed = scope is null && byStep.TryGetValue("", out var loose) ? loose.Length : 0;
         if (unattributed > 0)
             writer.Line($"\n  {unattributed} calls belong to no step"
-                        + (index.Enriched ? " (before the first step, in a step the report does not list, or attribution was not trusted)" : " (this report has no step attribution)"));
+                        + (index.Enriched ? " (before the first step, in a step the report does not list, while several steps ran that share none, or attribution was not trusted)" : " (this report has no step attribution)"));
 
         writer.Footer($"{scenario.Interactions.Count(i => i.Type == "Request")} calls · interactions {scenario.Address} · flow {scenario.Address}");
         return 0;
@@ -667,6 +690,7 @@ public static partial class QueryCommand
         var nextAnnotation = 0;
         var stepsByPath = scenario.AllSteps().ToDictionary(s => s.Path, s => s.Step);
         string? currentStep = null;
+        var stepHeaderShown = false;
 
         // A call is indented under the call it ran inside (CallNesting), one level per shown ancestor, so an
         // ancestor a filter dropped costs no level. Indentation alone says a line's parent is the nearest line
@@ -691,7 +715,15 @@ public static partial class QueryCommand
                 currentStep = interaction.StepPath;
                 section.Clear();
                 if (currentStep is not null && stepsByPath.TryGetValue(currentStep, out var step))
+                {
                     writer.Line($"── {currentStep}  {QueryWriter.OneLine(step.Display, 90)}".TrimEnd());
+                    stepHeaderShown = true;
+                }
+                else if (currentStep is null && stepHeaderShown)
+                {
+                    // Or it reads as the step above it's.
+                    writer.Line("── no step");
+                }
             }
 
             var parent = parents[interaction.Ordinal];

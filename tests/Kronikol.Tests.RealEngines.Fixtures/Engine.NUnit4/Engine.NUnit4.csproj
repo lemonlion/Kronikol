@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Plain NUnit: a step opened in an async [SetUp] is out of the test's flow, as NUnit runs the two apart. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="NUnit" Version="4.6.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
+    <ProjectReference Include="..\..\..\src\Kronikol.NUnit4\Kronikol.NUnit4.csproj" />
+  </ItemGroup>
+</Project>

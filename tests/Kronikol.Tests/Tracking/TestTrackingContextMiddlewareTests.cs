@@ -8,6 +8,27 @@ namespace Kronikol.Tests.Tracking;
 public class TestTrackingContextMiddlewareTests
 {
     [Fact]
+    public async Task A_request_carrying_a_trace_runs_with_that_trace_in_its_scope()
+    {
+        var trace = Guid.NewGuid();
+        Guid? seen = null;
+        var middleware = new TestTrackingContextMiddleware(_ =>
+        {
+            seen = TestIdentityScope.InboundTrace;
+            return Task.CompletedTask;
+        });
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Headers[TestTrackingHttpHeaders.CurrentTestNameHeader] = "My Test";
+        httpContext.Request.Headers[TestTrackingHttpHeaders.CurrentTestIdHeader] = "test-id-123";
+        httpContext.Request.Headers[TestTrackingHttpHeaders.TraceIdHeader] = trace.ToString();
+
+        await middleware.InvokeAsync(httpContext);
+
+        Assert.Equal(trace, seen);
+        Assert.Null(TestIdentityScope.InboundTrace);
+    }
+
+    [Fact]
     public async Task Sets_TestIdentityScope_from_request_headers()
     {
         TestIdentityScope.Reset();

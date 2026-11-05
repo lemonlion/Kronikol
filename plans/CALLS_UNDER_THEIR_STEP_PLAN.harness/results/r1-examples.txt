@@ -1,0 +1,77 @@
+# 17 projects in C:\Code\Kronikol-225r1
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllFailing/Example.Api.Tests.CiPreview.AllFailing.csproj (12 s) exit 1
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Flour_Failures.Getting_flour_should_return_internal_server_error
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Cake_Failures.Creating_a_cake_response_should_contain_sugar
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Cake_Failures.Creating_a_cake_response_should_have_four_ingredients
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Cake_Failures.Creating_a_cake_without_flour_should_return_unauthorized
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Cake_Failures.Creating_a_cake_without_milk_should_return_conflict
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Cake_Failures.Creating_a_cake_should_return_created
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Cake_Failures.Creating_a_cake_with_tracing_headers_should_return_created
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Cake_Failures.Creating_a_cake_without_eggs_should_return_not_found
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Milk_Failures.Getting_milk_should_return_not_found
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Milk_Failures.Getting_milk_should_return_empty_value
+  FAILED Example.Api.Tests.CiPreview.AllFailing.Scenarios.Eggs_Failures.Getting_eggs_should_return_forbidden
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.AllPassing/Example.Api.Tests.CiPreview.AllPassing.csproj (10 s) exit 0
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.FailingWithSteps/Example.Api.Tests.CiPreview.FailingWithSteps.csproj (12 s) exit 1
+  FAILED Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Ordering_a_cake_reports_the_wrong_status
+  FAILED Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Ordering_a_cake_returns_the_wrong_ingredients
+  FAILED Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Ordering_a_second_cake_reports_the_wrong_status
+  FAILED Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Ordering_a_cake_fails_inside_a_nested_step
+  FAILED Example.Api.Tests.CiPreview.FailingWithSteps.Scenarios.Dessert_Feature.Checking_the_recipe_fails_without_calling_anything
+examples/Example.Api/tests/Example.Api.Tests.CiPreview.Mixed/Example.Api.Tests.CiPreview.Mixed.csproj (11 s) exit 1
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Milk_Feature.Getting_milk_should_return_not_found
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Cake_Error_Diff_Feature.Cake_ingredients_should_include_sugar_butter_vanilla
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Cake_Error_Diff_Feature.Cake_ingredient_count_should_be_five
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Cake_Error_Diff_Feature.Cake_batch_id_should_be_a_specific_value
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Milk_Cluster_Feature.Getting_milk_should_return_201_created
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Milk_Cluster_Feature.Getting_milk_with_accept_header_should_return_201_created
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Milk_Cluster_Feature.Getting_milk_with_correlation_id_should_return_201_created
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Flour_Feature.Getting_flour_should_return_internal_server_error
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Eggs_Cluster_Feature.Getting_eggs_twice_should_return_404
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Eggs_Cluster_Feature.Getting_eggs_should_return_404_not_found
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Cake_Feature.Creating_a_cake_with_tracing_headers_should_return_created
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Cake_Feature.Creating_a_cake_should_return_created
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Cake_Feature.Creating_a_cake_response_should_contain_sugar
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Flour_Cluster_Feature.Flour_endpoint_should_indicate_failure
+  FAILED Example.Api.Tests.CiPreview.Mixed.Scenarios.Flour_Cluster_Feature.Getting_flour_should_return_500
+examples/Example.Api/tests/Example.Api.Tests.Component.BDDfy.xUnit3/Example.Api.Tests.Component.BDDfy.xUnit3.csproj (12 s) exit 0
+examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.TUnit/Example.Api.Tests.Component.LightBDD.TUnit.csproj (2 s) exit 1
+  ERROR C:\Users\cex\.nuget\packages\microsoft.testing.platform.msbuild\2.2.3\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(263,5): error : Testing with VSTest target is no longer supported b
+examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit2/Example.Api.Tests.Component.LightBDD.xUnit2.csproj (12 s) exit 0
+  FAILED to
+  FAILED to
+examples/Example.Api/tests/Example.Api.Tests.Component.LightBDD.xUnit3/Example.Api.Tests.Component.LightBDD.xUnit3.csproj (12 s) exit 0
+examples/Example.Api/tests/Example.Api.Tests.Component.NUnit4/Example.Api.Tests.Component.NUnit4.csproj (10 s) exit 0
+examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.TUnit/Example.Api.Tests.Component.ReqNRoll.TUnit.csproj (1 s) exit 1
+  ERROR C:\Users\cex\.nuget\packages\microsoft.testing.platform.msbuild\2.2.3\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(263,5): error : Testing with VSTest target is no longer supported b
+examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit2/Example.Api.Tests.Component.ReqNRoll.xUnit2.csproj (13 s) exit 0
+  FAILED to
+  FAILED to
+examples/Example.Api/tests/Example.Api.Tests.Component.ReqNRoll.xUnit3/Example.Api.Tests.Component.ReqNRoll.xUnit3.csproj (15 s) exit 0
+examples/Example.Api/tests/Example.Api.Tests.Component.Shared/Example.Api.Tests.Component.Shared.csproj (1 s) exit 0
+examples/Example.Api/tests/Example.Api.Tests.Component.TUnit/Example.Api.Tests.Component.TUnit.csproj (1 s) exit 1
+  ERROR C:\Users\cex\.nuget\packages\microsoft.testing.platform.msbuild\2.2.3\buildMultiTargeting\Microsoft.Testing.Platform.MSBuild.targets(263,5): error : Testing with VSTest target is no longer supported b
+examples/Example.Api/tests/Example.Api.Tests.Component.xUnit2/Example.Api.Tests.Component.xUnit2.csproj (9 s) exit 0
+  FAILED to
+  FAILED to
+examples/Example.Api/tests/Example.Api.Tests.Component.xUnit3/Example.Api.Tests.Component.xUnit3.csproj (11 s) exit 0
+examples/Example.Api/tests/Example.Api.Tests.Integration/Example.Api.Tests.Integration.csproj (739 s) exit 0
+# done, 40 failures
+=== LightBDD.TUnit
+Test run summary: Passed! - C:\Code\Kronikol-225r1\examples\Example.Api\tests\Example.Api.Tests.Component.Ligh
+  total: 3
+  failed: 0
+  succeeded: 3
+  skipped: 0
+=== ReqNRoll.TUnit
+Test run summary: Passed! - C:\Code\Kronikol-225r1\examples\Example.Api\tests\Example.Api.Tests.Component.ReqN
+  total: 13
+  failed: 0
+  succeeded: 13
+  skipped: 0
+=== TUnit
+Test run summary: Passed! - C:\Code\Kronikol-225r1\examples\Example.Api\tests\Example.Api.Tests.Component.TUni
+  total: 12
+  failed: 0
+  succeeded: 12
+  skipped: 0

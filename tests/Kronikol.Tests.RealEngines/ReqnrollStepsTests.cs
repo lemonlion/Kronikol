@@ -197,12 +197,31 @@ public class ReqnrollStepsTests
         """, "/background");
 
     [Theory, MemberData(nameof(Lanes))]
+    public void T30_two_step_methods_at_once_in_a_hook_each_stand_first_and_each_call_reads_its_own(string lane)
+    {
+        var read = EngineLane.Run(lane).Rows.Of("T30");
+
+        Assert.Contains("0 First parallel", read);
+        Assert.Contains("1 Second parallel", read);
+        Assert.Contains("2 Given a registered customer", read);
+        Assert.Contains("3 When the customer places the order", read);
+        Assert.Contains("0 /first", read);
+        Assert.Contains("1 /second", read);
+        Assert.Contains("2 /customers", read);
+        Assert.Contains("3 /orders", read);
+    }
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void T31_a_step_opened_by_hand_in_an_async_hook_is_closed_by_its_test_id_with_its_failure(string lane) =>
+        Assert.Contains("A step opened by hand [Failed]", EngineLane.Run(lane).Rows.Of("T31"), StringComparison.OrdinalIgnoreCase);
+
+    [Theory, MemberData(nameof(Lanes))]
     public void T19_two_step_methods_in_parallel_read_under_their_step(string lane)
     {
         Reads(lane, "T19", """
             0 Given two step methods run in parallel
               0.0 First parallel
-                0.0.0 Second parallel
+              0.1 Second parallel
             1 When the customer places the order
               1.0 An order is submitted
             2 Then the order is confirmed
@@ -243,7 +262,7 @@ public class ReqnrollStepsTests
     public void T23_two_step_methods_left_running_keep_their_place(string lane) => Reads(lane, "T23", """
         0 Given two step methods are left running
           0.0 A quick check
-            0.0.0 A slow background check
+          0.1 A slow background check
         1 When the order takes a while
           1.0 An order is submitted slowly
         2 Then the order is confirmed

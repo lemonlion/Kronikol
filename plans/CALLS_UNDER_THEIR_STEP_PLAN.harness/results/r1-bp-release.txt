@@ -1,0 +1,58 @@
+# BreakfastProvider's four in-memory lanes on R1 as it ships, against published 5.29.3 (run on this machine just before it), each in a scratch clone (scripts/run_breakfastprovider.sh, scripts/compare_reports.py). Reports are read only through the query engine.
+  failed: 0
+  succeeded: 214
+  failed: 0
+  succeeded: 187
+  failed: 0
+  succeeded: 212
+  failed: 0
+  succeeded: 212
+== proto ReqNRoll 11:49:57
+  failed: 0
+  succeeded: 214
+== proto LightBDD 11:50:31
+  failed: 0
+  succeeded: 187
+== proto BDDfy 11:51:29
+  failed: 0
+  succeeded: 212
+== proto NUnit 11:52:37
+  failed: 0
+  succeeded: 212
+=== ReqNRoll
+   1342  calls compared
+   1342  call reads the same
+    214  scenarios compared
+      2  a call's count differs (the run's own wobble, or a real change)
+           A request with a correlation id should return the same id in the response: ('GET', 'http://localhost:5173/ingredients/milk/availability') 0 -> 1
+           A request with a correlation id should return the same id in the response: ('Publish (Pub/Sub)', 'pubsub:///MenuAvailabilityChangedEvent') 0 -> 1
+=== LightBDD
+   1367  calls compared
+   1367  call reads the same
+    187  scenarios compared
+      1  a call's count differs (the run's own wobble, or a real change)
+           Health Check Should Report Degraded When Multiple Downstream Services Are Unavailable: ('GET', 'http://localhost:5134/health') 1 -> 0
+      1  tree differs
+           An Order Should Progress Through All Status Transitions To Completion: [('4.0', None, "Retrieval steps response created at should be close to '05/11/2026 11:44:14', '00:0
+=== BDDfy
+   1398  calls compared
+   1398  call reads the same
+    212  scenarios compared
+      1  tree differs
+           Order should progress through all status transitions to completion: [('3.6', None, "Retrieval steps response created at should be close to '05/11/2026 11:45:44', '00:02:0
+=== NUnit
+   1398  calls compared
+   1398  call reads the same
+    212  scenarios compared
+      1  a call's count differs (the run's own wobble, or a real change)
+           Outbox message should transition to failed after exhausting retries: ('Query', 'https://localhost:9999/colls/orders') 3 -> 4
+=== the mismatches each lane now says it has, from dotnet /c/Code/Kronikol-225r2/src/Kronikol.Tool/bin/Release/net10.0/Kronikol.Tool.dll query summary
+--- ReqNRoll
+--- LightBDD
+--- BDDfy
+--- NUnit
+=== the Kronikol package each lane restored
+ReqNRoll "Kronikol/5.29.4-proto225r1" 
+LightBDD "Kronikol/5.29.4-proto225r1" 
+BDDfy "Kronikol/5.29.4-proto225r1" 
+NUnit "Kronikol/5.29.4-proto225r1" 
