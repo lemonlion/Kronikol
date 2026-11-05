@@ -89,7 +89,7 @@ public static class DiagnosticReportGenerator
             sb.AppendLine("<h3>Entries per Test (top 50)</h3><table><tr><th>Test Name</th><th>Test ID</th><th>Count</th></tr>");
             foreach (var g in byTest.Take(50))
             {
-                var name = g.First().TestName;
+                var name = (g.FirstOrDefault(l => !l.IsDiagramMarker) ?? g.First()).TestName;
                 sb.AppendLine($"<tr><td>{Escape(name)}</td><td>{Escape(g.Key)}</td><td>{g.Count()}</td></tr>");
             }
             sb.AppendLine("</table>");
@@ -119,7 +119,7 @@ public static class DiagnosticReportGenerator
         }
 
         // Unpaired requests
-        var requests = logs.Where(l => l.Type == RequestResponseType.Request).ToArray();
+        var requests = logs.Where(l => l.Type == RequestResponseType.Request && !l.IsDiagramMarker).ToArray();
         var responseIds = logs.Where(l => l.Type == RequestResponseType.Response).Select(l => l.RequestResponseId).ToHashSet();
         var unpaired = requests.Where(r => !responseIds.Contains(r.RequestResponseId)).ToArray();
         if (unpaired.Length > 0)
@@ -148,7 +148,7 @@ public static class DiagnosticReportGenerator
             }
 
             var testsWithNoDiagrams = features.SelectMany(f => f.Scenarios)
-                .Where(s => !logs.Any(l => l.TestId == s.Id))
+                .Where(s => !logs.Any(l => l.TestId == s.Id && !l.IsDiagramMarker))
                 .ToArray();
             if (testsWithNoDiagrams.Length > 0)
             {

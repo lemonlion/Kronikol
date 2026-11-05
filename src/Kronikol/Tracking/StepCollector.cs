@@ -157,6 +157,8 @@ public static class StepCollector
         var named = phaseKeyword is not null || FrameworkNamesThisFlow();
         var flowPhase = TestPhaseContext.Current;
         var phaseNow = TestPhase.Unknown;
+        var startsAction = false;
+        var replacesBoundary = false;
 
         var step = new CollectedStep
         {
@@ -206,9 +208,33 @@ public static class StepCollector
                 phaseNow = says!.Value;
 
                 // A flow the framework does not name, or one that outlived the step it was forked inside, runs for the test and is
-                // not the test: its step keeps its phase to itself. A framework's own step is the test wherever it runs.
-                if (named && (isFrame || !OutlivedStepSaysPhase(state)))
+                // not the test: its step keeps its phase to itself.
+                if (named && (isFrame || (!OutlivedStepSaysPhase(state) && !state.StepsSetPhase)))
                 {
+                    // A framework's steps own the boundary: a woven keyword before its first step does not count as an act, and a
+                    // boundary a woven step drew gives way to the framework's.
+                    if (isFrame && !state.StepsSetPhase)
+                    {
+                        state.ActionStepSeen = false;
+                        if (!state.ExplicitBoundaryDrawn && !state.ClientDrewBoundary)
+                            state.ActionStartDrawn = false;
+                    }
+
+                    // The Setup/Action boundary: the first time this test's steps go from Setup to Action, and never once an Action step
+                    // has run, as a Setup partition over it would hide an act. For the same reason not at a step attribute's Then, as a
+                    // test's body can hold its act between a Given and a Then.
+                    startsAction = says == TestPhase.Action && (state.Phase == TestPhase.Setup || (isFrame && state.CallInSetupStep))
+                        && !state.ActionStartDrawn && !state.ActionStepSeen
+                        && (isFrame || keyword != "Then");
+                    state.ActionStepSeen |= says == TestPhase.Action;
+                    state.ActionStartDrawn |= startsAction;
+                    if (startsAction && isFrame)
+                        state.BoundaryStep = step;
+                    if (startsAction)
+                    {
+                        replacesBoundary = state.BoundaryLogged;
+                        state.BoundaryLogged = true;
+                    }
                     state.StepsSetPhase |= isFrame;
                     state.Phase = phaseNow;
                 }
@@ -249,7 +275,98 @@ public static class StepCollector
         if (phaseNow != TestPhase.Unknown)
             TestPhaseContext.Current = phaseNow;
 
+        // After the step's bar, so the bar closes the Setup partition as the first bar past the setup calls always has.
+        if (startsAction)
+            DefaultTrackingDiagramOverride.DrawBoundary(testId, replacesBoundary);
+
         return step.Ordinal;
+    }
+
+    /// <summary>
+    /// Whether an HTTP handler still has to ask its <c>CurrentStepTypeFetcher</c> about this test: no while the test's own
+    /// steps set its phase, as every adapter's do, or once this client has passed its boundary.
+    /// </summary>
+    internal static bool NeedsStepTypeFromHandler(string? testId, object client)
+    {
+        // A fetcher can answer no id, and a call must not fail for that.
+        if (testId is null)
+            return false;
+
+        if (!States.TryGetValue(testId, out var state))
+            return true;
+
+        lock (state)
+            return !state.StepsSetPhase && !state.ClientsPastBoundary.Contains(client);
+    }
+
+    /// <summary>
+    /// Draws the boundary from the step type an HTTP handler reports for a call, for a test whose framework starts no steps
+    /// here: a custom <c>CurrentStepTypeFetcher</c>, or LightBDD with no step decorator. What it has seen is the test's, not
+    /// the handler's: a handler shared by two tests drew the boundary for the first alone.
+    /// </summary>
+    internal static void NoteCallInStepType(string testId, string stepType, object client)
+    {
+        var inSetup = stepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
+                      || stepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
+                      || (stepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase)
+                          && !stepType.StartsWith("BUTWHEN", StringComparison.OrdinalIgnoreCase));
+
+        var state = States.GetOrAdd(testId, _ => new TestStepState());
+        lock (state)
+        {
+            if (inSetup)
+            {
+                state.CallInSetupStep = true;
+                state.ClientsInSetup.Add(client);
+                return;
+            }
+
+            if (!state.ClientsInSetup.Contains(client))
+                return;
+
+            state.ClientsPastBoundary.Add(client);
+
+            // Another client drew it: this one's first call past it still reads Action, as its fetcher named it.
+            if (state.ActionStartDrawn)
+            {
+                TestPhaseContext.Current = TestPhase.Action;
+                return;
+            }
+
+            state.ActionStartDrawn = true;
+            state.ClientDrewBoundary = true;
+            state.BoundaryLogged = true;
+
+            // Under the lock, so another client's first call past it is not logged ahead of it.
+            DefaultTrackingDiagramOverride.DrawBoundary(testId);
+        }
+    }
+
+    /// <summary>
+    /// A consumer's <c>StartAction()</c>: whether to log its marker. It overrides a framework step's boundary while that step is open
+    /// in this flow, or a woven step's at any time, and only the first one counts, as a second asks for the same boundary again.
+    /// </summary>
+    internal static bool NoteExplicitBoundary(string? testId, out bool replacesBoundary)
+    {
+        replacesBoundary = false;
+        if (testId is null)
+            return false;
+
+        var state = States.GetOrAdd(testId, _ => new TestStepState());
+        lock (state)
+        {
+            NotePhase(testId, TestPhase.Action);
+            var superseded = state.ClientDrewBoundary || (state.BoundaryStep is { } boundary && (!boundary.IsOpen || !FlowHolds(boundary)));
+            var first = !state.ExplicitBoundaryDrawn && !superseded;
+            state.ExplicitBoundaryDrawn = true;
+            if (first)
+            {
+                replacesBoundary = state.BoundaryLogged;
+                state.BoundaryLogged = true;
+            }
+
+            return first;
+        }
     }
 
     /// <summary>
@@ -277,7 +394,7 @@ public static class StepCollector
 
     /// <summary>
     /// Notes a phase the test set itself, with <c>StartSetup()</c> or <c>StartAction()</c>, so a step that continues the one
-    /// before it continues that.
+    /// before it continues that, and a test that drew its own boundary draws no second one.
     /// </summary>
     internal static void NotePhase(string? testId, TestPhase phase)
     {
@@ -288,11 +405,21 @@ public static class StepCollector
         lock (state)
         {
             state.Phase = phase;
+            state.ActionStartDrawn |= phase == TestPhase.Action;
         }
     }
 
     /// <summary>Whether a step of this test open in this flow says a phase: a story or a step under it is a label.</summary>
     internal static bool UnderOpenKeyword(string testId) => States.TryGetValue(testId, out var state) && OpenStepSaysPhase(state);
+
+    private static bool FlowHolds(CollectedStep step)
+    {
+        for (var held = FlowStep.Value; held is not null; held = held.Parent ?? held.CameFrom)
+            if (ReferenceEquals(held, step))
+                return true;
+
+        return false;
+    }
 
     // Walks this flow's steps, another test's among them, and reads only this test's.
     private static bool OpenStepSaysPhase(TestStepState state)
@@ -1058,6 +1185,18 @@ public static class StepCollector
         public List<CollectedStep> Open { get; } = new();
         public List<CollectedStep> TopLevel { get; } = new();
         public string? LastKeywordCategory { get; set; }
+
+        public bool ActionStepSeen { get; set; }
+
+        /// <summary>A boundary of this test's has been logged, so the next one replaces it.</summary>
+        public bool BoundaryLogged { get; set; }
+        public bool ActionStartDrawn { get; set; }
+        public bool ExplicitBoundaryDrawn { get; set; }
+        public HashSet<object> ClientsInSetup { get; } = [];
+        public HashSet<object> ClientsPastBoundary { get; } = [];
+        public CollectedStep? BoundaryStep { get; set; }
+        public bool ClientDrewBoundary { get; set; }
+        public bool CallInSetupStep { get; set; }
         public List<FileAttachment>? ScenarioAttachments { get; set; }
     }
 

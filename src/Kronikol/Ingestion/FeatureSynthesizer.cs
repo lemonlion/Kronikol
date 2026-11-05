@@ -155,7 +155,8 @@ public static class FeatureSynthesizer
 
         foreach (var log in logList)
         {
-            if (string.IsNullOrWhiteSpace(log.TestId))
+            // A test's boundary is no sign of a scenario: with no step bars, a test with no calls logs that alone.
+            if (string.IsNullOrWhiteSpace(log.TestId) || log.IsActionStart)
                 continue;
             var acc = Get(log.TestId);
             acc.Name ??= string.IsNullOrWhiteSpace(log.TestName) || log.TestName == TestIdentityScope.UnknownTestName ? null : log.TestName;

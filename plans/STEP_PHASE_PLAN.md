@@ -1,7 +1,7 @@
 # Step phase plan: #224
 
-**Written:** 2026-11-02, at 5.27.13. **Redesigned and re-measured:** 2026-11-03, at 5.28.2 (`v5.28.2`, main at `9d994a4b`). **Status: executing, on the owner's word of 2026-11-04 ("can you implement the plan in full"), every question as recommended, with Q14's three faults named to the owner and not filed.**
-R1 is 5.30.3, and it closes #195 and #224. R2 follows. R3's code shipped in 5.29.3, with #223's R1. The sections below stand as they were reviewed, each with an **As executed** note where a release differs, and the last entry of §12 says what building it changed.
+**Written:** 2026-11-02, at 5.27.13. **Redesigned and re-measured:** 2026-11-03, at 5.28.2 (`v5.28.2`, main at `9d994a4b`). **Status: executed, on the owner's word of 2026-11-04 ("can you implement the plan in full"), every question as recommended, with Q14's three faults named to the owner and not filed.**
+R1 is 5.30.3, and it closes #195 and #224. R2 is 5.31.0. R3's code shipped in 5.29.3, with #223's R1. The sections below stand as they were reviewed, each with an **As executed** note where a release differs, and the last entry of §12 says what building it changed.
 
 Evidence labels: **RUN** (measured here, against the published 5.28.2 packages unless the line says otherwise), **READ** (in the source, `file:line` at `9d994a4b`, or in the wiki at
 `c9e0698`), **INFERRED** (reasoned from facts, stated by none), **ISSUE** (taken from #224 or #195, not re-measured). Every RUN line has its probe and its output in
@@ -421,6 +421,8 @@ TDD: each fact below is written first and seen red on the tag current when the w
 - `ResolvePhaseFromStepType("ButWhen")` is Action.
 
 ### 7.2 R2, a minor: the boundary at the step
+
+**As executed:** 5.31.0, 2026-11-05.
 
 §5.6. What readers see differently, all with `SeparateSetup = true` or a per-phase verbosity, but for the last four:
 

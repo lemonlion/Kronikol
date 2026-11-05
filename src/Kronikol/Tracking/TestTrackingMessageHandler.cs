@@ -34,9 +34,6 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
     private readonly bool _trackDuringSetup;
     private readonly bool _trackDuringAction;
     private readonly IReadOnlyCollection<string> _excludedHosts;
-    private string? _lastStepType;
-    private bool _wasInGivenSection;
-    private bool _actionStartInjected;
     private int _invocationCount;
     private bool _listenerStarted;
 
@@ -449,11 +446,12 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 
     private void InjectImplicitActionStartIfNeeded(TestIdentity currentTestInfo)
     {
-        if (_actionStartInjected || _currentStepTypeFetcher is null)
+        if (_currentStepTypeFetcher is null || !StepCollector.NeedsStepTypeFromHandler(currentTestInfo.Id, this))
             return;
 
-        // A fetcher may throw where it has no step to read, as LightBDD's does outside a step, in a scenario decorator. A
-        // call made there is still a call and must not fail the test, as a throwing test identity fetcher does not.
+        // A fetcher may throw where it has no step to read, as LightBDD's does outside a step, in a scenario decorator, or on a test it does not
+        // know, as a shared handler now asks for each. A call made there is still a call and must not fail the test, as a throwing test identity
+        // fetcher does not.
         string? currentStepType;
         try
         {
@@ -461,29 +459,10 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         }
         catch
         {
-            currentStepType = null;
-        }
-
-        if (currentStepType is null)
-        {
-            _lastStepType = null;
             return;
         }
 
-        var isGivenOrAnd = currentStepType.StartsWith("GIVEN", StringComparison.OrdinalIgnoreCase)
-                           || currentStepType.StartsWith("AND", StringComparison.OrdinalIgnoreCase)
-                           || currentStepType.StartsWith("BUT", StringComparison.OrdinalIgnoreCase);
-
-        if (isGivenOrAnd)
-        {
-            _wasInGivenSection = true;
-        }
-        else if (_wasInGivenSection)
-        {
-            _actionStartInjected = true;
-            DefaultTrackingDiagramOverride.StartAction(currentTestInfo.Id);
-        }
-
-        _lastStepType = currentStepType;
+        if (currentStepType is not null)
+            StepCollector.NoteCallInStepType(currentTestInfo.Id, currentStepType, this);
     }
 }

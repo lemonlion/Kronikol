@@ -62,6 +62,23 @@ public class FeatureSynthesizerTests
         Assert.Equal(ExecutionResult.Passed, scenario.Result);
     }
 
+    // review2/F9: with no tests file and no step bars, a test with no calls logs its boundary alone, and that is no scenario, least of all one named by its id.
+    [Fact]
+    public void A_test_seen_only_by_its_boundary_is_no_scenario()
+    {
+        var logs = new[]
+        {
+            new RequestResponseLog("onlymarker", "onlymarker", "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+            {
+                IsActionStart = true
+            },
+        };
+
+        var result = FeatureSynthesizer.Build(null, logs, defaultFeatureName: "Captured");
+
+        Assert.Empty(result.Features);
+    }
+
     [Fact]
     public void Start_records_carry_examples_block_fields_onto_scenarios()
     {

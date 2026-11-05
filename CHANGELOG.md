@@ -4,6 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.31.0] - 2026-11-05
+
+The minor part moves (5.30.3 to 5.31.0): a suite of step attributes gets a Setup partition it has never had, which is a diagram feature, and the highest-ranking change
+decides the bump. No public member is added (`plans/STEP_PHASE_PLAN.md` R2). For the BDD adapters it is a bug fix. A report output change, so a Kronikol4J ledger line.
+
+### Added
+
+- **The Setup/Action boundary is drawn at the step, once per test.** `StepCollector` logs it the first time a test's steps go from Setup to Action, after the step's bar. So with
+  `SeparateSetup = true` a suite of step attributes has a Setup partition with a `[GivenStep]` then a `[WhenStep]`, where only an explicit `StartAction()` drew one. A `[ThenStep]` draws none,
+  as a test's body can hold its act between a Given and a Then, and a partition up to the Then would put that act in Setup, where the page's Setup filter hides it. It also reaches
+  further than that option: a plain suite's per-phase verbosity starts to apply, as a service-side call before the boundary is drawn at `SetupVerbosity`, and an `Unknown` call before the steps with it.
+
+### Fixed
+
+- **A Setup partition no longer depends on the HTTP client.** The boundary lived in two private fields of the handler, so of two tests on a shared handler the second had none,
+  on LightBDD no phases at all, a Given with no HTTP call had none, and a When with no HTTP call was drawn inside the partition. What a handler sees now belongs to the test, for
+  a test whose framework starts no steps: a custom `CurrentStepTypeFetcher`, or LightBDD's `[Obsolete]` overload with no decorator.
+- **A fetcher that answers no test id costs a call nothing,** and `StartAction` with no id logs nothing. A call with no id no longer stops the report at the end of the run.
+- **The diagnostic page does not count markers as requests.** A boundary and a step's bar were unpaired requests, in a table capped at 50 that could hide a real one, and a marker could name a test. A scenario
+  with only markers is listed as having no log entries.
+
+### Changed
+
+- **An explicit `StartAction()` inside the step that drew the boundary overrides it, on every adapter, and a second explicit call logs nothing.** A marker that replaces an earlier one says so, and the last
+  that says so is the boundary. A capture from before this has one marker for each client and each explicit call, and its first stands, as it did, whichever version of the tool reads it. A retry that calls `ClearSteps`
+  keeps its first attempt's boundary. An explicit call after that step has ended logs nothing, so a marking check in a Then does not swallow the When into Setup, and on a woven step's boundary an explicit call always wins.
+  So on a framework suite, to put what a When does before the boundary, call `StartAction()` inside that When: `When { call; StartAction(); }` puts the call in the partition, and one in a later step does nothing. `StartSetup()` then
+  `StartAction()` inside a When reads the arranging call as Setup.
+- **A framework suite with `SeparateSetup = true` always has its partition.** A suite that set `CurrentStepTypeFetcher = null`, or a custom fetcher that named a later act, had that choose the boundary; it is not asked once the framework's steps
+  have set the test's phase. `WhenTriggersAction = false` turns step attributes off and not a framework's steps. To have no partition, leave `SeparateSetup` off.
+- **A test whose first act comes before any Setup step has no partition,** where a BDD adapter drew one over that act: When, Then, Given, When draws none.
+- **A bypassed `[WhenStep]` draws the boundary,** and so does a LightBDD When that bypasses itself, as it moves the phase, so a real Given after it reads Setup in the Action part and stays out of the partition. A `[WhenStep]` in tear-down after a body with no
+  When, on a plain suite, draws it too, so the body sits in the partition with its phases unchanged.
+- On a handler shared by tests that asks a fetcher, a later test's calls read a phase where they read `Unknown`, so its trackers' phase options start to apply: `TrackDuringSetup = false` drops a later test's Given calls, as it does the first's.
+- `kronikol ingest` with no tests file makes no scenario of a test seen only by its boundary, where such a test was a scenario named by its id.
+- With `SeparateSetup` off, a run of identical calls across the boundary folds as one on a BDD adapter, where the marker used to end it. A call with a per-phase variant keeps it, so a test with one such call has its run split at the boundary.
+
+### Known
+
+- A call after `TestPhaseContext.Current = TestPhase.Action` written by hand, before a `[WhenStep]`, reads Action and sits in the partition. `StartAction()` is the way to say it.
+- `ClearSteps` in the middle of a test forgets where its boundary is, so a suite that calls it after each Given has no partition.
+- A keyword step closed by hand on another flow leaves the flow that opened it with no boundary, as it did.
+
 ## [5.30.3] - 2026-11-05
 
 The patch part moves (5.30.2 to 5.30.3): a fix of what moves a test's phase, with no new option and no new public member

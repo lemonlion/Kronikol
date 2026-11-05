@@ -408,7 +408,10 @@ public sealed record InteractionRecord
             var kind = ResolvedMarkerKind;
             var half = MarkerLog(name, kind);
             if (kind == DiagramMarkerKind.Phase)
+            {
                 half.IsActionStart = true;
+                half.PlantUml = PlantUml;
+            }
             else
             {
                 half.IsOverrideStart = MarkerEnd != true;

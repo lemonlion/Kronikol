@@ -89,7 +89,8 @@ public static class BackgroundAttribution
         for (var i = 0; i < result.Length; i++)
         {
             var log = result[i];
-            if (log is null || !Inherited(log) || log.IsDiagramMarker)
+            // A fetcher can answer no id, and such a call is nobody's to expire.
+            if (log?.TestId is null || !Inherited(log) || log.IsDiagramMarker)
                 continue;
             if (!ends.TryGetValue(log.TestId, out var ended))
                 continue;

@@ -32,6 +32,17 @@ public class BackgroundAttributionTests
             AttributionSource = source
         };
 
+    // review2/N04: a fetcher can answer no id at all, and a call with none must not stop the report at the end of the run.
+    [Fact]
+    public void A_call_with_no_test_id_is_left_alone()
+    {
+        var log = Log(null!, AttributionSource.TestContext, Ended.AddSeconds(1));
+
+        var kept = Assert.Single(BackgroundAttribution.Expire(Scenario(), [log]));
+
+        Assert.Null(kept.TestId);
+    }
+
     [Fact]
     public void A_call_that_inherited_the_scenario_after_it_ended_is_expired()
     {

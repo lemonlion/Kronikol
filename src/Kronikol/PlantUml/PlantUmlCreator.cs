@@ -119,7 +119,9 @@ public static partial class PlantUmlCreator
             .Select(testTraces =>
         {
             var traces = testTraces.ToList();
-            var testName = testTraces.First().TestName;
+
+            // A boundary drawn before a test's first call carries the test's id as its name.
+            var testName = (testTraces.FirstOrDefault(t => !t.IsActionStart) ?? testTraces.First()).TestName;
             var results = CreatePlantUml(
                 traces, 
                 requestPreFormattingProcessor,
@@ -158,6 +160,14 @@ public static partial class PlantUmlCreator
         return plantUmlPerTestName?.AsEnumerable() ?? [];
     }
 
+    // The test's boundary among its markers: the last that says it replaces an earlier one (at most one a step or a client drew, and the first explicit
+    // StartAction() after it), else the first, which is how a capture from before they said so reads, with a marker for each client and each explicit call.
+    private static int BoundaryIndex(List<RequestResponseLog> traces)
+    {
+        var replacing = traces.FindLastIndex(t => t.IsActionStart && t.PlantUml == DefaultTrackingDiagramOverride.ReplacesBoundary);
+        return replacing >= 0 ? replacing : traces.FindIndex(t => t.IsActionStart);
+    }
+
     private static PlantUmlResult[] CreatePlantUml(
         List<RequestResponseLog> tracesForTest,
         Func<string, string>? requestPreFormattingProcessor,
@@ -190,21 +200,41 @@ public static partial class PlantUmlCreator
         int diagramNoteWrapWidth = DefaultNoteWrapWidth,
         bool systemUiFont = false)
     {
+        // With no partition to draw, the boundary is not on the page, so it must not end a run of identical calls.
+        // Nor with a call that takes its phase variant from its place: there it is on the page after all.
+        var heldBoundary = !separateSetup && collapseConsecutiveIdenticalCalls && !tracesForTest.Any(t => t.SetupVariant is not null || t.ActionVariant is not null)
+            ? BoundaryIndex(tracesForTest) : -1;
+        var afterBoundary = heldBoundary >= 0 ? tracesForTest.Skip(heldBoundary + 1).Where(t => !t.IsActionStart).ToList() : [];
+        var boundaryMarker = heldBoundary >= 0 ? tracesForTest[heldBoundary] : null;
+        if (boundaryMarker is not null)
+            tracesForTest = tracesForTest.Where(t => !t.IsActionStart).ToList();
+
         // Collapse poll/retry bursts and apply the arrow cap before rendering (no-op when both are off).
         var collapsed = SequenceCollapser.Apply(tracesForTest, collapseConsecutiveIdenticalCalls, collapseThreshold, maxArrowsPerDiagram);
         tracesForTest = collapsed.Traces;
         var omittedPairs = collapsed.OmittedPairs;
-        if (tracesForTest.Count == 0)
+        if (tracesForTest.Count == 0 || tracesForTest.All(t => t.IsActionStart))
             return [];
+
+        if (boundaryMarker is not null)
+        {
+            var kept = tracesForTest.ToHashSet();
+            var next = afterBoundary.FirstOrDefault(kept.Contains);
+            tracesForTest = [.. tracesForTest];
+            tracesForTest.Insert(next is null ? tracesForTest.Count : tracesForTest.IndexOf(next), boundaryMarker);
+        }
 
         var builder = new DiagramBuilder(tracesForTest, plantUmlTheme, clientSideSplitting ? int.MaxValue : maxEncodedDiagramLength,
             sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides,
             diagramNoteWrapWidth, systemUiFont);
-        var lastTrace = tracesForTest[^1];
+
+        // The boundary draws nothing: a diagram split at the last call before it would leave one more, empty.
+        var lastTrace = tracesForTest.Last(t => !t.IsActionStart);
 
         var currentlyOverriding = false;
         var hasActionStart = separateSetup && tracesForTest.Any(t => t.IsActionStart);
-        var actionStartIndex = tracesForTest.FindIndex(t => t.IsActionStart);
+
+        var actionStartIndex = BoundaryIndex(tracesForTest);
         var hasSetupTraces = hasActionStart && tracesForTest
             .Take(actionStartIndex)
             .Any(t => !t.IsOverrideStart && !t.IsOverrideEnd && !t.IsActionStart);
@@ -234,9 +264,12 @@ public static partial class PlantUmlCreator
             traceIndex++;
             if (trace.IsActionStart)
             {
-                builder.ClosePartition();
-                setupPartitionClosed = true;
-                isInActionPhase = true;
+                if (traceIndex == actionStartIndex)
+                {
+                    builder.ClosePartition();
+                    setupPartitionClosed = true;
+                    isInActionPhase = true;
+                }
                 continue;
             }
 

@@ -59,6 +59,10 @@ public static class RequestResponseLogger
 
     public static void Log(RequestResponseLog log)
     {
+        // A fetcher can answer no id. Such a call is nobody's, which the report has a name for, where a null stopped the report at the end of the run.
+        if (log.TestId is null)
+            log = log with { TestId = TestIdentityScope.UnknownTestId, TestName = log.TestName ?? TestIdentityScope.UnknownTestName };
+
         if (Redaction is { } redaction)
         {
             var redacted = redaction.Apply(log);

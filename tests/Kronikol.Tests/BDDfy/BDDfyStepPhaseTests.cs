@@ -92,6 +92,44 @@ public class BDDfyStepPhaseTests : IDisposable
         Assert.Equal("Action", TestsOwnPhase());
     }
 
+    private int Boundaries() => RequestResponseLogger.RequestAndResponseLogs.Count(l => l.TestId == _id && l.IsActionStart);
+
+    // review4/F1: the box would close at the Then or not at all, and hiding Setup would hide the act.
+    [Fact]
+    public void An_async_Given_that_has_ended_leaves_the_When_to_draw_the_boundary()
+    {
+        ((Task)Execute(ExecutionOrder.SetupState, () => Yielding())).GetAwaiter().GetResult();
+
+        var inWhen = -1;
+        Execute(ExecutionOrder.Transition, () =>
+        {
+            inWhen = Boundaries();
+            return null;
+        });
+
+        Assert.Equal(1, inWhen);
+    }
+
+    [Fact]
+    public void An_async_Given_that_finished_at_once_leaves_the_When_to_draw_the_boundary()
+    {
+        ((Task)Execute(ExecutionOrder.SetupState, () => Task.CompletedTask)).GetAwaiter().GetResult();
+
+        Execute(ExecutionOrder.Transition, () => null);
+
+        Assert.Equal(1, Boundaries());
+    }
+
+    [Fact]
+    public void An_async_When_after_an_async_Given_draws_the_boundary_once()
+    {
+        ((Task)Execute(ExecutionOrder.SetupState, () => Yielding())).GetAwaiter().GetResult();
+        ((Task)Execute(ExecutionOrder.Transition, () => Yielding())).GetAwaiter().GetResult();
+        Execute(ExecutionOrder.Assertion, () => null);
+
+        Assert.Equal(1, Boundaries());
+    }
+
     // The option is about step attributes: BDDfy's own steps go on saying their word.
     [Fact]
     public void A_step_keeps_its_phase_with_WhenTriggersAction_off()

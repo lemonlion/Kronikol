@@ -91,7 +91,26 @@ public static class DefaultTrackingDiagramOverride
     public static void StartAction(string testId)
     {
         TestPhaseContext.Current = TestPhase.Action;
+        if (StepCollector.NoteExplicitBoundary(testId, out var replacesBoundary))
+            LogBoundary(testId, replacesBoundary);
+    }
+
+    /// <summary>
+    /// What a boundary that replaces an earlier one of its test carries in its fragment, which a boundary draws nothing of. A capture written
+    /// before this has a boundary for each client and each explicit call, and its first stands.
+    /// </summary>
+    internal const string ReplacesBoundary = "replaces";
+
+    /// <summary>The boundary a step or a client draws, which an explicit <see cref="StartAction(string)"/> overrides.</summary>
+    internal static void DrawBoundary(string testId, bool replacesBoundary = false)
+    {
+        TestPhaseContext.Current = TestPhase.Action;
         StepCollector.NotePhase(testId, TestPhase.Action);
+        LogBoundary(testId, replacesBoundary);
+    }
+
+    private static void LogBoundary(string testId, bool replacesBoundary)
+    {
         var log = new RequestResponseLog(
             testId,
             testId,
@@ -107,7 +126,8 @@ public static class DefaultTrackingDiagramOverride
             false)
         {
             IsActionStart = true,
-            MarkerKind = DiagramMarkerKind.Phase
+            MarkerKind = DiagramMarkerKind.Phase,
+            PlantUml = replacesBoundary ? ReplacesBoundary : null
         };
         RequestResponseLogger.Log(log);
     }

@@ -109,9 +109,10 @@ public record ReportConfigurationOptions
 
     /// <summary>
     /// When <c>true</c>, a sequence diagram draws the calls a test made before its Setup/Action boundary inside a
-    /// <c>Setup</c> partition. The boundary is <c>StartAction()</c>, or the one the test's client logs before its first
-    /// request after a request made in a Given step; <c>kronikol ingest --separate-setup</c> synthesises it from the
-    /// test's steps or its calls' phases. A test with no boundary, or no call before it, draws no partition. Default:
+    /// <c>Setup</c> partition. The boundary is the first step that goes from Setup to Action, or <c>StartAction()</c>, or for a
+    /// framework that starts no steps the one its client logs before its first request after a request made in a Given
+    /// step; <c>kronikol ingest --separate-setup</c> synthesises it from the test's steps or its calls' phases. A test with
+    /// no boundary, or no call before it, draws no partition. Default:
     /// <c>false</c>.
     /// </summary>
     public bool SeparateSetup { get; set; }

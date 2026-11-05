@@ -24,6 +24,45 @@ public class DiagnosticReportGeneratorTests : IDisposable
     // to the run's directory: a blank folder put it one level above the run (outside Run.json, the rotation
     // and the upload), and a null one threw before the run could write its manifest.
 
+    // review2/F8: a boundary and a step's bar are diagram markers, and were counted among the unpaired requests, in a table capped at 50 that could hide a real one.
+    [Fact]
+    public void Diagram_markers_are_not_unpaired_requests_and_do_not_name_a_test()
+    {
+        var folder = Directory.CreateTempSubdirectory("kronikol-diagpage-markers").FullName;
+        var marker = new RequestResponseLog("the-marker-id", "t1", "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        {
+            IsActionStart = true
+        };
+        var request = Guid.NewGuid();
+        var call = MakeLog("t1", RequestResponseType.Request, request);
+        var response = MakeLog("t1", RequestResponseType.Response, request);
+
+        DiagnosticReportGenerator.Generate([marker, call, response], [], new ReportConfigurationOptions { ReportsFolderPath = folder });
+        var html = File.ReadAllText(Path.Combine(folder, "DiagnosticReport.html"));
+        Directory.Delete(folder, recursive: true);
+
+        Assert.DoesNotContain("Unpaired Request", html);
+        Assert.DoesNotContain("the-marker-id</td>", html);
+    }
+
+    [Fact]
+    public void A_scenario_with_only_diagram_markers_is_listed_as_having_no_log_entries()
+    {
+        var folder = Directory.CreateTempSubdirectory("kronikol-diagpage-markers").FullName;
+        var marker = new RequestResponseLog("t1", "t1", "", "", new Uri("http://override.com"), [], "", "", RequestResponseType.Request, Guid.NewGuid(), Guid.NewGuid(), false)
+        {
+            IsActionStart = true
+        };
+        Feature[] features = [new() { DisplayName = "F", Scenarios = [new() { Id = "t1", DisplayName = "The quiet scenario", Result = ExecutionResult.Passed }] }];
+
+        DiagnosticReportGenerator.Generate([marker], features, new ReportConfigurationOptions { ReportsFolderPath = folder });
+        var html = File.ReadAllText(Path.Combine(folder, "DiagnosticReport.html"));
+        Directory.Delete(folder, recursive: true);
+
+        Assert.Contains("Scenario(s) with No Log Entries", html);
+        Assert.Contains("The quiet scenario", html);
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
