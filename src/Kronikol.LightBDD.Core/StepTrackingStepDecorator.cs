@@ -17,6 +17,9 @@ internal sealed class StepTrackingStepDecorator : IStepDecorator
 {
     internal static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, int> Frames = new();
 
+    /// <summary>When a step of a scenario last ended, by the clock calls are stamped with.</summary>
+    internal static readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset> LastEnded = new();
+
     /// <summary>The frame opened for a LightBDD step, if it ran.</summary>
     internal static int? FrameOf(Guid runtimeId) => Frames.TryGetValue(runtimeId, out var frame) ? frame : null;
 
@@ -45,6 +48,8 @@ internal sealed class StepTrackingStepDecorator : IStepDecorator
         finally
         {
             StepCollector.CompleteFrame(testId, frame, passed: true);
+            if (testId is not null)
+                LastEnded[testId] = DateTimeOffset.UtcNow;
         }
     }
 

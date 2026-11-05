@@ -1399,6 +1399,41 @@ public class TestTrackingMessageHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task Step_fetcher_that_throws_costs_the_call_nothing_and_no_action_start()
+    {
+        // LightBDD's throws outside a step, in a scenario decorator, and a tracked call there used to fail the test (plans/STEP_IDENTITY_PLAN.md F13)
+        var options = OptionsWithStepFetcher(() => throw new InvalidOperationException("Not in scenario context"));
+        using var invoker = CreateInvoker(options);
+
+        using var response = await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+
+        Assert.True(response.IsSuccessStatusCode);
+        var logs = GetLogsFromThisTest();
+        Assert.NotEmpty(logs);
+        Assert.DoesNotContain(logs, l => l.IsActionStart);
+    }
+
+    [Fact]
+    public async Task Step_fetcher_that_throws_between_steps_reads_as_no_step_so_the_given_section_is_kept()
+    {
+        var calls = 0;
+        var options = OptionsWithStepFetcher(() => ++calls switch
+        {
+            1 => "GIVEN",
+            2 => throw new InvalidOperationException("Not in scenario context"),
+            _ => "WHEN",
+        });
+        using var invoker = CreateInvoker(options);
+
+        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+        Assert.DoesNotContain(GetLogsFromThisTest(), l => l.IsActionStart);
+
+        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+        Assert.Contains(GetLogsFromThisTest(), l => l.IsActionStart);
+    }
+
+    [Fact]
     public async Task No_IsActionStart_marker_when_no_step_type_fetcher()
     {
         var options = DefaultOptions();

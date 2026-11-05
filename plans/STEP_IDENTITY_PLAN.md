@@ -1,6 +1,6 @@
 # Step identity plan: #223
 
-**Written:** 2026-11-02, at 5.27.13 (`v5.27.13`, `c58d98c0`; main at `27cc0e46`). **Status: executing, on the owner's word of 2026-11-04 ("implement the plan in full"), with the recommended answers to Q1 to Q6.** R1 is 5.29.3, R2 is 5.30.1. R3 follows. The sections below stand as they were reviewed, and each carries an **As executed** note where the release differs.
+**Written:** 2026-11-02, at 5.27.13 (`v5.27.13`, `c58d98c0`; main at `27cc0e46`). **Status: executed, on the owner's word of 2026-11-04 ("implement the plan in full"), with the recommended answers to Q1 to Q6.** R1 is 5.29.3, R2 is 5.30.1, R3 is 5.30.2. The sections below stand as they were reviewed, and each carries an **As executed** note where the release differs.
 
 **Checked again:** 2026-11-03, at 5.28.2 (main at `9d994a4b`), line by line, with three more independent reviews and a narrow one. Each of them changed the design (§12). The prototype rebases on it with no conflict. Source references stay at `27cc0e46`: of the
 files they name, only `ReportGenerator.cs` and `RequestResponseLog.cs` moved, neither near what is cited. **RUN at 5.28.2** marks what ran there.
@@ -569,6 +569,19 @@ None of the examples holds a hook step, so they show that nothing broke, not tha
 | Playwright | `HookStepTests`, 6 of 6, whose rows are built by hand, and CI's browser lanes on the commit. The whole suite runs again on R3 |
 | BreakfastProvider at `640c190` | ReqNRoll's lane, published 5.29.4 against a preview of this source: no failures, 1344 of 1344 calls on the same row, no tree differs, as no scenario there fails |
 | Mutation (`execution/mutate_r1_on_222.py`, M84 to M106 and M56) | every mutant caught: `results/execution/mutate-r2.txt` |
+| Linux | CI's Ubuntu lane on the commit, ahead of the tag |
+
+**As executed: R3's proof, on the commit it released as 5.30.2.** Each fact was run red on the code before it (`results/execution/red-r3-*`). 5.30.0 had narrowed `L5` and two LightBDD call facts to wait for this release, and they read every call again, 11 of 11 on three runs.
+
+| What | Result |
+|---|---|
+| `Kronikol.Tests` | 12,231 passed, 2 skipped, 0 failed |
+| The adapter suites | 2,198, 35, 11, 26, 111, 33, 49, 85, 50 passed, in the same order |
+| `Kronikol.Tests.RealEngines` | 357 passed: Reqnroll's four lanes 65 each, BDDfy 38, LightBDD 9, the plain lane and the files lane the rest |
+| Every example lane | all passed, Integration 265 of 265 |
+| The whole Playwright suite | 2,144 passed, 28 skipped, 0 failed. `FullPipelineParameterizedE2ETests`, whose fixture starts Example.Api on the fixed ports, read its 35 alone, as on a first pass it collided with the examples run |
+| BreakfastProvider at `640c190` | LightBDD's lane, published 5.30.1 against a preview of this source: no failures, 1368 of 1368 calls on the same row, and one tree differs, as in every earlier run of this lane |
+| Mutation (`execution/mutate_r1_on_222.py`, M95 to M98) | every mutant caught: `results/execution/mutate-r3.txt` |
 | Linux | CI's Ubuntu lane on the commit, ahead of the tag |
 
 ---

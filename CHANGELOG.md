@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.30.2] - 2026-11-05
+
+The patch part moves (5.30.1 to 5.30.2): two LightBDD bug fixes, with no new option and no new public member (`plans/STEP_IDENTITY_PLAN.md` R3).
+
+### Fixed
+
+- **A tracked call in a LightBDD scenario decorator no longer fails the test.** Kronikol asked LightBDD for the current step's type when it opened an implicit Act for the first call after a step, and outside a step LightBDD answers by throwing "Current task is not executing any scenario steps". The message handler now guards that question, as it already guards the question of who the current test is, and the call is listed with no step type. That holds for a fetcher of your own too: one that throws used to fail the test, and now its call reads phase `Unknown` and opens no Act.
+- **A LightBDD scenario's last call stays in the scenario.** A call stamped after LightBDD's own end time for the scenario read as a call from outside it, and showed as a background call. A scenario's end is now the later of LightBDD's end and the end of its last step, by the clock calls are stamped with. So a call made inside a step stays in the scenario, and a scenario with a step that outlives it, past a suite's time limit, ends when that step ended. A call a scenario decorator makes after the scenario's steps can still read as a background call, as it could before.
+
 ## [5.30.1] - 2026-11-05
 
 The patch part moves (5.30.0 to 5.30.1): bug fixes that change what a Reqnroll scenario lists, with no new option and no new public member (`plans/STEP_IDENTITY_PLAN.md` R2).

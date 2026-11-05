@@ -91,7 +91,12 @@ internal static class FeatureResultExtensions
             ErrorMessage = result.Status == ExecutionStatus.Failed ? result.StatusDetails : null,
             ErrorStackTrace = failedException?.StackTrace,
             Duration = result.ExecutionTime?.Duration,
-            EndedAt = result.ExecutionTime?.End,
+            // LightBDD's own timer can read earlier than the clock the scenario's calls are stamped with, and a call stamped after
+            // a scenario's end is moved out of it as a background call.
+            EndedAt = StepTrackingStepDecorator.LastEnded.TryGetValue(result.Info.RuntimeId.ToString(), out var lastStep)
+                      && (result.ExecutionTime?.End is not { } end || lastStep > end)
+                ? lastStep
+                : result.ExecutionTime?.End,
             Steps = MapSteps(result.GetSteps(), result.Status is ExecutionStatus.Ignored or ExecutionStatus.NotRun,
                 StepCollector.GetSteps(result.Info.RuntimeId.ToString())),
             IsHappyPath = classified.IsHappyPath,

@@ -452,7 +452,18 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         if (_actionStartInjected || _currentStepTypeFetcher is null)
             return;
 
-        var currentStepType = _currentStepTypeFetcher();
+        // A fetcher may throw where it has no step to read, as LightBDD's does outside a step, in a scenario decorator. A
+        // call made there is still a call and must not fail the test, as a throwing test identity fetcher does not.
+        string? currentStepType;
+        try
+        {
+            currentStepType = _currentStepTypeFetcher();
+        }
+        catch
+        {
+            currentStepType = null;
+        }
+
         if (currentStepType is null)
         {
             _lastStepType = null;

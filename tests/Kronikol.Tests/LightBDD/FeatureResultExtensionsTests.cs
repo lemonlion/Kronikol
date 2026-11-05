@@ -42,6 +42,40 @@ public class FeatureResultExtensionsTests
     }
 
     [Fact]
+    public void A_scenario_ends_with_its_last_step_where_LightBDDs_own_timer_reads_earlier()
+    {
+        // A call is stamped by the clock, and one stamped after the scenario's end leaves it as a background call (plans/STEP_IDENTITY_PLAN.md F14)
+        var scenario = new StubExecutionResult("s1", "Pay", duration: TimeSpan.FromSeconds(1));
+        var lastStep = scenario.ExecutionTime!.End.AddMilliseconds(5);
+        StepTrackingStepDecorator.LastEnded[scenario.Info.RuntimeId.ToString()] = lastStep;
+
+        var mapped = new[] { new StubFeatureResult("F").WithScenario(scenario) }.ToFeatures()[0].Scenarios[0];
+
+        Assert.Equal(lastStep, mapped.EndedAt);
+    }
+
+    [Fact]
+    public void A_scenario_keeps_LightBDDs_end_where_that_is_the_later()
+    {
+        var scenario = new StubExecutionResult("s1", "Pay", duration: TimeSpan.FromSeconds(1));
+        StepTrackingStepDecorator.LastEnded[scenario.Info.RuntimeId.ToString()] = scenario.ExecutionTime!.End.AddSeconds(-5);
+
+        var mapped = new[] { new StubFeatureResult("F").WithScenario(scenario) }.ToFeatures()[0].Scenarios[0];
+
+        Assert.Equal(scenario.ExecutionTime!.End, mapped.EndedAt);
+    }
+
+    [Fact]
+    public void A_scenario_with_no_step_decorator_keeps_LightBDDs_end()
+    {
+        var scenario = new StubExecutionResult("s1", "Pay", duration: TimeSpan.FromSeconds(1));
+
+        var mapped = new[] { new StubFeatureResult("F").WithScenario(scenario) }.ToFeatures()[0].Scenarios[0];
+
+        Assert.Equal(scenario.ExecutionTime!.End, mapped.EndedAt);
+    }
+
+    [Fact]
     public void ToFeatures_marks_its_names_as_made_so_the_word_list_spells_them()
     {
         // LightBDD names a feature from its class and a scenario from its method, always (plans/TITLES_AS_WRITTEN_PLAN.md 4.5)

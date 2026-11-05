@@ -53,6 +53,7 @@ public class Driver
     [Step] public async Task An_order_is_submitted() => await Post("orders");
     [Step] public async Task The_order_is_read_back() => await Post("orders/1");
     [Step] public async Task A_slow_background_check() { await Task.Delay(200); await Post("background"); }
+    [Step] public async Task Seeding_fails() { await Post("seed"); throw new InvalidOperationException("seeding failed"); }
 }
 
 /// <summary>What a suite's seeding decorator looks like: a step method before the scenario's first step.</summary>
@@ -64,6 +65,19 @@ public sealed class SeededAttribute : Attribute, IScenarioDecoratorAttribute
     public async Task ExecuteAsync(IScenario scenario, Func<Task> scenarioInvocation)
     {
         await new Driver().Reference_data_is_seeded();
+        await scenarioInvocation();
+    }
+}
+
+/// <summary>The same, failing: the scenario's steps never run.</summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class SeedingFailsAttribute : Attribute, IScenarioDecoratorAttribute
+{
+    public int Order => 0;
+
+    public async Task ExecuteAsync(IScenario scenario, Func<Task> scenarioInvocation)
+    {
+        await new Driver().Seeding_fails();
         await scenarioInvocation();
     }
 }
@@ -95,6 +109,13 @@ public class Probes : FeatureFixture
     [Scenario]
     [Seeded]
     public Task L1_a_step_method_in_a_scenario_decorator() => Runner.RunScenarioAsync(
+        given => Given_a_registered_customer(),
+        when => When_the_customer_places_the_order(),
+        then => Then_the_order_is_confirmed());
+
+    [Scenario]
+    [SeedingFails]
+    public Task L9_a_step_method_fails_in_a_scenario_decorator() => Runner.RunScenarioAsync(
         given => Given_a_registered_customer(),
         when => When_the_customer_places_the_order(),
         then => Then_the_order_is_confirmed());

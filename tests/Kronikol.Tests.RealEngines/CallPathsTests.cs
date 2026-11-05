@@ -14,16 +14,8 @@ public class CallPathsTests
     public void A_call_in_a_Reqnroll_step_method_reads_it(string lane) =>
         Assert.Equal("0.0 /customers, 1.0 /orders, 2.0 /orders/1", EngineLane.Run(lane).Rows.CallsOf("T00"));
 
-    // LightBDD's own timer can read a scenario's last calls out of it, by a margin that varies from run to run, until #223's R3 (its F14).
-    // So the first must be listed, and each call listed must read its step, whichever calls are listed.
-    private static void ReadsItsCalls(string scenario, params string[] calls)
-    {
-        var read = EngineLane.Run("Engine.LightBDD").Rows.CallsOf(scenario);
-
-        Assert.StartsWith(calls[0], read);
-        foreach (var call in read.Split(", "))
-            Assert.Contains(call, calls);
-    }
+    private static void ReadsItsCalls(string scenario, params string[] calls) =>
+        Assert.Equal(string.Join(", ", calls), EngineLane.Run("Engine.LightBDD").Rows.CallsOf(scenario));
 
     [Fact]
     public void A_call_in_a_LightBDD_steps_step_method_gives_the_same_path() =>
