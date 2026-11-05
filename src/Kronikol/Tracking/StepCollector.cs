@@ -440,21 +440,18 @@ public static class StepCollector
 
         for (var i = 0; i < count; i++)
         {
-            if (paramValues[i] is ITabularParameterData tabular)
+            if (paramValues[i] is ITabularParameterData tabular && ReadTabular(tabular) is { } table)
             {
                 result[i] = new StepParameter
                 {
                     Name = paramNames[i],
                     Kind = StepParameterKind.Tabular,
-                    TabularValue = new TabularParameterValue(
-                        tabular.GetColumns(),
-                        tabular.GetRows(),
-                        tabular.IsLinkedOutput)
+                    TabularValue = table
                 };
             }
             else
             {
-                var stringValue = paramValues[i]?.ToString() ?? "null";
+                var stringValue = Printed(paramValues[i]);
                 // Truncate complex objects (record ToString, generic collections) to [TypeName]
                 if (ParameterParser.IsComplexObjectString(stringValue))
                 {
@@ -474,6 +471,33 @@ public static class StepCollector
         }
 
         return result;
+    }
+
+    /// <summary>A table's rows, or null when a row's own getter throws: the step reads it as its type, as for <see cref="Printed"/>.</summary>
+    private static TabularParameterValue? ReadTabular(ITabularParameterData tabular)
+    {
+        try
+        {
+            return new TabularParameterValue(tabular.GetColumns(), tabular.GetRows(), tabular.IsLinkedOutput);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>A parameter's text. Its ToString is the test's own code, run as the step starts: if it throws, the test
+    /// must not fail for being tracked, so the value reads as its type.</summary>
+    private static string Printed(object? value)
+    {
+        try
+        {
+            return value?.ToString() ?? "null";
+        }
+        catch (Exception)
+        {
+            return $"[{value!.GetType().Name}]";
+        }
     }
 
     private static ScenarioStep ToScenarioStep(CollectedStep step)
@@ -508,6 +532,19 @@ public static class StepCollector
         };
     }
 
+    /// <summary>An exception's message, or null if reading it throws: a step fails with no message, and the caller gets what the method threw.</summary>
+    private static string? MessageOf(Exception ex)
+    {
+        try
+        {
+            return ex.Message;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     /// <summary>
     /// Wraps an async step's returned Task so that CompleteStep is called on
     /// completion or failure. Called by the IL weaver for async step methods.
@@ -522,7 +559,7 @@ public static class StepCollector
         }
         catch (Exception ex)
         {
-            CompleteStep(false, ex.Message);
+            CompleteStep(false, MessageOf(ex));
             throw;
         }
     }
@@ -540,7 +577,7 @@ public static class StepCollector
         }
         catch (Exception ex)
         {
-            CompleteStep(false, ex.Message);
+            CompleteStep(false, MessageOf(ex));
             throw;
         }
     }

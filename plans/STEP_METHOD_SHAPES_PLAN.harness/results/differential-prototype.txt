@@ -1,4 +1,4 @@
-The differential on the prototype, as main's file says.
+The differential on the code as released, as main's file says.
 runs 1860 [('OK', 1814), ('ASSERTION-LOST', 46)]
 form []
 condition []

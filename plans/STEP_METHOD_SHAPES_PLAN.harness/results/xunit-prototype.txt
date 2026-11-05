@@ -2,5 +2,5 @@ prototype: dotnet test on three facts, the second calling [Step] void M(in int x
 xunit-probe -> bin\Debug\net10.0\xunit-probe.dll
 Test run for bin\Debug\net10.0\xunit-probe.dll (.NETCoreApp,Version=v10.0)
 A total of 1 test files matched the specified pattern.
-Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 477 ms - xunit-probe.dll (net10.0)
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 988 ms - xunit-probe.dll (net10.0)
 exit 0

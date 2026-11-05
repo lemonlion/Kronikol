@@ -7,20 +7,20 @@ file: consumer.pdb
 runtime 10.0.11, assembly consumer, all
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
 void
-step 'Void' Passed 42 ms, under it: Inner
+step 'Void' Passed 71 ms, under it: Inner
 async Task
-step 'Task' Passed 27 ms, under it: Inner
+step 'Task' Passed 59 ms, under it: Inner
 int (issue)
 value 42
 step 'A number is chosen' Passed 0 ms, under it: 
 async ValueTask (issue)
-step 'A value task step' Passed 104 ms, under it: Inner
+step 'A value task step' Passed 112 ms, under it: Inner
 async ValueTask<int>
 value 7
-step 'A value task int' Passed 109 ms, under it: Inner
+step 'A value task int' Passed 119 ms, under it: Inner
 value + assertion
 value 3
-step 'Value with assertion' Passed 371 ms, under it: (an assertion)
+step 'Value with assertion' Passed 423 ms, under it: (an assertion)
 Task with a synchronous throw
 threw InvalidOperationException: thrown before any task
 at ShopDriver.Throws_before_its_task() in Program.cs:line 76
@@ -38,7 +38,7 @@ exit 0
 runtime 10.0.11, assembly consumer, ref
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
 in parameter
-step 'Takes an in parameter' Passed 33 ms, under it: Inner
+step 'Takes an in parameter' Passed 37 ms, under it: Inner
 ref parameter
 value 2
 step 'Takes a ref parameter' Passed 0 ms, under it: Inner
@@ -55,20 +55,20 @@ file: consumer.pdb
 runtime 10.0.11, assembly consumer, all
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
 void
-step 'Void' Passed 56 ms, under it: Inner
+step 'Void' Passed 48 ms, under it: Inner
 async Task
-step 'Task' Passed 25 ms, under it: Inner
+step 'Task' Passed 172 ms, under it: Inner
 int (issue)
 value 42
 step 'A number is chosen' Passed 0 ms, under it: 
 async ValueTask (issue)
-step 'A value task step' Passed 106 ms, under it: Inner
+step 'A value task step' Passed 138 ms, under it: Inner
 async ValueTask<int>
 value 7
-step 'A value task int' Passed 110 ms, under it: Inner
+step 'A value task int' Passed 193 ms, under it: Inner
 value + assertion
 value 3
-step 'Value with assertion' Passed 378 ms, under it: (an assertion)
+step 'Value with assertion' Passed 462 ms, under it: (an assertion)
 Task with a synchronous throw
 threw InvalidOperationException: thrown before any task
 at ShopDriver.Throws_before_its_task() in Program.cs:line 76
@@ -86,7 +86,7 @@ exit 0
 runtime 10.0.11, assembly consumer, ref
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
 in parameter
-step 'Takes an in parameter' Passed 29 ms, under it: Inner
+step 'Takes an in parameter' Passed 66 ms, under it: Inner
 ref parameter
 value 2
 step 'Takes a ref parameter' Passed 0 ms, under it: Inner
@@ -102,20 +102,20 @@ Build succeeded.
 runtime 10.0.11, assembly consumer, all
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
 void
-step 'Void' Passed 48 ms, under it: Inner
+step 'Void' Passed 53 ms, under it: Inner
 async Task
-step 'Task' Passed 28 ms, under it: Inner
+step 'Task' Passed 52 ms, under it: Inner
 int (issue)
 value 42
 step 'A number is chosen' Passed 0 ms, under it: 
 async ValueTask (issue)
-step 'A value task step' Passed 104 ms, under it: Inner
+step 'A value task step' Passed 108 ms, under it: Inner
 async ValueTask<int>
 value 7
-step 'A value task int' Passed 109 ms, under it: Inner
+step 'A value task int' Passed 108 ms, under it: Inner
 value + assertion
 value 3
-step 'Value with assertion' Passed 372 ms, under it: (an assertion)
+step 'Value with assertion' Passed 446 ms, under it: (an assertion)
 Task with a synchronous throw
 threw InvalidOperationException: thrown before any task
 at ShopDriver.Throws_before_its_task() in Program.cs:line 76
@@ -133,7 +133,7 @@ exit 0
 runtime 10.0.11, assembly consumer, ref
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
 in parameter
-step 'Takes an in parameter' Passed 36 ms, under it: Inner
+step 'Takes an in parameter' Passed 39 ms, under it: Inner
 ref parameter
 value 2
 step 'Takes a ref parameter' Passed 0 ms, under it: Inner
@@ -149,20 +149,20 @@ Build succeeded.
 runtime 10.0.11, assembly consumer, all
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
 void
-step 'Void' Passed 53 ms, under it: Inner
+step 'Void' Passed 70 ms, under it: Inner
 async Task
-step 'Task' Passed 37 ms, under it: Inner
+step 'Task' Passed 40 ms, under it: Inner
 int (issue)
 value 42
 step 'A number is chosen' Passed 0 ms, under it: 
 async ValueTask (issue)
-step 'A value task step' Passed 102 ms, under it: Inner
+step 'A value task step' Passed 112 ms, under it: Inner
 async ValueTask<int>
 value 7
-step 'A value task int' Passed 108 ms, under it: Inner
+step 'A value task int' Passed 119 ms, under it: Inner
 value + assertion
 value 3
-step 'Value with assertion' Passed 367 ms, under it: (an assertion)
+step 'Value with assertion' Passed 439 ms, under it: (an assertion)
 Task with a synchronous throw
 threw InvalidOperationException: thrown before any task
 at ShopDriver.Throws_before_its_task() in Program.cs:line 76
@@ -180,7 +180,7 @@ exit 0
 runtime 10.0.11, assembly consumer, ref
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.P
 in parameter
-step 'Takes an in parameter' Passed 41 ms, under it: Inner
+step 'Takes an in parameter' Passed 38 ms, under it: Inner
 ref parameter
 value 2
 step 'Takes a ref parameter' Passed 0 ms, under it: Inner
@@ -197,24 +197,24 @@ Build succeeded.
 runtime 10.0.11, assembly consumer, all
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
 void
-step 'Void' Passed 59 ms, under it: Inner
+step 'Void' Passed 58 ms, under it: Inner
 async Task
-step 'Task' Passed 32 ms, under it: Inner
+step 'Task' Passed 31 ms, under it: Inner
 int (issue)
 value 42
 step 'A number is chosen' Passed 0 ms, under it: 
 async ValueTask (issue)
-step 'A value task step' Passed 103 ms, under it: Inner
+step 'A value task step' Passed 115 ms, under it: Inner
 async ValueTask<int>
 value 7
-step 'A value task int' Passed 108 ms, under it: Inner
+step 'A value task int' Passed 112 ms, under it: Inner
 value + assertion
 value 3
-step 'Value with assertion' Passed 333 ms, under it: 
+step 'Value with assertion' Passed 344 ms, under it: 
 Task with a synchronous throw
 threw InvalidOperationException: thrown before any task
 at ShopDriver.Throws_before_its_task()
-step 'Throws before its task' Failed 0 ms, under it: 
+step 'Throws before its task' Failed 1 ms, under it: 
 iterator
 value 3
 step 'Inner' Passed 0 ms, under it: 
@@ -228,7 +228,7 @@ exit 0
 runtime 10.0.11, assembly consumer, ref
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
 in parameter
-step 'Takes an in parameter' Passed 37 ms, under it: Inner
+step 'Takes an in parameter' Passed 58 ms, under it: Inner
 ref parameter
 value 2
 step 'Takes a ref parameter' Passed 0 ms, under it: Inner
@@ -245,20 +245,20 @@ Build succeeded.
 runtime 10.0.11, assembly consumer, all
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
 void
-step 'Void' Passed 65 ms, under it: Inner
+step 'Void' Passed 144 ms, under it: Inner
 async Task
-step 'Task' Passed 40 ms, under it: Inner
+step 'Task' Passed 87 ms, under it: Inner
 int (issue)
 value 42
 step 'A number is chosen' Passed 0 ms, under it: 
 async ValueTask (issue)
-step 'A value task step' Passed 104 ms, under it: Inner
+step 'A value task step' Passed 115 ms, under it: Inner
 async ValueTask<int>
 value 7
-step 'A value task int' Passed 108 ms, under it: Inner
+step 'A value task int' Passed 126 ms, under it: Inner
 value + assertion
 value 3
-step 'Value with assertion' Passed 343 ms, under it: 
+step 'Value with assertion' Passed 501 ms, under it: 
 Task with a synchronous throw
 threw InvalidOperationException: thrown before any task
 at ShopDriver.Throws_before_its_task()
@@ -276,7 +276,7 @@ exit 0
 runtime 10.0.11, assembly consumer, ref
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0
 in parameter
-step 'Takes an in parameter' Passed 25 ms, under it: Inner
+step 'Takes an in parameter' Passed 94 ms, under it: Inner
 ref parameter
 value 2
 step 'Takes a ref parameter' Passed 0 ms, under it: Inner
@@ -289,7 +289,7 @@ exit of the ref run: 0
 Kronikol.StepTracking: Left 2 step method(s) unwoven; they run as written, without a step:
 Program.cs, line 77, in ShopDriver.An_iterator: it is an iterator, whose body runs while its caller enumerates it, after the method has returned
 Program.cs, line 78, in ShopDriver.An_async_void: it is async void, which nothing can wait for, so its step would close at its first await
-Kronikol.StepTracking: Instrumented 12 step method(s) (474ms)
+Kronikol.StepTracking: Instrumented 12 step method(s) (610ms)
 _WeaveAssertionTracking:
 <home>/.nuget\packages\kronikol.steptracking\5.28.99-proto226\buildTransitive\Kronikol.StepTracking.targets(156,5): warning KRONIKOL004: Kronikol.StepTracking: 2 step method(s) were left as written, so they run without a step. First: Program.cs, line 77,
 =================== prototype, terminal logger, -v:m -tl:on

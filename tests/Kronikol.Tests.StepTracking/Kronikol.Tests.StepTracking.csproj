@@ -16,8 +16,12 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.4.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+    <!-- ILVerify reads every method a weave wrote, before any of it runs: a by-ref regression then fails a fact and leaves the test host alive. -->
+    <PackageReference Include="Microsoft.ILVerification" Version="10.0.12" />
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <!-- The shapes the two weavers read together: a real build runs the step weaver, then the assertion weaver. -->
+    <PackageReference Include="Shouldly" Version="4.3.0" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,6 +31,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Kronikol.StepTracking\Kronikol.StepTracking.csproj" />
+    <ProjectReference Include="..\..\src\Kronikol.AssertionTracking\Kronikol.AssertionTracking.csproj" />
     <ProjectReference Include="..\..\src\Kronikol\Kronikol.csproj" />
   </ItemGroup>
 

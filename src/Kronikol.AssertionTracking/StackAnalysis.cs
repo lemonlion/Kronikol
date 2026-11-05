@@ -271,7 +271,7 @@ internal sealed class StackAnalysis
             case Code.Jmp:
                 return true;
             case Code.Ret:
-                return IsVoid(body.Method.ReturnType) || Pop(1);
+                return IsVoid(body.Method.ReturnType) || ReturnsNothingUnderRuntimeAsync(body.Method) || Pop(1);
 
             case Code.Ldfld:
             {
@@ -651,7 +651,12 @@ internal sealed class StackAnalysis
         }
     }
 
-    private static bool IsVoid(TypeReference type)
+    /// <summary>Compiled for runtime async (MethodImplAttributes.Async, which Cecil does not name yet), a method's ret carries the
+    /// task's result, so a Task's or a ValueTask's carries nothing.</summary>
+    private static bool ReturnsNothingUnderRuntimeAsync(MethodDefinition method) =>
+        ((int)method.ImplAttributes & 0x2000) != 0 && method.ReturnType is not GenericInstanceType;
+
+    internal static bool IsVoid(TypeReference type)
     {
         while (type is RequiredModifierType required)
             type = required.ElementType;

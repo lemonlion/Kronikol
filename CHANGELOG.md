@@ -4,6 +4,63 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.29.0] - 2026-11-05
+
+The minor part moves (5.28.6 to 5.29.0): `WeaveResult.UnwovenSteps`, `WeaveResult.StepsWithNoBody`, `UnwovenStep`, each weave task's `PdbFile` and the warning codes `KRONIKOL004` and
+`KRONIKOL005` are new surface. The rest are bug fixes, which ride with them (#226, `plans/STEP_METHOD_SHAPES_PLAN.md`). No runtime member is new, so a new weaver works over an older core.
+
+### Added
+
+- **`KRONIKOL004`: a step method the weave cannot bracket is left as the compiler wrote it, and the build says so.** An iterator or an async iterator, whose body runs while its caller
+  enumerates it. An `async void`, which nothing can wait for (with a `SkipIf`, which a refusal would ignore, it is woven as before, and its step closes at its first `await`). A method that
+  returns anything else a caller can await, which the weaver cannot wait for. Each runs as written, without a step. The warning comes once, with how many and the first by document and line,
+  says how many of them carry a `SkipIf` that is not read, and `-v:n` lists every one. `<NoWarn>KRONIKOL004</NoWarn>` silences it.
+- **`KRONIKOL005`: a `SkipIf` that cannot be used.** Those warnings had no code, so no project could silence them. They have one now, and the step still runs.
+- **`WeaveResult.UnwovenSteps` and `WeaveResult.StepsWithNoBody`, with `UnwovenStep`,** for a tool that calls the weaver. A method with a step attribute and no body (abstract, an interface's,
+  `extern`) is in the second list and gets a line at `-v:n` with no warning, as nothing about it is wrong: an override that wants a step carries the attribute itself.
+- **`PdbFile` on `WeaveStepsTask` and `WeaveAssertionsTask`.** The targets pass the property `$(PdbFile)`, so a project whose PDB sits elsewhere keeps its symbols.
+
+### Fixed
+
+- **A `[Step]` method can return anything (#226).** A value and a `ValueTask` threw `InvalidProgramException` at the first call. A value step closes when it returns, and a `ValueTask` or
+  `ValueTask<T>` when the task ends. The method has one wrapper now, chosen by one classification, and the suite reads every shape through ILVerify before it runs it.
+- **A `ref`, `in` or `out` parameter killed the test process,** with no result for any test in it, as the weaver stored the managed pointer in the parameter array. A span, a `ref struct`,
+  a `params ReadOnlySpan<T>` and a pointer threw. A `ref` or `in` parameter now reads as its value as the step starts, an `out` parameter is not captured, as it has no value yet, and the others read
+  as their type, such as `[Span<Int32>]`.
+- **A `Task` step that threw before it had a task left its step open.** A guard clause was enough: the step never reached the report, and the steps after it nested under it.
+- **A bypassed sub-step closed its parent as well,** as the bypass's own return was rewritten along with the method's, so what followed read as its sibling.
+- **`SkipIf` on a value, on a `Task<T>` of a struct, or on a generic `T` threw at every call, skipped or not.** A bypass now hands back that type's default, whatever the type is.
+- **`SkipIf` naming a member it cannot use** read the first argument as `this` on a static step, and threw on a generic class or a private member of a base. It warns `KRONIKOL005` and runs.
+- **`DebugType=embedded`, `none` or a `PdbFile` elsewhere wove nothing, with no word.** Every step of the project was missing from the report. A step needs no symbols, so each is woven now, with
+  line numbers where the project has any. A `DebugType` changed to `none` also failed the next build until it was cleaned, with `SymbolsNotMatchingException`, under either weaver. A `PdbFile` with
+  a name of its own keeps its line numbers.
+- **The two weavers work in either order on any shape.** An assertion in a value step was refused with `KRONIKOL003`, as the broken stack ended the weave, and an assertion in an expression-bodied step
+  was left unwoven. Each draws its note.
+- **A method that ended in a handler, and a `tail.` call before a `ret`,** threw `InvalidProgramException`. Both run.
+- **A parameter whose `ToString` throws, and a table whose rows throw, failed the test,** in `StepCollector`, before the body ran. It reads as its type and the step goes on.
+- **An exception whose `Message` throws replaced the exception,** in the wrapper and in `StepCollector.CompleteStepAsync`, and the step stayed open. The caller gets what the method threw, and the
+  step fails with no message.
+- **The weavers left every assembly they resolved open,** which on a reused MSBuild node kept a referenced project's DLL locked until a collection. Each resolver is disposed now.
+- **The step weaver's resolver read `.` and `bin` first,** so a stale assembly in the current directory could decide a shape, as it once changed an assertion's label. It no longer does.
+- **An assertion that opens a `finally` or a `catch (E e)` threw `InvalidProgramException` in Release,** with or without a step in the project.
+- **An assertion inside a `throw` that ends its statement threw `InvalidProgramException`,** in a plain method and a `Task` step. It is left as written, with `KRONIKOL003`.
+- **A project that names no core type lost the note of an assertion task it hands back,** in Release, as the step weaver's reference to the core read as version 0.0.0.0.
+- **A `[Step]` local function, lambda or explicit interface implementation with no `Description` read by its compiled name.** It reads by the name in the source.
+- **A C# 14 extension block's skeleton was woven,** and a `SkipIf` on one warned falsely. Only the method that runs is woven.
+- **Runtime async.** A project with `<Features>runtime-async=on</Features>` threw at every `async` step. It is bracketed now and its step ends when its work does. Its limit: a keyword step's phase
+  change does not reach its caller, as there is no stub to carry it, so `[WhenStep]` moves the phase inside itself and not after it.
+- **The sentinel attribute the step weaver adds** failed ILVerify in every woven assembly: it derived from `object` and its constructor had no base call.
+- **A fault in a step lost its frame's file and line in an optimised build.** Optimised code has no offset for a fault the JIT raises out of line, an array's bounds or an overflow, and the runtime reads it as the
+  method's start, where the weave's first instructions had no sequence point. Such a frame now reads what a plain build of the same source reads, in a `finally` too, where Shouldly reads the text of its message
+  through the frame. A build that is not optimised, whose offsets are exact, gets no such point, and a step with a `SkipIf` keeps the frame it had, as its first line would read as run when the bypass went past it.
+
+**Behaviour changes:** every woven method changes, as an `async Task` step gains a `try` round its stub. Under a coverage tool in an optimised build, a step's first line reads one more hit, for the point above, and no line changes between covered and not; a build that is not optimised reads as it did. New warnings can fail a build under `-warnaserror`, or with the code in
+`WarningsAsErrors`, until the code changes or `NoWarn` names the code: `KRONIKOL003` (a statement that ends by throwing), `KRONIKOL004`, and `KRONIKOL005`. An `async void` step is undrawn, and a keyword attribute on one no longer moves the phase, so a `[WhenStep] async void` leaves its calls in the phase before it. A `SkipIf` on an
+instance member from a static step, or on a private member of a base, runs where it failed, and a `static void M(Steps self)` with such a `SkipIf` warns and runs, where it read the member off `self` by luck. A
+step with a throwing `ToString` passes. A getter that `SkipIf` reads and that throws now fails its step and closes it. An assertion in an expression-bodied step draws a note and no longer warns
+`KRONIKOL003`. A project with `DebugType=embedded` or `none` starts drawing its steps, which take the time they always should have. A `T` that `allows ref struct` reads `[T]` even when it is an `int`.
+A `[AsyncStateMachine]` written by hand on a plain `void` is refused.
+
 ## [5.28.6] - 2026-11-05
 
 The patch part moves (5.28.5 to 5.28.6): bug fixes that move report output, with no new option and no new public member, which a comparison of every public member with the last release confirms (#222, `plans/BACKGROUND_AS_WRITTEN_PLAN.md` R1).

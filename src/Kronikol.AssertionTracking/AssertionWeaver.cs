@@ -73,18 +73,20 @@ public class AssertionWeaver
         // can stall on Linux overlay filesystems used by CI runners).
         var assemblyBytes = File.ReadAllBytes(assemblyPath);
 
+        // It holds every assembly it opens: left open on a reused MSBuild node, they would stop the next build copying them.
+        using var resolver = CreateResolver(assemblyPath);
         var readerParams = new ReaderParameters
         {
             ReadSymbols = true,
             SymbolReaderProvider = new DefaultSymbolReaderProvider(throwIfNoSymbol: false),
             ReadingMode = ReadingMode.Immediate,
-            AssemblyResolver = CreateResolver(assemblyPath)
+            AssemblyResolver = resolver
         };
         if (pdbPath != null)
             readerParams.SymbolStream = new MemoryStream(File.ReadAllBytes(pdbPath));
 
         using var assemblyStream = new MemoryStream(assemblyBytes);
-        using var assembly = AssemblyDefinition.ReadAssembly(assemblyStream, readerParams);
+        using var assembly = ReadAssembly(assemblyStream, readerParams, ref pdbPath);
 
         var readMs = sw.ElapsedMilliseconds;
 
@@ -189,7 +191,26 @@ public class AssertionWeaver
 
             // The symbols go back where they came from: into the assembly when it embedded them, so a stack
             // trace through a woven method keeps its line numbers either way.
-            if (pdbPath != null)
+            // The runtime finds a PDB by the name the assembly gives it. Cecil gives the name of a file it opens itself, and for a
+            // stream the assembly's own, so a PDB the project named for itself is written beside an assembly of that name.
+            var namedForItself = pdbPath != null && !string.Equals(Path.GetFileName(pdbPath), assembly.Name.Name + ".pdb", StringComparison.Ordinal);
+            if (namedForItself)
+            {
+                // Under an extension of its own, since a file with the PDB's name and a .dll's may be one of the project's.
+                var besideIt = Path.ChangeExtension(pdbPath!, ".kronikol-woven");
+                try
+                {
+                    File.Delete(pdbPath!);
+                    assembly.Write(besideIt, new WriterParameters { WriteSymbols = true, SymbolWriterProvider = new PortablePdbWriterProvider() });
+                    NamePdbByFileName(besideIt);
+                    File.Copy(besideIt, assemblyPath, overwrite: true);
+                }
+                finally
+                {
+                    File.Delete(besideIt);
+                }
+            }
+            else if (pdbPath != null)
             {
                 using var outputAssembly = new MemoryStream();
                 using var outputPdb = new MemoryStream();
@@ -234,6 +255,33 @@ public class AssertionWeaver
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Cecil writes the full path of a PDB file it opens itself into the assembly, which a build with mapped paths must not carry.
+    /// The runtime goes by the file name alone, which is what the assembly names on the other path too, so the rest is blanked.
+    /// </summary>
+    private static void NamePdbByFileName(string path)
+    {
+        var bytes = File.ReadAllBytes(path);
+        ImageDebugDirectory directory;
+        using (var written = ModuleDefinition.ReadModule(new MemoryStream(bytes)))
+        {
+            var entry = written.GetDebugHeader().Entries.FirstOrDefault(e => e.Directory.Type == ImageDebugType.CodeView);
+            if (entry == null)
+                return;
+            directory = entry.Directory;
+        }
+
+        // A CodeView record's path follows its signature, its GUID and its age.
+        var start = directory.PointerToRawData + 24;
+        var stop = start;
+        while (stop < bytes.Length && bytes[stop] != 0)
+            stop++;
+        var name = System.Text.Encoding.UTF8.GetBytes(Path.GetFileName(System.Text.Encoding.UTF8.GetString(bytes, start, stop - start)));
+        Array.Clear(bytes, start, stop - start);
+        Array.Copy(name, 0, bytes, start, name.Length);
+        File.WriteAllBytes(path, bytes);
     }
 
     private static bool HasAlreadyBeenWeaved(AssemblyDefinition assembly)
@@ -335,6 +383,29 @@ public class AssertionWeaver
             a.AttributeType.Name == "TrackAssertionsBetaAttribute" ||
             a.AttributeType.FullName == "Kronikol.Tracking.TrackAssertionsAttribute" ||
             a.AttributeType.FullName == "Kronikol.Tracking.TrackAssertionsBetaAttribute");
+    }
+
+    /// <summary>
+    /// The assembly, with its symbols where they match. A project whose DebugType changed keeps the old PDB in obj until it is
+    /// cleaned, and that PDB is not this assembly's. With DebugType=none it fails to match, and the weave says it has no symbols.
+    /// With DebugType=embedded Cecil reads what is embedded and never looks at it, so those go back in and it is left alone.
+    /// </summary>
+    private static AssemblyDefinition ReadAssembly(MemoryStream assembly, ReaderParameters parameters, ref string? pdbPath)
+    {
+        try
+        {
+            var read = AssemblyDefinition.ReadAssembly(assembly, parameters);
+            if (read.MainModule.HasDebugHeader && read.MainModule.GetDebugHeader().Entries.Any(entry => entry.Directory.Type == ImageDebugType.EmbeddedPortablePdb))
+                pdbPath = null;
+            return read;
+        }
+        catch (SymbolsNotMatchingException)
+        {
+            assembly.Position = 0;
+            parameters.SymbolStream = null;
+            pdbPath = null;
+            return AssemblyDefinition.ReadAssembly(assembly, parameters);
+        }
     }
 
     private static bool ReferencesAssertionLibrary(AssemblyDefinition assembly)
@@ -508,7 +579,11 @@ public class AssertionWeaver
         }
         else
         {
-            coreVersion = ttdAssemblyRef.Version;
+            // The compiler keeps no reference for a project that names no type of the core, and the step weaver, which runs first,
+            // adds one with no version: the core's own is read from the references, as for one this weave adds.
+            coreVersion = ttdAssemblyRef.Version == new Version(0, 0, 0, 0)
+                ? ReferencedCoreVersion(module, ttdAssemblyRef)
+                : ttdAssemblyRef.Version;
         }
 
         // Construct the Track type reference
@@ -572,11 +647,11 @@ public class AssertionWeaver
     }
 
     /// <summary>The version of the Kronikol assembly the build references, found where the weave finds every reference,
-    /// or null when it is not there.</summary>
+    /// or null when it is not there or cannot be opened.</summary>
     private static Version? ReferencedCoreVersion(ModuleDefinition module, AssemblyNameReference core)
     {
         try { return module.AssemblyResolver.Resolve(core)?.Name.Version; }
-        catch (AssemblyResolutionException) { return null; }
+        catch (Exception ex) when (ex is AssemblyResolutionException or IOException or UnauthorizedAccessException or BadImageFormatException) { return null; }
     }
 
     /// <summary>
@@ -2843,6 +2918,65 @@ public class AssertionWeaver
     }
 
     /// <summary>
+    /// Where the step weaver's wrapper of this method ends, if it has one: its catch is the handler that calls
+    /// StepCollector, and each of the method's returns became a leave to that end.
+    /// </summary>
+    private static Instruction? StepWrapperEnd(MethodDefinition method) =>
+        method.Body.ExceptionHandlers.LastOrDefault(h => h.HandlerType == ExceptionHandlerType.Catch && h.HandlerEnd != null
+            && Range(h.HandlerStart, h.HandlerEnd).Any(i => i.Operand is MethodReference called && called.DeclaringType.FullName == "Kronikol.Tracking.StepCollector"))?.HandlerEnd;
+
+    /// <summary>
+    /// Whether the statement can return from a step: a leave to the end of the step's wrapper.
+    /// A leave to anywhere else is the compiler's own, out of a using, a lock or a try, and the method carries on after it.
+    /// </summary>
+    private static bool ReturnsFromTheStep(MethodDefinition method, Instruction start, Instruction end)
+    {
+        var wrapperEnd = StepWrapperEnd(method);
+        return wrapperEnd != null && Range(start, end).Any(i => (i.OpCode == OpCodes.Leave || i.OpCode == OpCodes.Leave_S) && i.Operand == wrapperEnd);
+    }
+
+    /// <summary>Whether an assertion call in the statement has no way on but to a throw: none reaches the statement's end, or leaves it.</summary>
+    private static bool EveryWayOnThrows(Instruction start, Instruction end)
+    {
+        var statement = new HashSet<Instruction>(Range(start, end));
+        foreach (var call in statement.Where(i => IsCallInstruction(i) && i.Operand is MethodReference called && IsAssertionCall(called)))
+        {
+            var seen = new HashSet<Instruction>();
+            var pending = new Stack<Instruction>();
+            pending.Push(call);
+            var getsOut = false;
+            while (pending.Count > 0 && !getsOut)
+            {
+                var at = pending.Pop();
+                if (!seen.Add(at))
+                    continue;
+                if (at == end)
+                {
+                    getsOut = true;
+                    break;
+                }
+                var next = new List<Instruction>();
+                if (at.Operand is Instruction target)
+                    next.Add(target);
+                else if (at.Operand is Instruction[] targets)
+                    next.AddRange(targets);
+                if (at.OpCode.FlowControl != FlowControl.Branch && at.OpCode.FlowControl != FlowControl.Return && at.OpCode.FlowControl != FlowControl.Throw && at.Next != null)
+                    next.Add(at.Next);
+                foreach (var instruction in next)
+                {
+                    if (statement.Contains(instruction))
+                        pending.Push(instruction);
+                    else
+                        getsOut = true;
+                }
+            }
+            if (!getsOut)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
     /// The values on the stack where the statement's <c>try</c> opens (<paramref name="entry"/>, stored before it
     /// and loaded back inside it) and where the statement ends (<paramref name="exit"/>, stored before its
     /// <c>leave</c> and loaded back after the <c>catch</c>), bottom first. Returns null when both can be accounted
@@ -2866,8 +3000,24 @@ public class AssertionWeaver
         // method) cannot stay inside a try; it can leave to the method's own return when the statement is followed
         // by one and there is no value to return.
         if (Range(start, end).Any(i => i.OpCode == OpCodes.Ret) &&
-            (method.ReturnType.MetadataType != MetadataType.Void || end.Next?.OpCode != OpCodes.Ret))
+            (!StackAnalysis.IsVoid(method.ReturnType) || end.Next?.OpCode != OpCodes.Ret))
             return "the statement returns from the method part-way";
+
+        // The step weaver has turned a value's return into a store and a leave by the time a real build gets here. A leave to the end of
+        // its wrapper jumps past the note, so the assertion would run with nothing to show for it and nothing said. Any other leave is the
+        // compiler's own, out of a using, a lock or a try, and the method carries on after it, as it does after a void step's own return.
+        if (!StackAnalysis.IsVoid(method.ReturnType) && ReturnsFromTheStep(method, start, end))
+            return "a way through the statement returns from the step";
+
+        // The statement's own throw would reach the wrapper's catch and read as the assertion failing, and one that ends its
+        // method, try or handler leaves nothing after it for the wrapper to leave to.
+        if (end.OpCode == OpCodes.Throw)
+            return "the statement ends by throwing";
+
+        // A throw part-way, with no other way on from the assertion: it would read as the assertion failing, and the arm beside it as the
+        // assertion passing, though it never ran.
+        if (EveryWayOnThrows(start, end))
+            return "every way on from its assertion throws";
 
         // A filter has the exception on the stack as it starts and can only end at its endfilter.
         if (method.Body.ExceptionHandlers.Any(h => h.HandlerType == ExceptionHandlerType.Filter && Range(h.FilterStart, h.HandlerStart).Contains(start)))
@@ -3177,8 +3327,15 @@ public class AssertionWeaver
         {
             if (existingHandler.TryStart == firstInstr)
                 existingHandler.TryStart = tryStart;
+            // An assertion that is a finally's or a catch's first statement, with no nop before it in Release: without these the
+            // wrapper starts outside the handler it belongs to, which the runtime refuses. A catch starts with the exception on
+            // the stack, so the handler starts where that is stored, before the try, and the handler before it ends there too.
             if (existingHandler.HandlerEnd == firstInstr)
-                existingHandler.HandlerEnd = tryStart;
+                existingHandler.HandlerEnd = prologueStart;
+            if (existingHandler.TryEnd == firstInstr)
+                existingHandler.TryEnd = prologueStart;
+            if (existingHandler.HandlerStart == firstInstr)
+                existingHandler.HandlerStart = prologueStart;
         }
 
         // Fix branch-into-try: any branch/leave from outside our try region that targets

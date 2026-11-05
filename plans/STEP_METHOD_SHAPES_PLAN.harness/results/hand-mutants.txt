@@ -1,0 +1,52 @@
+What only a real build sees, each decision taken out by hand, with the fact that goes red. mutations.py runs the catalogue's rows, which never run a real build, so these were run with `dotnet test` on the code as released, at the facts' own filters.
+
+Taken out                                                                 Fact that goes red
+resolver.RemoveSearchDirectory(".") and ("bin"), the step weaver           A_stale_assembly_in_the_current_directory_does_not_decide_a_shape
+NamePdbByFileName, the step weaver                                         A_PdbFile_under_a_path_map_leaves_two_clones_the_same(Steps)
+NamePdbByFileName, the assertion weaver                                    A_PdbFile_under_a_path_map_leaves_two_clones_the_same(Assertions), (StepsThenAssertions)
+namedForItself, the step weaver                                            A_project_with_a_PdbFile_of_its_own_keeps_its_line_numbers(Steps, each of custom.pdb, custom, custom.sym)
+StartAtTheFirstStatement                                                   A_fault_in_a_step_keeps_the_file_and_line_a_plain_build_gives_it(Release): no "Steps.cs:line 14"
+That point's skipIf == null                                                A_step_counts_under_coverage_as_a_plain_build_does(Release)
+That point's IsOptimised                                                   A_step_counts_under_coverage_as_a_plain_build_does(Debug)
+
+The step weaver's NamePdbByFileName at first survived the path map's fact, which ran both weavers: the last to write hides what the first left, so each PDB fact also runs with one weaver.
+
+The second run below is of that point's first cut, on every step and in every build, which the coverage gate threw out, so its Debug row for the frame is gone. The third is of the point as released. In the second run, A_project_with_only_assertions_and_its_PdbFile_elsewhere_is_woven fails with or without a mutant: its first form read a step tree, where a plain method draws nothing, and it reads the build's own line now.
+
+The runs: 12 facts in the PDB filter, 2 in the frame's.
+--- hand-mutants.txt
+unmutated exit 0: 
+ 1 file changed, 2 deletions(-)
+mutant-stale exit 1: 
+  Failed Kronikol.Tests.StepTracking.StaleAssemblyTests.A_stale_assembly_in_the_current_directory_does_not_decide_a_shape [2 s]
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+mutant-pathmap exit 0: 
+done
+--- hand-mutants2.txt
+unmutated exit 1: Total tests: 12  Passed: 11  Failed: 1 
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_project_with_only_assertions_and_its_PdbFile_elsewhere_is_woven [3 s]
+mutant-step-names exit 1: Total tests: 12  Passed: 10  Failed: 2 
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_PdbFile_under_a_path_map_leaves_two_clones_the_same(weavers: Steps) [4 s]
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_project_with_only_assertions_and_its_PdbFile_elsewhere_is_woven [1 s]
+mutant-assertion-names exit 1: Total tests: 12  Passed: 9  Failed: 3 
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_PdbFile_under_a_path_map_leaves_two_clones_the_same(weavers: StepsThenAssertions) [4 s]
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_PdbFile_under_a_path_map_leaves_two_clones_the_same(weavers: Assertions) [4 s]
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_project_with_only_assertions_and_its_PdbFile_elsewhere_is_woven [3 s]
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+mutant-step-own-name exit 1: Total tests: 12  Passed: 8  Failed: 4 
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_project_with_a_PdbFile_of_its_own_keeps_its_line_numbers(weavers: Steps, file: "custom.sym") [8 
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_project_with_a_PdbFile_of_its_own_keeps_its_line_numbers(weavers: Steps, file: "custom.pdb") [2 
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_project_with_a_PdbFile_of_its_own_keeps_its_line_numbers(weavers: Steps, file: "custom") [3 s]
+  Failed Kronikol.Tests.StepTracking.StepBuildTests.A_project_with_only_assertions_and_its_PdbFile_elsewhere_is_woven [2 s]
+done
+--- hand-mutants3.txt
+=== skipIf == null: the point goes on a method with a bypass too
+Failed Kronikol.Tests.StepTracking.StepBuildTests.A_step_counts_under_coverage_as_a_plain_build_does(configuration: "Release") [4 s]
+Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 20 s - Kronikol.Tests.StepTracking.dll (net10.0)
+=== IsOptimised: the point goes on a build that is not optimised too
+Failed Kronikol.Tests.StepTracking.StepBuildTests.A_step_counts_under_coverage_as_a_plain_build_does(configuration: "Debug") [5 s]
+Failed!  - Failed:     1, Passed:     3, Skipped:     0, Total:     4, Duration: 22 s - Kronikol.Tests.StepTracking.dll (net10.0)
+=== StartAtTheFirstStatement: no point at all
+Failed Kronikol.Tests.StepTracking.StepBuildTests.A_fault_in_a_step_keeps_the_file_and_line_a_plain_build_gives_it(configuration: "Release") [4 s]
+Failed Kronikol.Tests.StepTracking.StepBuildTests.A_step_counts_under_coverage_as_a_plain_build_does(configuration: "Release") [4 s]
+Failed!  - Failed:     2, Passed:     2, Skipped:     0, Total:     4, Duration: 18 s - Kronikol.Tests.StepTracking.dll (net10.0)

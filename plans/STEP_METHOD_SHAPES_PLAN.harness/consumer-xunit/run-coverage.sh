@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # What coverlet makes of a woven assembly, as a project that collects coverage sees it: the same steps on the published weaver and
-# on the prototype, line by line. Coverlet instruments the woven IL and reads the woven symbols. Writes results/coverage.txt.
+# on the prototype, line by line, in each configuration, as a project collecting coverage in Release is as common as one in Debug.
+# Coverlet instruments the woven IL and reads the woven symbols. Writes results/coverage.txt.
 #   WORK=<a folder of your own, holding feed/ with the prototype's package> run-coverage.sh
 set -u
 
@@ -11,6 +12,8 @@ scratch="$W/coverage"
 mkdir -p "$scratch"
 : > "$out"
 
+for configuration in Debug Release; do
+echo "################### $configuration" >> "$out"
 for pair in "published 5.28.2" "prototype 5.28.99-proto226"; do
     set -- $pair
     label=$1; version=$2
@@ -97,7 +100,7 @@ public class Driver
 }
 EOF
     echo "=================== $label" >> "$out"
-    (cd "$p" && dotnet test xunit-probe.csproj -nologo -tl:off -p:StepTrackingVersion="$version" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.IncludeTestAssembly=true 2>&1 \
+    (cd "$p" && dotnet test xunit-probe.csproj -c "$configuration" -nologo -tl:off -p:StepTrackingVersion="$version" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.IncludeTestAssembly=true 2>&1 \
         | grep -E "Passed!|Failed!|error |warning KRONIKOL" | sed -E 's/, Duration: [^-]*-/ -/' | cut -c1-160 | head -6) >> "$out"
     find "$p" -name coverage.cobertura.xml | head -1 | xargs -I{} cp {} "$scratch/$label.xml"
 done
@@ -124,8 +127,11 @@ for label, root in (('published', a), ('prototype', b)):
     print(f"{label}: lines {root.get('lines-covered')} of {root.get('lines-valid')}, branches {root.get('branches-covered')} of {root.get('branches-valid')}")
 differ = [k for k in sorted(set(am) | set(bm)) if am.get(k) != bm.get(k)]
 print(f"methods {len(am)} and {len(bm)}; methods whose lines, hits or branches differ: {len(differ)}")
+turned = [(k, x[0]) for k in differ for x, y in zip(am.get(k, []), bm.get(k, [])) if (x[1] == '0') != (y[1] == '0')]
+print(f"lines that change between covered and not: {len(turned)}")
 for k in differ:
     print('DIFF', k, am.get(k), bm.get(k))
 PY
+done
 rm -rf "${scratch:?}"
 tail -3 "$out"

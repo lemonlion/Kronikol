@@ -1,10 +1,10 @@
 prototype: a netstandard2.0 library's [Step] methods, run from net10.0
 Build succeeded.
 async ValueTask
-  step 'A value task' Passed 134 ms, under it: Inner
+  step 'A value task' Passed 181 ms, under it: Inner
 async ValueTask<int>
   value 7
-  step 'A value task of int' Passed 116 ms, under it: Inner
+  step 'A value task of int' Passed 131 ms, under it: Inner
 int
   value 3
-  step 'A value' Passed 29 ms, under it: Inner
+  step 'A value' Passed 30 ms, under it: Inner

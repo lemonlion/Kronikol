@@ -155,6 +155,7 @@ namespace Kronikol.Tracking
 
     <WeaveStepsTask
       AssemblyPath="@(IntermediateAssembly)"
+      PdbFile="$(PdbFile)"
       References="@(ReferencePath)" />
 
     <Touch Files="$(IntermediateOutputPath)__step_tracking_weaved__.marker" AlwaysCreate="true" />

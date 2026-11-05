@@ -7,9 +7,9 @@ file: consumer.pdb
 runtime 10.0.11, assembly consumer, all
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
 void
-step 'Void' Passed 48 ms, under it: Inner
+step 'Void' Passed 53 ms, under it: Inner
 async Task
-step 'Task' Passed 33 ms, under it: Inner
+step 'Task' Passed 29 ms, under it: Inner
 int (issue)
 threw InvalidProgramException: Common Language Runtime detected an invalid program.
 at ShopDriver.A_number_is_chosen()
@@ -30,7 +30,7 @@ iterator
 threw InvalidProgramException: Common Language Runtime detected an invalid program.
 at ShopDriver.An_iterator()
 async void
-step 'An async void' Passed 0 ms, under it: 
+step 'An async void' Passed 1 ms, under it: 
 step 'Inner' Passed 0 ms, under it: 
 a value step that throws, for its line number
 threw InvalidOperationException: from a value step
@@ -52,9 +52,9 @@ file: consumer.pdb
 runtime 10.0.11, assembly consumer, all
 references: System.Runtime 10.0.0.0, System.Reflection.Metadata 10.0.0.0, Kronikol 5.28.2.0, System.Threading.Thread 10.0.0.0, Shouldly 4.3.0.0, System.Console 10.0.0.0, System.Linq 10.0.0.0, System.Private.CoreLib 10.0.0.0
 void
-step 'Void' Passed 93 ms, under it: Inner
+step 'Void' Passed 57 ms, under it: Inner
 async Task
-step 'Task' Passed 76 ms, under it: Inner
+step 'Task' Passed 43 ms, under it: Inner
 int (issue)
 threw InvalidProgramException: Common Language Runtime detected an invalid program.
 at ShopDriver.A_number_is_chosen()
@@ -224,7 +224,7 @@ value 7
 exit of the ref run: 0
 =================== baseline, normal verbosity: the weavers in the order they ran, and what they listed
 _WeaveStepTracking:
-Kronikol.StepTracking: Instrumented 14 step method(s) (396ms)
+Kronikol.StepTracking: Instrumented 14 step method(s) (587ms)
 _WeaveAssertionTracking:
 1><home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Progra
 <home>/.nuget\packages\kronikol.assertiontracking\5.28.2\buildTransitive\Kronikol.AssertionTracking.targets(58,5): warning KRONIKOL003: Kronikol.AssertionTracking: 1 assertion statement(s) were left as written, so they run without a note. First: Program.

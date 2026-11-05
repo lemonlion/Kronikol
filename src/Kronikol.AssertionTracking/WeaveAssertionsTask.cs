@@ -24,6 +24,9 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
     [Required]
     public string AssemblyPath { get; set; } = string.Empty;
 
+    /// <summary>The project's PdbFile property: symbols it writes somewhere other than beside the assembly.</summary>
+    public string? PdbFile { get; set; }
+
     /// <summary>
     /// The build's source roots (<c>@(SourceRoot)</c>). A root whose <c>MappedPath</c> metadata differs from its path
     /// is a name the compiler wrote for that directory, and a document under that name is read from the directory.
@@ -72,9 +75,10 @@ public class WeaveAssertionsTask : Microsoft.Build.Utilities.Task
             return true;
         }
 
-        // A project that embeds its PDB (DebugType=embedded) has no file beside the assembly: the weaver reads
-        // the symbols from the assembly itself, and leaves one with none at all (DebugType=none) unwoven.
-        string? pdbPath = Path.ChangeExtension(AssemblyPath, ".pdb");
+        // A project that embeds its PDB (DebugType=embedded) has no file of this build's beside the assembly: the weaver reads
+        // the symbols from the assembly itself, and leaves one with none at all (DebugType=none) unwoven. The build writes a
+        // PdbFile with its extension changed to .pdb, whatever it was given.
+        string? pdbPath = Path.ChangeExtension(!string.IsNullOrEmpty(PdbFile) ? PdbFile : AssemblyPath, ".pdb");
         if (!File.Exists(pdbPath))
             pdbPath = null;
 

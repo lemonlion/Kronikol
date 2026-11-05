@@ -1,6 +1,7 @@
 using Kronikol.Tracking;
 using Kronikol.Reports;
 using Kronikol.TabularAttributes;
+using Kronikol.Tracking.Tabular;
 
 namespace Kronikol.Tests.Tracking;
 
@@ -771,5 +772,90 @@ public class StepCollectorTests
         Assert.True(steps[0].Duration!.Value.Ticks > 0);
 
         StepCollector.ClearSteps(testId);
+    }
+    private sealed class ThrowsWhenPrinted
+    {
+        public override string ToString() => throw new InvalidOperationException("the parameter's own code");
+    }
+
+    private sealed class ThrowsWhenItsRowsAreRead : ITabularParameterData
+    {
+        public TabularColumn[] GetColumns() => [];
+        public TabularRow[] GetRows() => throw new InvalidOperationException("a row's getter");
+    }
+
+    [Fact]
+    public void A_parameter_whose_ToString_throws_reads_as_its_type_and_the_step_goes_on()
+    {
+        // Being tracked must not fail a test: BuildParameters called it outside any try, in StartStep, before the body ran (F10).
+        var testId = "test-tostring-throws";
+        StepCollector.StartStep(testId, null, "A step", ["value"], [new ThrowsWhenPrinted()]);
+        StepCollector.CompleteStep(testId, passed: true);
+
+        var step = Assert.Single(StepCollector.GetSteps(testId));
+        Assert.Equal(ExecutionResult.Passed, step.Status);
+        Assert.Equal("[ThrowsWhenPrinted]", Assert.Single(step.Parameters!).InlineValue!.Value);
+    }
+
+    [Fact]
+    public void A_table_whose_rows_throw_reads_as_its_type_and_the_step_goes_on()
+    {
+        var testId = "test-rows-throw";
+        StepCollector.StartStep(testId, null, "A step", ["table"], [new ThrowsWhenItsRowsAreRead()]);
+        StepCollector.CompleteStep(testId, passed: true);
+
+        var step = Assert.Single(StepCollector.GetSteps(testId));
+        Assert.Equal(ExecutionResult.Passed, step.Status);
+        var parameter = Assert.Single(step.Parameters!);
+        Assert.Null(parameter.TabularValue);
+        Assert.EndsWith("ThrowsWhenItsRowsAreRead", parameter.InlineValue!.Value);
+    }
+
+    private sealed class MessageThrows : Exception
+    {
+        public override string Message => throw new ArithmeticException("the getter's own exception");
+    }
+
+    /// <summary>In place of xUnit's Record, which reads the exception's Message, the very thing that throws here.</summary>
+    private static async Task<Exception?> ThrownBy(Func<Task> call)
+    {
+        try
+        {
+            await call();
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
+    }
+
+    [Fact]
+    public async Task A_task_that_fails_with_a_message_that_throws_keeps_its_exception_and_fails_its_step()
+    {
+        // CompleteStepAsync read ex.Message in its catch, so the caller got what the getter threw, and the step stayed open (F22).
+        var testId = "test-message-throws";
+        using var identity = TestIdentityScope.Begin(testId, testId);
+        StepCollector.StartStep(testId, null, "A step", null, null);
+
+        var thrown = await ThrownBy(() => StepCollector.CompleteStepAsync(Task.FromException(new MessageThrows())));
+
+        Assert.IsType<MessageThrows>(thrown);
+        Assert.False(StepCollector.HasActiveStep(testId));
+        Assert.Equal(ExecutionResult.Failed, Assert.Single(StepCollector.GetSteps(testId)).Status);
+    }
+
+    [Fact]
+    public async Task A_task_of_a_value_that_fails_with_a_message_that_throws_keeps_its_exception_and_fails_its_step()
+    {
+        var testId = "test-message-throws-value";
+        using var identity = TestIdentityScope.Begin(testId, testId);
+        StepCollector.StartStep(testId, null, "A step", null, null);
+
+        var thrown = await ThrownBy(() => StepCollector.CompleteStepAsync(Task.FromException<int>(new MessageThrows())));
+
+        Assert.IsType<MessageThrows>(thrown);
+        Assert.False(StepCollector.HasActiveStep(testId));
+        Assert.Equal(ExecutionResult.Failed, Assert.Single(StepCollector.GetSteps(testId)).Status);
     }
 }

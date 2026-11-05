@@ -292,7 +292,7 @@ MUTANTS = [
     ], ["Z75-assertion-over-a-referenced-type-steps-first"]),
 
     ("M90 a branch out of the statement sent to what follows, wherever it went", ASSERTIONS, [
-        ("            if (branch.Operand is Instruction goesTo && !IsWhatFollows(end, goesTo))\n                return \"a branch out of the statement goes somewhere other than what follows it\";\n", ""),
+        ("            if (branch.Operand is not Instruction goesTo || !IsWhatFollows(end, goesTo))\n                return \"a branch out of the statement goes somewhere other than what follows it\";\n", ""),
     ], ["Z143-in-an-if-takes-the-else-steps-first", "Z143-on-a-value-step-carries-on-steps-first"]),
 
     ("M91 what follows read as the next instruction alone", ASSERTIONS, [
@@ -302,6 +302,18 @@ MUTANTS = [
     ("M98 two returns taken for two ways on", ASSERTIONS, [
         (" || (next.OpCode == OpCodes.Ret && goesTo?.OpCode == OpCodes.Ret)", ""),
     ], ["Z143b-a-null-path-in-a-then-arm-steps-first", "Z143b-a-null-path-in-a-then-arm-assertions-first"]),
+
+    ("M99 no hop past a leave: a step weaver's return is one", ASSERTIONS, [
+        (" || at.OpCode == OpCodes.Leave || at.OpCode == OpCodes.Leave_S)\n                at = (Instruction)at.Operand;", ")\n                at = (Instruction)at.Operand;"),
+    ], ["Z143c-a-null-path-in-a-then-arm-of-the-step-steps-first"]),
+
+    ("M101 a readonly member's SkipIf read off this, so that its getter changes the struct", WEAVER, [
+        ("!skipIf.IsStatic && IsReadOnlyMember(method) && !IsReadOnlyMember(skipIf.PropertyGetterRef!.Resolve()))", "!skipIf.IsStatic && false)"),
+    ], ["Z149-skipif-on-a-readonly-member-reads-a-copy", "Z149-skipif-on-a-readonly-member-of-a-generic-struct-reads-a-copy"]),
+
+    ("M100 a switch left as a branch with no one target", ASSERTIONS, [
+        ("(i.Operand is Instruction target && Outside(target) || i.Operand is Instruction[] targets && targets.Any(Outside))", "i.Operand is Instruction target && Outside(target)"),
+    ], ["Z148-a-switch-expression-on-an-assertion-steps-first", "Z148-a-switch-expression-on-an-assertion-assertions-first"]),
 
     ("M92 a throw part-way wrapped", ASSERTIONS, [
         ("        if (EveryWayOnThrows(start, end))\n            return \"every way on from its assertion throws\";\n", ""),

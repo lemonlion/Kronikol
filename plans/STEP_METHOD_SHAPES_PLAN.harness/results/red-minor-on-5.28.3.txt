@@ -1,0 +1,67 @@
+The minor's new facts over the patch's source, 5.28.3 (7a8b98a3), each fact with the rows it read, in the suite's own runner.
+With the sentinel's ThisUninitReturn (F9) in, every shape-runner row is red for it. Taken out, as the plan's S0 does, each is red for its own reason.
+
+--- every new fact, as it stands
+green StaleAssemblyTests.A_stale_assembly_in_the_current_directory_does_not_decide_a_shape: {'Passed': 1}
+green StepBuildTests.A_PdbFile_under_a_path_map_leaves_two_clones_the_same: {'Passed': 1}
+RED   StepBuildTests.A_SkipIf_it_cannot_use_warns_with_a_code_a_project_can_silence: {'Failed': 1}
+RED   StepBuildTests.A_build_at_normal_verbosity_lists_each_one: {'Failed': 1}
+RED   StepBuildTests.A_build_warns_once_for_the_methods_it_left_as_written: {'Failed': 2}
+RED   StepBuildTests.A_library_that_names_no_core_type_keeps_the_note_of_a_task_it_hands_back: {'Failed': 2}
+RED   StepBuildTests.A_project_that_embeds_its_symbols_is_woven: {'Failed': 1}
+RED   StepBuildTests.A_project_whose_DebugType_changed_builds_without_a_clean: {'Failed': 6}
+RED   StepBuildTests.A_project_with_a_PdbFile_of_its_own_keeps_its_line_numbers: {'Failed': 3}
+RED   StepBuildTests.A_project_with_a_TargetName_of_its_own_keeps_its_line_numbers: {'Failed': 1}
+RED   StepBuildTests.A_project_with_its_PdbFile_elsewhere_keeps_its_symbols: {'Failed': 2}
+RED   StepBuildTests.A_project_with_no_symbols_is_woven: {'Failed': 1}
+RED   StepBuildTests.A_step_attribute_with_no_body_warns_nothing_and_is_listed_at_normal_verbosity: {'Failed': 1}
+green StepBuildTests.NoWarn_silences_it: {'Passed': 1}
+RED   StepBuildTests.The_steps_and_assertions_weavers_run_in_either_order: {'Failed': 2}
+RED   StepBuildTests.The_warning_counts_the_refused_steps_whose_SkipIf_is_not_read: {'Failed': 3}
+RED   StepShapeTests.A_bypassed_sub_step_leaves_its_parent_open: {'Failed': 4}
+green StepShapeTests.A_file_of_the_project_that_bears_the_name_of_its_PDB_is_left_alone: {'Passed': 2}
+RED   StepShapeTests.A_method_shape_does_what_it_should: {'Failed': 1926, 'Passed': 3}
+RED   StepShapeTests.A_referenced_assembly_is_free_after_the_weave: {'Failed': 2, 'Passed': 2}
+green StepShapeTests.Every_shape_in_the_catalogue_is_run: {'Passed': 1}
+RED   StepShapeTests.The_weave_does_not_change_what_a_program_does: {'Failed': 30}
+RED   StepShapeTests.Under_runtime_async_a_step_moves_the_phase_inside_itself_and_not_for_its_caller: {'Failed': 2}
+green WeaveStepsTaskTests.A_step_it_can_weave_says_nothing_of_being_left: {'Passed': 1}
+RED   WeaveStepsTaskTests.The_task_names_the_first_method_by_document_and_line: {'Failed': 1}
+RED   WeaveStepsTaskTests.Two_refused_methods_are_named_by_their_order_in_the_file_and_not_by_the_weave: {'Failed': 1}
+shape rows green here: 3
+RED   StepCollectorTests.A_parameter_whose_ToString_throws_reads_as_its_type_and_the_step_goes_on: {'Failed': 1}
+RED   StepCollectorTests.A_table_whose_rows_throw_reads_as_its_type_and_the_step_goes_on: {'Failed': 1}
+RED   StepCollectorTests.A_task_of_a_value_that_fails_with_a_message_that_throws_keeps_its_exception_and_fails_its_step: {'Failed': 1}
+RED   StepCollectorTests.A_task_that_fails_with_a_message_that_throws_keeps_its_exception_and_fails_its_step: {'Failed': 1}
+
+--- the facts on the shape runner, the sentinel taken out
+RED   StepShapeTests.A_bypassed_sub_step_leaves_its_parent_open: {'Failed': 4}
+green StepShapeTests.A_file_of_the_project_that_bears_the_name_of_its_PDB_is_left_alone: {'Passed': 2}
+RED   StepShapeTests.A_method_shape_does_what_it_should: {'Failed': 1411, 'Passed': 518}
+RED   StepShapeTests.A_referenced_assembly_is_free_after_the_weave: {'Failed': 2, 'Passed': 2}
+green StepShapeTests.Every_shape_in_the_catalogue_is_run: {'Passed': 1}
+RED   StepShapeTests.The_weave_does_not_change_what_a_program_does: {'Failed': 30}
+RED   StepShapeTests.Under_runtime_async_a_step_moves_the_phase_inside_itself_and_not_for_its_caller: {'Failed': 2}
+shape rows green here: 518
+
+--- why, a line for each of the named facts
+Failed A_bypassed_sub_step_leaves_its_parent_open (id: "H11-nested-bypass-task")
+      Assert.DoesNotContain() Failure: Item found in collection ↓ (pos 0) Collection: ["TREE", "EARLY"] Found: "TREE"
+Failed A_bypassed_sub_step_leaves_its_parent_open (id: "H11-nested-bypass-task-int")
+      Assert.DoesNotContain() Failure: Item found in collection ↓ (pos 0) Collection: ["TREE", "EARLY"] Found: "TREE"
+Failed A_bypassed_sub_step_leaves_its_parent_open (id: "H11-nested-bypass-void")
+      Assert.DoesNotContain() Failure: Item found in collection ↓ (pos 0) Collection: ["TREE", "EARLY"] Found: "TREE"
+Failed A_bypassed_sub_step_leaves_its_parent_open (id: "H11-nested-bypass-value")
+      Assert.Contains() Failure: Sub-string not found String: null Not found: "S:Bypassed"
+Failed A_referenced_assembly_is_free_after_the_weave (id: "Z75-assertion-over-a-referenced-type-steps-first", configuration: "Release")
+      Assert.DoesNotContain() Failure: Item found in collection ↓ (pos 0) Collection: ["LOCKED"] Found: "LOCKED"
+Passed A_referenced_assembly_is_free_after_the_weave (id: "Z76-step-returns-a-referenced-type", configuration: "Release")
+Failed A_referenced_assembly_is_free_after_the_weave (id: "Z03c-ivt-internal-base", configuration: "Release")
+      Assert.DoesNotContain() Failure: Item found in collection ↓ (pos 0) Collection: ["LOCKED"] Found: "LOCKED"
+Passed A_referenced_assembly_is_free_after_the_weave (id: "Z76-step-returns-a-referenced-type", configuration: "Debug")
+Failed Under_runtime_async_a_step_moves_the_phase_inside_itself_and (id: "Z147-runtime-async-phase-after-a-suspending-step")
+      RUN-IPE: InvalidProgramException at the call: at Steps.M()
+Failed Under_runtime_async_a_step_moves_the_phase_inside_itself_and (id: "Z147-runtime-async-phase-after-a-step-that-does-no"···)
+      RUN-IPE: InvalidProgramException at the call: at Steps.M()
+
+Added after this run, from the coverage gate: A_step_counts_under_coverage_as_a_plain_build_does. Over 5.28.3, which has no point at a step's start, its Release row is red and its Debug row green: hand-mutants.txt has the same with that point taken out, and the Debug row is there to keep a point out.

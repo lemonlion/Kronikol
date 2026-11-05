@@ -1,3 +1,4 @@
+################### Debug
 =================== published
 Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7 - xunit-probe.dll (net10.0)
 =================== prototype
@@ -5,3 +6,16 @@ Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7 - xunit-pr
 published: lines 29 of 57, branches 12 of 18
 prototype: lines 29 of 57, branches 12 of 18
 methods 33 and 33; methods whose lines, hits or branches differ: 0
+lines that change between covered and not: 0
+################### Release
+=================== published
+Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7 - xunit-probe.dll (net10.0)
+=================== prototype
+Passed!  - Failed:     0, Passed:     7, Skipped:     0, Total:     7 - xunit-probe.dll (net10.0)
+published: lines 20 of 45, branches 12 of 18
+prototype: lines 20 of 45, branches 12 of 18
+methods 33 and 33; methods whose lines, hits or branches differ: 3
+lines that change between covered and not: 0
+DIFF Driver.APlainTask [('46', '1', 'True', '50% (1/2)'), ('47', '0', 'False', None), ('48', '1', 'False', None)] [('46', '2', 'True', '50% (1/2)'), ('47', '0', 'False', None), ('48', '1', 'False', None)]
+DIFF Driver.AThrow [('73', '1', 'False', None)] [('73', '2', 'False', None)]
+DIFF Driver.AVoid [('25', '1', 'True', '50% (1/2)'), ('27', '1', 'False', None), ('31', '0', 'False', None), ('33', '0', 'False', None)] [('25', '2', 'True', '50% (1/2)'), ('27', '1', 'False', None), ('31', '0', 'False', None), ('33', '0', 'False', None)]

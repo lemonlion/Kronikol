@@ -1,10 +1,10 @@
 label: prototype-debug-plus
 weaver: <home>/k226bin\Kronikol.StepTracking.dll
 runtime: 10.0.11
-shapes: 635, runs: 635, seconds: 312
+shapes: 648, runs: 648, seconds: 576
 
 by outcome:
-  OK           635
+  OK           648
 
 by family (runs ok / runs):
   A sync value                         32 /   32
@@ -21,8 +21,8 @@ by family (runs ok / runs):
   H SkipIf, the member it names        27 /   27
   I with assertion weaving, assertions-first   22 /   22
   I with assertion weaving, steps-first   23 /   23
-  Z found by review                   104 /  104
-  Z found by review, assertions-first   78 /   78
-  Z found by review, steps-first       81 /   81
+  Z found by review                   109 /  109
+  Z found by review, assertions-first   82 /   82
+  Z found by review, steps-first       85 /   85
 
 not ok, one line per shape (the two configurations together where they agree):

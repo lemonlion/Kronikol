@@ -57,6 +57,7 @@ namespace Kronikol.Tracking
 
     <WeaveAssertionsTask
       AssemblyPath="@(IntermediateAssembly)"
+      PdbFile="$(PdbFile)"
       SourceRoots="@(SourceRoot)"
       PathMap="$(PathMap)"
       CodePage="$(CodePage)"
