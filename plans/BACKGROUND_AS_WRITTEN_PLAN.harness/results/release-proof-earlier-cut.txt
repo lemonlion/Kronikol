@@ -1,0 +1,463 @@
+# The round on an earlier cut, 6861a8f0, before the tenth review's fixes, kept for what it found. Its Integration line, 158 of 265, is a fresh tree's example projects not restored (NETSDK1004): the script restores them now. Its Playwright run was stopped. The final round is release-proof.txt.
+
+
+##### release.slnf in Release, every target framework  00:24
+f0c37d72 WIP: #222 R1
+    0 Error(s)
+    30 Warning(s)
+Build succeeded.
+Build succeeded.
+Build succeeded.
+
+##### the core suite and the suites that load what changed  00:26
+Passed!  - Failed:     0, Passed: 12075, Skipped:     2, Total: 12077, Duration: 7 m 43 s - Kronikol.Tests.dll (net10.0)
+--- Kronikol.Tests.SearchEngine
+Passed!  - Failed:     0, Passed:   787, Skipped:     0, Total:   787, Duration: 16 s - Kronikol.Tests.SearchEngine.dll (net10.0)
+--- Kronikol.Tests.StepTracking
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 15 s - Kronikol.Tests.StepTracking.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit3
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 18 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit2
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 15 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+
+##### finished  00:36
+
+##### the public surface against the published 5.28.3  00:37
+5605 and 5605 lines
+diff ended
+
+##### the shape matrix: xUnit v2, on the release's assemblies  00:37
+release MISSED: 0
+release INVENTED: 0
+release BORROWED: 0
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the floor: Reqnroll 3.0.1  00:39
+release-reqnroll-3.0.1 INVENTED: 0
+release-reqnroll-3.0.1 BORROWED: 0
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the control: published 5.28.3  00:42
+control-release INVENTED: 11
+control-release BORROWED: 8
+
+##### the other adapters and row tests off  00:43
+--- xunit3
+FINISHED
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+--- tunit
+FINISHED
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+--- norowtests
+FINISHED
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the edge and nested shapes  00:49
+E35 one                            failing: [('s13/b0', 'Given the hook fails after this step')] scope: failin
+E36 one                            failing: [('s14/b1', 'And the hook fails before this step')] scope: scenari
+E39 one                            failing: [('s17/b0', 'Given a composite step runs the step a hook stops'), 
+E41 one                            failing: [('s19/0', 'When the hook fails after this step')] scope: failingS
+86 <tree>/plans/BACKGROUND_AS_WRITTEN_PLAN.harness/results/nested-shapes-release.txt
+
+##### published 5.28.3 against the release, scenario by scenario  00:51
+pass: Failures.md: 13 and 13 lines, 2 differing
+fail-and: Failures.md: 44 and 44 lines, 4 differing
+fail-when: Failures.md: 39 and 46 lines, 17 differing
+fail-bg: Failures.md: 39 and 39 lines, 6 differing
+fail-bg2: Failures.md: 39 and 39 lines, 4 differing
+
+##### BreakfastProvider across the fix  00:59
+pins moved: 27
+BreakfastProvider at 640c190
+Build succeeded.
+  duration: 31s 838ms
+  duration: 13s 335ms
+bp-control: BackgroundSteps blocks in Specifications.yml: 10
+bp-fix: BackgroundSteps blocks in Specifications.yml: 0
+- bp-control\TestRunReport.krkl  2026-11-05T01:00:32Z  214 scenarios, 0 failed
++ bp-fix\TestRunReport.krkl  2026-11-05T01:01:01Z  214 scenarios, 0 failed
+
+Slower (16):
+  s3 0.12s → 0.21s  Different muffin recipes should produce the expected batch
+  s12 0.11s → 0.39s  Audit logs should be returned in descending timestamp order
+moved: Order Cross-Field Validation > An order exceeding the maximum items per order should be rejected: b0 b1 0 1 2 3 -
+with a b address: 10 and 0
+scenarios whose step addresses moved: 10
+rm: cannot remove '<scratch>/proof/bp/src/BreakfastProvider.Api/bin/Debug/net10.0/Grpc.Core.Api.dll': Device or resource busy
+
+##### finished  01:03
+
+##### the example projects on their own, then every Integration fact  01:15
+--- xUnit2
+Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 852 ms - Example.Api.Tests.Component.ReqNRoll.xUnit2.dll (net10.0)
+--- xUnit3
+Passed!  - Failed:     0, Passed:    21, Skipped:     0, Total:    21, Duration: 715 ms - Example.Api.Tests.Component.ReqNRoll.xUnit3.dll (net10.0)
+--- TUnit
+Test run summary: Passed! - <tree>\examples\Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\b
+  total: 12
+  failed: 0
+  succeeded: 12
+--- Integration
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBothRequestAndResponse_BothEmphasized(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [887 m
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBothRequestAndResponse_BothEmphasized(projectName: "Example.Api.Tests.Component.xUnit2") [806 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBothRequestAndResponse_BothEmphasized(projectName: "Example.Api.Tests.Component.TUnit") [789 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBothRequestAndResponse_BothEmphasized(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [905 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBothRequestAndResponse_BothEmphasized(projectName: "Example.Api.Tests.Component.NUnit4") [719 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisSmallerText_ShrinksNonFocusedFields(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisSmallerText_ShrinksNonFocusedFields(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisSmallerText_ShrinksNonFocusedFields(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisSmallerText_ShrinksNonFocusedFields(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisSmallerText_ShrinksNonFocusedFields(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.NoFocusSet_NormalRendering(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.NoFocusSet_NormalRendering(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.NoFocusSet_NormalRendering(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.NoFocusSet_NormalRendering(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.NoFocusSet_NormalRendering(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisHidden_ReplacesNonFocusedWithEllipsis(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisHidden_ReplacesNonFocusedWithEllipsis(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisHidden_ReplacesNonFocusedWithEllipsis(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisHidden_ReplacesNonFocusedWithEllipsis(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisHidden_ReplacesNonFocusedWithEllipsis(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusResponseFields_EmphasizesResponseBody(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusResponseFields_EmphasizesResponseBody(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusResponseFields_EmphasizesResponseBody(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusResponseFields_EmphasizesResponseBody(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusResponseFields_EmphasizesResponseBody(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 m
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNoneEmphasis_NoMarkupOnFocusedFields(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNoneEmphasis_NoMarkupOnFocusedFields(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNoneEmphasis_NoMarkupOnFocusedFields(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNoneEmphasis_NoMarkupOnFocusedFields(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 ms
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNoneEmphasis_NoMarkupOnFocusedFields(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisLightGray_GraysNonFocusedFields(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisLightGray_GraysNonFocusedFields(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 ms
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisLightGray_GraysNonFocusedFields(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisLightGray_GraysNonFocusedFields(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisLightGray_GraysNonFocusedFields(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusSingleRequestField_OnlyThatFieldEmphasized(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusSingleRequestField_OnlyThatFieldEmphasized(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusSingleRequestField_OnlyThatFieldEmphasized(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusSingleRequestField_OnlyThatFieldEmphasized(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusSingleRequestField_OnlyThatFieldEmphasized(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithHiddenDeEmphasis_ProductionScenario(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithHiddenDeEmphasis_ProductionScenario(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithHiddenDeEmphasis_ProductionScenario(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithHiddenDeEmphasis_ProductionScenario(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithHiddenDeEmphasis_ProductionScenario(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusColoredEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusColoredEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusColoredEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusColoredEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusColoredEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisNone_NormalRenderingForNonFocused(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisNone_NormalRenderingForNonFocused(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [1 ms
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisNone_NormalRenderingForNonFocused(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisNone_NormalRenderingForNonFocused(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisNone_NormalRenderingForNonFocused(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusMultipleRequestFields_AllEmphasized(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusMultipleRequestFields_AllEmphasized(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusMultipleRequestFields_AllEmphasized(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusMultipleRequestFields_AllEmphasized(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusMultipleRequestFields_AllEmphasized(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithSeparateSetup_BothApplied(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithSeparateSetup_BothApplied(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithSeparateSetup_BothApplied(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithSeparateSetup_BothApplied(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusWithSeparateSetup_BothApplied(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNonExistentField_AllFieldsDeEmphasized(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNonExistentField_AllFieldsDeEmphasized(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNonExistentField_AllFieldsDeEmphasized(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNonExistentField_AllFieldsDeEmphasized(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusNonExistentField_AllFieldsDeEmphasized(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldAndColoredEmphasis_CombinesMarkup(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldAndColoredEmphasis_CombinesMarkup(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 m
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldAndColoredEmphasis_CombinesMarkup(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldAndColoredEmphasis_CombinesMarkup(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldAndColoredEmphasis_CombinesMarkup(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisCombined_LightGrayAndSmallerText(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisCombined_LightGrayAndSmallerText(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisCombined_LightGrayAndSmallerText(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisCombined_LightGrayAndSmallerText(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 m
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.DeEmphasisCombined_LightGrayAndSmallerText(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.NUnit4") [1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 ms
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.FieldFocusTests.FocusBoldEmphasis_HighlightsRequestFields(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.TUnitParameterizedRenderingTests.Both_reports_contain_parameterized_groups [1 ms]
+  Failed Example.Api.Tests.Integration.Tests.TUnitParameterizedRenderingTests.R1_scalar_columns_renders_region_amount_expedited [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.TUnitParameterizedRenderingTests.R4_expandable_renders_customer_order_with_expand_details [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.TUnitParameterizedRenderingTests.R2_flattened_object_renders_order_scenario_properties_as_columns [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.TUnitParameterizedRenderingTests.R3_subtable_renders_shipping_address_with_nested_table [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.TUnitParameterizedRenderingTests.Report_contains_all_four_parameterized_groups [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.TUnitParameterizedRenderingTests.TUnit_project_generates_all_report_files [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.TUnitParameterizedRenderingTests.Report_also_contains_non_parameterized_cake_scenarios [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_report_contains_expected_scenarios(projectName: "Example.Api.Tests.Component.TUnit") [1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_report_contains_expected_scenarios(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_report_contains_expected_scenarios(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_report_contains_expected_scenarios(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") 
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_report_contains_expected_scenarios(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_yaml_spec_has_valid_structure(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_yaml_spec_has_valid_structure(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_yaml_spec_has_valid_structure(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_yaml_spec_has_valid_structure(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_yaml_spec_has_valid_structure(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_generates_all_report_files(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_generates_all_report_files(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_generates_all_report_files(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_generates_all_report_files(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_generates_all_report_files(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 ms]
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+C:\Program Files\dotnet\sdk\10.0.300\Sdks\Microsoft.NET.Sdk\targets\Microsoft.PackageDependencyResolution.targets(266,5): error NETSDK1004: Assets file 'C:\Code\Kronikol-
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_plantuml_contains_expected_participants_and_arrows(projectName: "Example.Api.Tests.Component.BD
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_plantuml_contains_expected_participants_and_arrows(projectName: "Example.Api.Tests.Component.NU
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_plantuml_contains_expected_participants_and_arrows(projectName: "Example.Api.Tests.Component.xU
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_plantuml_contains_expected_participants_and_arrows(projectName: "Example.Api.Tests.Component.TU
+  Failed Example.Api.Tests.Integration.Tests.ReportGenerationTests.Project_plantuml_contains_expected_participants_and_arrows(projectName: "Example.Api.Tests.Component.Li
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupFalse_NoSetupPartition(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupFalse_NoSetupPartition(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupFalse_NoSetupPartition(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1 
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupFalse_NoSetupPartition(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupFalse_NoSetupPartition(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [<
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomPlantUmlServerBaseUrl_AppearsInDiagramImgSrc(projectName: "Example.Api.Tests.Component.NUnit
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomPlantUmlServerBaseUrl_AppearsInDiagramImgSrc(projectName: "Example.Api.Tests.Component.BDDfy
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomPlantUmlServerBaseUrl_AppearsInDiagramImgSrc(projectName: "Example.Api.Tests.Component.xUnit
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomPlantUmlServerBaseUrl_AppearsInDiagramImgSrc(projectName: "Example.Api.Tests.Component.Light
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomPlantUmlServerBaseUrl_AppearsInDiagramImgSrc(projectName: "Example.Api.Tests.Component.TUnit
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadFalse_DiagramImgsHaveNoLazyAttribute(projectName: "Example.Api.Tests.Component.NUnit4") [<
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadFalse_DiagramImgsHaveNoLazyAttribute(projectName: "Example.Api.Tests.Component.TUnit") [< 
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadFalse_DiagramImgsHaveNoLazyAttribute(projectName: "Example.Api.Tests.Component.BDDfy.xUnit
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadFalse_DiagramImgsHaveNoLazyAttribute(projectName: "Example.Api.Tests.Component.LightBDD.xU
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadFalse_DiagramImgsHaveNoLazyAttribute(projectName: "Example.Api.Tests.Component.xUnit2") [<
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadTrue_DiagramImgsHaveLazyAttribute(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3")
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadTrue_DiagramImgsHaveLazyAttribute(projectName: "Example.Api.Tests.Component.TUnit") [< 1 m
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadTrue_DiagramImgsHaveLazyAttribute(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadTrue_DiagramImgsHaveLazyAttribute(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.LazyLoadTrue_DiagramImgsHaveLazyAttribute(projectName: "Example.Api.Tests.Component.LightBDD.xUnit
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupFalse_PartitionNoColor(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupFalse_PartitionNoColor(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupFalse_PartitionNoColor(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupFalse_PartitionNoColor(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupFalse_PartitionNoColor(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupTrue_PartitionHasColor(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupTrue_PartitionHasColor(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupTrue_PartitionHasColor(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupTrue_PartitionHasColor(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [< 1
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.HighlightSetupTrue_PartitionHasColor(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupTrue_DiagramContainsSetupPartition(projectName: "Example.Api.Tests.Component.xUnit2")
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupTrue_DiagramContainsSetupPartition(projectName: "Example.Api.Tests.Component.BDDfy.xU
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupTrue_DiagramContainsSetupPartition(projectName: "Example.Api.Tests.Component.NUnit4")
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupTrue_DiagramContainsSetupPartition(projectName: "Example.Api.Tests.Component.TUnit") 
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.SeparateSetupTrue_DiagramContainsSetupPartition(projectName: "Example.Api.Tests.Component.LightBDD
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.ExcludedHeaders_NotInDiagram(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3") [1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.ExcludedHeaders_NotInDiagram(projectName: "Example.Api.Tests.Component.LightBDD.xUnit2") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.ExcludedHeaders_NotInDiagram(projectName: "Example.Api.Tests.Component.TUnit") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.ExcludedHeaders_NotInDiagram(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.ExcludedHeaders_NotInDiagram(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 ms]
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomSpecificationsTitle_AppearsInReport(projectName: "Example.Api.Tests.Component.TUnit") [< 1 m
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomSpecificationsTitle_AppearsInReport(projectName: "Example.Api.Tests.Component.LightBDD.xUnit
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomSpecificationsTitle_AppearsInReport(projectName: "Example.Api.Tests.Component.BDDfy.xUnit3")
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomSpecificationsTitle_AppearsInReport(projectName: "Example.Api.Tests.Component.NUnit4") [< 1 
+  Failed Example.Api.Tests.Integration.Tests.ConfigurationOverrideTests.CustomSpecificationsTitle_AppearsInReport(projectName: "Example.Api.Tests.Component.xUnit2") [< 1 
+Failed!  - Failed:   158, Passed:   107, Skipped:     0, Total:   265, Duration: 9 m 40 s - Example.Api.Tests.Integration.dll (net10.0)
+
+##### the whole Playwright suite  01:28

@@ -31,6 +31,9 @@ public record ScenarioStep
     public string? DocString { get; set; }
     public string? DocStringMediaType { get; set; }
 
+    /// <summary>What opened this step, where an adapter has to tell it from one that reads the same (#222). Never written out.</summary>
+    internal object? OpenedBy { get; set; }
+
     /// <summary>
     /// Why this step or assertion failed — the assertion's message, or the exception message that ended
     /// the step. The single most-wanted piece of information about a failing test, and until it lived here

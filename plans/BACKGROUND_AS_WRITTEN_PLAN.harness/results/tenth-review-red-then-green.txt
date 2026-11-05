@@ -1,0 +1,14 @@
+# The tenth review's facts, 2026-11-05: on the cut it read, then on its fixes.
+
+=== before
+Failed!  - Failed:     4, Passed:    46, Skipped:     0, Total:    50, Duration: 1 m 21 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+BackgroundSectionRowSwitchTests.A_search_that_lands_on_the_row_shown_passes_on_none_of_what_it_opens_there
+BackgroundSectionRowSwitchTests.Going_back_to_the_same_search_keeps_closed_what_the_reader_closed
+BackgroundSectionRowSwitchTests.Sub_steps_drawn_since_the_search_chose_the_row_are_no_change_of_the_readers
+BackgroundSectionRowSwitchTests.What_the_reader_opened_before_the_search_opened_the_rest_carries
+tenth review's fixes in
+
+=== after
+    0 Error(s)
+Failed!  - Failed:     1, Passed:    49, Skipped:     0, Total:    50, Duration: 58 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+BackgroundSectionRowSwitchTests.Sub_steps_drawn_since_the_search_chose_the_row_are_no_change_of_the_readers

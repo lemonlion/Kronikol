@@ -1,0 +1,16 @@
+# The ninth review's facts, 2026-11-04: on the cut it read, then on its fixes.
+
+=== before
+    0 Error(s)
+Failed!  - Failed:     6, Passed:    64, Skipped:     0, Total:    70, Duration: 1 m 49 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+BackgroundRenderingTests.The_accent_clears_a_steps_triangle_and_moves_it_out_of_line_with_none
+BackgroundSectionRowSwitchTests.A_row_the_search_chose_does_not_undo_what_the_reader_closed
+BackgroundSectionRowSwitchTests.A_row_the_search_chose_does_not_undo_what_the_reader_opened(selector: "details.step-collapsible")
+BackgroundSectionRowSwitchTests.A_search_after_Clear_All_opens_again_what_the_reader_closed
+BackgroundSectionRowSwitchTests.A_search_after_going_Back_opens_again_what_the_reader_closed
+BackgroundSectionRowSwitchTests.What_the_search_opened_on_a_row_it_chose_does_not_carry
+ninth review's fixes in
+
+=== after
+    0 Error(s)
+Passed!  - Failed:     0, Passed:    70, Skipped:     0, Total:    70, Duration: 3 m 16 s - Kronikol.Tests.EndToEnd.dll (net10.0)

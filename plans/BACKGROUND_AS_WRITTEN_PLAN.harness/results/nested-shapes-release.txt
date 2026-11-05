@@ -1,0 +1,90 @@
+Build succeeded.
+ Total time: 4.9539 Seconds
+--- pass, 21 one
+! Step marker 1 does not match step 'a logged in customer'; interactions up to the next marker that matches ca
+s0  21 A background step that runs steps with arguments › 21 one  [Passed]  0s
+
+  b0    Given a composite step passes arguments  0s  [i0-i4] 3 calls
+    b0.0  Ran for
+        · who
+        · 21 one
+    b0.1  Given the basket is listed
+        · table
+        · sku
+        · count
+        · APPLE
+        · 3
+      b0.1.0 Ran for
+          · who
+          · 21 one rows:1
+    b0.2  Given the note "kept" says
+        """a doc string"""
+      b0.2.0 Ran for
+          · who
+          · 21 one kept:a doc string
+  0     When the customer acts "one"  [i6]
+    0.0   Ran for
+        · who
+        · 21 one
+  1     Then the outcome is "one"  [i8]
+    1.0   Ran for
+        · who
+        · 21 one
+5 calls · interactions s0 · flow s0
+--- pass, 23 gherkin from a hook
+! Step marker 1 does not match step 'a logged in customer'; interactions up to the next marker that matches ca
+s3  23 A hook that runs a step, beside a background › 23 gherkin from a hook  [Passed]  0s
+
+  0     Given the hook prepares  0s  [i0]
+    0.0   Ran for
+        · who
+        · 23 gherkin from a hook
+  1     Given a logged in customer  [i2]
+    1.0   Ran for
+        · who
+        · 23 gherkin from a hook
+  2     When the customer acts "gherkin"  [i4]
+    2.0   Ran for
+        · who
+        · 23 gherkin from a hook
+  3     Then the outcome is "gherkin"  [i6]
+    3.0   Ran for
+        · who
+        · 23 gherkin from a hook
+4 calls · interactions s3 · flow s3
+--- pass, 23 woven from a hook
+! Step marker 1 does not match step 'a logged in customer'; interactions up to the next marker that matches ca
+s4  23 A hook that runs a step, beside a background › 23 woven from a hook  [Passed]  0.09s
+
+  b0    Given a logged in customer  0.01s
+  0     When the customer acts "woven"  0s
+    0.0   Ran for
+        · who
+        · 23 woven from a hook
+  1     Then the outcome is "woven"  0s
+    1.0   Ran for
+        · who
+        · 23 woven from a hook
+   4 calls belong to no step (before the first step, or attribution was not trusted)
+4 calls · interactions s4 · flow s4
+ Total time: 1.9528 Seconds
+--- fail-nested, 22 breaks
+! Step marker 1 does not match step 'a logged in customer'; interactions up to the next marker that matches ca
+s2  22 A background step whose inner step fails › 22 breaks  [Failed]  0.07s
+
+✗ b0    Given a composite step runs two steps  0.04s  [i0-i2] 2 calls
+    b0.0  Ran for  0.01s
+        · who
+        · 22 breaks
+  ✗ b0.1  Given the first inner step  0s
+      b0.1.0 Ran for
+          · who
+          · 22 breaks
+2 calls · interactions s2 · flow s2
+--- fail-nested, the digest
+# Failures — 1 of 5 scenarios
+## Failures
+### 1. 22 A background step whose inner step fails › 22 breaks
+**Failing step** — `s2/b0` Given a composite step runs two steps
+**Failing step** — `s2/b0.1` Given the first inner step
+failingSteps: [{"path": "s2/b0", "text": "Given a composite step runs two steps", "message": null, "sourceFile": null, "sourceLine": null}, {"path": "s2/b0.1", "text": "Given the first inner step", "message": null, "sourceFile": null, "sourceLine": null}]

@@ -1019,9 +1019,12 @@
         }
         .step-background .step-text { color: var(--kron-muted); }
 
+        /* The same 25px as a step of the scenario's own, so the steps read straight down, with the accent left of a step's triangle. */
         .scenario-steps > .step-background,
         .scenario-steps > .step-collapsible.step-background {
-            margin-left: 25px;
+            margin-left: 9px;
+            padding-left: 13px;
+            border-left: 3px solid var(--kron-hairline);
         }
 
         .step-number {

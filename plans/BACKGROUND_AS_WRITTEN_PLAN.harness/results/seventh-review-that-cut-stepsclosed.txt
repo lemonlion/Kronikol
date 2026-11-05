@@ -465,8 +465,8 @@ page.evaluate: TypeError: Cannot read properties of undefined (reading 'read')
     at eval (eval at evaluate (:303:30), <anonymous>:1:17)
     at UtilityScript.evaluate (<anonymous>:305:16)
     at UtilityScript.<anonymous> (<anonymous>:1:44)
-    at read (C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-7\drive7.js:42:29)
-    at run (C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-7\drive7.js:80:42)
-    at async C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-7\drive7.js:110:19 {
+    at read (<scratch>\review-7\drive7.js:42:29)
+    at run (<scratch>\review-7\drive7.js:80:42)
+    at async <scratch>\review-7\drive7.js:110:19 {
   log: []
 }

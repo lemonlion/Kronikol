@@ -5,10 +5,9 @@ namespace Kronikol.Reports;
 /// already in force to <c>And</c> — so a background <c>Given</c> followed by a scenario <c>Given</c>
 /// reads <c>Given / And</c> once the two lists are rendered as one.
 /// <para>
-/// This is a render-time projection and never touches the model: background steps are shared by
-/// reference across every scenario of a Rule group (<see cref="BackgroundStepsDetector"/>) and the
-/// HTML and data outputs are written concurrently, so rewriting a keyword in place would race the
-/// data writers and leak <c>And</c> into the JSON/XML/YAML files.
+/// This is a render-time projection and never touches the model: the HTML and data outputs are
+/// written concurrently, so rewriting a keyword in place would race the data writers and leak
+/// <c>And</c> into the JSON/XML/YAML files.
 /// </para>
 /// <para>
 /// Localisation is a deliberate non-goal: an unrecognised keyword (a non-English Gherkin dialect)

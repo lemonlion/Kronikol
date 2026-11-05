@@ -1,3 +1,5 @@
+using Kronikol.Reports;
+
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
@@ -16,6 +18,105 @@ public class BackgroundRenderingTests : PlaywrightTestBase
         await Page.Locator("details.feature").First.WaitForAsync();
         await ExpandAllFeaturesAsync();
         await ExpandAllScenariosAsync();
+    }
+
+    /// <summary>A scenario from the options, as a run writes one: a Background, then its own steps.</summary>
+    private async Task OpenScenario(string name, ExecutionResult result, ScenarioStep[] background, ScenarioStep[] steps)
+    {
+        var options = new ReportConfigurationOptions
+        {
+            ReportsFolderPath = Path.Combine(TempDir, name),
+            GenerateSpecificationsReport = false,
+            GenerateSpecificationsData = false,
+        };
+        var scenario = new Scenario
+        {
+            Id = name,
+            DisplayName = "Pay",
+            Result = result,
+            BackgroundSteps = background,
+            Steps = steps,
+            ErrorMessage = result == ExecutionResult.Failed ? "it failed" : null,
+        };
+        lock (ReportTestHelper.WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            ReportGenerator.CreateStandardReportsWithDiagrams([new Feature { DisplayName = "Orders", Scenarios = [scenario] }], DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
+            DefaultDiagramsFetcher.Reset();
+        }
+        await Page.GotoReportAsync(new Uri(Path.Combine(options.ReportsFolderPath, "TestRunReport.html")).AbsoluteUri);
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
+    }
+
+    private static ScenarioStep Plain(string keyword, string text, ExecutionResult status = ExecutionResult.Passed) =>
+        new() { Keyword = keyword, Text = text, Status = status };
+
+    private static ScenarioStep Composite(string keyword, string text) =>
+        Plain(keyword, text) with { SubSteps = [Plain("Given", text + " inside")] };
+
+    [Fact]
+    public async Task A_background_step_is_painted_with_its_accent_with_and_without_sub_steps()
+    {
+        await OpenScenario("BgAccent", ExecutionResult.Passed,
+            [Plain("Given", "a customer is signed in"), Composite("And", "the basket is full")],
+            [Plain("When", "the customer pays"), Composite("Then", "the receipt is sent")]);
+
+        var borders = await Page.Locator("details.scenario").First.EvaluateAsync<string[]>("""
+            (el) => [...el.querySelectorAll('details.scenario-steps > .step')].map(s => {
+                const style = getComputedStyle(s);
+                return style.borderLeftWidth + ' ' + style.borderLeftStyle;
+            })
+        """);
+
+        Assert.Equal(["3px solid", "3px solid", "0px none", "0px none"], borders);
+    }
+
+    [Fact]
+    public async Task The_accent_clears_a_steps_triangle_and_moves_it_out_of_line_with_none()
+    {
+        await OpenScenario("BgAccentPlace", ExecutionResult.Passed,
+            [Plain("Given", "a customer is signed in"), Composite("And", "the basket is full")],
+            [Plain("When", "the customer pays"), Composite("Then", "the receipt is sent")]);
+
+        var places = await Page.Locator("details.scenario").First.EvaluateAsync<double[][]>("""
+            (el) => [...el.querySelectorAll('details.scenario-steps > .step')].map(s => {
+                const content = s.querySelector('summary') ?? s.querySelector('.step-status');
+                const left = content.getBoundingClientRect().left;
+                const accentEnd = s.getBoundingClientRect().left + parseFloat(getComputedStyle(s).borderLeftWidth);
+                const triangle = content.tagName === 'SUMMARY' ? parseFloat(getComputedStyle(content, '::before').left) : 0;
+                return [left, left + triangle - accentEnd];
+            })
+        """);
+
+        // A plain step against a plain one, a step with sub-steps against one: each reads straight down the list.
+        Assert.Equal(places[2][0], places[0][0], 1);
+        Assert.Equal(places[3][0], places[1][0], 1);
+        // Past the end of the accent, the status icon of a plain step and the triangle of one with sub-steps.
+        Assert.InRange(places[0][1], 1, 16);
+        Assert.InRange(places[1][1], 1, 16);
+    }
+
+    [Fact]
+    public async Task A_failed_background_step_shows_the_failed_icon_on_its_muted_text()
+    {
+        await OpenScenario("BgFailed", ExecutionResult.Failed,
+            [Plain("Given", "a customer is signed in", ExecutionResult.Failed)],
+            []);
+
+        var row = Page.Locator("details.scenario").First.Locator("details.scenario-steps > .step-background");
+        Assert.True(await row.Locator(".step-status.failed").IsVisibleAsync());
+        Assert.True(await row.Locator(".step-text").EvaluateAsync<bool>("""
+            (text) => {
+                const muted = document.createElement('span');
+                muted.style.color = 'var(--kron-muted)';
+                text.parentElement.appendChild(muted);
+                const same = getComputedStyle(muted).color === getComputedStyle(text).color;
+                muted.remove();
+                return same;
+            }
+        """));
     }
 
     [Fact]

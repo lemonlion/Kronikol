@@ -1,0 +1,209 @@
+
+##### release.slnf in Release, every target framework  02:36
+8a8a2ad8 WIP: results
+    0 Error(s)
+    30 Warning(s)
+Build succeeded.
+Build succeeded.
+Build succeeded.
+
+##### the public surface against the published 5.28.5  02:37
+5605 and 5605 lines
+diff ended
+
+##### the core suite and the suites that load what changed  02:37
+Passed!  - Failed:     0, Passed: 12084, Skipped:     2, Total: 12086, Duration: 7 m 30 s - Kronikol.Tests.dll (net10.0)
+--- Kronikol.Tests.SearchEngine
+Passed!  - Failed:     0, Passed:   787, Skipped:     0, Total:   787, Duration: 16 s - Kronikol.Tests.SearchEngine.dll (net10.0)
+--- Kronikol.Tests.StepTracking
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 11 s - Kronikol.Tests.StepTracking.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit3
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 31 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit2
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 32 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+
+##### the shape matrix: xUnit v2, on the release's assemblies  02:48
+release MISSED: 0
+release INVENTED: 0
+release BORROWED: 0
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the floor: Reqnroll 3.0.1  02:50
+release-reqnroll-3.0.1 INVENTED: 0
+release-reqnroll-3.0.1 BORROWED: 0
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the control: published 5.28.5  02:51
+control-release INVENTED: 11
+control-release BORROWED: 8
+
+##### the other adapters and row tests off  02:53
+--- xunit3
+FINISHED
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+--- tunit
+FINISHED
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+--- norowtests
+FINISHED
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the edge and nested shapes  02:58
+E35 one                            failing: [('s13/b0', 'Given the hook fails after this step')] scope: failin
+E36 one                            failing: [('s14/b1', 'And the hook fails before this step')] scope: scenari
+E39 one                            failing: [('s17/b0', 'Given a composite step runs the step a hook stops'), 
+E41 one                            failing: [('s19/0', 'When the hook fails after this step')] scope: failingS
+90 <tree>/plans/BACKGROUND_AS_WRITTEN_PLAN.harness/results/nested-shapes-release.txt
+
+##### published 5.28.5 against the release, scenario by scenario  02:59
+pass: Failures.md: 13 and 13 lines, 2 differing
+fail-and: Failures.md: 44 and 44 lines, 4 differing
+fail-when: Failures.md: 39 and 46 lines, 17 differing
+fail-bg: Failures.md: 39 and 39 lines, 6 differing
+fail-bg2: Failures.md: 39 and 39 lines, 4 differing
+
+##### BreakfastProvider across the fix  03:09
+pins moved: 27
+BreakfastProvider at 640c190
+Build succeeded.
+  duration: 59s 069ms
+  duration: 21s 015ms
+bp-control: BackgroundSteps blocks in Specifications.yml: 10
+bp-fix: BackgroundSteps blocks in Specifications.yml: 0
+- bp-control\TestRunReport.krkl  2026-11-05T03:10:45Z  214 scenarios, 0 failed
++ bp-fix\TestRunReport.krkl  2026-11-05T03:11:30Z  214 scenarios, 0 failed
+
+Slower (12):
+  s12 0.16s → 0.27s  Audit logs should be returned in descending timestamp order
+  s13 0.11s → 0.48s  Filtering audit logs by a non-existent entity type should re…
+moved: Order Cross-Field Validation > An order exceeding the maximum items per order should be rejected: b0 b1 0 1 2 3 -
+with a b address: 10 and 0
+scenarios whose step addresses moved: 10
+
+##### history, query diff and a merge: seven runs on the published 5.28.5, then one on the release  03:14
+Build succeeded.
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+--- history after the seventh run on the published packages
+! Step marker 1 does not match step 'the basket holds "from the composite"'; interactions up to the next marker that matches carry no stepPath. (×6; 
+! mergeable-format report
+history: nothing changed (against 6 earlier runs on local)
+ledger: <scratch>\proof\upgrade\.kronikol\history.jsonl 
+
+no scenario in this run has a verdict other than stable · 41 scenarios read against 6 earlier run(s)
+Passed!  - Failed:     0, Passed:    41, Skipped:     0, Total:    41, Duration:
+--- history after one run on the fixed build
+! mergeable-format report
+history: nothing changed (against 7 earlier runs on local)
+ledger: <scratch>\proof\upgrade\.kronikol\history.jsonl 
+
+no scenario in this run has a verdict other than stable · 41 scenarios read against 7 earlier run(s)
+--- the fixed run's console line about history, if any, and its summary
+41 scenarios · 0 failed · 236 interactions · 1 distinct bodies
+01 Background then When  2 passed
+02 Background then Given  2 passed
+03 Background then Then  2 passed
+04 No background, shared Given and When  2 passed
+05 No background, outline with placeholders in a table  2 passed
+06 Background and one scenario  1 passed
+07 Feature and rule backgrounds  4 passed
+--- query diff, the published packages against the fixed build
+! old: Step marker 1 does not match step 'the basket holds "from the composite"'; interactions up to the next marker that matches carry no stepPath. (
+! old: mergeable-format report
+! new: mergeable-format report
+- upgrade-before\TestRunReport.krkl  2026-11-05T03:15:19Z  41 scenarios, 0 failed
++ upgrade-after\TestRunReport.krkl  2026-11-05T03:15:25Z  41 scenarios, 0 failed
+
+no change in results, timings or tracked calls
+matched on stableId · compare s3 s7 for two scenarios in one run
+--- merge of the fixed run
+Wrote merged data to <scratch>\proof\upgrade-merged.krkl
+Kronikol: reports written to <scratch>\proof  (upgrade-m
+! mergeable-format report
+s0  01 one  [Passed]
+
+── b0  Given a logged in customer
+  s0/i0     Shape Tests → Shape API  GET /ran-for/01%20one  OK  4 ms
+── 0  When the customer acts "one"
+  s0/i2     Shape Tests → Shape API  GET /ran-for/01%20one  OK  0 ms
+── 1  Then the outcome is "one"
+  s0/i4     Shape Tests → Shape API  GET /ran-for/01%20one  OK  0 ms
+
+##### finished  03:15
+
+##### the example projects on their own, then every Integration fact  03:15
+--- xUnit2
+Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 566 ms - Example.Api.Tests.Component.ReqNRoll.xUnit2.dll (net10.0)
+--- xUnit3
+Passed!  - Failed:     0, Passed:    21, Skipped:     0, Total:    21, Duration: 608 ms - Example.Api.Tests.Component.ReqNRoll.xUnit3.dll (net10.0)
+--- TUnit
+Test run summary: Passed! - <tree>\examples\Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\b
+  total: 12
+  failed: 0
+  succeeded: 12
+--- Integration
+Passed!  - Failed:     0, Passed:   265, Skipped:     0, Total:   265, Duration: 13 m 6 s - Example.Api.Tests.Integration.dll (net10.0)
+
+##### the whole Playwright suite  03:34
+Passed!  - Failed:     0, Passed:  2136, Skipped:    28, Total:  2164, Duration: 15 m 22 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+
+##### finished  03:49
+
+# The matrix's reports again, as they were cleared for disk, and the comparison with warnings about the whole report set aside: 5.28.5 prints its step mismatch above every answer, and the release has none.
+
+##### the shape matrix: xUnit v2, on the release's assemblies  03:50
+release MISSED: 0
+release INVENTED: 0
+release BORROWED: 0
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the floor: Reqnroll 3.0.1  03:51
+release-reqnroll-3.0.1 INVENTED: 0
+release-reqnroll-3.0.1 BORROWED: 0
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the control: published 5.28.5  03:52
+control-release INVENTED: 11
+control-release BORROWED: 8
+
+##### published 5.28.5 against the release, scenario by scenario  03:55
+pass: Failures.md: 13 and 13 lines, 2 differing
+fail-and: Failures.md: 44 and 44 lines, 4 differing
+fail-when: Failures.md: 39 and 46 lines, 17 differing
+fail-bg: Failures.md: 39 and 39 lines, 6 differing
+fail-bg2: Failures.md: 39 and 39 lines, 4 differing
+
+##### finished  04:12

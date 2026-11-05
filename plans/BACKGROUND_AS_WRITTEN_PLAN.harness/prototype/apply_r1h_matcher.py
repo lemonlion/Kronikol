@@ -1,8 +1,8 @@
 # R1 takes the matcher of #225's R2, and its facts and mutations follow.
 import pathlib
 
-P = pathlib.Path(r"C:\Code\Kronikol-222p")
-H = pathlib.Path(r"C:\Code\Kronikol-222\plans\BACKGROUND_AS_WRITTEN_PLAN.harness")
+P = pathlib.Path(r"<tree>p")
+H = pathlib.Path(r"<tree>\plans\BACKGROUND_AS_WRITTEN_PLAN.harness")
 
 
 def edit(path, *pairs):

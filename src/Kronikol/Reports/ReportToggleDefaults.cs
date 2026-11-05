@@ -120,7 +120,8 @@ public record ReportToggleDefaults
     public bool? RulesOpen { get; set; }
 
     /// <summary>The separate Background Steps disclosure starts open (only emitted with
-    /// <see cref="ReportConfigurationOptions.SeparateBackgroundSteps"/>). Default: <c>false</c>.</summary>
+    /// <see cref="ReportConfigurationOptions.SeparateBackgroundSteps"/>). Default: closed, but open where it holds a failed
+    /// step; <c>false</c> keeps that one closed too.</summary>
     public bool? BackgroundStepsOpen { get; set; }
 
     /// <summary>The Raw Plant UML disclosure under each diagram image starts open (non-BrowserJs

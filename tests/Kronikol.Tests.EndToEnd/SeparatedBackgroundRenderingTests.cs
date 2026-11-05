@@ -1,3 +1,5 @@
+using Kronikol.Reports;
+
 namespace Kronikol.Tests.EndToEnd;
 
 /// <summary>
@@ -44,6 +46,42 @@ public class SeparatedBackgroundRenderingTests : PlaywrightTestBase
         var background = Page.Locator("details.scenario").First.Locator("details.scenario-background");
         await background.WaitForAsync();
         Assert.Null(await background.GetAttributeAsync("open"));
+    }
+
+    [Fact]
+    public async Task A_section_holding_a_failed_step_starts_open_and_shows_the_failure_without_a_click()
+    {
+        // #222: every real Background now goes behind this summary, so a failure must not need finding there. Row by row in
+        // an outline it is BackgroundSectionRowSwitchTests'.
+        var options = new ReportConfigurationOptions
+        {
+            ReportsFolderPath = Path.Combine(TempDir, "BgFailedSection"),
+            SeparateBackgroundSteps = true,
+            GenerateSpecificationsReport = false,
+            GenerateSpecificationsData = false,
+        };
+        var scenario = new Scenario
+        {
+            Id = "failed-section",
+            DisplayName = "Pay",
+            Result = ExecutionResult.Failed,
+            ErrorMessage = "it failed",
+            BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "a customer is signed in", Status = ExecutionResult.Failed }],
+        };
+        lock (ReportTestHelper.WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            ReportGenerator.CreateStandardReportsWithDiagrams([new Feature { DisplayName = "Orders", Scenarios = [scenario] }], DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow, options);
+            DefaultDiagramsFetcher.Reset();
+        }
+        await Page.GotoReportAsync(new Uri(Path.Combine(options.ReportsFolderPath, "TestRunReport.html")).AbsoluteUri);
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandAllFeaturesAsync();
+        await ExpandAllScenariosAsync();
+
+        var section = Page.Locator("details.scenario").First.Locator("details.scenario-background");
+        Assert.NotNull(await section.GetAttributeAsync("open"));
+        Assert.True(await section.Locator(".step-status.failed").IsVisibleAsync());
     }
 
     [Fact]

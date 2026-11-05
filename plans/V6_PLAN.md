@@ -17,6 +17,8 @@ Version 6.0.0. Two coordinated changes, both breaking (the plan had four):
 3. ~~Headers hidden by default~~: moved to `V4_PLAN.md`.
 4. ~~YAML notes by default~~: moved to `V4_PLAN.md`.
 
+Also for 6.0.0, as a default moving is a major: **`kronikol ingest` stops guessing a Background**, so a stream with keyworded steps gets one only by saying `background: true` (`BACKGROUND_AS_WRITTEN_PLAN.md` section 5.8, its R3 and Q2). Each scenario already keeps its own steps, and removing the call fails one of 591 ingest facts, the one that section names. `[Obsolete]` on `BackgroundStepsDetector`, if it is to go, belongs here too (its Q5).
+
 Investigated 2026-08-30. All file:line references verified against the working tree at that date.
 
 ---

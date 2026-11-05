@@ -3,7 +3,7 @@
 #
 #   upgrade-across-the-fix.sh <work-dir> <kronikol-exe> <dir-with-fixed-dlls>
 #
-# Seven green runs on the published 5.27.13 packages write one ledger, then one run on the fixed assemblies appends to it. The suite is
+# Seven green runs on published packages (the suite's pin, or KronikolVersion in the environment) write one ledger, then one run on the fixed assemblies appends to it. The suite is
 # the shape matrix, whose steps move between b0.. and 0.. across the fix, so anything that reads a step's address would show it here.
 set -u
 work=$1; kronikol=$2; dlls=$3
@@ -20,7 +20,7 @@ for i in 1 2 3 4 5 6 7; do
   KRK_MODE=pass dotnet test -c Release --no-build 2>&1 | tail -1 | cut -c1-80
 done
 rm -rf "$work/upgrade-before"; cp -r "$reports" "$work/upgrade-before"
-echo "--- history after the seventh run on 5.27.13"
+echo "--- history after the seventh run on the published packages"
 "$kronikol" query history "$reports" 2>&1 | head -6 | cut -c1-150
 
 cp "$dlls/Kronikol.dll" "$dlls/Kronikol.ReqNRoll.Core.dll" bin/Release/net10.0/
@@ -31,7 +31,7 @@ echo "--- history after one run on the fixed build"
 echo "--- the fixed run's console line about history, if any, and its summary"
 "$kronikol" query summary "$reports" 2>&1 | grep -i -E "history|scenarios|passed|failed" | head -8 | cut -c1-150
 
-echo "--- query diff, 5.27.13 against the fixed build"
+echo "--- query diff, the published packages against the fixed build"
 "$kronikol" query diff "$work/upgrade-before" "$work/upgrade-after" 2>&1 | head -16 | cut -c1-150
 
 echo "--- merge of the fixed run"

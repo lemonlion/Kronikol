@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The final cut: every measurement again on one build, the mutations last.
-H=/c/Code/Kronikol-222/plans/BACKGROUND_AS_WRITTEN_PLAN.harness; W=/c/Code/Kronikol-222m; P=/c/Code/Kronikol-222p; R=$H/results; K=$W/final-tool/Kronikol.Tool.exe; D=$W/final-dlls
+H=<tree>/plans/BACKGROUND_AS_WRITTEN_PLAN.harness; W=<tree>m; P=<tree>p; R=$H/results; K=$W/final-tool/Kronikol.Tool.exe; D=$W/final-dlls
 stamp() { echo; echo "##### $1  $(date +%H:%M)"; }
 export KRONIKOL_HISTORY=off KRONIKOL_KEEP_RUNS=off
 cd $P || exit 1
@@ -11,7 +11,7 @@ sed -i '/^Final prototype/,$d' $R/features-table-counts.txt $R/features-table-r2
 stamp "build"
 build
 dotnet build src/Kronikol.Tool/Kronikol.Tool.csproj -c Release -p:GeneratePackageOnBuild=false -v q 2>&1 | grep -E " error |Build succeeded" | head -3 | cut -c1-170
-rm -rf "/c/Code/Kronikol-222m/final-dlls" "/c/Code/Kronikol-222m/final-tool"; mkdir -p $D
+rm -rf "<tree>m/final-dlls" "<tree>m/final-tool"; mkdir -p $D
 cp src/Kronikol.ReqNRoll.Core/bin/Release/net10.0/Kronikol.dll src/Kronikol.ReqNRoll.Core/bin/Release/net10.0/Kronikol.ReqNRoll.Core.dll $D/
 cp -r src/Kronikol.Tool/bin/Release/net10.0 $W/final-tool
 

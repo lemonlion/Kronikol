@@ -48,4 +48,11 @@ public record ReqNRollScenarioInfo
     /// hooks did not resolve one, and the title is shown then.
     /// </summary>
     internal string? RowName { get; init; }
+
+    /// <summary>
+    /// The texts of the steps a <c>Background:</c> written in the feature or the scenario's rule gives this scenario, in the
+    /// order they run (#222). Empty when none is written and when the Gherkin document is out of reach; null for a scenario
+    /// built by hand, which never had a document to read.
+    /// </summary>
+    internal IReadOnlyList<string>? WrittenBackground { get; init; }
 }

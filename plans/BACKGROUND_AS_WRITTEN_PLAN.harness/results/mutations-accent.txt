@@ -1,0 +1,5 @@
+M68 the accent is off a Background step again: CAUGHT by A_background_step_is_painted_with_its_accent_with_and_without_sub_steps, The_accent_leaves_air_before_the_step_and_moves_it_out_of_line_with_none
+M69 the accent moves a Background step out of line: CAUGHT by The_accent_leaves_air_before_the_step_and_moves_it_out_of_line_with_none
+M70 the accent leaves no air before the step: CAUGHT by The_accent_leaves_air_before_the_step_and_moves_it_out_of_line_with_none
+restored, facts: Passed!  - Failed:     0, Passed:    55, Skipped:     0, Total:    55, Duration: 14 s - Kronikol.Tests.dll (ne
+restored, a real run's facts: Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 3 m 4 s - Example.Api.Tests.I

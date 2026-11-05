@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.28.6] - 2026-11-05
+
+The patch part moves (5.28.5 to 5.28.6): bug fixes that move report output, with no new option and no new public member, which a comparison of every public member with the last release confirms (#222, `plans/BACKGROUND_AS_WRITTEN_PLAN.md` R1).
+
+### Fixed
+
+- **A Reqnroll step is a Background step when the feature file wrote it in a `Background:`, and it is always the step of the scenario that ran it** (#222). The report guessed a Background from steps that read alike and then gave every scenario the first one's step objects. So a scenario that failed could show no failed step, an outline's later rows showed the first row's table, a real `Background:` usually went unmarked, and steps nobody wrote in one were marked, a `When` and a `Then` among them. On 41 measured scenarios, all passing, 38 were wrong in some way, and none is now. The adapter reads the Gherkin document Reqnroll embeds, as it already did for outline rows. A `ReqNRollScenarioInfo` built by hand has no document and keeps the guess, with its own steps.
+
+  **What a reader sees change:** a real Background is muted and addressed `b0`, `b1`, a prefix scenarios merely share is not, and those steps' addresses move (`b1` to `1`, `0` to `b0`), so a script that hard-codes an address wants a look. `query history` and `query diff` do not notice. A committed `Specifications.yml` shows steps moving between `BackgroundSteps:` and `Steps:`. A scenario's layout no longer depends on who else ran or failed. With `SeparateBackgroundSteps`, every real Background now goes behind that section.
+- **`Failures.md`, `Failures.jsonl` and the Features table read the step that failed.** A step lent from another scenario left `failingSteps` empty, the calls not narrowed to the step, a `0 failed` count on a failed scenario, and a `✗` on a scenario that passed.
+- **A file attached in a step two scenarios shared no longer stops the report.** Since 4.27.2, all tests passed, `dotnet test` exited 1 with a `KeyNotFoundException`, and no report was written; `kronikol ingest` of the same shape ended in an unhandled exception. `BackgroundStepsDetector`, which ingest still calls for a stream that does not say, now gives each scenario its own steps, so its data is right too, and the attachment walk visits a step once.
+- **A step that runs a step through `ITestRunner` is a sub-step of the step that ran it**, with its table, doc string, inline values and outcome, where it was a row of its own that put every later row's sub-steps and calls one out. `ReqNRollScenarioCollector.GetAll()` and `ScenarioContext[StepsCollectionKey]` still hold it.
+- **A step reads failed when a step inside it failed**, in the report and in the public list's `Status`, and its `Duration` is its own, where the inner step's overwrote it.
+- **A step a suite's hook kept the adapter from closing is listed, failed.** A suite's `[AfterStep]` that throws, or a `[BeforeStep]` ahead of the adapter's, left a failed scenario with no failed step and its calls on none.
+- **A failure is not hidden behind a closed section.** A **Background Steps** section holding a failed step starts open when `BackgroundStepsOpen` is unset, and `false` still keeps it closed, as `StepsSectionOpen = false` does. A failed step whose sub-steps all passed starts open with them drawn, in every lane.
+- **Switching an outline's row keeps what you left there.** The script copied a row's open and closed sections to the next by position, which could close a failing row's section or its Failure Result. A choice now lasts for that outline as long as the page is open, and a section or a step holding a failure keeps its own state. A filter search that lands on one row opens that row's sections once until the search ends, and a row it chooses takes nothing from the row it left and passes on only what you change there.
+- **A Background step's muted left accent paints.** The wiki has described it since 3.0.48 and a later rule took it off, so only the muted text marked such a step. It stands left of a step's triangle, so the steps still read straight down.
+- **`query failures` says no step is marked failed** for a scenario that lists Background steps alone, where it looked at the other list.
+
+### Changed (docs)
+
+- The wiki's Background Steps section says what the mark means and when the detector still guesses. `kronikol ingest` of keyworded steps with no `background: true` keeps the guess until v6, as a default moving is a major (`plans/V6_PLAN.md`).
+
 ## [5.28.5] - 2026-11-05
 
 The patch part moves (5.28.4 to 5.28.5): a bug fix, with no new option and no new public member (`plans/CALLS_UNDER_THEIR_STEP_PLAN.md`

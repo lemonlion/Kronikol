@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Everything else on the final cut: the adapters, the floor, the paints, the real suite, R2, the combination, every Integration fact, Linux. One at a time.
-H=/c/Code/Kronikol-222/plans/BACKGROUND_AS_WRITTEN_PLAN.harness; S=/c/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/994b0688-e89e-47c0-97ad-a18ca1007b2a/scratchpad; W=/c/Code/Kronikol-222m; T=$S/tool/kronikol.exe; P=/c/Code/Kronikol-222p
+H=<tree>/plans/BACKGROUND_AS_WRITTEN_PLAN.harness; S=<scratch>; W=<tree>m; T=$S/tool/kronikol.exe; P=<tree>p
 R=$H/results
 stamp() { echo; echo "##### $1  $(date +%H:%M)"; }
 export KRONIKOL_HISTORY=off KRONIKOL_KEEP_RUNS=off
-P=/c/Code/Kronikol-222p; K=$W/final-tool/Kronikol.Tool.exe; D=$W/final-dlls; T=$S/tool/kronikol.exe
+P=<tree>p; K=$W/final-tool/Kronikol.Tool.exe; D=$W/final-dlls; T=$S/tool/kronikol.exe
 cd $P || exit 1
 stamp "adapters"
 for lane in xunit3 tunit norowtests; do bash $H/probes/run-lane.sh $lane prototype-on-5.28.2 $W $K $D 2>&1 | grep -E " error |=[0-9]" | cut -c1-110; done
@@ -77,10 +77,10 @@ for pair in "fail-and:09 two" "fail-bg:08 breaks"; do mode=${pair%%:*}; name=${p
 { echo; echo "Final prototype with R2 on 5.28.2, 2026-11-04"; node $H/probes/features-table.js $W/prototype-r2-fail-when "09" prototype-r2 2>&1 | grep -v headings | cut -c1-110; } | tee -a $R/features-table-r2.txt
 
 stamp "with #223's newest prototype"
-X=/c/Code/Kronikol-222x; TIP=$(git -C /c/Code/Kronikol-222 rev-parse --short proto/223-on-5282)
+X=<tree>x; TIP=$(git -C <tree> rev-parse --short proto/223-on-5282)
 echo "proto/223-on-5282 at $TIP"
-git -C /c/Code/Kronikol-222 worktree remove --force $X 2>/dev/null; rm -rf $X
-git -C /c/Code/Kronikol-222 -c core.autocrlf=false -c core.eol=lf worktree add --detach $X $TIP 2>&1 | tail -1 | cut -c1-90
+git -C <tree> worktree remove --force $X 2>/dev/null; rm -rf $X
+git -C <tree> -c core.autocrlf=false -c core.eol=lf worktree add --detach $X $TIP 2>&1 | tail -1 | cut -c1-90
 cd $X || exit 1
 python -X utf8 $H/prototype/apply_on_223.py $X $H/prototype/r1-first-cut.patch && bash $W/run-combo2.sh 2>&1 | cut -c1-110
 
@@ -91,7 +91,7 @@ for name in xUnit2 xUnit3 TUnit NUnit4 BDDfy.xUnit3 LightBDD.xUnit2 LightBDD.xUn
 { echo "--- Integration, every fact, the final cut"; dotnet test examples/Example.Api/tests/Example.Api.Tests.Integration -c Release -p:GeneratePackageOnBuild=false 2>&1 | grep -E "^\s+Failed |^(Passed|Failed)!" | cut -c1-170; } >> $R/reqnroll-examples-on-prototype.txt
 tail -6 $R/reqnroll-examples-on-prototype.txt | cut -c1-150
 stamp "Linux"
-MSYS_NO_PATHCONV=1 wsl -d podman-machine-default -u root -- sh /mnt/c/Users/cex/AppData/Local/Temp/claude/c--Code-Kronikol/994b0688-e89e-47c0-97ad-a18ca1007b2a/scratchpad/linux-222.sh > $W/linux.log 2>&1
+MSYS_NO_PATHCONV=1 wsl -d podman-machine-default -u root -- sh <scratch>/linux-222.sh > $W/linux.log 2>&1
 old=$(head -1 $R/shapes-prototype-linux.txt)
 { echo "$old"; grep -E "Build succeeded|^(Passed|Failed)!|attach run" $W/linux.log | cut -c1-110; for m in pass fail-and fail-when fail-bg fail-bg2; do python -X utf8 -I $H/probes/shapes-table.py $K $W/linux-out/$m > $W/linux-$m.txt 2>&1; printf '%s: scenarios=41 ' $m; for v in MISSED INVENTED BORROWED; do printf '%s=%s ' $v "$(grep -c "$v" $W/linux-$m.txt)"; done; echo; done; } > $W/linux-new.txt
 cp $W/linux-new.txt $R/shapes-prototype-linux.txt; tail -8 $R/shapes-prototype-linux.txt | cut -c1-100

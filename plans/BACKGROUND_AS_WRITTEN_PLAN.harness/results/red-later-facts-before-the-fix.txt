@@ -1,0 +1,10 @@
+# The facts added after the first red run, on main's source with do-nothing members standing in, 2026-11-04.
+Failed!  - Failed:     2, Passed:     0, Skipped:     0, Total:     2, Duration: 2 s - Kronikol.Tests.dll (net10.0)
+Failed Kronikol.Tests.ReqNRoll.BackgroundAsWrittenTests.Both_Gherkin_lanes_read_the_same_Background_from_one_recorded_run
+Failed Kronikol.Tests.Tool.IngestCommandTests.A_file_attached_to_a_step_two_tests_read_alike_on_stops_no_report
+Failed!  - Failed:     5, Passed:     1, Skipped:     0, Total:     6, Duration: 1 m 12 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+Failed Kronikol.Tests.EndToEnd.BackgroundRenderingTests.A_background_step_is_painted_with_its_accent_with_and_without_sub_steps
+Failed Kronikol.Tests.EndToEnd.BackgroundRenderingTests.The_accent_leaves_air_before_the_step_and_moves_it_out_of_line_with_none
+Failed Kronikol.Tests.EndToEnd.FullPipelineParameterizedE2ETests.A_step_that_failed_in_a_real_run_shows_the_failed_icon_in_the_list(scenario: "An AfterStep hook fails on a scenario's own step", step: "a step an AfterStep hook fails when asked", background: False)
+Failed Kronikol.Tests.EndToEnd.FullPipelineParameterizedE2ETests.A_step_that_failed_in_a_real_run_shows_the_failed_icon_in_the_list(scenario: "The Background step is the one that failed", step: "a Background step that fails when asked", background: True)
+Failed Kronikol.Tests.EndToEnd.SeparatedBackgroundRenderingTests.A_section_holding_a_failed_step_starts_open_and_shows_the_failure_without_a_click

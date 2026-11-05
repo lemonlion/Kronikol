@@ -68,7 +68,7 @@ public class VerdictFencesTests
         // script, default variant (no verdicts), verdict variant
         { "advanced-search.js", "1543f8d6b072935b1b5a7f4838a4f6a3315a2b3c689026b3f099a116e55c0fb2", "e15cf8d1c84cb2cd0fc4c44bd3e237ca1dd37398d3028b0f813a1409e11a51a7" },
         { "report-scenario-feature-map-helper.js", "1fabc946b6ce384a3c0192f482831af92667c8a571c94271c17d039f823c5da2", "094f7e44413e058c7cdf5974a7484626e0af4be7cc150d6f8aa875fd953a0342" },
-        { "report-search-function.js", "0696f19fc5f00917a5fde122641a1a6f62116962d51d23a66a1508367149c0d9", "e6b805eb054d3ce9f80aa4706e2b3fe10581e50f23fc209a4d8420ec298ac9d8" },
+        { "report-search-function.js", "2f99997f18b89f8cb5238cc650664ed9702f881b7fa4338c4c1c1544df461e6e", "8e59755ccdf695a60d5b94c25f13a336756c655e8faa38c8936dd2a50628daa7" },
         { "report-search-index.js", "d40cbeafe0fee2252ead016c52cc9e0c51554239e40ec4ba086cee22c284ed03", "181ced75ceb7c88a81f3cfb0ba9c67e30da8589aead9a2bb48465175681a6549" },
     };
 

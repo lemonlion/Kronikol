@@ -239,6 +239,18 @@ public class SearchFunctionPageTests : PlaywrightTestBase
         Assert.Equal("none", (await DisplaysAsync("details.scenario"))[Vanilla]);
     }
 
+    [Fact]
+    public async Task A_diagrams_section_the_reader_closed_stays_closed_on_the_next_key()
+    {
+        await OpenAsync(GenerateReveal("SearchPage_RevealReaderClosed.html"));
+        await SearchAsync("chocolate", ChocolateCake);
+        await Page.EvaluateAsync("id => { document.getElementById(id).querySelector('details.example-diagrams').open = false; }", ChocolateCake);
+
+        await SearchAsync("chocolate cake", ChocolateCake);
+
+        Assert.Equal("feature rule scenario steps background", await OpenedAsync(ChocolateCake));
+    }
+
     // ---- emptying the search ----
 
     [Fact]

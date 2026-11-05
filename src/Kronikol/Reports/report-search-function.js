@@ -19,13 +19,29 @@ function revealSingleMatch(el) {
     [el.closest('details.feature'), el.closest('details.rule'), el].forEach(function(d) {
         if (d && !d.open) { _openedBySearch.push(d); d.setAttribute('open', ''); }
     });
-    ['details.example-diagrams', 'details.scenario-steps', 'details.scenario-background'].forEach(function(sel) {
-        var section = el.querySelector(sel);
-        if (section) section.setAttribute('open', '');
+}
+
+// The sections a match needs, on the row shown, so this runs once the search has chosen its row. No other row's, as the
+// reader's choices there are not the search's to change, and each once until the search is emptied, so one the reader closes
+// stays closed.
+var _sectionsRevealed = new WeakSet();
+function revealMatchSections(el) {
+    var shown = el.querySelector('.param-detail-panel:not([style*="display"])') || el;
+    [el.querySelector('details.example-diagrams'), shown.querySelector('details.scenario-steps'), shown.querySelector('details.scenario-background')].forEach(function(section) {
+        if (section && !_sectionsRevealed.has(section)) {
+            _sectionsRevealed.add(section);
+            if (typeof selectRowSearchOpens === 'function') selectRowSearchOpens(shown, section);
+            else section.setAttribute('open', '');
+        }
     });
+}
+// Emptying the field, Clear All and an address with another search or none each end that search, so the next one reveals afresh.
+function forget_sections_revealed() {
+    _sectionsRevealed = new WeakSet();
 }
 
 function close_opened_by_search() {
+    forget_sections_revealed();
     _openedBySearch.forEach(function(d) { d.removeAttribute('open'); });
     _openedBySearch = [];
 }
@@ -45,12 +61,18 @@ function choose_search_row(row) {
         _rowsChosenBySearch.push(chosen);
     }
     chosen.row = row;
+    click_search_row(row);
+}
+// A row the search chooses or puts back shows as it stands, as the search's choice is not the reader's to keep.
+function click_search_row(row) {
+    selectRowBySearch = true;
     row.click();
+    selectRowBySearch = false;
 }
 function clear_search_rows() {
     document.querySelectorAll('tr.row-search-match').forEach(function(r) { r.classList.remove('row-search-match'); });
     _rowsChosenBySearch.forEach(function(c) {
-        if (c.was && c.row.classList.contains('row-active') && !c.was.classList.contains('row-active')) c.was.click();
+        if (c.was && c.row.classList.contains('row-active') && !c.was.classList.contains('row-active')) click_search_row(c.was);
     });
     _rowsChosenBySearch = [];
 }
@@ -381,6 +403,7 @@ function run_search_scenarios() {
         revealSingleMatch(r.single);
     }
     highlight_search_rows(r.words);
+    if (r.count === 1 && r.single) revealMatchSections(r.single);
 }
 
 // The search's own query (the owner, 2026-10-27: a search gives a page of results, and a result picked goes to it; a

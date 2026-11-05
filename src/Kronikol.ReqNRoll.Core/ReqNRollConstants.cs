@@ -14,4 +14,7 @@ public static class ReqNRollConstants
 
     /// <summary>The running row's name, as <c>BeforeScenario</c> resolved it (#101).</summary>
     internal const string RowNameKey = "Kronikol.RowName";
+
+    /// <summary>A step under way: on its own step context, and on the scenario's for the innermost, as a step definition can run a step.</summary>
+    internal const string OpenStepKey = "Kronikol.OpenStep";
 }

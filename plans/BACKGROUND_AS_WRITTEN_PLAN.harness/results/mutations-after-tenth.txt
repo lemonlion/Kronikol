@@ -1,0 +1,10 @@
+# After the tenth review's fixes: each changed line, and the facts added on ticking section 6 and the changelog against the diff. M1 was run again once the second Features table fact reached the guess, as a When left after the prefix stops it.
+
+M86 a step's Duration is the time of the last step it ran: CAUGHT by xUnit2"), xUnit3")
+M1 the detector hands every scenario the first's steps again: CAUGHT by A_scenario_that_failed_counts_its_own_failed_step(hooksSaw: False), A_scenario_that_passed_counts_none_of_another_scenarios_failure(hooksSaw: False), Scenarios_built_by_hand_keep_the_guess_each_with_its_own_steps, The_detector_leaves_each_scenario_its_own_steps
+M8 the adapter guesses over what the hooks saw too: CAUGHT by A_feature_any_scenario_of_which_the_hooks_saw_is_not_guessed_at, A_feature_the_hooks_saw_is_not_guessed_at_when_the_document_writes_nothing, A_scenario_keeps_its_layout_when_another_scenario_fails, Steps_that_read_alike_stay_each_scenarios_own
+M82 a step not yet drawn reads as a change: CAUGHT by Sub_steps_drawn_since_the_search_chose_the_row_are_no_change_of_the_readers
+M83 what the reader had on the row shown is not kept before the search opens a section: CAUGHT by A_search_that_lands_on_the_row_shown_passes_on_none_of_what_it_opens_there, What_the_reader_opened_before_the_search_opened_the_rest_carries
+M84 what the search opens on the row shown is passed on: CAUGHT by A_search_that_lands_on_the_row_shown_passes_on_none_of_what_it_opens_there, What_the_search_opened_on_a_row_it_chose_does_not_carry
+restored, facts: Passed!  - Failed:     0, Passed:    59, Skipped:     0, Total:    59, Duration: 5 s - Kronikol.Tests.dll (net
+restored, a real run's facts: Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 1 m 37 s - Example.Api.Tests.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # BreakfastProvider's Reqnroll suite, in memory, across the fix: a scratch clone with its Kronikol pins moved to 5.28.2. Two runs on the published packages, two with the final assemblies swapped in.
-H=/c/Code/Kronikol-222/plans/BACKGROUND_AS_WRITTEN_PLAN.harness; W=/c/Code/Kronikol-222m; K=$W/final-tool/Kronikol.Tool.exe; D=$W/final-dlls; B=/c/Code/Kronikol-222bp; R=$H/results
+H=<tree>/plans/BACKGROUND_AS_WRITTEN_PLAN.harness; W=<tree>m; K=$W/final-tool/Kronikol.Tool.exe; D=$W/final-dlls; B=<tree>bp; R=$H/results
 PROJECT=./tests/BreakfastProvider.Tests.Component.ReqNRoll/BreakfastProvider.Tests.Component.ReqNRoll.csproj; OUT=$B/tests/BreakfastProvider.Tests.Component.ReqNRoll/bin/Debug/net10.0
 export KRONIKOL_HISTORY=off KRONIKOL_KEEP_RUNS=off KRONIKOL_SUITE=reqnroll-in-memory
 rm -rf $B; git clone -q --depth 1 https://github.com/lemonlion/BreakfastProvider $B || exit 1

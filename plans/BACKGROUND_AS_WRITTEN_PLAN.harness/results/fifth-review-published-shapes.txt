@@ -601,7 +601,7 @@ at Features/Q5/Q14_TwoBlocksAttaches.feature:7
 example: row=a
 attachments: 1 on its steps · attachments s64
   0     Given q step attaches a file for its row  0.01s
-      attachment: row-a.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-5\runs\
+      attachment: row-a.txt → <scratch>\review-5\runs\
   1     And q step fails for row b  0s
   2     When an r step "a"  [i0]
     2.0   Ran for
@@ -614,7 +614,7 @@ at Features/Q5/Q14_TwoBlocksAttaches.feature:7
 example: row=b
 attachments: 1 on its steps · attachments s65
   0     Given q step attaches a file for its row  0s
-      attachment: row-b.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-5\runs\
+      attachment: row-b.txt → <scratch>\review-5\runs\
 ✗ 1     And q step fails for row b
 0 calls · interactions s65 · flow s65
 --- s66
@@ -623,7 +623,7 @@ at Features/Q5/Q14_TwoBlocksAttaches.feature:7
 example: row=c
 attachments: 1 on its steps · attachments s66
   0     Given q step attaches a file for its row  0s
-      attachment: row-c.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-5\runs\
+      attachment: row-c.txt → <scratch>\review-5\runs\
   1     And q step fails for row b
   2     When an r step "c"  [i0]
     2.0   Ran for
@@ -636,7 +636,7 @@ at Features/Q5/Q14_TwoBlocksAttaches.feature:7
 example: row=d
 attachments: 1 on its steps · attachments s67
   0     Given q step attaches a file for its row  0.05s
-      attachment: row-d.txt → C:\Users\cex\AppData\Local\Temp\claude\c--Code-Kronikol\994b0688-e89e-47c0-97ad-a18ca1007b2a\scratchpad\review-5\runs\
+      attachment: row-d.txt → <scratch>\review-5\runs\
   1     And q step fails for row b
   2     When an r step "d"  [i0]
     2.0   Ran for

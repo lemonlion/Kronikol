@@ -135,8 +135,12 @@ internal static class AttachmentPlacement
     /// </summary>
     internal static void ForEachList(IEnumerable<Scenario> scenarios, Func<FileAttachment[], FileAttachment[]> replace)
     {
+        // Each scenario and step once, however many lists hold it: a list replaced twice would hand replace the copies it made.
+        var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
         foreach (var scenario in scenarios)
         {
+            if (!visited.Add(scenario))
+                continue;
             if (scenario.Attachments is { Length: > 0 } own)
                 scenario.Attachments = replace(own);
             Steps(scenario.BackgroundSteps);
@@ -147,6 +151,8 @@ internal static class AttachmentPlacement
         {
             foreach (var step in steps ?? [])
             {
+                if (!visited.Add(step))
+                    continue;
                 if (step.Attachments is { Length: > 0 } attachments)
                     step.Attachments = replace(attachments);
                 Steps(step.SubSteps);

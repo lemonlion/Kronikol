@@ -207,6 +207,8 @@ function apply_url_hash(hash) {
         return value.split(',').map(function(v) { try { return decodeURIComponent(v); } catch (e) { return null; } })
             .filter(function(v) { return v !== null && v !== ''; });
     }
+    var searchbar = document.getElementById('searchbar');
+    if ((searchbar ? searchbar.value : '') !== (params.q || '') && typeof forget_sections_revealed === 'function') forget_sections_revealed();
     hold_visibility();
     try {
         step(reset_filters);

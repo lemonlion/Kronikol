@@ -1,7 +1,7 @@
 // node cost.js <big-old/big.html> <big-new/big.html> <word>: what a one-match filter search costs on an outline of many rows, and what it leaves open.
 const path = require('path');
 const { chromium } = require('C:/Code/Kronikol4J/playwright/node_modules/playwright-core');
-const { launchInstalled } = require('C:/Code/Kronikol-222/tools/playwright/installed-browser.js');
+const { launchInstalled } = require('<tree>/tools/playwright/installed-browser.js');
 
 async function measure(browser, report, word) {
     const page = await browser.newPage({ viewport: { width: 1100, height: 800 } });

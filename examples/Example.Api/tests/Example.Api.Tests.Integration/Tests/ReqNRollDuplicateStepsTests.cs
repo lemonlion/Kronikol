@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Example.Api.Tests.Integration.Helpers;
 
 namespace Example.Api.Tests.Integration.Tests;
@@ -88,34 +89,90 @@ public class ReqNRollDuplicateStepsTests
     // The CI "Integration (ReqNRoll)" filter matches the project-name theory argument
     // (FullyQualifiedName~Component.ReqNRoll.xUnit3), so even single-project tests take
     // the project as a theory parameter.
+    [Theory]
+    [MemberData(nameof(ReqNRollProjects))]
+    public async Task A_Background_is_what_the_feature_file_writes_and_a_step_a_step_ran_is_no_row(string projectName)
+    {
+        var scenarios = await RunAndParseScenariosAsync(projectName);
+
+        var own = Assert.Single(scenarios, s => s.Name == "A scenario's own steps come after its Background");
+        Assert.Equal(["Given a step that passes", "And a step runs a step with a table and a doc string"], own.BackgroundSteps);
+        Assert.Equal(["When another step that passes", "Then a third step that passes"], own.Steps);
+
+        var inARule = Assert.Single(scenarios, s => s.Name == "A scenario in a rule runs both Backgrounds");
+        Assert.Equal(["Given a step that passes", "And a step runs a step with a table and a doc string", "Given a rule's step that passes"], inARule.BackgroundSteps);
+        Assert.Equal(["When another step that passes"], inARule.Steps);
+    }
+
+    [Theory]
+    [MemberData(nameof(ReqNRollProjects))]
+    public async Task A_step_a_step_ran_keeps_its_doc_string(string projectName)
+    {
+        var result = await TestProjectRunner.RunAsync(projectName);
+        Assert.True(result.Success, $"{projectName} failed:\n{result.StandardError}\n{result.StandardOutput}");
+
+        var html = Kronikol.Reports.HtmlReportFile.ToPlain(await File.ReadAllTextAsync(ReportParser.GetReportFiles(result.ReportsFolderPath).TestRunReportHtml!));
+
+        Assert.Contains("<pre class=\"step-docstring\"><code>a doc string</code></pre>", html);
+    }
+
+    [Theory]
+    [MemberData(nameof(ReqNRollProjects))]
+    public async Task A_failure_is_read_on_the_step_that_failed(string projectName)
+    {
+        var result = await TestProjectRunner.RunAsync(projectName, new Dictionary<string, string> { ["KRONIKOL_EXAMPLE_STEP_FAILURES"] = "true", ["GITHUB_STEP_SUMMARY"] = "" });
+        Assert.False(result.Success, $"{projectName} was asked to fail and did not:\n{result.StandardOutput}");
+
+        var failing = (await File.ReadAllLinesAsync(Path.Combine(result.ReportsFolderPath, "Failures.jsonl")))
+            .Select(line => JsonDocument.Parse(line).RootElement)
+            .Where(row => row.GetProperty("kind").GetString() == "failure")
+            .ToDictionary(
+                row => row.GetProperty("scenario").GetString()!,
+                row => row.GetProperty("failingSteps").EnumerateArray().Select(step => step.GetProperty("text").GetString()!).ToArray());
+
+        Assert.Equal(8, failing.Count);
+        Assert.Equal(["Given a Background step that fails when asked"], failing["The Background step is the one that failed"]);
+        Assert.Equal(["Given a step runs a step that fails when asked", "Given an inner step that fails when asked"], failing["An inner step fails"]);
+        Assert.Contains("Given a step runs a step whose argument does not convert when asked", failing["An inner argument does not convert"]);
+        Assert.Equal(["And a step a hook stops when asked"], failing["A BeforeStep hook ahead of the adapter's fails"]);
+        Assert.Equal(["Given a step runs a step a hook stops when asked", "Given a step a hook stops when asked"], failing["A BeforeStep hook ahead of the adapter's fails on an inner step"]);
+        Assert.Equal(["Given a step runs a step an AfterStep hook fails when asked", "Given a step with a doc string an AfterStep hook fails when asked"], failing["An AfterStep hook fails on an inner step"]);
+        Assert.Equal(["When a step an AfterStep hook fails when asked"], failing["An AfterStep hook fails on a scenario's own step"]);
+
+        Assert.Equal(["Given a step an AfterStep hook fails when asked"], failing["An AfterScenario hook runs a step an AfterStep hook fails"]);
+
+        // The hook stopped ours from closing that inner step, and it is still described.
+        var html = Kronikol.Reports.HtmlReportFile.ToPlain(await File.ReadAllTextAsync(ReportParser.GetReportFiles(result.ReportsFolderPath).TestRunReportHtml!));
+        Assert.Contains("<pre class=\"step-docstring\"><code>its doc string</code></pre>", html);
+    }
+
     public static TheoryData<string> XUnit3Only() => new() { TestProjects.ReqNRollXUnit3 };
 
     [Theory]
     [MemberData(nameof(XUnit3Only))]
     public async Task Background_scenarios_record_exactly_the_feature_file_steps(string projectName)
     {
-        // The Cake Quality feature's scenarios share their Given + When, so
-        // BackgroundStepsDetector extracts that prefix into BackgroundSteps — doubled
-        // steps would both double the extracted prefix and corrupt the detection.
+        // The Cake Quality feature writes one Background step: doubled steps would miscount it
+        // and would push the scenario's own steps out of Steps.
         var scenarios = await RunAndParseScenariosAsync(projectName);
 
         var milk = Assert.Single(scenarios, s => s.Name == "The baked cake contains the requested milk");
+        Assert.Equal(["Given a valid post request for the Cake endpoint"], milk.BackgroundSteps);
         Assert.Equal(
             [
-                "Given a valid post request for the Cake endpoint",
-                "When the request is sent to the cake post endpoint"
+                "When the request is sent to the cake post endpoint",
+                "Then the cake should contain the requested milk"
             ],
-            milk.BackgroundSteps);
-        Assert.Equal(["Then the cake should contain the requested milk"], milk.Steps);
+            milk.Steps);
 
         var flour = Assert.Single(scenarios, s => s.Name == "The baked cake contains the requested flour");
+        Assert.Equal(["Given a valid post request for the Cake endpoint"], flour.BackgroundSteps);
         Assert.Equal(
             [
-                "Given a valid post request for the Cake endpoint",
-                "When the request is sent to the cake post endpoint"
+                "When the request is sent to the cake post endpoint",
+                "Then the cake should contain the requested flour"
             ],
-            flour.BackgroundSteps);
-        Assert.Equal(["Then the cake should contain the requested flour"], flour.Steps);
+            flour.Steps);
     }
 
     [Theory]

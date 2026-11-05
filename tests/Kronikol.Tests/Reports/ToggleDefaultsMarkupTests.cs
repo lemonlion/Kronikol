@@ -603,7 +603,7 @@ public class ToggleDefaultsMarkupTests
         Assert.Contains("closest('details.rule')", content);
         // the feature round the match too (5.2.0): where features start closed, the match opened out of sight
         Assert.Contains("[el.closest('details.feature'), el.closest('details.rule'), el].forEach(", content);
-        Assert.Contains("'details.example-diagrams', 'details.scenario-steps', 'details.scenario-background'", content);
+        Assert.Contains("[el.querySelector('details.example-diagrams'), shown.querySelector('details.scenario-steps'), shown.querySelector('details.scenario-background')].forEach(", content);
     }
 
     // ═══════════════════════════════════════════════════════════

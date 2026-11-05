@@ -158,7 +158,7 @@ public static partial class QueryCommand
                 }
             }
 
-            if (failingSteps.Length == 0 && scenario.Steps.Count > 0)
+            if (failingSteps.Length == 0 && scenario.BackgroundSteps.Count + scenario.Steps.Count > 0)
                 writer.Line("  (no step is marked failed — the failure was outside a tracked step)");
 
             WriteAttachments(writer, index, scenario.Attachments, "  ", $"attachments {scenario.Address}");

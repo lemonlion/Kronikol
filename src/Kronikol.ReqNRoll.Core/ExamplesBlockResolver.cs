@@ -84,6 +84,34 @@ internal static class ExamplesBlockResolver
     }
 
     /// <summary>
+    /// The texts of the steps the feature's <c>Background:</c> and the scenario's rule's give the running scenario, in the
+    /// order they run, from the Gherkin document Reqnroll embeds (#222). Empty when no Background is written, or when
+    /// Reqnroll's messages are unavailable: every step is then the scenario's own. Same reflection seam, same
+    /// silent-degradation contract as <see cref="Resolve"/>.
+    /// </summary>
+    public static IReadOnlyList<string> ResolveBackgroundSteps(FeatureInfo? featureInfo, ScenarioInfo? scenarioInfo)
+    {
+        if (featureInfo is null || scenarioInfo is null)
+            return [];
+        try
+        {
+            var lookup = LookupCache.GetValue(featureInfo, BuildLookup);
+            if (FindPickle(lookup, scenarioInfo) is { AstNodeIds.Count: > 0 } pickle
+                && lookup.BackgroundByScenarioId.TryGetValue(pickle.AstNodeIds[0], out var byId))
+            {
+                return byId;
+            }
+            return scenarioInfo.Title is { Length: > 0 } title && lookup.BackgroundByScenarioName.TryGetValue(title, out var byName)
+                ? byName
+                : [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
+
+    /// <summary>
     /// The running row's name as Gherkin names its pickle (#101): the title with each <c>&lt;header&gt;</c> filled from the
     /// row's <c>Examples:</c> values. The pickle Reqnroll embeds is Gherkin's own answer, taken when it is found, belongs
     /// to this scenario and holds this row's values; otherwise <see cref="FillPlaceholders"/> gives the same answer from
@@ -220,6 +248,12 @@ internal static class ExamplesBlockResolver
         /// outline's title and therefore its declaration line - which is the line we want.
         /// </summary>
         public Dictionary<string, int> LinesByScenarioName { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>A scenario's ast id to the texts of the Background steps it runs first: its feature's, then its rule's.</summary>
+        public Dictionary<string, string[]> BackgroundByScenarioId { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>The same by title, for a scenario no pickle is found for: a title two rules share keeps the first.</summary>
+        public Dictionary<string, string[]> BackgroundByScenarioName { get; } = new(StringComparer.Ordinal);
     }
 
     private static FeatureBlockLookup BuildLookup(FeatureInfo featureInfo)
@@ -242,6 +276,8 @@ internal static class ExamplesBlockResolver
                     lookup.LinesByScenarioName[scenarioName] = (int)location.Line;
                 IndexScenario(lookup, scenario);
             }
+
+            IndexBackgrounds(lookup, messages.GherkinDocument?.Feature);
         }
         catch
         {
@@ -263,6 +299,37 @@ internal static class ExamplesBlockResolver
                     yield return ruleScenario;
             }
         }
+    }
+
+    /// <summary>
+    /// Which Background steps each scenario runs first. Read from the document rather than from its pickle, as Gherkin
+    /// compiles a scenario with no steps of its own to a pickle with none, and Reqnroll still runs the Background for it.
+    /// </summary>
+    private static void IndexBackgrounds(FeatureBlockLookup lookup, Feature? feature)
+    {
+        var featureSteps = (feature?.Children ?? []).Select(c => c.Background).FirstOrDefault(b => b is not null)?.Steps ?? [];
+        foreach (var child in feature?.Children ?? [])
+        {
+            if (child.Scenario is { } scenario)
+                IndexBackground(lookup, scenario, featureSteps);
+            if (child.Rule is not { } rule)
+                continue;
+            var ruleSteps = (rule.Children ?? []).Select(c => c.Background).FirstOrDefault(b => b is not null)?.Steps ?? [];
+            foreach (var ruleChild in rule.Children ?? [])
+            {
+                if (ruleChild.Scenario is { } ruleScenario)
+                    IndexBackground(lookup, ruleScenario, [.. featureSteps, .. ruleSteps]);
+            }
+        }
+    }
+
+    private static void IndexBackground(FeatureBlockLookup lookup, Scenario scenario, IReadOnlyList<Step> steps)
+    {
+        var texts = steps.Select(s => s.Text ?? "").ToArray();
+        if (scenario.Id is { Length: > 0 } id)
+            lookup.BackgroundByScenarioId[id] = texts;
+        if (scenario.Name is { Length: > 0 } name)
+            lookup.BackgroundByScenarioName.TryAdd(name, texts);
     }
 
     private static void IndexScenario(FeatureBlockLookup lookup, Scenario scenario)

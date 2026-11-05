@@ -1,0 +1,17 @@
+M40 a composite's state crosses from a failed one: CAUGHT by A_composite_the_reader_opened_stays_open_past_a_failed_one, A_failed_composite_keeps_its_state_on_its_own_row(failedByItself: False), A_failed_composite_keeps_its_state_on_its_own_row(failedByItself: True)
+M57 a row the search chooses or puts back keeps and brings what the reader left: CAUGHT by A_row_the_search_chooses_takes_nothing_from_the_row_it_left
+M58 the search opens every row's sections: CAUGHT by A_search_that_moves_to_another_row_shows_its_match_on_each_and_leaves_the_rest, A_section_the_reader_closed_during_a_search_stays_closed_as_it_narrows, A_section_the_reader_closed_stays_closed_when_the_match_moves_away_and_back, Emptying_the_search_puts_back_what_the_reader_left, The_search_changes_no_row_but_the_one_it_chose
+M60 a new search does not open what the reader closed in the last: CAUGHT by A_new_search_opens_again_what_the_reader_closed_in_the_last
+M68 the accent is off a Background step again: CAUGHT by A_background_step_is_painted_with_its_accent_with_and_without_sub_steps, The_accent_clears_a_steps_triangle_and_moves_it_out_of_line_with_none
+M69 the accent moves a Background step out of line: CAUGHT by The_accent_clears_a_steps_triangle_and_moves_it_out_of_line_with_none
+M70 the accent leaves no air before the step: CAUGHT by The_accent_clears_a_steps_triangle_and_moves_it_out_of_line_with_none
+M71 the accent sits under a step's triangle: CAUGHT by The_accent_clears_a_steps_triangle_and_moves_it_out_of_line_with_none
+M73 what empties the field by Clear All or Back does not end the search: CAUGHT by A_search_after_Clear_All_opens_again_what_the_reader_closed, A_search_after_going_Back_opens_again_what_the_reader_closed
+M74 the search's own switch keeps nothing of the row it left: CAUGHT by A_row_the_search_chose_does_not_undo_what_the_reader_closed, scenario-background"), step-collapsible")
+M75 a row the search chose keeps all it holds: CAUGHT by A_row_the_search_chose_does_not_undo_what_the_reader_closed, What_the_search_opened_on_a_row_it_chose_does_not_carry, step-collapsible")
+M76 what the search opened on a row it chose counts as the reader's: CAUGHT by What_the_search_opened_on_a_row_it_chose_does_not_carry
+M77 what the reader changes on a row the search chose is dropped: CAUGHT by What_the_reader_changes_on_a_row_the_search_chose_carries
+M78 a row the reader goes to stays marked as the search's: CAUGHT by A_row_the_search_chose_is_the_readers_once_they_come_back_to_it
+M79 emptying the search leaves its rows marked: SURVIVED, so the line came out: nothing needs it, as a mark goes when the reader reaches the row.
+restored, facts: Passed!  - Failed:     0, Passed:    55, Skipped:     0, Total:    55, Duration: 5 s - Kronikol.Tests.dll (net
+restored, a real run's facts: Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 2 m 8 s - Example.Api.Tests.I

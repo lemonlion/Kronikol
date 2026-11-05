@@ -25,8 +25,13 @@ public sealed class FullPipelineFixture : IAsyncLifetime
     public string LightBDDReportPath => Path.Combine(LightBDDProjectDir, "bin", "Debug", "net10.0", "Reports", "Specifications.html");
     public string ReqNRollReportPath => Path.Combine(ReqNRollProjectDir, "bin", "Debug", "net10.0", "Reports", "Specifications.html");
 
+    /// <summary>The page of a Reqnroll run asked to fail its steps, kept from before the green run writes over it.</summary>
+    public string ReqNRollFailingReportPath { get; } = Path.Combine(Path.GetTempPath(), "kronikol-failing-reqnroll-" + Guid.NewGuid().ToString("N") + ".html");
+
     public ValueTask InitializeAsync()
     {
+        RunDotnetTest(ReqNRollProjectDir, askedToFail: true);
+        File.Copy(Path.Combine(ReqNRollProjectDir, "bin", "Debug", "net10.0", "Reports", "TestRunReport.html"), ReqNRollFailingReportPath, overwrite: true);
         RunDotnetTest(XUnit3ProjectDir, "FullyQualifiedName~ParameterizedDiagnostic");
         // LightBDD needs all tests to run for report generation (report is written in scope teardown)
         RunDotnetTest(LightBDDProjectDir);
@@ -34,9 +39,13 @@ public sealed class FullPipelineFixture : IAsyncLifetime
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    public ValueTask DisposeAsync()
+    {
+        File.Delete(ReqNRollFailingReportPath);
+        return ValueTask.CompletedTask;
+    }
 
-    private static void RunDotnetTest(string projectDir, string? filter = null)
+    private static void RunDotnetTest(string projectDir, string? filter = null, bool askedToFail = false)
     {
         // No --no-restore: a clean CI runner has never restored the example projects, and
         // dotnet test would fail with NETSDK1004 (missing assets file) before running anything.
@@ -52,6 +61,11 @@ public sealed class FullPipelineFixture : IAsyncLifetime
             UseShellExecute = false,
             CreateNoWindow = true
         };
+        if (askedToFail)
+        {
+            psi.Environment["KRONIKOL_EXAMPLE_STEP_FAILURES"] = "true";
+            psi.Environment["GITHUB_STEP_SUMMARY"] = "";
+        }
 
         using var process = Process.Start(psi)!;
         var stdout = process.StandardOutput.ReadToEnd();
@@ -64,10 +78,11 @@ public sealed class FullPipelineFixture : IAsyncLifetime
             throw new InvalidOperationException($"dotnet test timed out after 10 minutes:\n{stdout}\n{stderr}");
         }
 
-        if (process.ExitCode != 0)
+        // a run asked to fail has to get as far as its tests: a build that fails exits 1 too
+        if (askedToFail ? process.ExitCode == 0 || !stdout.Contains("Failed!") : process.ExitCode != 0)
         {
             throw new InvalidOperationException(
-                $"dotnet test failed (exit {process.ExitCode}):\n{stdout}\n{stderr}");
+                $"dotnet test {(askedToFail ? "was asked to fail and did not" : "failed")} (exit {process.ExitCode}):\n{stdout}\n{stderr}");
         }
     }
 }
@@ -125,6 +140,22 @@ public class FullPipelineParameterizedE2ETests : PlaywrightTestBase
     private ILocator GetGroupedParamRows() => Page.Locator("table.param-table-grouped > tbody > tr[data-row-idx]");
 
     #endregion
+
+    // #222: the page results/paint-5.27.13-failed-when-reads-passed.png holds, a red failure block over a list of green ticks,
+    // read from a real run.
+    [Theory]
+    [InlineData("An AfterStep hook fails on a scenario's own step", "a step an AfterStep hook fails when asked", false)]
+    [InlineData("The Background step is the one that failed", "a Background step that fails when asked", true)]
+    public async Task A_step_that_failed_in_a_real_run_shows_the_failed_icon_in_the_list(string scenario, string step, bool background)
+    {
+        await NavigateToReport(_pipeline.ReqNRollFailingReportPath);
+        await ExpandAll();
+
+        var steps = Page.Locator("details.scenario", new() { HasTextString = scenario }).First.Locator("details.scenario-steps");
+        var row = steps.Locator("> .step", new() { HasTextString = step }).First;
+        Assert.True(await row.Locator(".step-status.failed").First.IsVisibleAsync());
+        Assert.Equal(background, await row.EvaluateAsync<bool>("(s) => s.classList.contains('step-background')"));
+    }
 
     // ═══════════════════════════════════════════════════════════════════
     // xUnit3 Full Pipeline Tests

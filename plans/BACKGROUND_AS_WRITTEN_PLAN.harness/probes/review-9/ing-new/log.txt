@@ -1,0 +1,10 @@
+Ingesting 1 capture file(s):
+  <review-9>\ing-new\captures-attached\captures.ndjson
+Tests file: <review-9>\ing-new\captures-attached\tests.ndjson
+Report diagnostics: 10 log entries across 2 test(s).
+Replayed 10 interaction record(s) into 2 scenario(s).
+Specifications.html and Specifications.yml are blank: 1 of 2 scenario(s) failed, and the specification is only published from a green run.
+Kronikol: reports written to <review-9>\ing-new\out  (TestRunReport.html · TestRunReport.krkl · Failures.md)
+  1 failed — kronikol query failures <review-9>\ing-new\out
+    01182602dc5ef74f  Orders › The payment is declined
+  agents: read <review-9>\ing-new\out\CLAUDE.md first; never open TestRunReport.krkl

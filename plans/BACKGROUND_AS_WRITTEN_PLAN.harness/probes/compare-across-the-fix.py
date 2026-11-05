@@ -20,9 +20,20 @@ RUN_IDS = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 HEADER = re.compile(r"^(\s*)── (\S+)\s+(.*)$")
 
 
+# A warning about the whole report prints above every answer (from 5.28.5), so it says nothing of the scenario asked about.
+# Each is listed once, at the end, by the side that gave it.
+warnings = {}
+
+
 def query(*args):
     done = subprocess.run([kronikol, "query", *args], capture_output=True, text=True, encoding="utf-8", errors="replace")
-    return done.stdout + done.stderr
+    kept = []
+    for line in (done.stdout + done.stderr).splitlines(keepends=True):
+        if line.startswith("! "):
+            warnings.setdefault("left" if left in args else "right", set()).add(line.strip())
+        else:
+            kept.append(line)
+    return "".join(kept)
 
 
 def scenarios(report):
@@ -117,6 +128,10 @@ print(f"diagrams: {diagram_count} read; scenarios alike {same_diagrams}, differi
 print(f"calls: alike {same_calls}, differing {different_calls}")
 print(f"flow, step addresses aside: alike {same_flow}, differing {different_flow}")
 print(f"scenarios whose step addresses moved: {moved}")
+for side in ("left", "right"):
+    print(f"warnings about the whole report, {side}: {len(warnings.get(side, []))}")
+    for line in sorted(warnings.get(side, [])):
+        print("    " + line[:170])
 
 print()
 files = lambda folder: sorted(n for n in os.listdir(folder) if os.path.isfile(os.path.join(folder, n)))

@@ -163,6 +163,44 @@ public class IngestCommandTests : IDisposable
         Assert.Contains("print how many it attributed", usage.ToString());
     }
 
+    [Fact]
+    public void A_file_attached_to_a_step_two_tests_read_alike_on_stops_no_report()
+    {
+        // #222: where the guess finds steps that read alike, the attachment walk met one step twice, and the second visit threw:
+        // an unhandled exception and no report.
+        var captures = Path.Combine(_dir, "captures-attached");
+        Directory.CreateDirectory(captures);
+        File.WriteAllText(Path.Combine(captures, "captures.ndjson"), "");
+        var files = Directory.CreateDirectory(Path.Combine(_dir, "attached")).FullName;
+        var first = Path.Combine(files, "a.txt").Replace('\\', '/');
+        var second = Path.Combine(files, "b.txt").Replace('\\', '/');
+        File.WriteAllText(first, "first");
+        File.WriteAllText(second, "second");
+        File.WriteAllLines(Path.Combine(captures, "tests.ndjson"),
+        [
+            """{"event":"start","testId":"a","testName":"The order goes through","feature":"Orders","timestamp":"2026-08-21T10:00:00Z"}""",
+            """{"event":"step","testId":"a","keyword":"Given","text":"the basket holds apple","status":"passed","timestamp":"2026-08-21T10:00:01Z"}""",
+            """{"event":"step","testId":"a","keyword":"When","text":"the customer places the order","status":"passed","timestamp":"2026-08-21T10:00:02Z"}""",
+            """{"event":"step","testId":"a","keyword":"Then","text":"the order is confirmed","status":"passed","timestamp":"2026-08-21T10:00:03Z"}""",
+            $$"""{"event":"attachment","testId":"a","name":"a.txt","path":"{{first}}","step":0,"timestamp":"2026-08-21T10:00:03Z"}""",
+            """{"event":"end","testId":"a","status":"passed","timestamp":"2026-08-21T10:00:04Z"}""",
+            """{"event":"start","testId":"b","testName":"The payment is declined","feature":"Orders","timestamp":"2026-08-21T10:00:05Z"}""",
+            """{"event":"step","testId":"b","keyword":"Given","text":"the basket holds apple","status":"passed","timestamp":"2026-08-21T10:00:06Z"}""",
+            """{"event":"step","testId":"b","keyword":"When","text":"the customer places the order","status":"failed","error":"402 card declined","timestamp":"2026-08-21T10:00:07Z"}""",
+            $$"""{"event":"attachment","testId":"b","name":"b.txt","path":"{{second}}","step":0,"timestamp":"2026-08-21T10:00:07Z"}""",
+            """{"event":"end","testId":"b","status":"failed","error":"402 card declined","timestamp":"2026-08-21T10:00:08Z"}""",
+        ]);
+        var reports = Path.Combine(_dir, "out-attached");
+        var error = new StringWriter();
+
+        var code = IngestCommand.Run([captures, "--tests", Path.Combine(captures, "tests.ndjson"), "-o", reports], new StringWriter(), error);
+
+        Assert.True(code == 0, error.ToString());
+        Assert.True(File.Exists(Path.Combine(reports, "TestRunReport.html")));
+        var copied = Directory.GetFiles(Path.Combine(reports, "attachments"), "*", SearchOption.AllDirectories).Select(File.ReadAllText).Order().ToArray();
+        Assert.Equal(["first", "second"], copied);
+    }
+
     /// <summary>
     /// #130's repro as files: one test whose When step (10 ms, or an instant with no duration) makes two calls, the second
     /// a database read answered 2 s later.

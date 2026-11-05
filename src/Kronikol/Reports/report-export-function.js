@@ -33,6 +33,7 @@ function reset_filters() {
     if (window._kronDeepReset) window._kronDeepReset();
 }
 function clear_all_filters() {
+    if (typeof forget_sections_revealed === 'function') forget_sections_revealed();
     reset_filters();
     applyVisibility(fc());
     // The address keeps its anchor: somebody who followed a link to one scenario and then pressed Clear All has cleared

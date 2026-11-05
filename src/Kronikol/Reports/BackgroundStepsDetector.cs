@@ -1,9 +1,14 @@
 namespace Kronikol.Reports;
 
 /// <summary>
-/// Detects common step prefixes across scenarios (heuristic for Gherkin Background sections)
-/// and extracts them into <see cref="Scenario.BackgroundSteps"/>.
+/// Guesses a Gherkin Background from steps that read alike: the longest prefix several scenarios share goes into
+/// <see cref="Scenario.BackgroundSteps"/>, each scenario keeping its own steps.
 /// Groups scenarios by <see cref="Scenario.Rule"/> so each Rule can have its own background.
+/// <para>
+/// It is a guess, and the steps' text cannot settle it: it misses a Background over one scenario or followed by a
+/// <c>Given</c> or <c>When</c>, and calls a prefix one where none was written. Only a producer with no source to read should
+/// call it. The Reqnroll adapter reads the Gherkin document, and the Cucumber lane its messages.
+/// </para>
 /// </summary>
 public static class BackgroundStepsDetector
 {
@@ -41,12 +46,10 @@ public static class BackgroundStepsDetector
                                  s.Steps![commonPrefixLength].Keyword is "Given" or "When"))
                 continue;
 
-            // Use the first scenario's steps as the background template
-            var backgroundSteps = members[0].Steps!.Take(commonPrefixLength).ToArray();
-
+            // Steps that read alike are still each scenario's own: its result, its arguments, its sub-steps (#222).
             foreach (var scenario in members)
             {
-                scenario.BackgroundSteps = backgroundSteps;
+                scenario.BackgroundSteps = scenario.Steps!.Take(commonPrefixLength).ToArray();
                 scenario.Steps = scenario.Steps!.Skip(commonPrefixLength).ToArray();
             }
         }

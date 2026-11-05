@@ -93,7 +93,14 @@ public class ReqNRollTrackingHooks
         var stepType = _scenarioContext.StepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString();
         ReqNRollTestContext.CurrentStepType = stepType;
         TestPhaseContext.Current = PhaseConfiguration.ResolvePhaseFromStepType(stepType);
-        _scenarioContext[ReqNRollConstants.StepStopwatchKey] = Stopwatch.StartNew();
+        _scenarioContext[ReqNRollConstants.StepStopwatchKey] = Open(stepType).Stopwatch;
+    }
+
+    private OpenStep Open(string stepType)
+    {
+        var opened = new OpenStep(Stopwatch.StartNew(), InnermostOpenStep, _scenarioContext.StepContext.StepInfo);
+        _scenarioContext[ReqNRollConstants.OpenStepKey] = opened;
+        _scenarioContext.StepContext[ReqNRollConstants.OpenStepKey] = opened;
 
         // Push a step onto StepCollector so assertion tracking sub-steps attach here. The step's
         // Gherkin arguments ride along so the delimiter bar can draw them — the table Reqnroll hands
@@ -101,7 +108,8 @@ public class ReqNRollTrackingHooks
         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
         var stepInfo = _scenarioContext.StepContext.StepInfo;
         StepCollector.StartStep(scenarioId, stepType, stepInfo.Text, null, null,
-            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText);
+            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText, opened.Nested);
+        return opened;
     }
 
     [AfterStep(Order = int.MaxValue)]
@@ -110,19 +118,50 @@ public class ReqNRollTrackingHooks
         if (!IsOwner)
             return;
 
-        var stepStopwatch = (Stopwatch)_scenarioContext[ReqNRollConstants.StepStopwatchKey];
-        stepStopwatch.Stop();
+        // None when a suite's hook sorted ahead of BeforeStep and threw: Reqnroll still runs this, and the step is still the
+        // one that failed, so it is listed, with no frame of the collector's to close and no time. Under a step that ran it, it
+        // still has its place among the steps that one ran, so it is opened here to close at that place.
         var stepContext = _scenarioContext.StepContext;
+        stepContext.TryGetValue(ReqNRollConstants.OpenStepKey, out OpenStep? opened);
+        if (opened is null && InnermostOpenStep is not null)
+            opened = Open(stepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString());
+        opened?.Stopwatch.Stop();
         var steps = (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey];
-        var tableText = stepContext.StepInfo.Table?.ToString();
-        var docString = stepContext.StepInfo.MultilineText;
 
+        // Pop the StepCollector step so assertion sub-steps are captured
+        var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
+        // Reqnroll opens a step only while the scenario is well, so the scenario failing by now failed in this step. It writes a
+        // failure only to the step that failed, the step that ran it carries on, and a step that never reached a hook
+        // (undefined, ambiguous) has no frame at all.
+        var status = stepContext.Status != ScenarioExecutionStatus.OK ? stepContext.Status : _scenarioContext.ScenarioExecutionStatus;
+        var passed = status == ScenarioExecutionStatus.OK;
+        if (opened is not null)
+        {
+            CloseLeftOpen(opened, scenarioId, steps);
+            StepCollector.CompleteStep(scenarioId, passed);
+        }
+
+        // A step a step definition ran is that step's sub-step, which StepCollector has made it, so it is no row of the
+        // scenario's own, whose list and whose Background count run by the feature file.
+        var parent = opened is not null ? opened.Parent : InnermostOpenStep;
+        var info = Describe(stepContext.StepInfo, status, opened, parent);
+        if (opened is not null && parent is null)
+            _scenarioContext.Remove(ReqNRollConstants.OpenStepKey);
+        else if (opened is not null)
+            _scenarioContext[ReqNRollConstants.OpenStepKey] = parent!;
+
+        parent?.Nested.Add(info);
+        steps.Add(info);
+    }
+
+    private static ReqNRollStepInfo Describe(StepInfo stepInfo, ScenarioExecutionStatus status, OpenStep? opened, OpenStep? parent)
+    {
         // Capture inline parameter positions from binding match
         InlineParamCapture[]? inlineParams = null;
-        var bindingMatch = stepContext.StepInfo.BindingMatch;
+        var bindingMatch = stepInfo.BindingMatch;
         if (bindingMatch is { Success: true, Arguments.Length: > 0 })
         {
-            var stepText = stepContext.StepInfo.Text;
+            var stepText = stepInfo.Text;
             var captures = new List<InlineParamCapture>();
             var methodParams = bindingMatch.StepBinding?.Method?.Parameters?.ToArray();
             for (var i = 0; i < bindingMatch.Arguments.Length; i++)
@@ -145,19 +184,55 @@ public class ReqNRollTrackingHooks
                 inlineParams = captures.ToArray();
         }
 
-        // Pop the StepCollector step so assertion sub-steps are captured
-        var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
-        var passed = stepContext.Status == ScenarioExecutionStatus.OK;
-        StepCollector.CompleteStep(scenarioId, passed);
+        return new ReqNRollStepInfo(
+            stepInfo.StepInstance.StepDefinitionKeyword.ToString(),
+            stepInfo.Text,
+            status,
+            opened?.Stopwatch.Elapsed,
+            stepInfo.Table?.ToString(),
+            stepInfo.MultilineText,
+            inlineParams) { Nested = opened?.Nested, RanByAStep = parent is not null };
+    }
 
-        steps.Add(new ReqNRollStepInfo(
-            stepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString(),
-            stepContext.StepInfo.Text,
-            stepContext.Status,
-            stepStopwatch.Elapsed,
-            tableText,
-            docString,
-            inlineParams));
+    /// <summary>
+    /// A suite's AfterStep hook that threw kept ours from running, as Reqnroll stops a type's hooks at the first throw. Those steps
+    /// are the ones that failed, and nothing else is left to list them. They are closed when the step that ran them closes, or
+    /// as the scenario's AfterScenario hooks begin.
+    /// </summary>
+    private void CloseLeftOpen(OpenStep? upTo, string scenarioId, List<ReqNRollStepInfo> steps)
+    {
+        for (var left = InnermostOpenStep; left is not null && !ReferenceEquals(left, upTo); left = left.Parent)
+        {
+            left.Stopwatch.Stop();
+            StepCollector.CompleteStep(scenarioId, false);
+            var info = Describe(left.StepInfo, _scenarioContext.ScenarioExecutionStatus, left, left.Parent);
+            left.Parent?.Nested.Add(info);
+            steps.Add(info);
+        }
+    }
+
+    private OpenStep? InnermostOpenStep =>
+        _scenarioContext.TryGetValue(ReqNRollConstants.OpenStepKey, out OpenStep? open) ? open : null;
+
+    /// <summary>A step under way. Its definition can run more of them, which finish inside it.</summary>
+    private sealed class OpenStep(Stopwatch stopwatch, OpenStep? parent, StepInfo stepInfo)
+    {
+        public Stopwatch Stopwatch { get; } = stopwatch;
+        public OpenStep? Parent { get; } = parent;
+        public StepInfo StepInfo { get; } = stepInfo;
+        public List<ReqNRollStepInfo> Nested { get; } = [];
+    }
+
+    // Ahead of a suite's own at any later order, so a step left open takes neither their time nor their woven steps, and they
+    // find it in the list. AfterScenario comes back to it for a step one of their hooks ran and left open.
+    [AfterScenario(Order = int.MinValue)]
+    internal void CloseStepsLeftOpen()
+    {
+        if (!IsOwner || InnermostOpenStep is null)
+            return;
+
+        CloseLeftOpen(null, (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey], (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey]);
+        _scenarioContext.Remove(ReqNRollConstants.OpenStepKey);
     }
 
     [AfterScenario(Order = int.MaxValue)]
@@ -167,6 +242,7 @@ public class ReqNRollTrackingHooks
             return;
 
         _stopwatch?.Stop();
+        CloseStepsLeftOpen();
         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
         var steps = (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey];
 
@@ -221,6 +297,7 @@ public class ReqNRollTrackingHooks
             ExamplesBlockIndex = examplesBlock.Index,
             SourceFile = source.File,
             SourceLine = source.Line,
+            WrittenBackground = ExamplesBlockResolver.ResolveBackgroundSteps(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo),
             RowName = _scenarioContext.TryGetValue(ReqNRollConstants.RowNameKey, out string? rowName)
                 ? rowName
                 : ExamplesBlockResolver.ResolveRowName(_featureContext.FeatureInfo, _scenarioContext.ScenarioInfo)

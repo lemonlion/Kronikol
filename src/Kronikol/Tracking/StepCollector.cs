@@ -53,6 +53,14 @@ public static class StepCollector
     /// </summary>
     public static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
         string[][]? table, string? docString)
+        => StartStep(testId, keyword, text, paramNames, paramValues, table, docString, openedBy: null);
+
+    /// <summary>
+    /// The same, saying what opened the step, which reaches <see cref="ScenarioStep.OpenedBy"/>: an adapter that hears of a
+    /// step twice can then tell its own from one that reads the same.
+    /// </summary>
+    internal static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
+        string[][]? table, string? docString, object? openedBy)
     {
         if (testId is null)
             return;
@@ -64,7 +72,8 @@ public static class StepCollector
             OriginalKeyword = keyword,
             Text = text,
             StartTime = Stopwatch.GetTimestamp(),
-            Parameters = BuildParameters(paramNames, paramValues)
+            Parameters = BuildParameters(paramNames, paramValues),
+            OpenedBy = openedBy
         };
 
         var isTopLevel = false;
@@ -494,7 +503,8 @@ public static class StepCollector
                 : null,
             Attachments = step.Attachments is { Count: > 0 }
                 ? step.Attachments.ToArray()
-                : null
+                : null,
+            OpenedBy = step.OpenedBy
         };
     }
 
@@ -560,5 +570,6 @@ public static class StepCollector
         public StepParameter[]? Parameters { get; set; }
         public List<CollectedStep> SubSteps { get; } = new();
         public List<FileAttachment>? Attachments { get; set; }
+        public object? OpenedBy { get; set; }
     }
 }

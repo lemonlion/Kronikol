@@ -1,0 +1,63 @@
+scenarios: 41 and 41; only in one: []
+--- step addresses moved: 01 one: 0 1 2 -> b0 0 1
+--- step addresses moved: 01 two: 0 1 2 -> b0 0 1
+--- step addresses moved: 02 one: 0 1 2 3 -> b0 0 1 2
+--- step addresses moved: 02 two: 0 1 2 3 -> b0 0 1 2
+--- step addresses moved: 04 one: b0 b1 0 -> 0 1 2
+--- step addresses moved: 04 two: b0 b1 0 -> 0 1 2
+--- step addresses moved: 05 row APPLE: b0 b1 b2 -> 0 1 2
+--- step addresses moved: 05 row BANANA: b0 b1 b2 -> 0 1 2
+--- step addresses moved: 06 only: 0 1 -> b0 0
+--- step addresses moved: 07 a one: 0 1 2 3 -> b0 b1 0 1
+--- step addresses moved: 07 a two: 0 1 2 3 -> b0 b1 0 1
+--- step addresses moved: 07 b one: 0 1 2 -> b0 0 1
+--- step addresses moved: 07 b two: 0 1 2 -> b0 0 1
+--- step addresses moved: 08 breaks: 0 1 2 -> b0 0 1
+--- step addresses moved: 08 holds: 0 1 2 -> b0 0 1
+--- step addresses moved: 09 one: b0 b1 b2 0 -> 0 1 2 3
+--- step addresses moved: 09 two: b0 b1 b2 0 -> 0 1 2 3
+--- step addresses moved: 10 row x: 0 1 2 -> b0 0 1
+--- step addresses moved: 10 row y: 0 1 2 -> b0 0 1
+--- flow differs beyond its step addresses: 11 one
+    @@ -2,0 +3 @@
+    +── <step> Given a composite step calls another
+    @@ -4,0 +6 @@
+    +── <step> When the customer acts "one"
+    @@ -5,0 +8 @@
+    +── <step> Then the outcome is "one"
+--- step addresses moved: 11 one:  -> b0 0 1
+--- flow differs beyond its step addresses: 11 two
+    @@ -2,0 +3 @@
+    +── <step> Given a composite step calls another
+    @@ -4,0 +6 @@
+    +── <step> When the customer acts "two"
+    @@ -5,0 +8 @@
+    +── <step> Then the outcome is "two"
+--- step addresses moved: 11 two:  -> b0 0 1
+--- step addresses moved: 12 eins: 0 1 2 -> b0 0 1
+--- step addresses moved: 12 zwei: 0 1 2 -> b0 0 1
+--- step addresses moved: 13 one: 0 1 2 -> b0 0 1
+--- step addresses moved: 13 two: 0 1 2 -> b0 0 1
+--- step addresses moved: 14 one: b0 0 -> 0 1
+--- step addresses moved: 14 two: b0 0 -> 0 1
+--- step addresses moved: 15 empty: 0 -> b0
+--- step addresses moved: 15 full: 0 1 2 -> b0 0 1
+--- step addresses moved: 16 from file b: b0 0 -> 0 1
+--- step addresses moved: 18 one: b0 0 -> 0 1
+--- step addresses moved: 18 two: b0 0 -> 0 1
+--- step addresses moved: 19 one: 0 1 2 -> b0 0 1
+--- step addresses moved: 19 two: 0 1 2 -> b0 0 1
+--- step addresses moved: 20 row x: 0 1 2 -> b0 0 1
+--- step addresses moved: 20 row y: 0 1 2 -> b0 0 1
+
+diagrams: 41 read; scenarios alike 41, differing 0
+calls: alike 41, differing 0
+flow, step addresses aside: alike 39, differing 2
+scenarios whose step addresses moved: 36
+warnings about the whole report, left: 1
+    ! Step marker 1 does not match step 'the basket holds "from the composite"'; interactions up to the next marker that matches carry no stepPath. (×6; summary --json lists 
+warnings about the whole report, right: 0
+
+files only in one: ['TestRunReport.labs.html']
+Specifications.yml: 0 and 0 lines, 0 differing
+Failures.md: 39 and 39 lines, 4 differing

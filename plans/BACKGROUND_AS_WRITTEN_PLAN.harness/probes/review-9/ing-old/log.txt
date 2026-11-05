@@ -1,0 +1,20 @@
+Ingesting 1 capture file(s):
+  <review-9>\ing-old\captures-attached\captures.ndjson
+Tests file: <review-9>\ing-old\captures-attached\tests.ndjson
+Unhandled exception. System.Collections.Generic.KeyNotFoundException: The given key 'FileAttachment { Name = a.txt, RelativePath = attachments/a.txt, MediaType = , IsInlineImage = False, Problem = , IsUrl = False }' was not present in the dictionary.
+   at System.Collections.Generic.Dictionary`2.get_Item(TKey key)
+   at Kronikol.Reports.ReportGenerator.<>c__DisplayClass216_0.<CopyAttachments>g__Place|4(FileAttachment attachment) in <review-9>\old\src\Kronikol\Reports\ReportGenerator.cs:line 7127
+   at System.Linq.Enumerable.ArraySelectIterator`2.Fill(ReadOnlySpan`1 source, Span`1 destination, Func`2 func)
+   at System.Linq.Enumerable.ArraySelectIterator`2.ToArray()
+   at Kronikol.Reports.ReportGenerator.<>c__DisplayClass216_0.<CopyAttachments>b__3(FileAttachment[] attachments) in <review-9>\old\src\Kronikol\Reports\ReportGenerator.cs:line 7122
+   at Kronikol.Reports.AttachmentPlacement.<ForEachList>g__Steps|9_0(ScenarioStep[] steps, <>c__DisplayClass9_0&) in <review-9>\old\src\Kronikol\Reports\AttachmentPlacement.cs:line 151
+   at Kronikol.Reports.AttachmentPlacement.ForEachList(IEnumerable`1 scenarios, Func`2 replace) in <review-9>\old\src\Kronikol\Reports\AttachmentPlacement.cs:line 142
+   at Kronikol.Reports.ReportGenerator.CopyAttachments(Feature[] features, String reportsDirectory) in <review-9>\old\src\Kronikol\Reports\ReportGenerator.cs:line 7122
+   at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagramsCore(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment environment, Func`2 getEnv, Action`1 beforeFirstWrite, IReadOnlyList`1 suppliedSpans, String historyBaseDirectory, AttachmentContext attachmentContext, Boolean printsDiagnostics) in <review-9>\old\src\Kronikol\Reports\ReportGenerator.cs:line 504
+   at Kronikol.Reports.ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(Feature[] features, DateTime startRunTime, DateTime endRunTime, ReportConfigurationOptions options, RunEnvironment environment, Func`2 getEnv, Action`1 beforeFirstWrite, IReadOnlyList`1 spans, String historyBaseDirectory, AttachmentContext attachments) in <review-9>\old\src\Kronikol\Reports\ReportGenerator.cs:line 201
+   at Kronikol.Ingestion.IngestPipeline.RunCore(IngestRequest request, ReportConfigurationOptions options, String decodedAttachments) in <review-9>\old\src\Kronikol\Ingestion\IngestPipeline.cs:line 694
+   at Kronikol.Ingestion.IngestPipeline.Run(IngestRequest request) in <review-9>\old\src\Kronikol\Ingestion\IngestPipeline.cs:line 466
+   at Kronikol.Tool.IngestCommand.Run(IReadOnlyList`1 args, TextWriter out, TextWriter error) in <review-9>\old\src\Kronikol.Tool\IngestCommand.cs:line 566
+   at Kronikol.Tool.Commands.<>c.<.cctor>b__7_1(IReadOnlyList`1 a, TextWriter o, TextWriter e) in <review-9>\old\src\Kronikol.Tool\Commands.cs:line 31
+   at Kronikol.Tool.Commands.Dispatch(IReadOnlyList`1 args, TextWriter out, TextWriter error) in <review-9>\old\src\Kronikol.Tool\Commands.cs:line 103
+   at Program.<Main>$(String[] args) in <review-9>\old\src\Kronikol.Tool\Program.cs:line 25

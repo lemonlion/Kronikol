@@ -554,12 +554,12 @@ public static class ReportGenerator
 
         if (options.GenerateSpecificationsReport)
         {
-            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), suite: suite, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, warmUp: warmUp));
+            Add($"{options.HtmlSpecificationsFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(options.HtmlSpecificationsCustomStyleSheet, options), $"{options.HtmlSpecificationsFileName}.html", options.SpecificationsTitle, false, generateBlankOnFailedTests: true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScriptSpecifications, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, showStepNumbers: options.SpecificationsShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, showNoInteractionsMarker: options.ShowNoInteractionsMarker, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: true), backgroundOpensOnFailure: ReportToggleDefaultsResolver.BackgroundOpensOnFailure(options, specifications: true), suite: suite, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, warmUp: warmUp));
         }
 
         if (options.GenerateTestRunReport)
         {
-            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp, backgroundPaths: backgroundPaths));
+            Add($"{options.HtmlTestRunReportFileName}.html", () => GenerateHtmlReportCore(diagrams, features, startRunTime, endRunTime, UserStylesheets(null, options), $"{options.HtmlTestRunReportFileName}.html", GetTestRunReportTitle(options), true, lazyLoadImages: options.LazyLoadDiagramImages, diagramFormat: options.DiagramFormat, plantUmlRendering: options.PlantUmlRendering, inlineSvgRendering: options.InlineSvgRendering, internalFlowTracking: options.InternalFlowTracking, internalFlowDataScript: internalFlowDataScript, wholeTestSegments: wholeTestSegments, trackedLogs: trackedLogs, wholeTestVisualization: options.WholeTestFlowVisualization, ciMetadata: ciMetadata, showStepNumbers: options.TestRunReportShowStepNumbers, customCss: options.CustomCss, customFaviconBase64: options.CustomFaviconBase64, customLogoHtml: options.CustomLogoHtml, groupParameterizedTests: options.GroupParameterizedTests, maxParameterColumns: options.MaxParameterColumns, titleizeParameterNames: options.TitleizeParameterNames, titleWords: titleWords, componentDiagramPlantUml: ShouldEmbedComponentDiagram(options) ? componentDiagramPlantUml : null, componentDiagramDrawn: componentDiagramDrawn, componentDiagram: ShouldEmbedComponentDiagram(options) ? componentDiagram : null, showNoInteractionsMarker: options.ShowNoInteractionsMarker, diagnostics: reportDiagnostics, background: background, browserRenderWorkers: options.BrowserRenderWorkers, browserRenderCacheMegabytes: options.BrowserRenderCacheMegabytes, browserFragmentMaxHeight: options.BrowserFragmentMaxHeight, separateBackgroundSteps: options.SeparateBackgroundSteps, collapseRepeatedStepKeywords: options.CollapseRepeatedStepKeywords, notePayloadFormat: options.NotePayloadFormat, fullSearchIndex: options.FullSearchIndex, searchIndexCache: searchIndexCache, toggleDefaults: ReportToggleDefaultsResolver.Resolve(options, specifications: false), backgroundOpensOnFailure: ReportToggleDefaultsResolver.BackgroundOpensOnFailure(options, specifications: false), suite: suite, history: options.EmbedHistoryInReport && (options.ShowScenarioHistory || options.ShowHistorySection) ? history?.Verdicts : null, showHistorySection: options.ShowHistorySection, showReportDiagnostics: options.ShowReportDiagnosticsSection, renderCollapsedSubStepsOnExpand: options.RenderCollapsedSubStepsOnExpand, showScenarioHistory: options.ShowScenarioHistory, warmUp: warmUp, backgroundPaths: backgroundPaths));
         }
 
         if (options.GenerateSpecificationsData)
@@ -1492,7 +1492,8 @@ public static class ReportGenerator
         bool showScenarioHistory = false,
         WarmUpResult? warmUp = null,
         EmbeddedComponentDiagram? componentDiagram = null,
-        IReadOnlyDictionary<Guid, string>? backgroundPaths = null)
+        IReadOnlyDictionary<Guid, string>? backgroundPaths = null,
+        bool backgroundOpensOnFailure = false)
     {
         // The Specifications page describes the tests, so a scenario that is not a test is not in it.
         if (!includeTestRunData)
@@ -2478,6 +2479,7 @@ public static class ReportGenerator
                         searchIndexPieces: searchIndexPieces,
                         scenarioToolbarControls: scenarioToolbarControls,
                         toggleDefaults: toggles,
+                        backgroundOpensOnFailure: backgroundOpensOnFailure,
                         // Without this the flat outline rows compute their ids with no suite while the
                         // scenario <details> around them computes with one, so one report carries two
                         // identity schemes and the deep link from a flat row resolves to nothing.
@@ -2609,7 +2611,7 @@ public static class ReportGenerator
                     body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(scenario.Description)}</div>""");
 
                 RenderScenarioStepSections(body, scenario, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords,
-                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral);
+                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral, backgroundOpensOnFailure);
 
                 if (scenario.Attachments is { Length: > 0 })
                 {
@@ -3555,10 +3557,10 @@ public static class ReportGenerator
 
     private static bool HasAnyFailed(ScenarioStep step)
     {
+        if (step.Status == ExecutionResult.Failed) return true;
         if (step.SubSteps is not { Length: > 0 }) return false;
         foreach (var sub in step.SubSteps)
         {
-            if (sub.Status == ExecutionResult.Failed) return true;
             if (HasAnyFailed(sub)) return true;
         }
         return false;
@@ -3719,7 +3721,8 @@ public static class ReportGenerator
         HistoryVerdicts? history = null,
         Dictionary<string, int>? historySlots = null,
         WarmUpResult? warmUp = null,
-        StepDeferral? stepDeferral = null)
+        StepDeferral? stepDeferral = null,
+        bool backgroundOpensOnFailure = false)
     {
         var toggles = toggleDefaults ?? ResolvedToggleDefaults.BuiltIn;
         var scenarios = group.Scenarios;
@@ -4097,7 +4100,7 @@ public static class ReportGenerator
                     body.Append($"""<div class="scenario-description">{System.Net.WebUtility.HtmlEncode(s.Description)}</div>""");
 
                 RenderScenarioStepSections(body, s, showStepNumbers, separateBackgroundSteps, collapseRepeatedStepKeywords,
-                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral);
+                    toggles.StepsSectionOpen, toggles.BackgroundStepsOpen, stepDeferral, backgroundOpensOnFailure);
 
                 if (s.Attachments is { Length: > 0 })
                 {
@@ -4360,7 +4363,8 @@ public static class ReportGenerator
         bool collapseRepeatedStepKeywords,
         bool stepsSectionOpen = true,
         bool backgroundStepsOpen = false,
-        StepDeferral? deferral = null)
+        StepDeferral? deferral = null,
+        bool backgroundOpensOnFailure = false)
     {
         var background = scenario.BackgroundSteps ?? [];
         var steps = scenario.Steps ?? [];
@@ -4371,7 +4375,9 @@ public static class ReportGenerator
             {
                 // Each section collapses independently, so the Steps list still opens with its own primary.
                 var backgroundKeywords = collapseRepeatedStepKeywords ? StepKeywordCollapser.DisplayKeywords(background) : null;
-                body.Append($"""<details class="scenario-background"{(backgroundStepsOpen ? " open" : "")}>""");
+                // A section holding a failed step starts open, and stays open as its outline row is selected, unless it was set to stay closed.
+                var holdsFailure = backgroundOpensOnFailure && background.Any(HasAnyFailed);
+                body.Append($"""<details class="scenario-background"{(holdsFailure ? " data-holds-failure" : "")}{(backgroundStepsOpen || holdsFailure ? " open" : "")}>""");
                 body.Append("""<summary class="h4" title="The steps of the feature's background, which run before this scenario's own">Background Steps</summary>""");
                 for (var bi = 0; bi < background.Length; bi++)
                 {
@@ -4470,8 +4476,8 @@ public static class ReportGenerator
     /// <para>
     /// <c>displayKeyword</c> shows in place of <see cref="ScenarioStep.Keyword"/> —
     /// <see cref="StepKeywordCollapser"/> substitutes <c>And</c> for a repeat of the primary keyword in
-    /// force. A render-time projection only; the step itself is never modified, because background steps
-    /// are shared across scenarios and the data writers run concurrently with this one.
+    /// force. A render-time projection only; the step itself is never modified, because the data writers
+    /// run concurrently with this one.
     /// </para>
     /// <para>
     /// <c>isBackground</c> says the step came from <see cref="Scenario.BackgroundSteps"/>, marking it

@@ -45,6 +45,11 @@ internal static class ScenarioInfoEnumerableExtensions
                             // title keys its id and its place on the title, as it did when it was named by it.
                             var displayName = x.RowName ?? x.ScenarioTitle;
 
+                            // Every step is this scenario's own, as it ran; those a Background: gave it come first (#222).
+                            var rows = x.Steps.Where(step => !step.RanByAStep).ToList();
+                            var ran = rows.Count > 0 ? MapSteps(rows, StepCollector.GetSteps(x.ScenarioId)) : [];
+                            var backgroundCount = CountBackgroundSteps(ran, x.WrittenBackground ?? []);
+
                             return new Scenario
                             {
                                 Id = x.ScenarioId,
@@ -59,9 +64,8 @@ internal static class ScenarioInfoEnumerableExtensions
                                 ErrorStackTrace = x.TestError?.StackTrace,
                                 Duration = x.Duration,
                                 EndedAt = x.EndedAt,
-                                Steps = x.Steps.Count > 0
-                                    ? MapSteps(x.Steps, StepCollector.GetSteps(x.ScenarioId))
-                                    : null,
+                                BackgroundSteps = backgroundCount > 0 ? ran[..backgroundCount] : null,
+                                Steps = ran.Length > backgroundCount ? ran[backgroundCount..] : null,
                                 Tags = tags.Length > 0 ? tags : null,
                                 Rule = x.Rule,
                                 SourceFile = x.SourceFile,
@@ -77,7 +81,9 @@ internal static class ScenarioInfoEnumerableExtensions
                             };
                         }).ToArray();
 
-                BackgroundStepsDetector.DetectAndExtract(scenarios);
+                // Scenarios built by hand have no document to read, so what they share is still only guessed at.
+                if (featureGroup.All(x => x.WrittenBackground is null))
+                    BackgroundStepsDetector.DetectAndExtract(scenarios);
 
                 return new Feature
                 {
@@ -113,7 +119,7 @@ internal static class ScenarioInfoEnumerableExtensions
                 Parameters = ParseTableText(steps[i].TableText),
                 TextSegments = BuildTextSegments(steps[i]),
                 SubSteps = collectedSteps is not null && i < collectedSteps.Length
-                    ? collectedSteps[i].SubSteps
+                    ? DescribeNested(collectedSteps[i].SubSteps, steps[i].Nested)
                     : null,
                 Attachments = collectedSteps is not null && i < collectedSteps.Length
                     ? collectedSteps[i].Attachments
@@ -123,6 +129,50 @@ internal static class ScenarioInfoEnumerableExtensions
                 priorFailure = true;
         }
         return mapped;
+    }
+
+    /// <summary>
+    /// How many rows, from the first, are the Background the document writes: a failed step ends a scenario early, and a
+    /// row that disagrees with the document is never counted as it.
+    /// </summary>
+    internal static int CountBackgroundSteps(IReadOnlyList<ScenarioStep> ran, IReadOnlyList<string> writtenBackground)
+    {
+        var count = 0;
+        while (count < ran.Count && count < writtenBackground.Count
+               && string.Equals(ran[count].Text, writtenBackground[count], StringComparison.Ordinal))
+        {
+            count++;
+        }
+        return count;
+    }
+
+    /// <summary>
+    /// The steps a step definition ran, as the hooks saw them. The collector holds their place among the woven steps, but
+    /// not their table, doc string or inline values. Each is found by what opened it, so a woven step that reads the same stays
+    /// what it was, under any woven step between.
+    /// </summary>
+    private static ScenarioStep[]? DescribeNested(ScenarioStep[]? subSteps, IReadOnlyList<ReqNRollStepInfo>? nested)
+    {
+        if (subSteps is null || nested is not { Count: > 0 })
+            return subSteps;
+
+        foreach (var subStep in subSteps)
+        {
+            var step = subStep.OpenedBy is null ? null : nested.FirstOrDefault(s => ReferenceEquals(s.Nested, subStep.OpenedBy));
+            if (step is null)
+            {
+                DescribeNested(subStep.SubSteps, nested);
+                continue;
+            }
+
+            subStep.Status = step.Status.ToStepResult(false);
+            subStep.DocString = step.DocString;
+            subStep.Parameters = ParseTableText(step.TableText);
+            subStep.TextSegments = BuildTextSegments(step);
+            DescribeNested(subStep.SubSteps, step.Nested);
+        }
+
+        return subSteps;
     }
 
     private static StepTextSegment[]? BuildTextSegments(ReqNRollStepInfo step)

@@ -85,6 +85,16 @@ public static class ReportToggleDefaultsResolver
         return resolved;
     }
 
+    /// <summary>
+    /// Whether a report's separate Background section holding a failed step starts open though
+    /// <see cref="ResolvedToggleDefaults.BackgroundStepsOpen"/> is false: so when <see cref="ReportToggleDefaults.BackgroundStepsOpen"/>
+    /// was left unset (#222). Only the options can tell unset from false, so a value set says what it says, as does a record
+    /// handed to <c>GenerateHtmlReport</c>.
+    /// </summary>
+    internal static bool BackgroundOpensOnFailure(ReportConfigurationOptions options, bool specifications) =>
+        options.TestRunReportToggleDefaults.BackgroundStepsOpen is null
+        && (!specifications || options.SpecificationsToggleDefaults.BackgroundStepsOpen is null);
+
     private static ResolvedToggleDefaults Overlay(ResolvedToggleDefaults baseline, ReportToggleDefaults overrides) => new()
     {
         Details = Defined(overrides.Details) ?? baseline.Details,

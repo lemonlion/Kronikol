@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # E44 with the separate section, on a build: run-paint-row.sh <label> <kronikol> [dlls]
-H=/c/Code/Kronikol-222/plans/BACKGROUND_AS_WRITTEN_PLAN.harness; W=/c/Code/Kronikol-222m; label=$1; dlls=${2:-}
+H=<tree>/plans/BACKGROUND_AS_WRITTEN_PLAN.harness; W=<tree>m; label=$1; dlls=${2:-}
 suite=$W/edge-$label; out=$suite/bin/Release/net10.0/Reports
 cd $suite || exit 1
 if [ -n "$dlls" ]; then for name in Kronikol.dll Kronikol.ReqNRoll.Core.dll; do cp "$dlls/$name" bin/Release/net10.0/; done; fi
