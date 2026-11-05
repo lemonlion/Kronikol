@@ -73,6 +73,7 @@ public class MoreBindings(Driver driver, ScenarioContext scenario, ITestRunner r
     [When("a pending step runs")] public void Pending() => throw new PendingStepException();
 
     [Given("a call that outlasts its step")] public void Outlasts() => _pending = driver.Post("spans");
+    [When("the payment passes")] public Task Passes() => driver.Post("payments");
     [Then("the call is answered")] public Task Answered() => _pending!;
 }
 
@@ -88,4 +89,31 @@ public class ConstructedBindings
     }
 
     [Given("a step whose binding constructor runs a step")] public Task Run() => _driver.Post("ctor-step");
+}
+
+[Binding]
+public class WhatDidNotRunBindings(Driver driver, ScenarioContext scenario, ITestRunner runner)
+{
+    [BeforeScenario("plainhookthrows")]
+    public void PlainHookThrows() => throw new InvalidOperationException("the plain hook failed");
+
+    [When("this step is ambiguous")] public Task AmbiguousOne() => driver.Post("ambiguous-one");
+
+    [When("this step is ambiguous")] public Task AmbiguousTwo() => driver.Post("ambiguous-two");
+
+    [Given("a step that runs an inner step a hook stops, then a step method")]
+    public async Task RunsAStoppedStep()
+    {
+        await runner.GivenAsync("an inner step a hook stops");
+        await driver.A_customer_is_registered();
+    }
+
+    [Given("an inner step a hook stops")] public Task Stopped() => driver.Post("stopped");
+
+    [BeforeStep("stopsinner", Order = int.MinValue)]
+    public void StopInner()
+    {
+        if (scenario.StepContext.StepInfo.Text == "an inner step a hook stops")
+            throw new InvalidOperationException("the hook stopped it");
+    }
 }

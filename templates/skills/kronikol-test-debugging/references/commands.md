@@ -209,7 +209,7 @@ scenario's `stableId` and example values, and, when the scenario holds attachmen
 lists them all, the scenario's own with them. Since 4.31.0 the tree cuts two lists, each with a line naming
 the view that prints the rest: a step's parameters past eight (`… N more parameter(s): steps s3/2`; a step's
 own tree prints them all), and a step's attachments, cut as `failures` cuts them
-(`… N more attachment(s) (names): attachments s3/2`).
+(`… N more attachment(s) (names): attachments s3/2`). A row's mark says how it ended: `✗` failed, `~` bypassed, `-` reads skipped (it did not run, or it skipped itself), `·` an assertion, `?` no result.
 
 ### `attachments <report> s3`
 Every attachment of one scenario, in `Failures.jsonl`'s order: the scenario's own, then each step's (background

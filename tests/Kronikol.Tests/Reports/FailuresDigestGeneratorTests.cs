@@ -20,6 +20,30 @@ public class FailuresDigestGeneratorTests
     private static FailuresDigest Generate(Feature[] features, RequestResponseLog[]? logs = null) =>
         FailuresDigestGenerator.Generate(features, logs, "TestRunReport", "3.0.84");
 
+    [Fact]
+    public void The_steps_before_a_failure_are_the_steps_that_ran()
+    {
+        var features = OneFailure();
+        features[0].Scenarios[2].Steps =
+        [
+            new ScenarioStep { Keyword = "Given", Text = "a Background row", Status = ExecutionResult.SkippedAfterFailure, DidNotRun = true },
+            new ScenarioStep { Keyword = "Given", Text = "a basket", Status = ExecutionResult.Passed },
+            new ScenarioStep { Keyword = "When", Text = "a step that skipped itself", Status = ExecutionResult.Skipped },
+            new ScenarioStep { Keyword = "Then", Text = "a row read back with no mark", Status = ExecutionResult.SkippedAfterFailure },
+            new ScenarioStep { Keyword = "Then", Text = "an undefined row", Status = ExecutionResult.Skipped, DidNotRun = true },
+            new ScenarioStep { Text = "Seeding fails", Status = ExecutionResult.Failed },
+        ];
+
+        var digest = Generate(features).Markdown;
+
+        Assert.Contains("a basket", digest);
+        Assert.Contains("a step that skipped itself", digest);
+        Assert.DoesNotContain("a Background row", digest);
+        Assert.DoesNotContain("a row read back with no mark", digest);
+        Assert.DoesNotContain("an undefined row", digest);
+        Assert.DoesNotContain("earlier step(s)", digest);
+    }
+
     // ─── Shape ─────────────────────────────────────────────────
 
     [Fact]

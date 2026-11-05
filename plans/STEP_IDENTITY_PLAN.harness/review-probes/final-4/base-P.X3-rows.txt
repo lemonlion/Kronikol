@@ -1,0 +1,489 @@
+## feature: A rules
+=== A1 passes under the rule [Passed] rule=A rule with a background
+  b0 Given the shop is ready d
+  b1 Given the rule background runs d
+  b2 And the rule background fails when asked d
+  0 When the customer places the order d
+    0.0 Order d
+  1 Then the order is confirmed d
+    1.0 Read back d
+  calls: b0 /ready, b1 /rule-bg, b2 /rule-bg-2, 0 /orders, 1 /orders/1
+=== A2 the rule background fails [Failed] rule=A rule with a background error=rule background failed
+  b0 Given the shop is ready d
+  b1 Given the rule background runs d
+  b2 And the rule background fails when asked [Failed] d
+  calls: b0 /ready, b1 /rule-bg, b2 /rule-bg-2
+=== A3 the feature background fails under the rule [Failed] rule=A rule with a background error=the shop is not ready
+  b0 Given the shop is ready [Failed] d
+  calls: b0 /ready
+=== A4 an own step is undefined under the rule [Skipped] rule=A rule with a background
+  b0 Given the shop is ready d
+  b1 Given the rule background runs d
+  b2 And the rule background fails when asked d
+  calls: b0 /ready, b1 /rule-bg, b2 /rule-bg-2
+=== A5 an own step fails under the rule [Failed] rule=A rule with a background error=payment declined
+  b0 Given the shop is ready d
+  b1 Given the rule background runs d
+  b2 And the rule background fails when asked d
+  0 When the payment fails [Failed] d
+  calls: b0 /ready, b1 /rule-bg, b2 /rule-bg-2, 0 /payments
+=== A6 passes under the plain rule [Passed] rule=A rule with no background
+  b0 Given the shop is ready d
+  0 When the customer places the order d
+    0.0 Order d
+  1 Then the order is confirmed d
+    1.0 Read back d
+  calls: b0 /ready, 0 /orders, 1 /orders/1
+=== A7 fails under the plain rule [Failed] rule=A rule with no background error=payment declined
+  b0 Given the shop is ready d
+  0 When the payment fails [Failed] d
+  calls: b0 /ready, 0 /payments
+=== A8 an outline under a rule [Failed] rule=A rule with no background error=payment broke
+  values: fate=breaks; n=2
+  b0 Given the shop is ready d
+  0 When the payment breaks [Failed] d
+  calls: b0 /ready, 0 /fate/breaks
+=== A8 an outline under a rule [Passed] rule=A rule with no background
+  values: fate=passes; n=1
+  b0 Given the shop is ready d
+  0 When the payment passes d
+  1 Then order 1 is read back d
+  calls: b0 /ready, 0 /fate/passes, 1 /orders/1
+## feature: B background fails
+=== B1 passes [Passed]
+  b0 Given the shop is ready d
+  b1 And the shop is stocked d
+  0 When the customer places the order d
+    0.0 Order d
+  1 Then the order is confirmed d
+    1.0 Read back d
+  calls: b0 /ready, b1 /stocked, 0 /orders, 1 /orders/1
+=== B2 the first background step fails [Failed] error=the shop is not ready
+  b0 Given the shop is ready [Failed] d
+  calls: b0 /ready
+=== B3 writes a background step again after a failure [Failed] error=payment declined
+  b0 Given the shop is ready d
+  b1 And the shop is stocked d
+  0 When the payment fails [Failed] d
+  calls: b0 /ready, b1 /stocked, 0 /payments
+=== B4 a plain hook throws [Failed] error=the hook failed
+  calls: 
+=== B5 a hook step fails [Failed] error=seed failed
+  0 Seed fails [Failed] d
+  calls: 0 /seed-fail
+=== B6 a hook skips the scenario [Skipped] error=$XunitDynamicSkip$skipped by the hook
+  calls: 
+=== B7 the background fails and an after hook has a step [Failed] error=the shop is not ready
+  b0 Given the shop is ready [Failed] d
+  0 Clean d
+  calls: b0 /ready, 0 /clean
+## feature: B2 an undefined background step
+=== B21 first under an undefined background [Skipped]
+  b0 Given the shop is ready d
+  calls: b0 /ready
+=== B22 second under an undefined background [Skipped]
+  b0 Given the shop is ready d
+  calls: b0 /ready
+## feature: B3 a pending background step
+=== B31 first under a pending background [Skipped] error=The step definition is not implemented.
+  b0 Given a background step is pending [Skipped] d
+  calls: 
+=== B32 second under a pending background [Skipped] error=The step definition is not implemented.
+  b0 Given a background step is pending [Skipped] d
+  calls: 
+## feature: C outlines
+=== C1 a failed row with a table, an inline value and a doc string after it [Failed] error=payment broke
+  values: fate=breaks; sku=PEAR; count=2; n=2
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment breaks [Failed] d
+  calls: 0 /customers, 1 /fate/breaks
+=== C1 a failed row with a table, an inline value and a doc string after it [Passed]
+  values: fate=passes; n=1; Listed=sku: APPLE, count: 1
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment passes d
+  2 Then the basket is listed {table sku count APPLE 1} d
+  3 And order 1 is read back d
+  4 And the note says """note 1""" d
+  calls: 0 /customers, 1 /fate/passes, 2 /basket, 3 /orders/1, 4 /note
+=== C1 a failed row with a table, an inline value and a doc string after it [Passed]
+  values: fate=passes; n=3; Listed=sku: PLUM, count: 3
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment passes d
+  2 Then the basket is listed {table sku count PLUM 3} d
+  3 And order 3 is read back d
+  4 And the note says """note 3""" d
+  calls: 0 /customers, 1 /fate/passes, 2 /basket, 3 /orders/3, 4 /note
+=== C2 the failed row comes first [Failed] error=payment broke
+  values: fate=breaks; sku=PEAR; count=2
+  0 When the payment breaks [Failed] d
+  calls: 0 /fate/breaks
+=== C2 the failed row comes first [Passed]
+  values: fate=passes; Listed=sku: APPLE, count: 1
+  0 When the payment passes d
+  1 Then the basket is listed {table sku count APPLE 1} d
+  calls: 0 /fate/passes, 1 /basket
+=== C3 two Examples blocks, one failing [Passed]
+  values: fate=passes; Listed=sku: APPLE
+  0 When the payment passes d
+  1 Then the basket is listed {table sku APPLE} d
+  calls: 0 /fate/passes, 1 /basket
+=== C3 two Examples blocks, one failing [Failed] error=payment broke
+  values: fate=breaks; sku=PEAR
+  0 When the payment breaks [Failed] d
+  calls: 0 /fate/breaks
+=== C4 a row that names an undefined step [Skipped]
+  values: fate=one; sku=APPLE
+  calls: 
+=== C4 a row that names an undefined step [Skipped]
+  values: fate=two; sku=PEAR
+  calls: 
+=== C5 a table no value feeds, a row failing [Failed] error=payment broke
+  values: fate=breaks
+  0 When the payment breaks [Failed] d
+  calls: 0 /fate/breaks
+=== C5 a table no value feeds, a row failing [Passed]
+  values: fate=passes
+  0 When the payment passes d
+  1 Then the basket is listed {table sku fixed} d
+  calls: 0 /fate/passes, 1 /basket
+=== C6 every row's hook throws [Failed] error=the hook failed
+  values: fate=passes; sku=APPLE
+  calls: 
+=== C6 every row's hook throws [Failed] error=the hook failed
+  values: fate=passes; sku=PEAR
+  calls: 
+=== C7 a row with values no step used, a later scalar group [Failed] error=payment broke
+  values: fate=breaks; sku=APPLE; ExpectedA=1; ExpectedB=2
+  0 When the payment breaks [Failed] d
+  calls: 0 /fate/breaks
+=== C7 a row with values no step used, a later scalar group [Passed]
+  values: fate=passes; Listed=sku: PEAR; Expected=ExpectedA: 3, ExpectedB: 4
+  0 When the payment passes d
+  1 Then the basket is listed {table sku PEAR} d
+  2 Then order 3 is read back d
+  3 Then order 4 is read back d
+  calls: 0 /fate/passes, 1 /basket, 2 /orders/3, 3 /orders/4
+## feature: D ignored
+=== D2 passes beside it [Passed]
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the customer places the order d
+    1.0 Order d
+  calls: 0 /customers, 1 /orders
+=== D3 an outline with an ignored Examples block [Passed]
+  values: fate=passes
+  0 When the payment passes d
+  calls: 0 /fate/passes
+## feature: E hooks
+=== E01 a plain BeforeScenario hook throws [Failed] error=the hook failed
+  calls: 
+=== E02 a BeforeScenario hook calls Pending [Failed] error=The step definition is not implemented.
+  calls: 
+=== E03 a BeforeScenario hook skips [Skipped] error=$XunitDynamicSkip$skipped by the hook
+  calls: 
+=== E04 a hook catches a failed step method and every step passes [Passed]
+  0 Seed fails [Failed] d
+  1 Seed d
+  2 Given a registered customer d
+    2.0 Customer d
+  3 When the customer places the order d
+    3.0 Order d
+  calls: 0 /seed-fail, 1 /seed, 2 /customers, 3 /orders
+=== E05 a hook catches a failed step method and a step skips itself [Skipped] error=$XunitDynamicSkip$skipped by the step
+  0 Seed fails [Failed] d
+  1 Seed d
+  2 Given a registered customer d
+    2.0 Customer d
+  3 When a step skips itself [Skipped] d
+  calls: 0 /seed-fail, 1 /seed, 2 /customers, 3 /skips
+=== E05b a hook catches a failed step method and a step is pending [Skipped] error=The step definition is not implemented.
+  0 Seed fails [Failed] d
+  1 Seed d
+  2 Given a registered customer d
+    2.0 Customer d
+  3 When a step is pending [Skipped] d
+  calls: 0 /seed-fail, 1 /seed, 2 /customers
+=== E05c a hook catches a failed step method and a step is undefined [Skipped]
+  0 Seed fails [Failed] d
+  1 Seed d
+  2 Given a registered customer d
+    2.0 Customer d
+  calls: 0 /seed-fail, 1 /seed, 2 /customers
+=== E06 a step skips itself and an AfterScenario step method fails [Failed] error=$XunitDynamicSkip$skipped by the step
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When a step skips itself [Skipped] d
+  2 Clean fails [Failed] d
+  calls: 0 /customers, 1 /skips, 2 /clean-fail
+=== E07 a step is pending and an AfterScenario step method fails [Failed] error=The step definition is not implemented.
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When a step is pending [Skipped] d
+  2 Clean fails [Failed] d
+  calls: 0 /customers, 2 /clean-fail
+=== E08 every step passes and an AfterScenario step method fails [Failed] error=clean failed
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the customer places the order d
+    1.0 Order d
+  2 Clean fails [Failed] d
+  calls: 0 /customers, 1 /orders, 2 /clean-fail
+=== E09 a step skips itself and an AfterScenario hook catches a failed step method [Skipped] error=$XunitDynamicSkip$skipped by the step
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When a step skips itself [Skipped] d
+  2 Clean fails [Failed] d
+  calls: 0 /customers, 1 /skips, 2 /clean-fail
+=== E10 a failed scenario with a plain call in AfterScenario [Failed] error=payment declined
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment fails [Failed] d
+  calls: 0 /customers, 1 /payments, 1 /teardown
+=== E11 a failed scenario with a step method in AfterScenario [Failed] error=payment declined
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment fails [Failed] d
+  2 Clean d
+  calls: 0 /customers, 1 /payments, 2 /clean
+=== E12 a failed scenario whose AfterScenario hook runs a Gherkin step [Failed] error=payment declined
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment fails [Failed] d
+  calls: 0 /customers, 1 /payments
+=== E13 a hook runs two Gherkin steps, the first failing [Failed] error=inner step failed
+  0 Given an inner step fails [Failed] d
+  calls: 0 /inner
+=== E14 a hook's step method runs two Gherkin steps, the first failing [Failed] error=inner step failed
+  0 Wrapper step method {inner [Func<Task>]} d
+  1 Given an inner step fails [Failed] d
+  calls: 0 /wrapper, 1 /inner, 1 /wrapper-end
+=== E15 a hook runs an undefined Gherkin step [Skipped]
+  calls: 
+=== E16 a block hook catches a failed step method and every step passes [Passed]
+  0 Given a registered customer d
+    0.0 Customer d
+  1 Seed fails [Failed] d
+  2 When the customer places the order d
+    2.0 Order d
+  3 Then the order is confirmed d
+    3.0 Read back d
+  calls: 0 /customers, 1 /seed-fail, 2 /orders, 3 /orders/1
+=== E17 a failed scenario whose AfterScenario hook throws [Failed] error=payment declined
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment fails [Failed] d
+  calls: 0 /customers, 1 /payments
+=== E18 a hook step fails and a plain call in AfterScenario [Failed] error=seed failed
+  0 Seed fails [Failed] d
+  calls: 0 /seed-fail, 0 /teardown
+=== E19 a plain hook throws and an AfterScenario hook has a step method [Failed] error=the hook failed
+  0 Clean d
+  calls: 0 /clean
+## feature: F steps
+=== F01 a step skips itself [Skipped] error=$XunitDynamicSkip$skipped by the step
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When a step skips itself [Skipped] d
+  calls: 0 /customers, 1 /skips
+=== F02 a step calls ScenarioContext Pending [Skipped] error=The step definition is not implemented.
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When a step calls ScenarioContext Pending [Skipped] d
+  calls: 0 /customers
+=== F03 a step is ambiguous [Failed] error=Ambiguous step definitions found for step 'When this step is ambiguous': P.X3:EngineFixtures.Steps.A...
+  0 Given a registered customer d
+    0.0 Customer d
+  calls: 0 /customers
+=== F04 a step binds badly [Failed] error=Parameter count mismatch! The binding method 'P.X3:EngineFixtures.Steps.Badly(String)' should have 0...
+  0 Given a registered customer d
+    0.0 Customer d
+  calls: 0 /customers
+=== F05 an ambiguous step after a failure [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+=== F06 an undefined step after a failure [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+=== F07 a badly bound step after a failure [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+=== F08 a pending step after a failure [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+=== F09 the same step written twice, failing [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+=== F10 undefined, then undefined again, then And [Skipped]
+  calls: 
+=== F11 a skipped step with a doc string and a table [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+=== F12 a step fails at And keyword rows [Failed] error=inner step failed
+  0 Given a registered customer d
+    0.0 Customer d
+  1 And an inner step fails [Failed] d
+  calls: 0 /customers, 1 /inner
+## feature: G steps at depth
+=== G01 A runs B which fails then C [Failed] error=inner step failed
+  0 Given A runs B which fails then C [Failed] d
+    0.0 Given an inner step fails [Failed] d
+  calls: 0 /inner, 0 /outer-after
+=== G02 three levels [Failed] error=inner step failed
+  0 Given depth one runs depth two then a sibling [Failed] d
+    0.0 Given depth two fails then runs a child [Failed] d
+      0.0.0 Given an inner step fails [Failed] d
+  calls: 0 /inner, 0 /d2-after, 0 /d1-after
+=== G03 a step method between the Gherkin steps [Failed] error=inner step failed
+  0 Given a step whose step method runs two steps [Failed] d
+    0.0 Wrapper step method {inner [Func<Task>]} d
+      0.0.0 Given an inner step fails [Failed] d
+  calls: 0 /wrapper, 0 /inner, 0 /wrapper-end
+=== G04 an undefined inner step [Skipped]
+  0 Given a step that runs an undefined step [Skipped] d
+  calls: 
+=== G05 a pending inner step [Skipped] error=The step definition is not implemented.
+  0 Given a step that runs a pending step [Skipped] d
+    0.0 When a step is pending [Skipped] d
+  calls: 
+=== G06 an inner step skips itself [Skipped] error=$XunitDynamicSkip$skipped by the step
+  0 Given a step that runs a step that skips itself [Skipped] d
+    0.0 When a step skips itself [Skipped] d
+  calls: 0 /skips
+=== G07 one inner step three times [Failed] error=inner step failed
+  0 Given a step that retries an inner step three times [Failed] d
+    0.0 Given an inner step fails [Failed] d
+  calls: 0 /inner
+=== G08 inner steps with arguments after a failure [Failed] error=inner step failed
+  0 Given a step that runs steps with arguments, the first failing [Failed] d
+    0.0 Given an inner step fails [Failed] d
+  calls: 0 /inner
+=== G09 And and But inner steps skipped [Failed] error=inner step failed
+  0 Given a step that runs a step with the wrong keyword text [Failed] d
+    0.0 Given an inner step fails [Failed] d
+  calls: 0 /inner
+=== G10 an outer step throws after an inner step passed [Failed] error=outer threw
+  0 Given a step that fails after running a step [Failed] d
+    0.0 Given a registered customer d
+      0.0.0 Customer d
+  calls: 0 /customers
+=== G11 an outer step throws after an inner failure [Failed] error=inner step failed
+  0 Given a step that fails inner and throws itself [Failed] d
+    0.0 Given an inner step fails [Failed] d
+  calls: 0 /inner
+=== G12 the inner failure with a plain call in AfterScenario [Failed] error=inner step failed
+  0 Given A runs B which fails then C [Failed] d
+    0.0 Given an inner step fails [Failed] d
+  calls: 0 /inner, 0 /outer-after, 0 /teardown
+=== G13 the inner failure with a step method in AfterScenario [Failed] error=inner step failed
+  0 Given A runs B which fails then C [Failed] d
+    0.0 Given an inner step fails [Failed] d
+  1 Clean d
+  calls: 0 /inner, 0 /outer-after, 1 /clean
+## feature: G2 steps at depth in a background
+=== G21 inner failure in the background [Failed] error=inner step failed
+  b0 Given A runs B which fails then C [Failed] d
+    b0.0 Given an inner step fails [Failed] d
+  calls: b0 /inner, b0 /outer-after
+## feature: H2 a BeforeFeature hook runs a Gherkin step
+=== H21 under a feature hook that ran a step [Passed]
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the customer places the order d
+    1.0 Order d
+  calls: 0 /customers, 1 /orders
+## feature: I siblings with no background written
+=== I1 passes, sharing an opening with the rest [Passed]
+  0 Given a registered customer d
+    0.0 Customer d
+  1 And the shop is ready d
+  2 When the customer places the order d
+    2.0 Order d
+  3 Then the order is confirmed d
+    3.0 Read back d
+  calls: 0 /customers, 1 /ready, 2 /orders, 3 /orders/1
+=== I2 fails, sharing the opening [Failed] error=payment declined
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment fails [Failed] d
+  calls: 0 /customers, 1 /payments
+=== I3 passes too [Passed]
+  0 Given a registered customer d
+    0.0 Customer d
+  1 And the shop is ready d
+  2 When order 3 is placed d
+  3 Then the order is confirmed d
+    3.0 Read back d
+  calls: 0 /customers, 1 /ready, 2 /orders/3, 3 /orders/1
+## feature: J round two
+=== J01 a hook ahead of Kronikol's throws at an inner step, a step method after it [Failed] error=the hook stopped it
+  0 Given a step that runs an inner step whose hook throws, then a step method [Failed] d
+    0.0 Given an inner step a hook stops [Failed] d
+    0.1 Late after skip d
+  calls: 0 /late
+=== J02 an undefined step, then a block hook's step method [Skipped]
+  0 Seed d
+  calls: 0 /seed
+=== J03 an AfterStep hook throws on an inner step [Failed] error=after step hook threw on the inner step
+  0 Given a step that runs the inner step an AfterStep hook throws on [Failed] d
+    0.0 Given the inner step with a bad after hook [Failed] d
+  calls: 0 /bad-after
+=== J04 a plain hook throws and an AfterScenario step method fails [Failed] error=the hook failed
+  0 Clean fails [Failed] d
+  calls: 0 /clean-fail
+=== J05 a step fails and an AfterScenario step method fails [Failed] error=payment declined
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment fails [Failed] d
+  2 Clean fails [Failed] d
+  calls: 0 /customers, 1 /payments, 2 /clean-fail
+=== J06 a hook that ties with Kronikol's last hook runs a Gherkin step after a failure [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+=== J07 a caught failed step method, then the scenario ignores itself at run time [Skipped] error=$XunitDynamicSkip$no GPU here
+  0 Seed fails [Failed] d
+  1 Seed d
+  calls: 0 /seed-fail, 1 /seed
+=== J08 the scenario ignores itself at run time [Skipped] error=$XunitDynamicSkip$no GPU here
+  calls: 
+=== J09 ignored at run time and an AfterScenario step method fails [Failed] error=$XunitDynamicSkip$no GPU here
+  0 Clean fails [Failed] d
+  calls: 0 /clean-fail
+=== J10 leaves a Gherkin step running for the next scenario [Passed]
+  0 Given a step that leaves a Gherkin step to run later d
+  calls: 
+=== J11 fails at once and waits in its AfterScenario hook [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+=== J12 a table with a pipe and a doc string with a brace, skipped [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+## feature: K files on a failed scenario
+=== K1 a failing step, a file attached in AfterScenario [Failed] error=payment declined
+  0 Given a registered customer d
+    0.0 Customer d
+  1 When the payment fails [Failed] d
+  calls: 0 /customers, 1 /payments
+  scenario files: after-scenario-K1.txt
+=== K2 a failing step, a file attached in AfterStep [Failed] error=payment declined
+  0 Given a registered customer files=after-step-a_registered_customer.txt d
+    0.0 Customer d
+  1 When the payment fails [Failed] files=after-step-the_payment_fails.txt d
+  calls: 0 /customers, 1 /payments
+=== K3 a file attached in BeforeScenario, a failing first step [Failed] error=payment declined
+  0 When the payment fails [Failed] d
+  calls: 0 /payments
+  scenario files: before-scenario-K3.txt
+=== K4 a plain hook throws, a file attached in AfterScenario [Failed] error=the hook failed
+  calls: 
+  scenario files: after-scenario-K4.txt
+=== K5 an undefined step, a file attached in AfterScenario [Skipped]
+  0 Given a registered customer d
+    0.0 Customer d
+  calls: 0 /customers
+  scenario files: after-scenario-K5.txt
+background keys: calls:Number,afterScenarioEnd:Array,interactions:Array
+background.calls: 0
+top-level keys: formatVersion,kronikolVersion,suite,startTime,endTime,ciMetadata,environment,features,background,diagnostics

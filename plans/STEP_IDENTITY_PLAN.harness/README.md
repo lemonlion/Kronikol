@@ -28,6 +28,7 @@ Every RUN line in the plan comes from here, unless the line names the peer sessi
 | `REVIEW.md` | The three independent reviews and what was done about each finding, and the audit of the plan's claims |
 | `REVIEW-FINAL-2.md`, `review-probes/final-2/` | The second final review, of the merged code: its report, as written, and its probes. `Probe.Reqnroll` and `Probe.BDDfy` are the shapes, `rows` and `held` read one report's rows and held calls |
 | `REVIEW-FINAL-3.md`, `review-probes/final-3/` | The narrow third review of the second's fixes: its report, its probes (`fixture/`, `unit/`), and its readings before the fixes it reviewed (`old-rows.txt`), on them (`new-rows.txt`), and on the fixes for what it found (`fix3-rows.txt`) |
+| `REVIEW-FINAL-4.md`, `review-probes/final-4/` | The narrow fourth review, of R2 and R3 before their release: its findings and what was done about each, its probes (`rq/`, `lb/`), and its rows on 5.29.3 (`base-P.X3-rows.txt`) and on its candidate (`wip-P.X3-rows.txt`) |
 | `execution/` | `mutate_r1_on_222.py`, the mutation pass over the merged code: `python mutate_r1_on_222.py <worktree> <out file> [ids]`, on a clean worktree, as it restores each file from its own copy. Any `BUILD` in its output is a broken fact and proves nothing. `mutate_r1.py` is the same pass before the merge |
 | `results/execution/` | The execution's own outputs: `red-*`, every fact run before its fix; `mutate-r1-*`, the mutation passes; `breakfastprovider-*`, a real consumer by row and by tree; `playwright-whole-on-rehearsal.txt` |
 

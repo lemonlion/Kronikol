@@ -114,11 +114,12 @@ internal static class ScenarioInfoEnumerableExtensions
         var priorFailure = false;
         var mapped = StepPairing.InOrderTheyRan(steps, collectedSteps, s => s.FrameId, (step, collected) =>
         {
+            priorFailure |= step.AfterFailure;
             var row = MapStep(step, collected, priorFailure);
             if (step.Status == ScenarioExecutionStatus.TestError || step.Status == ScenarioExecutionStatus.BindingError)
                 priorFailure = true;
             return row;
-        }, s => s.NotRunAfter);
+        }, s => s.NotRunAfter, s => s.NotRunUnder);
 
         return mapped.Count > 0 ? mapped.ToArray() : null;
     }
@@ -129,7 +130,9 @@ internal static class ScenarioInfoEnumerableExtensions
         DidNotRun = step.FrameId is null,
         Keyword = step.Keyword,
         Text = step.Text,
-        Status = step.Status.ToStepResult(priorFailure),
+        // A step that did not run after a failure reads so whatever stopped it from matching: Reqnroll still tries, and
+        // records an ambiguous step's error on it.
+        Status = step.NotRunAfter is not null && priorFailure ? ExecutionResult.SkippedAfterFailure : step.Status.ToStepResult(priorFailure),
         Duration = step.Duration,
         DocString = step.DocString,
         Parameters = ParseTableText(step.TableText),

@@ -284,12 +284,15 @@ public static class FailuresDigestGenerator
                 .ToArray();
 
         var failing = failingIndexes.Select(i => Line(ordered[i])).ToArray();
-        var context = failingIndexes.Length == 0
-            ? []
-            : ordered.Take(failingIndexes[0]).TakeLast(StepsBeforeFailure).Select(Line).ToArray();
 
-        // How many steps came before the first failing one: the context above holds the last few of them (#161).
-        var stepsBeforeTotal = failingIndexes.Length == 0 ? 0 : failingIndexes[0];
+        // The steps that ran before the first failing one: a written Background's rows stand first in the list, ran or not.
+        var before = ordered.Take(failingIndexes.FirstOrDefault())
+            .Where(s => !s.Step.DidNotRun && s.Step.Status != ExecutionResult.SkippedAfterFailure)
+            .ToArray();
+        var context = before.TakeLast(StepsBeforeFailure).Select(Line).ToArray();
+
+        // How many there were: the context above holds the last few of them (#161).
+        var stepsBeforeTotal = before.Length;
         var (calls, callsScope, callsTotal) = BuildCalls(located, failing, stepPaths, interactions, address);
 
         return new Entry(

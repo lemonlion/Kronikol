@@ -1,6 +1,6 @@
 # Step identity plan: #223
 
-**Written:** 2026-11-02, at 5.27.13 (`v5.27.13`, `c58d98c0`; main at `27cc0e46`). **Status: executing, on the owner's word of 2026-11-04 ("implement the plan in full"), with the recommended answers to Q1 to Q6.** R1 is 5.29.3. R2 and R3 follow. The sections below stand as they were reviewed, and each carries an **As executed** note where the release differs.
+**Written:** 2026-11-02, at 5.27.13 (`v5.27.13`, `c58d98c0`; main at `27cc0e46`). **Status: executing, on the owner's word of 2026-11-04 ("implement the plan in full"), with the recommended answers to Q1 to Q6.** R1 is 5.29.3, R2 is 5.30.1. R3 follows. The sections below stand as they were reviewed, and each carries an **As executed** note where the release differs.
 
 **Checked again:** 2026-11-03, at 5.28.2 (main at `9d994a4b`), line by line, with three more independent reviews and a narrow one. Each of them changed the design (§12). The prototype rebases on it with no conflict. Source references stay at `27cc0e46`: of the
 files they name, only `ReportGenerator.cs` and `RequestResponseLog.cs` moved, neither near what is cited. **RUN at 5.28.2** marks what ran there.
@@ -558,6 +558,19 @@ None of the examples holds a hook step, so they show that nothing broke, not tha
 | Mutation over the merged code (`execution/mutate_r1_on_222.py`) | every mutant caught but M55, which is equivalent: `results/execution/mutate-r1-*` |
 | Linux | CI's Ubuntu lane on the commit, ahead of the tag |
 
+**As executed: R2's proof, on the commit it released as 5.30.1.** Each fact was run red on R1's commit, with a stub of the surface the facts name (`results/execution/red-r2.txt`: 8 real-engine facts on each Reqnroll lane, 2 unit), and green with the source. `M86` showed that the guard for a passing step with no open step had no job, so it went.
+
+| What | Result |
+|---|---|
+| `Kronikol.Tests` | 12,226 passed, 2 skipped, 0 failed |
+| The adapter suites | 2,198, 35, 11, 26, 111, 33, 49, 85, 50 passed, in the order of the table above |
+| `Kronikol.Tests.RealEngines` | 356 passed: Reqnroll's four lanes 65 each, BDDfy 38, LightBDD 8, the plain lane and the files lane the rest |
+| Every example lane | all passed, Integration 265 of 265. A run before it read 12 of Integration's failed, right after another session stopped its own run on the same fixed ports; their names were not kept, and the run alone read none |
+| Playwright | `HookStepTests`, 6 of 6, whose rows are built by hand, and CI's browser lanes on the commit. The whole suite runs again on R3 |
+| BreakfastProvider at `640c190` | ReqNRoll's lane, published 5.29.4 against a preview of this source: no failures, 1344 of 1344 calls on the same row, no tree differs, as no scenario there fails |
+| Mutation (`execution/mutate_r1_on_222.py`, M84 to M106 and M56) | every mutant caught: `results/execution/mutate-r2.txt` |
+| Linux | CI's Ubuntu lane on the commit, ahead of the tag |
+
 ---
 
 ## 7. Releases
@@ -632,6 +645,8 @@ A list of what was thought of, not of what the change touches: run the audit che
 - **A consumer's rebuilt rows.** A row rebuilt with `new` before the reports are written leaves the scenario's rows paired by position and its calls read against the bars, as published. Rebuilt with `with`, it keeps its identity. A row removed from the list stays removed.
 - **A BDDfy step that is `async void`, or any async step with `Configurator.AsyncVoidSupportEnabled` off,** closes at its first `await`, as BDDfy gives no task to wait on: its `AsyncTestSyncContext` is internal. What it opens after that reads as a row of its own, where published's double pop could leave it under the step.
 - **A row with a `NotRunAfter` id behind a frame under a step method** can stand after a step method that ran later than it, as the walk waits for the next framework step. The third review traced it on a fuzz sample, and the code before the fixes misplaces the same row by another route.
+- **A Gherkin step another scenario's step left to start later through `ITestRunner`**, which starts during a scenario that has already failed, reads as a row of that scenario, as Reqnroll reports it there. Telling them apart needs a flow of the adapter's own.
+- **A call a LightBDD scenario decorator makes after the scenario's steps** can read as a background call, as it could: the scenario's end is the later of LightBDD's end and its last step's, and nothing stamps the decorator's own end.
 
 ---
 
@@ -682,4 +697,5 @@ at their first `await`, which R1's left-running rule meets but does not fix).
 - 2026-11-05: BreakfastProvider at `640c190` on a preview of R1 over #222's R1: ReqNRoll 214, LightBDD 187, BDDfy 212 and NUnit 212 all pass, published against preview. By the row a call's step path names, ReqNRoll 1342 of 1342 calls on the same row, LightBDD 1359 of 1368 and the other 9 gain a step they had none for, BDDfy 1398 of 1398, NUnit 1398 of 1398. ReqNRoll's 64 calls with another address and 10 trees that differ are all #222's: a shared opening step in a feature that writes no Background, no longer read as one, which renumbers the rows. Three counts differ, each a background or retry call of the run's own wobble.
 - 2026-11-05: a second final review, on the merged code with the first review's fixes (`REVIEW-FINAL-2.md`), measured six regressions in what a report says, none stopping a report or changing a verdict: a BDDfy async step's inner steps as rows (§5.1), a rebuilt row beside a nested Gherkin step, a row listed twice in a BDDfy list not in run order, a held call rewinding what followed it, a BDDfy file listed twice by position, and a BDDfy story inside a step losing its rows. Each fixed and proved red then green (`results/execution/red-second-review-*`), with its claims corrected above.
 - 2026-11-05: a narrow third review of those fixes (`REVIEW-FINAL-3.md`) measured three regressions in them and one shape a fix still missed: rows that read alike became one row by position (`Except` on a record), a file on a frame past the last row was lost by position, which took a hidden `Setup`'s file from a test that threw with no consumer's hand in it, a step stayed open under an executor around Kronikol's that does not hand BDDfy the task, and a list by kind whose frames still ascend counted as in run order. Each fixed and proved red then green (`results/execution/red-third-review-*`), M73 to M83 are the mutants for those rules, and the reviewer's own shapes read right on the fixes (`review-probes/final-3/fix3-rows.txt`).
+- 2026-11-05: a narrow fourth review, of R2 and R3 before their release (`REVIEW-FINAL-4.md`), measured five regressions in R2 and claims in both changelogs that were not true: a skip blamed on a failure a hook caught or one that came after it, rows that never ran among the steps before a failure, an ambiguous step after a failure read as failed, an inner step's row after what ran behind it, and another scenario's stray step. Four are fixed and proved red then green (`results/execution/red-fourth-review-engines.txt`, M99 to M106), the fifth is stated in §9, and the claims are corrected. R2's priorFailure seed went: a row that did not run now says whether a failure Reqnroll recorded stopped it.
 

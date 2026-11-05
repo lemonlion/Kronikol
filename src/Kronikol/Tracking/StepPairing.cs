@@ -9,12 +9,12 @@ namespace Kronikol.Tracking;
 /// step with no frame did not run, and stands where the framework lists it, after the last step that did, or by
 /// the id of the step opened before it, where the adapter knows that. A framework step whose
 /// frame opened inside another step is listed there, as that step's sub-step, with what the framework knows about it (its
-/// arguments, its outcome).
+/// arguments, its outcome), and so is one that did not run with a step open, where the adapter knows that.
 /// </summary>
 internal static class StepPairing
 {
     public static List<ScenarioStep> InOrderTheyRan<T>(IReadOnlyList<T> natives, ScenarioStep[] collected, Func<T, int?> frameOf,
-        Func<T, ScenarioStep?, ScenarioStep> map, Func<T, int?>? notRunAfter = null)
+        Func<T, ScenarioStep?, ScenarioStep> map, Func<T, int?>? notRunAfter = null, Func<T, int?>? notRunUnder = null)
     {
         var indexOfFrame = new Dictionary<int, int>();
         for (var i = 0; i < natives.Count; i++)
@@ -34,7 +34,11 @@ internal static class StepPairing
         var inRunOrder = framed.Zip(framed.Skip(1)).All(pair => pair.First < pair.Second)
             && !natives.Where((_, i) => framed.Length > 0 && i > framed[0] && i < framed[^1]).Any(n => frameOf(n) is null && notRunAfter?.Invoke(n) is null);
 
-        bool ListedInside(T native) => frameOf(native) is { } step && InATree(collected, step);
+        var notRunInside = notRunUnder is null
+            ? null
+            : natives.Where(n => notRunUnder(n) is not null).ToLookup(n => notRunUnder(n)!.Value);
+
+        bool ListedInside(T native) => (frameOf(native) ?? notRunUnder?.Invoke(native)) is { } step && InATree(collected, step);
 
         var lastFramed = Array.FindLastIndex(collected, c => c.CollectedId is { } id && indexOfFrame.ContainsKey(id));
         var merged = new List<ScenarioStep>();
@@ -59,11 +63,11 @@ internal static class StepPairing
                     Through(native);
                     next = native + 1;
                 }
-                merged.Add(map(natives[native], WithNested(collected[k], natives, indexOfFrame, map)));
+                merged.Add(map(natives[native], WithNested(collected[k], natives, indexOfFrame, map, notRunInside, notRunAfter)));
             }
             else if (!collected[k].OpenedAsFrame)
             {
-                merged.Add(WithNested(collected[k], natives, indexOfFrame, map) with { OutsideFrameworkStep = true });
+                merged.Add(WithNested(collected[k], natives, indexOfFrame, map, notRunInside, notRunAfter) with { OutsideFrameworkStep = true });
             }
 
             // What did not run with no id to go by stands after the last step that did. What has one waits for it.
@@ -87,20 +91,27 @@ internal static class StepPairing
             if (frameOf(natives[i]) is { } frame)
                 indexOfFrame.TryAdd(frame, i);
 
-        return WithNested(step, natives, indexOfFrame, map);
+        return WithNested(step, natives, indexOfFrame, map, null, null);
     }
 
-    private static ScenarioStep WithNested<T>(ScenarioStep step, IReadOnlyList<T> natives, Dictionary<int, int> indexOfFrame, Func<T, ScenarioStep?, ScenarioStep> map)
+    private static ScenarioStep WithNested<T>(ScenarioStep step, IReadOnlyList<T> natives, Dictionary<int, int> indexOfFrame, Func<T, ScenarioStep?, ScenarioStep> map,
+        ILookup<int, T>? notRunInside, Func<T, int?>? notRunAfter)
     {
-        if (step.SubSteps is not { Length: > 0 })
+        var notRun = new Queue<T>(step.CollectedId is { } own && notRunInside is not null ? notRunInside[own] : []);
+        if (step.SubSteps is not { Length: > 0 } && notRun.Count == 0)
             return step;
 
         var subSteps = new List<ScenarioStep>();
-        foreach (var sub in step.SubSteps)
+        foreach (var sub in step.SubSteps ?? [])
         {
-            var nested = WithNested(sub, natives, indexOfFrame, map);
+            // What did not run stands among what did by the id of the step opened before it.
+            while (notRun.TryPeek(out var next) && notRunAfter?.Invoke(next) is { } after && sub.CollectedId > after)
+                subSteps.Add(map(notRun.Dequeue(), null));
+
+            var nested = WithNested(sub, natives, indexOfFrame, map, notRunInside, notRunAfter);
             subSteps.Add(sub.CollectedId is { } id && indexOfFrame.TryGetValue(id, out var native) ? map(natives[native], nested) : nested);
         }
+        subSteps.AddRange(notRun.Select(n => map(n, null)));
         return step with { SubSteps = subSteps.ToArray() };
     }
 

@@ -75,6 +75,13 @@ public sealed class ReportRows
     public IReadOnlyList<string> ScenarioFilesOf(string name) =>
         Items(_scenarios.First(s => s.Name.StartsWith(name, StringComparison.Ordinal)).Scenario, "attachments").Select(file => Text(file, "name") ?? "").ToArray();
 
+    /// <summary>The names an outline row's example values are held under, which say how they were grouped.</summary>
+    public IReadOnlyList<string> ExampleValueNames(string name, int occurrence)
+    {
+        var scenario = _scenarios.Where(s => s.Name.StartsWith(name, StringComparison.Ordinal)).Select(s => s.Scenario).ElementAt(occurrence);
+        return scenario.TryGetProperty("exampleValues", out var values) ? values.EnumerateObject().Select(value => value.Name).ToArray() : [];
+    }
+
     /// <summary>The names of the files on a scenario's top-level row, by its address (<c>b0</c>, <c>0</c>).</summary>
     public IReadOnlyList<string> FilesOn(string name, string address)
     {

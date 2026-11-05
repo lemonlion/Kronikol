@@ -450,7 +450,7 @@ public static partial class QueryCommand
         foreach (var (path, rawDepth, step) in rows)
         {
             var depth = rawDepth - baseDepth;
-            var mark = step.Failed ? "✗" : step.Status is "Bypassed" ? "~" : step.IsAssertion ? "·" : step.Status is null && hasAResult ? "?" : " ";
+            var mark = step.Failed ? "✗" : step.Status is "Bypassed" ? "~" : step.Status is "Skipped" or "SkippedAfterFailure" ? "-" : step.IsAssertion ? "·" : step.Status is null && hasAResult ? "?" : " ";
             var indent = new string(' ', depth * 2);
             var duration = step.DurationSeconds is { } d and > 0.001 ? $"  {d:0.##}s" : "";
 

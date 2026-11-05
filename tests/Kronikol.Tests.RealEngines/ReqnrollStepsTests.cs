@@ -81,8 +81,11 @@ public class ReqnrollStepsTests
         """);
 
     [Theory, MemberData(nameof(Lanes))]
-    public void T05_a_step_method_that_fails_in_BeforeScenario_is_the_failed_row(string lane) => Reads(lane, "T05", """
+    public void T05_a_step_method_that_fails_in_BeforeScenario_is_the_failed_row_with_what_did_not_run_after_it(string lane) => Reads(lane, "T05", """
         0 Seeding fails [Failed]
+        1 Given a registered customer [SkippedAfterFailure]
+        2 When the customer places the order [SkippedAfterFailure]
+        3 Then the order is confirmed [SkippedAfterFailure]
         calls: 0 /seed
         """);
 
@@ -107,7 +110,21 @@ public class ReqnrollStepsTests
         """);
 
     [Theory, MemberData(nameof(Lanes))]
-    public void T07_a_BeforeStep_hook_that_throws_leaves_the_failed_step_listed(string lane) => Reads(lane, "T07", "0 Given a registered customer [Failed]\ncalls: ");
+    public void T07_a_BeforeStep_hook_that_throws_is_the_failed_row_with_what_did_not_run_after_it(string lane) => Reads(lane, "T07", """
+        0 Given a registered customer [Failed]
+        1 When the customer places the order [SkippedAfterFailure]
+        2 Then the order is confirmed [SkippedAfterFailure]
+        calls:
+        """.TrimEnd() + " ");
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void T08_a_failing_step_lists_the_step_after_it(string lane) => Reads(lane, "T08", """
+        0 Given a registered customer
+          0.0 A customer is registered
+        1 When the payment fails [Failed]
+        2 Then the order is confirmed [SkippedAfterFailure]
+        calls: 0 /customers, 1 /payments
+        """);
 
     [Theory, MemberData(nameof(Lanes))]
     public void T29_a_step_with_no_frame_takes_no_hook_steps_row(string lane) => Assert.StartsWith("""
@@ -164,7 +181,17 @@ public class ReqnrollStepsTests
         1 Given a registered customer
           1.0 A customer is registered
         2 When the payment fails [Failed]
+        3 Then the order is confirmed [SkippedAfterFailure]
         calls: 0 /seed, 1 /customers, 2 /payments
+        """);
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void T18_an_undefined_step_and_the_step_after_it_are_listed(string lane) => Reads(lane, "T18", """
+        0 Given a registered customer
+          0.0 A customer is registered
+        1 When nobody has written this step [Skipped]
+        2 Then the order is confirmed [Skipped]
+        calls: 0 /customers
         """);
 
     [Theory, MemberData(nameof(Lanes))]
@@ -295,9 +322,12 @@ public class ReqnrollStepsTests
         """");
 
     [Theory, MemberData(nameof(Lanes))]
-    public void T26_a_step_over_a_failed_inner_step_reads_failed(string lane) => Reads(lane, "T26", """
+    public void T26_a_step_over_a_failed_inner_step_reads_failed_and_its_skipped_inner_step_stays_under_it(string lane) => Reads(lane, "T26", """
         0 Given a step that runs two steps, the first failing [Failed]
           0.0 Given an inner step fails [Failed]
+          0.1 Given a registered customer [SkippedAfterFailure]
+        1 When the customer places the order [SkippedAfterFailure]
+        2 Then the order is confirmed [SkippedAfterFailure]
         calls: 0 /inner
         """);
 
@@ -456,4 +486,84 @@ public class ReqnrollStepsTests
             2 Block prepared
             3 When the customer places the order [Failed]
             """.ReplaceLineEndings("\n"), EngineLane.Run(lane).Rows.Of("Q4"));
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void E07_a_BeforeStep_hook_that_throws_on_the_second_step_is_that_steps_failure(string lane) => Reads(lane, "E07", """
+        0 Given a registered customer
+          0.0 A customer is registered
+        1 When an order of 70 is placed [Failed]
+        2 Then the order is confirmed [SkippedAfterFailure]
+        calls: 0 /customers
+        """);
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void E08_a_pending_step_and_the_step_after_it_are_listed(string lane) => Reads(lane, "E08", """
+        0 Given a registered customer
+          0.0 A customer is registered
+        1 When a pending step runs [Skipped]
+        2 Then the order is confirmed [Skipped]
+        calls: 0 /customers
+        """);
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void E21_a_row_that_fails_groups_its_values_as_a_row_that_passes(string lane)
+    {
+        var rows = EngineLane.Run(lane).Rows;
+
+        Assert.DoesNotContain("sku", rows.ExampleValueNames("E21", 1));
+        Assert.Equal(rows.ExampleValueNames("E21", 0), rows.ExampleValueNames("E21", 1));
+    }
+
+    [Fact]
+    public void N1_a_step_method_a_hook_caught_blames_no_skip_on_itself() => Reads("Engine.Reqnroll.xUnit3", "N1", """
+        0 Fails in a hook [Failed]
+        1 Given a registered customer
+          1.0 A customer is registered
+        2 When a step skips itself [Skipped]
+        3 Then the order is confirmed [Skipped]
+        calls: 1 /customers
+        """);
+
+    [Fact]
+    public void N2_a_failure_after_a_skip_blames_no_skip_on_itself() => Reads("Engine.Reqnroll.xUnit3", "N2", """
+        0 Given a registered customer
+          0.0 A customer is registered
+        1 When a step skips itself [Skipped]
+        2 Then the order is confirmed [Skipped]
+        3 Fails in a hook [Failed]
+        calls: 0 /customers
+        """);
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void N3_what_a_plain_hooks_failure_stopped_reads_skipped_after_it(string lane) => Reads(lane, "N3", """
+        0 Given a registered customer [SkippedAfterFailure]
+        1 When the customer places the order [SkippedAfterFailure]
+        calls:
+        """.TrimEnd() + " ");
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void N4_an_ambiguous_step_after_a_failure_did_not_run(string lane) => Reads(lane, "N4", """
+        0 When the payment fails [Failed]
+        1 When this step is ambiguous [SkippedAfterFailure]
+        2 Then the order is confirmed [SkippedAfterFailure]
+        calls: 0 /payments
+        """);
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void N5_an_ambiguous_step_is_the_failure(string lane) => Reads(lane, "N5", """
+        0 Given a registered customer
+          0.0 A customer is registered
+        1 When this step is ambiguous [Failed]
+        2 Then the order is confirmed [SkippedAfterFailure]
+        calls: 0 /customers
+        """);
+
+    [Theory, MemberData(nameof(Lanes))]
+    public void N6_an_inner_step_a_hook_stopped_keeps_its_place_among_what_ran_there(string lane) => Reads(lane, "N6", """
+        0 Given a step that runs an inner step a hook stops, then a step method [Failed]
+          0.0 Given an inner step a hook stops [Failed]
+          0.1 A customer is registered
+        1 Then the order is confirmed [SkippedAfterFailure]
+        calls: 0 /customers
+        """);
 }

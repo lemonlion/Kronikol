@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.30.1] - 2026-11-05
+
+The patch part moves (5.30.0 to 5.30.1): bug fixes that change what a Reqnroll scenario lists, with no new option and no new public member (`plans/STEP_IDENTITY_PLAN.md` R2).
+
+### Fixed
+
+- **A Reqnroll scenario lists the steps it did not run.** The adapter learned of a step from its own `AfterStep` hook, which Reqnroll runs only for a step that ran, so a step skipped after a failure, an undefined step and a pending one were missing from the report: a scenario that failed at its first step read as a scenario of one step. It now listens to Reqnroll's `StepFinishedEvent` as well, and such a step reads where the scenario lists it, as `SkippedAfterFailure` or `Skipped`, with no bar, as LightBDD and the Cucumber lane already do. An ambiguous or badly bound step that is the scenario's first failure reads `Failed`, and after a failure it reads `SkippedAfterFailure`, as it did not run.
+- **What did not run after a failing hook** reads `SkippedAfterFailure`, in order, after the failed row, and under a written Background the Background's rows stand first, as they always do. A hook's `[Step]` that failed and was caught stops nothing, so it blames no skip on itself.
+- **A step a Gherkin step was running through `ITestRunner`, and skipped,** is listed under that step, in the order it came among what ran there, and not as a row of the scenario.
+- **`kronikol query steps`** marks a row that reads skipped with `-`, whether it did not run or skipped itself, so it no longer reads like a step that passed.
+- **`Failures.md`** lists only steps that ran under "Steps before it" and in their count.
+
+### Changed behaviour
+
+- A failed or skipped Reqnroll scenario gains rows, and a failed outline row groups with the tables of its later steps. No sibling scenario moves, and a passing scenario lists what it did.
+- What follows a row that did not run moves with it: a step method in an `[AfterScenario]` hook that was `s3/2` is `s3/3` there, and its calls' `stepPath` with it.
+- A failed outline row's stable id becomes the one its passing run has, as both now list the same steps.
+- An undefined or pending step still fails the run and reads as skipped in the report, as it always has.
+
+### Limits, stated in the wiki
+
+- A throw that leaves the scenario's generated method leaves the steps after it unlisted, as nothing runs them and no event names them: a throwing block hook, a throwing `AfterStep` hook, or `StopAtFirstError`.
+- A Gherkin step that another scenario's step left to start later through `ITestRunner`, and that starts during a scenario that has already failed, reads as a row of that scenario, as Reqnroll reports it there.
+
 ## [5.30.0] - 2026-11-05
 
 The minor part moves (5.29.4 to 5.30.0): a call names its sub-step, which a reader could not get before (`plans/CALLS_UNDER_THEIR_STEP_PLAN.md`

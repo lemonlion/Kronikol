@@ -116,7 +116,17 @@ public static class StepCollector
         return OrdinalOfOpenStep(testId);
     }
 
-    /// <summary>The id of the step this test opened last, 0 if none; a step listed with no frame stands after it.</summary>
+    /// <summary>The framework step open for this test now, if any: a step that did not run while one is open is that step's.</summary>
+    internal static int? OpenFrameOf(string? testId)
+    {
+        if (testId is null || !States.TryGetValue(testId, out var state))
+            return null;
+
+        lock (state)
+            return LastOpenFrame(state)?.Ordinal;
+    }
+
+    /// <summary>The id of the step this test opened last, 0 if none; a step that did not run stands after it.</summary>
     internal static int LastStepIdOf(string? testId)
     {
         if (testId is null || !States.TryGetValue(testId, out var state))

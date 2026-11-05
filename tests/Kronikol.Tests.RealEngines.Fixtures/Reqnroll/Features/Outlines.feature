@@ -21,3 +21,15 @@ Feature: Outlines
       | amount |
       | 10     |
       | 20     |
+
+  Scenario Outline: E21 a row that fails groups its values by the table of a step that did not run
+    Given a registered customer
+    When the payment <fate>
+    Given the basket is listed
+      | sku   | count   |
+      | <sku> | <count> |
+
+    Examples:
+      | fate   | sku   | count |
+      | passes | APPLE | 1     |
+      | fails  | PEAR  | 2     |

@@ -453,4 +453,32 @@ public class StepFrameTests
         StepCollector.CompleteFrame(test, frame, true);
         Assert.Equal(frame, StepCollector.LastStepIdOf(test));
     }
+
+    [Fact]
+    public void OpenFrameOf_is_the_framework_step_open_under_any_step_method_and_null_with_none()
+    {
+        var test = NewTest();
+        Assert.Null(StepCollector.OpenFrameOf(test));
+
+        var outer = StepCollector.StartFrame(test, "Given", "outer");
+        var inner = StepCollector.StartFrame(test, "Given", "inner");
+        StepCollector.StartStep(test, null, "a step method", null, null);
+        Assert.Equal(inner, StepCollector.OpenFrameOf(test));
+
+        StepCollector.CompleteStep(test, true);
+        StepCollector.CompleteFrame(test, inner, true);
+        Assert.Equal(outer, StepCollector.OpenFrameOf(test));
+
+        StepCollector.CompleteFrame(test, outer, true);
+        Assert.Null(StepCollector.OpenFrameOf(test));
+    }
+
+    [Fact]
+    public void With_only_a_step_method_open_there_is_no_open_frame()
+    {
+        var test = NewTest();
+        StepCollector.StartStep(test, null, "a step method", null, null);
+
+        Assert.Null(StepCollector.OpenFrameOf(test));
+    }
 }

@@ -77,6 +77,23 @@ public class ReqNRollTrackingHooks
                     if (testId is not null)
                         StepCollector.AddAttachment(testId, evt.FilePath, name: null);
                 });
+                // A step Reqnroll runs no hooks for (skipped after a failure, undefined) is known only here. Reqnroll runs this
+                // inline, so a throw would fail the step it reports on.
+                eventPublisher.AddHandler<StepFinishedEvent>(evt =>
+                {
+                    if (evt.ScenarioContext is ScenarioContext scenario)
+                    {
+                        try
+                        {
+                            NoteStepThatDidNotRun(scenario);
+                        }
+                        catch
+                        {
+                            // The step is missing from the report, as it was before this handler.
+                        }
+                    }
+                });
+
                 // A suite's AfterScenario hook that throws stops ours, and Reqnroll 3.0.1 runs none for a scenario ignored at
                 // run time, but this is published either way. Reqnroll runs it inline, so a throw would replace the test's failure.
                 eventPublisher.AddHandler<ScenarioFinishedEvent>(evt =>
@@ -139,14 +156,12 @@ public class ReqNRollTrackingHooks
         if (!IsOwner)
             return;
 
-        // None when a suite's hook sorted ahead of BeforeStep and threw: Reqnroll still runs this, and the step is still the
-        // one that failed, so it is listed, with no frame of the collector's to close and no time. Under a step that ran it, it
-        // still has its place among the steps that one ran, so it is opened here to close at that place.
+        // None when a suite's hook sorted ahead of BeforeStep and threw: Reqnroll still runs this, and the step's finished
+        // event, which comes first, has listed it.
         var stepContext = _scenarioContext.StepContext;
-        stepContext.TryGetValue(ReqNRollConstants.OpenStepKey, out OpenStep? opened);
-        if (opened is null && InnermostOpenStep is not null)
-            opened = Open(stepContext.StepInfo.StepInstance.StepDefinitionKeyword.ToString());
-        opened?.Stopwatch.Stop();
+        if (!stepContext.TryGetValue(ReqNRollConstants.OpenStepKey, out OpenStep? opened) || opened is null)
+            return;
+        opened.Stopwatch.Stop();
         var steps = (List<ReqNRollStepInfo>)_scenarioContext[ReqNRollConstants.StepsCollectionKey];
 
         // Pop the StepCollector step so assertion sub-steps are captured
@@ -155,24 +170,47 @@ public class ReqNRollTrackingHooks
         // failure only to the step that failed, the step that ran it carries on, and a step that never reached a hook
         // (undefined, ambiguous) has no frame at all.
         var status = stepContext.Status != ScenarioExecutionStatus.OK ? stepContext.Status : _scenarioContext.ScenarioExecutionStatus;
-        if (opened is not null)
-        {
-            CloseLeftOpen(opened, scenarioId, steps);
-            StepCollector.CompleteFrame(scenarioId, opened.Frame, status == ScenarioExecutionStatus.OK);
-        }
+        CloseLeftOpen(opened, scenarioId, steps);
+        StepCollector.CompleteFrame(scenarioId, opened.Frame, status == ScenarioExecutionStatus.OK);
 
-        var parent = opened?.Parent;
-        var info = Describe(stepContext.StepInfo, status, opened);
-        if (opened is not null && parent is null)
+        if (opened.Parent is null)
             _scenarioContext.Remove(ReqNRollConstants.OpenStepKey);
-        else if (opened is not null)
-            _scenarioContext[ReqNRollConstants.OpenStepKey] = parent!;
+        else
+            _scenarioContext[ReqNRollConstants.OpenStepKey] = opened.Parent;
 
-        // Listed with no frame, it stands after what opened before it, and it is not a step built by hand.
-        steps.Add(opened is null ? info with { NotRunAfter = StepCollector.LastStepIdOf(scenarioId) } : info);
+        steps.Add(Describe(stepContext.StepInfo, status, opened));
     }
 
-    private static ReqNRollStepInfo Describe(StepInfo stepInfo, ScenarioExecutionStatus status, OpenStep? opened)
+    /// <summary>
+    /// A step Reqnroll ran no hooks of ours for (skipped after a failure, undefined, or a suite's BeforeStep hook sorted ahead of
+    /// ours threw): listed as it came in the scenario, after the step opened before it, and under the step that ran it if one did.
+    /// </summary>
+    private static void NoteStepThatDidNotRun(ScenarioContext scenario)
+    {
+        var stepContext = scenario.StepContext;
+        if (stepContext.ContainsKey(ReqNRollConstants.OpenStepKey)
+            || !scenario.TryGetValue(ReqNRollConstants.ScenarioRuntimeIdKey, out string? scenarioId))
+            return;
+
+        // StepInstance is set after the match on Reqnroll 3.0.1, so an undefined step has none there.
+        var keyword = stepContext.StepInfo.StepInstance?.StepDefinitionKeyword.ToString() ?? stepContext.StepInfo.StepDefinitionType.ToString();
+        ((List<ReqNRollStepInfo>)scenario[ReqNRollConstants.StepsCollectionKey]).Add(new ReqNRollStepInfo(
+            keyword,
+            stepContext.StepInfo.Text,
+            stepContext.Status,
+            null,
+            stepContext.StepInfo.Table?.ToString(),
+            stepContext.StepInfo.MultilineText)
+        {
+            NotRunAfter = StepCollector.LastStepIdOf(scenarioId),
+            NotRunUnder = StepCollector.OpenFrameOf(scenarioId),
+            // A failure Reqnroll recorded stopped it. A step that skipped itself, or one that failed and was caught, did not.
+            AfterFailure = stepContext.Status is not (ScenarioExecutionStatus.TestError or ScenarioExecutionStatus.BindingError)
+                           && scenario.ScenarioExecutionStatus is ScenarioExecutionStatus.TestError or ScenarioExecutionStatus.BindingError,
+        });
+    }
+
+    private static ReqNRollStepInfo Describe(StepInfo stepInfo, ScenarioExecutionStatus status, OpenStep opened)
     {
         // Capture inline parameter positions from binding match
         InlineParamCapture[]? inlineParams = null;
@@ -206,10 +244,10 @@ public class ReqNRollTrackingHooks
             stepInfo.StepInstance.StepDefinitionKeyword.ToString(),
             stepInfo.Text,
             status,
-            opened?.Stopwatch.Elapsed,
+            opened.Stopwatch.Elapsed,
             stepInfo.Table?.ToString(),
             stepInfo.MultilineText,
-            inlineParams) { FrameId = opened?.Frame };
+            inlineParams) { FrameId = opened.Frame };
     }
 
     /// <summary>

@@ -1,0 +1,5 @@
+caught M95 a scenario never learns when its last step ended: by 4 on a real engine, ['L2_a_step_method_before_a_composite_steps_own_steps_stands_first_among', 'L1_a_step_method_in_a_scenario_decorator_stands_first_and_its_call_is_', 'V1_plain_calls_read_their_step'] (212s)
+caught M96 a scenario ends when LightBDD says, whatever its last step: by 1 unit, ['A_scenario_ends_with_its_last_step_where_LightBDDs_own_timer_reads_ear'] (48s)
+caught M97 a scenario ends at its last step even if LightBDD read later: by 2 unit, ['A_scenario_ends_with_its_last_step_where_LightBDDs_own_timer_reads_ear', 'A_scenario_keeps_LightBDDs_end_where_that_is_the_later'] (48s)
+caught M98 a fetcher that throws fails the test: by 2 unit, ['Step_fetcher_that_throws_between_steps_reads_as_no_step_so_the_given_s', 'Step_fetcher_that_throws_costs_the_call_nothing_and_no_action_start'] (50s)
+done

@@ -215,4 +215,40 @@ public class StepPairingTests
 
         Assert.Equal(["given", "skipped", "when"], merged.Select(s => s.Text));
     }
+
+    [Fact]
+    public void A_step_that_did_not_run_under_a_step_is_listed_there_at_the_end_of_what_ran_and_as_no_row()
+    {
+        ScenarioStep[] collected = [Collected(1, "outer", Collected(2, "inner"))];
+        Native[] natives = [new("inner", 2), new("outer", 1), new("skipped inner")];
+
+        var merged = StepPairing.InOrderTheyRan(natives, collected, n => n.Frame, (n, c) => (c ?? new ScenarioStep { Text = "" }) with { Text = n.Text },
+            n => n.Frame is null ? 2 : null, n => n.Frame is null ? 1 : null);
+
+        Assert.Equal("outer", Assert.Single(merged).Text);
+        Assert.Equal(["inner", "skipped inner"], merged[0].SubSteps!.Select(s => s.Text));
+    }
+
+    [Fact]
+    public void A_step_that_did_not_run_under_a_step_no_longer_listed_stands_as_a_row()
+    {
+        ScenarioStep[] collected = [Collected(1, "listed")];
+        Native[] natives = [new("listed", 1), new("skipped")];
+
+        var merged = StepPairing.InOrderTheyRan(natives, collected, n => n.Frame, (n, c) => new ScenarioStep { Text = n.Text, CollectedId = c?.CollectedId },
+            n => n.Frame is null ? 1 : null, n => n.Frame is null ? 99 : null);
+
+        Assert.Equal(["listed", "skipped"], merged.Select(s => s.Text));
+    }
+
+    [Fact]
+    public void A_step_that_did_not_run_under_a_step_stands_among_what_ran_there_by_the_id_before_it()
+    {
+        ScenarioStep[] collected = [Collected(1, "outer", Collected(3, "late"))];
+        (string Text, int? Frame, int? After, int? Under)[] natives = [("outer", 1, null, null), ("stopped", null, 1, 1)];
+
+        var merged = StepPairing.InOrderTheyRan(natives, collected, n => n.Frame, (n, c) => (c ?? new ScenarioStep { Text = "" }) with { Text = n.Text }, n => n.After, n => n.Under);
+
+        Assert.Equal(["stopped", "late"], Assert.Single(merged).SubSteps!.Select(s => s.Text));
+    }
 }
