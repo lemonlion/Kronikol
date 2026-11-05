@@ -1,0 +1,25 @@
+# R4 (F16) on main with R1, 2026-11-04: red before the fix, green after.
+
+=== A_scenario_reached_twice_is_collected_once, before: Failed, 'The collection contained 2 matching items'.
+
+=== the real run's facts, before the fix
+    0 Error(s)
+    0 Error(s)
+Failed!  - Failed:     2, Passed:    10, Skipped:     0, Total:    12, Duration: 2 m 38 s - Example.Api.Tests.Integration.dll (net
+Example.Api.Tests.Integration.Tests.ReqNRollDuplicateStepsTests.A_failure_is_read_on_the_step_that_failed(projectName: "Example.Api.Tests.Component.ReqNRoll.xUnit2")
+Example.Api.Tests.Integration.Tests.ReqNRollDuplicateStepsTests.A_failure_is_read_on_the_step_that_failed(projectName: "Example.Api.Tests.Component.ReqNRoll.xUnit3")
+   Assert.Equal() Failure: Values differ
+Actual:   8
+Expected: 9
+applied
+ .../ReqNRollTrackingHooks.cs                       | 28 ++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+=== the real run's facts, on the fix
+    0 Error(s)
+    0 Error(s)
+Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 1 m 24 s - Example.Api.Tests.Integration.dll (net
+
+=== the core facts on the fix
+    0 Error(s)
+Passed!  - Failed:     0, Passed:   215, Skipped:     0, Total:   215, Duration: 8 s - Kronikol.Tests.dll (net10.0)

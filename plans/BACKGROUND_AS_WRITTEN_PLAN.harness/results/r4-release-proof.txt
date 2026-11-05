@@ -1,0 +1,119 @@
+# R4's round on its own commit, on R1 as released.
+
+##### release.slnf in Release, every target framework  04:45
+f9b6e274 WIP: R4's bump and record
+    0 Error(s)
+    30 Warning(s)
+Build succeeded.
+Build succeeded.
+Build succeeded.
+
+##### the core suite and the suites that load what changed  04:46
+  Failed Kronikol.Tests.PlantUml.NodeJsCodeCacheTests.Code_cache_is_created_on_first_run_reused_afterwards_and_regenerated_when_v8_rejects_it [4 s]
+Failed!  - Failed:     1, Passed: 12084, Skipped:     2, Total: 12087, Duration: 9 m 41 s - Kronikol.Tests.dll (net10.0)
+--- Kronikol.Tests.SearchEngine
+Passed!  - Failed:     0, Passed:   787, Skipped:     0, Total:   787, Duration: 19 s - Kronikol.Tests.SearchEngine.dll (net10.0)
+--- Kronikol.Tests.StepTracking
+Passed!  - Failed:     0, Passed:    61, Skipped:     0, Total:    61, Duration: 13 s - Kronikol.Tests.StepTracking.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit3
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 31 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit2
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 26 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+
+##### finished  05:00
+
+# NodeJsCodeCacheTests passes alone, three times of three: it reads one code cache file on this machine, which other sessions' runs were using. The core suite again:
+Passed!  - Failed:     0, Passed: 12085, Skipped:     2, Total: 12087, Duration: 8 m 1 s - Kronikol.Tests.dll (net10.0)
+
+##### the public surface against the published 5.28.6  05:10
+5605 and 5605 lines
+diff ended
+
+##### the shape matrix: xUnit v2, on the release's assemblies  05:10
+release MISSED: 0
+release INVENTED: 0
+release BORROWED: 0
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the floor: Reqnroll 3.0.1  05:12
+release-reqnroll-3.0.1 INVENTED: 0
+release-reqnroll-3.0.1 BORROWED: 0
+pass: MISSED=0 INVENTED=0 BORROWED=0 
+fail-and: MISSED=0 INVENTED=0 BORROWED=0 
+fail-when: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg: MISSED=0 INVENTED=0 BORROWED=0 
+fail-bg2: MISSED=0 INVENTED=0 BORROWED=0 
+
+##### the control: published 5.28.6  05:15
+control-release INVENTED: 0
+control-release BORROWED: 0
+
+##### the edge and nested shapes  05:17
+E35 one                            failing: [('s13/b0', 'Given the hook fails after this step')] scope: failin
+E36 one                            failing: [('s14/b1', 'And the hook fails before this step')] scope: scenari
+E39 one                            failing: [('s17/b0', 'Given a composite step runs the step a hook stops'), 
+E41 one                            failing: [('s19/0', 'When the hook fails after this step')] scope: failingS
+E47 one                            failing: [] scope: scenario
+90 <tree>/plans/BACKGROUND_AS_WRITTEN_PLAN.harness/results/nested-shapes-release.txt
+
+##### finished  05:19
+
+##### the example projects on their own, then every Integration fact  05:36
+--- xUnit2
+Passed!  - Failed:     0, Passed:    13, Skipped:     0, Total:    13, Duration: 686 ms - Example.Api.Tests.Component.ReqNRoll.xUnit2.dll (net10.0)
+--- xUnit3
+Passed!  - Failed:     0, Passed:    22, Skipped:     0, Total:    22, Duration: 631 ms - Example.Api.Tests.Component.ReqNRoll.xUnit3.dll (net10.0)
+--- TUnit
+Test run summary: Passed! - <tree>\examples\Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\b
+  total: 13
+  failed: 0
+  succeeded: 13
+--- Integration
+Passed!  - Failed:     0, Passed:   265, Skipped:     0, Total:   265, Duration: 17 m 59 s - Example.Api.Tests.Integration.dll (net10.0)
+
+##### the whole Playwright suite  06:00
+Passed!  - Failed:     0, Passed:  2136, Skipped:    28, Total:  2164, Duration: 18 m 16 s - Kronikol.Tests.EndToEnd.dll (net10.0)
+
+##### finished  06:18
+
+# Rebased on 5.29.0, c667bad6, kronikol-f6's minor, as 5.29.1: the build, the core suite and the Integration facts again.
+
+##### release.slnf in Release, every target framework  06:19
+27a24061 WIP: R4's bump and record
+    0 Error(s)
+    30 Warning(s)
+Build succeeded.
+Build succeeded.
+Build succeeded.
+
+##### the core suite and the suites that load what changed  06:20
+Passed!  - Failed:     0, Passed: 12089, Skipped:     2, Total: 12091, Duration: 7 m 53 s - Kronikol.Tests.dll (net10.0)
+--- Kronikol.Tests.SearchEngine
+Passed!  - Failed:     0, Passed:   787, Skipped:     0, Total:   787, Duration: 14 s - Kronikol.Tests.SearchEngine.dll (net10.0)
+--- Kronikol.Tests.StepTracking
+Passed!  - Failed:     0, Passed:  2091, Skipped:     0, Total:  2091, Duration: 3 m 22 s - Kronikol.Tests.StepTracking.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit3
+Passed!  - Failed:     0, Passed:    35, Skipped:     0, Total:    35, Duration: 18 s - Kronikol.Tests.LightBDD.xUnit3.dll (net10.0)
+--- Kronikol.Tests.LightBDD.xUnit2
+Passed!  - Failed:     0, Passed:    11, Skipped:     0, Total:    11, Duration: 22 s - Kronikol.Tests.LightBDD.xUnit2.dll (net10.0)
+
+##### finished  06:34
+
+##### the example projects on their own, then every Integration fact  06:44
+--- xUnit2
+Passed!  - Failed:     0, Passed:    13, Skipped:     0, Total:    13, Duration: 510 ms - Example.Api.Tests.Component.ReqNRoll.xUnit2.dll (net10.0)
+--- xUnit3
+Passed!  - Failed:     0, Passed:    22, Skipped:     0, Total:    22, Duration: 854 ms - Example.Api.Tests.Component.ReqNRoll.xUnit3.dll (net10.0)
+--- TUnit
+Test run summary: Passed! - <tree>\examples\Example.Api\tests\Example.Api.Tests.Component.ReqNRoll.TUnit\b
+  total: 13
+  failed: 0
+  succeeded: 13
+--- Integration
+Passed!  - Failed:     0, Passed:   265, Skipped:     0, Total:   265, Duration: 15 m 13 s - Example.Api.Tests.Integration.dll (net10.0)
+
+##### finished  07:10

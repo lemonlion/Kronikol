@@ -15,6 +15,7 @@ public class ReqNRollTrackingHooks
     private readonly ScenarioContext _scenarioContext;
     private readonly FeatureContext _featureContext;
     private Stopwatch? _stopwatch;
+    private bool _collected;
 
     // Track which event publishers we've already subscribed to, so we only subscribe
     // once per test-thread publisher. Without this, BeforeScenario would add a new
@@ -75,6 +76,24 @@ public class ReqNRollTrackingHooks
                     var testId = ReqNRollTestContext.CurrentTestInfo?.Id;
                     if (testId is not null)
                         StepCollector.AddAttachment(testId, evt.FilePath, name: null);
+                });
+                // A suite's AfterScenario hook that throws stops ours, and Reqnroll 3.0.1 runs none for a scenario ignored at
+                // run time, but this is published either way. Reqnroll runs it inline, so a throw would replace the test's failure.
+                eventPublisher.AddHandler<ScenarioFinishedEvent>(evt =>
+                {
+                    if (evt.ScenarioContext is ScenarioContext scenario
+                        && scenario.TryGetValue(ReqNRollConstants.OwnerHooksKey, out object? owner)
+                        && owner is ReqNRollTrackingHooks hooks)
+                    {
+                        try
+                        {
+                            hooks.CollectScenario();
+                        }
+                        catch
+                        {
+                            // The scenario is lost from the report, as it was before this handler.
+                        }
+                    }
                 });
             }
         }
@@ -240,6 +259,15 @@ public class ReqNRollTrackingHooks
     {
         if (!IsOwner)
             return;
+
+        CollectScenario();
+    }
+
+    private void CollectScenario()
+    {
+        if (_collected)
+            return;
+        _collected = true;
 
         _stopwatch?.Stop();
         CloseStepsLeftOpen();

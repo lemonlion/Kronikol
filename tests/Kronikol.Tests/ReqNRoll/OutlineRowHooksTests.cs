@@ -18,6 +18,22 @@ namespace Kronikol.Tests.ReqNRoll;
 /// </summary>
 public class OutlineRowHooksTests
 {
+    // The hook and, behind it, Reqnroll's ScenarioFinishedEvent both reach a scenario in the usual run.
+    [Fact]
+    public void A_scenario_reached_twice_is_collected_once()
+    {
+        var featureContext = Internal<FeatureContext>(new ObjectContainer(), Baskets(false), ConfigurationLoader.GetDefault());
+        var scenarioContext = Internal<ScenarioContext>(new ObjectContainer(), ScenarioInfoOf("Reached twice", "0"), null, null);
+        var hooks = new ReqNRollTrackingHooks(scenarioContext, featureContext);
+
+        hooks.BeforeScenario();
+        var id = (ReqNRollTestContext.CurrentTestInfo ?? throw new InvalidOperationException("no identity")).Id;
+        hooks.AfterScenario();
+        hooks.AfterScenario();
+
+        Assert.Single(ReqNRollScenarioCollector.GetAll(), scenario => scenario.ScenarioId == id);
+    }
+
     private const string Title = "A basket is weighed on the UK scale (<case>)";
 
     private sealed class FakeMessages(GherkinDocument document, List<Pickle> pickles) : IFeatureLevelCucumberMessages

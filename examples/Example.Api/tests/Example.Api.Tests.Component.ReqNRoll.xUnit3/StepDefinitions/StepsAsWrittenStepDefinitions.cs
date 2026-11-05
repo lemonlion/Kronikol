@@ -121,6 +121,14 @@ public class StepsAsWrittenStepDefinitions(ScenarioContext scenario, ITestRunner
         }
     }
 
+    // A hook that throws stops the later hooks of its type, the adapter's among them, and the scenario stays in the report.
+    [AfterScenario("after-scenario-fails")]
+    public void FailsWhenAsked()
+    {
+        if (AskedToFail)
+            throw new InvalidOperationException("This AfterScenario hook was asked to fail.");
+    }
+
     [AfterScenario("reads-the-public-list")]
     public void ReadsThePublicList()
     {

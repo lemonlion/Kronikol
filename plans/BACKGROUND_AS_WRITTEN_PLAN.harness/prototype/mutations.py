@@ -10,7 +10,7 @@ import sys
 
 root = pathlib.Path(sys.argv[1])
 out = pathlib.Path(sys.argv[2])
-FILTER = "FullyQualifiedName~FeaturesTableOverOwnStepsTests|FullyQualifiedName~BackgroundAsWrittenTests|FullyQualifiedName~SharedStepsTests|FullyQualifiedName~StepsAStepRanTests|FullyQualifiedName~StepsUnderAWovenStepTests|FullyQualifiedName~BackgroundSectionFromTheOptionsTests|FullyQualifiedName~WhatTheFixLeavesTests|FullyQualifiedName~QueryOverBackgroundStepsTests"
+FILTER = "FullyQualifiedName~OutlineRowHooksTests|FullyQualifiedName~FeaturesTableOverOwnStepsTests|FullyQualifiedName~BackgroundAsWrittenTests|FullyQualifiedName~SharedStepsTests|FullyQualifiedName~StepsAStepRanTests|FullyQualifiedName~StepsUnderAWovenStepTests|FullyQualifiedName~BackgroundSectionFromTheOptionsTests|FullyQualifiedName~WhatTheFixLeavesTests|FullyQualifiedName~QueryOverBackgroundStepsTests"
 TESTS = "tests/Kronikol.Tests/Kronikol.Tests.csproj"
 REAL = "examples/Example.Api/tests/Example.Api.Tests.Integration"
 REAL_FILTER = "FullyQualifiedName~ReqNRollDuplicateStepsTests"
@@ -18,6 +18,10 @@ E2E = "tests/Kronikol.Tests.EndToEnd"
 E2E_FILTER = "FullyQualifiedName~BackgroundSectionRowSwitchTests|FullyQualifiedName~SearchFunctionPageTests|FullyQualifiedName~BackgroundRenderingTests|FullyQualifiedName~SeparatedBackgroundRenderingTests"
 
 MUTATIONS = [
+    ("M87 a scenario a suite's hook stopped the adapter from collecting stays out of the report", "src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs",
+     "                            hooks.CollectScenario();\n", "", True),
+    ("M88 a scenario the hook and the event both reach is collected twice", "src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs",
+     "        if (_collected)\n            return;\n", ""),
     ("M86 a step's Duration is the time of the last step it ran", "src/Kronikol.ReqNRoll.Core/ReqNRollTrackingHooks.cs",
      "            opened?.Stopwatch.Elapsed,\n", "            (_scenarioContext[ReqNRollConstants.StepStopwatchKey] as Stopwatch)?.Elapsed,\n", True),
     ("M1 the detector hands every scenario the first's steps again", "src/Kronikol/Reports/BackgroundStepsDetector.cs",

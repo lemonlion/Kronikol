@@ -130,7 +130,8 @@ public class ReqNRollDuplicateStepsTests
                 row => row.GetProperty("scenario").GetString()!,
                 row => row.GetProperty("failingSteps").EnumerateArray().Select(step => step.GetProperty("text").GetString()!).ToArray());
 
-        Assert.Equal(8, failing.Count);
+        Assert.Equal(9, failing.Count);
+        Assert.Empty(failing["An AfterScenario hook fails"]);
         Assert.Equal(["Given a Background step that fails when asked"], failing["The Background step is the one that failed"]);
         Assert.Equal(["Given a step runs a step that fails when asked", "Given an inner step that fails when asked"], failing["An inner step fails"]);
         Assert.Contains("Given a step runs a step whose argument does not convert when asked", failing["An inner argument does not convert"]);

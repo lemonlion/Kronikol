@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.29.1] - 2026-11-05
+
+The patch part moves (5.29.0 to 5.29.1): a bug fix, with no new option and no new public member (#236, `plans/BACKGROUND_AS_WRITTEN_PLAN.md` R4).
+
+### Fixed
+
+- **A scenario a suite's `[AfterScenario]` hook stopped the adapter from collecting stays in the report.** A hook that throws stops the later hooks of its type, and the adapter collected in its own, which sorts last. So `dotnet test` reported the failure and the report had no row for it: beside a passing scenario `Failures.md` opened "# No failures" on a failed run, and alone no report was written. The scenario is now listed, failed, with its steps, calls and the hook's error, by Reqnroll's `ScenarioFinishedEvent`, once per scenario. At Reqnroll 3.0.1 a scenario ignored at run time, which runs no such hook there, is listed too, as skipped.
+
 ## [5.29.0] - 2026-11-05
 
 The minor part moves (5.28.6 to 5.29.0): `WeaveResult.UnwovenSteps`, `WeaveResult.StepsWithNoBody`, `UnwovenStep`, each weave task's `PdbFile` and the warning codes `KRONIKOL004` and

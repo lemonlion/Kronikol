@@ -1,0 +1,4 @@
+M87 a scenario a suite's hook stopped the adapter from collecting stays out of the report: CAUGHT by xUnit2"), xUnit3")
+M88 a scenario the hook and the event both reach is collected twice: CAUGHT by A_scenario_reached_twice_is_collected_once
+restored, facts: Passed!  - Failed:     0, Passed:    64, Skipped:     0, Total:    64, Duration: 6 s - Kronikol.Tests.dll (net
+restored, a real run's facts: Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 1 m 33 s - Example.Api.Tests.

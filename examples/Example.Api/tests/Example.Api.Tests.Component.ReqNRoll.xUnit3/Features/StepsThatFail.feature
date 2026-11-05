@@ -29,3 +29,7 @@ Scenario: An AfterStep hook fails on a scenario's own step
 @after-scenario-runs-a-step
 Scenario: An AfterScenario hook runs a step an AfterStep hook fails
     Given a step that passes
+
+@after-scenario-fails
+Scenario: An AfterScenario hook fails
+    Given a step that passes
