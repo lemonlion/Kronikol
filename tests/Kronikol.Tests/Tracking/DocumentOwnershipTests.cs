@@ -57,6 +57,29 @@ public class DocumentOwnershipTests
     }
 
     [Fact]
+    public async Task A_held_call_keeps_the_step_it_was_logged_under_when_a_later_step_confirms_it()
+    {
+        // What the call happened under is known when it is logged and only then: a hold can release it much later.
+        var pay = Owner();
+        var logged = StepCollector.StartFrame(pay.Id, "When", "the order is dispatched");
+        using (TestIdentityScope.Detach())
+        {
+            await Deep(Key("x"), DocumentOperationKind.Write);
+            var dispatch = Call("dispatch");
+            Assert.Empty(LoggedAt(dispatch));
+
+            StepCollector.CompleteFrame(pay.Id, logged, passed: true);
+            var confirmedUnder = StepCollector.StartFrame(pay.Id, "Then", "the order is read");
+            await Deep(Key("x"), DocumentOperationKind.Write);
+
+            Assert.NotEqual(logged, confirmedUnder);
+            Assert.All(LoggedAt(dispatch), call => Assert.Equal(logged, call.OpenStep));
+            Assert.NotEmpty(LoggedAt(dispatch));
+            StepCollector.CompleteFrame(pay.Id, confirmedUnder, passed: true);
+        }
+    }
+
+    [Fact]
     public async Task A_write_on_a_scenarios_document_opens_the_window_and_the_next_operation_on_it_confirms_what_came_between()
     {
         var pay = Owner();

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Reqnroll on TUnit, which a lane runs with `dotnet run`, as `dotnet test` refuses it on this SDK. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <Import Project="..\Reqnroll\Reqnroll.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Reqnroll.TUnit" Version="$(ReqnrollFixtureVersion)" />
+    <PackageReference Include="TUnit" Version="1.53.0" />
+    <ProjectReference Include="..\..\..\src\Kronikol.ReqNRoll.TUnit\Kronikol.ReqNRoll.TUnit.csproj" />
+  </ItemGroup>
+</Project>

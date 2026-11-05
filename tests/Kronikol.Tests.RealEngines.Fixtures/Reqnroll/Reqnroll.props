@@ -1,0 +1,8 @@
+<Project>
+  <!-- What every Reqnroll lane shares: the features and bindings, and the engine. A lane adds its runner and its adapter. -->
+  <ItemGroup>
+    <PackageReference Include="Reqnroll" Version="$(ReqnrollFixtureVersion)" />
+    <Compile Include="$(MSBuildThisFileDirectory)*.cs" LinkBase="Shared" />
+    <ReqnrollFeatureFile Include="..\Reqnroll\Features\*.feature" Link="Features\%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

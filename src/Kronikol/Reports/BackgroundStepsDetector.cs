@@ -63,7 +63,10 @@ public static class BackgroundStepsDetector
         for (var i = 0; i < minStepCount; i++)
         {
             var reference = scenarios[0].Steps![i];
+            // A row no framework step ran says nothing about what a feature shares, and a scenario rebuilt by hand keeps its rows' marks.
             var allMatch = scenarios.All(s =>
+                !s.Steps![i].OutsideFrameworkStep &&
+                !s.Steps![i].DidNotRun &&
                 s.Steps![i].Keyword == reference.Keyword &&
                 s.Steps[i].Text == reference.Text);
 

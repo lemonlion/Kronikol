@@ -426,4 +426,33 @@ public class BackgroundStepsDetectorTests
         Assert.Null(scenarios[2].BackgroundSteps);
         Assert.Equal(2, scenarios[2].Steps!.Length);
     }
+
+    // A consumer that rebuilds a scenario's info keeps its rows' marks and loses the document, so the guess runs over them (Q51, Q52).
+    [Fact]
+    public void A_row_no_framework_step_opened_is_no_part_of_what_a_feature_shares()
+    {
+        var a = MakeScenario("a", ("", "Reference data is seeded"), ("Then", "one"));
+        var b = MakeScenario("b", ("", "Reference data is seeded"), ("Then", "two"));
+        foreach (var scenario in new[] { a, b })
+            scenario.Steps![0] = scenario.Steps[0] with { OutsideFrameworkStep = true };
+
+        BackgroundStepsDetector.DetectAndExtract([a, b]);
+
+        Assert.Null(a.BackgroundSteps);
+        Assert.Null(b.BackgroundSteps);
+    }
+
+    [Fact]
+    public void A_row_that_did_not_run_is_no_part_of_what_a_feature_shares()
+    {
+        var a = MakeScenario("a", ("Given", "a basket"), ("And", "an item"), ("Then", "one"));
+        var b = MakeScenario("b", ("Given", "a basket"), ("And", "an item"), ("Then", "two"));
+        b.Steps![1] = b.Steps[1] with { DidNotRun = true };
+
+        BackgroundStepsDetector.DetectAndExtract([a, b]);
+
+        Assert.Equal(["a basket"], a.BackgroundSteps!.Select(s => s.Text));
+        Assert.Equal(["an item", "one"], a.Steps!.Select(s => s.Text));
+        Assert.Equal(["an item", "two"], b.Steps!.Select(s => s.Text));
+    }
 }

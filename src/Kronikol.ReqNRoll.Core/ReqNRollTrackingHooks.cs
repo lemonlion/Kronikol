@@ -117,17 +117,19 @@ public class ReqNRollTrackingHooks
 
     private OpenStep Open(string stepType)
     {
-        var opened = new OpenStep(Stopwatch.StartNew(), InnermostOpenStep, _scenarioContext.StepContext.StepInfo);
-        _scenarioContext[ReqNRollConstants.OpenStepKey] = opened;
-        _scenarioContext.StepContext[ReqNRollConstants.OpenStepKey] = opened;
+        var stopwatch = Stopwatch.StartNew();
 
         // Push a step onto StepCollector so assertion tracking sub-steps attach here. The step's
         // Gherkin arguments ride along so the delimiter bar can draw them — the table Reqnroll hands
         // an outline step already has its <placeholders> substituted.
         var scenarioId = (string)_scenarioContext[ReqNRollConstants.ScenarioRuntimeIdKey];
         var stepInfo = _scenarioContext.StepContext.StepInfo;
-        StepCollector.StartStep(scenarioId, stepType, stepInfo.Text, null, null,
-            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText, opened.Nested);
+        var frame = StepCollector.StartFrame(scenarioId, stepType, stepInfo.Text,
+            ReqNRollStepArguments.ToBarRows(stepInfo.Table), stepInfo.MultilineText);
+
+        var opened = new OpenStep(stopwatch, InnermostOpenStep, stepInfo, frame);
+        _scenarioContext[ReqNRollConstants.OpenStepKey] = opened;
+        _scenarioContext.StepContext[ReqNRollConstants.OpenStepKey] = opened;
         return opened;
     }
 
@@ -153,27 +155,24 @@ public class ReqNRollTrackingHooks
         // failure only to the step that failed, the step that ran it carries on, and a step that never reached a hook
         // (undefined, ambiguous) has no frame at all.
         var status = stepContext.Status != ScenarioExecutionStatus.OK ? stepContext.Status : _scenarioContext.ScenarioExecutionStatus;
-        var passed = status == ScenarioExecutionStatus.OK;
         if (opened is not null)
         {
             CloseLeftOpen(opened, scenarioId, steps);
-            StepCollector.CompleteStep(scenarioId, passed);
+            StepCollector.CompleteFrame(scenarioId, opened.Frame, status == ScenarioExecutionStatus.OK);
         }
 
-        // A step a step definition ran is that step's sub-step, which StepCollector has made it, so it is no row of the
-        // scenario's own, whose list and whose Background count run by the feature file.
-        var parent = opened is not null ? opened.Parent : InnermostOpenStep;
-        var info = Describe(stepContext.StepInfo, status, opened, parent);
+        var parent = opened?.Parent;
+        var info = Describe(stepContext.StepInfo, status, opened);
         if (opened is not null && parent is null)
             _scenarioContext.Remove(ReqNRollConstants.OpenStepKey);
         else if (opened is not null)
             _scenarioContext[ReqNRollConstants.OpenStepKey] = parent!;
 
-        parent?.Nested.Add(info);
-        steps.Add(info);
+        // Listed with no frame, it stands after what opened before it, and it is not a step built by hand.
+        steps.Add(opened is null ? info with { NotRunAfter = StepCollector.LastStepIdOf(scenarioId) } : info);
     }
 
-    private static ReqNRollStepInfo Describe(StepInfo stepInfo, ScenarioExecutionStatus status, OpenStep? opened, OpenStep? parent)
+    private static ReqNRollStepInfo Describe(StepInfo stepInfo, ScenarioExecutionStatus status, OpenStep? opened)
     {
         // Capture inline parameter positions from binding match
         InlineParamCapture[]? inlineParams = null;
@@ -210,7 +209,7 @@ public class ReqNRollTrackingHooks
             opened?.Stopwatch.Elapsed,
             stepInfo.Table?.ToString(),
             stepInfo.MultilineText,
-            inlineParams) { Nested = opened?.Nested, RanByAStep = parent is not null };
+            inlineParams) { FrameId = opened?.Frame };
     }
 
     /// <summary>
@@ -223,10 +222,8 @@ public class ReqNRollTrackingHooks
         for (var left = InnermostOpenStep; left is not null && !ReferenceEquals(left, upTo); left = left.Parent)
         {
             left.Stopwatch.Stop();
-            StepCollector.CompleteStep(scenarioId, false);
-            var info = Describe(left.StepInfo, _scenarioContext.ScenarioExecutionStatus, left, left.Parent);
-            left.Parent?.Nested.Add(info);
-            steps.Add(info);
+            StepCollector.CompleteFrame(scenarioId, left.Frame, false);
+            steps.Add(Describe(left.StepInfo, _scenarioContext.ScenarioExecutionStatus, left));
         }
     }
 
@@ -234,12 +231,12 @@ public class ReqNRollTrackingHooks
         _scenarioContext.TryGetValue(ReqNRollConstants.OpenStepKey, out OpenStep? open) ? open : null;
 
     /// <summary>A step under way. Its definition can run more of them, which finish inside it.</summary>
-    private sealed class OpenStep(Stopwatch stopwatch, OpenStep? parent, StepInfo stepInfo)
+    private sealed class OpenStep(Stopwatch stopwatch, OpenStep? parent, StepInfo stepInfo, int? frame)
     {
         public Stopwatch Stopwatch { get; } = stopwatch;
         public OpenStep? Parent { get; } = parent;
         public StepInfo StepInfo { get; } = stepInfo;
-        public List<ReqNRollStepInfo> Nested { get; } = [];
+        public int? Frame { get; } = frame;
     }
 
     // Ahead of a suite's own at any later order, so a step left open takes neither their time nor their woven steps, and they

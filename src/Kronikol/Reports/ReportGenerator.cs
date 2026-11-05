@@ -5376,10 +5376,15 @@ public static class ReportGenerator
     /// Walks one test's ordered log stream and works out, for every real interaction, which step it happened
     /// under, plus the annotations worth exporting.
     ///
-    /// <para>Attribution is positional: the <em>n</em>th step marker opens the <em>n</em>th step in
-    /// document order (background steps first, and leaving out what <see cref="Scenario.BarlessRows"/> names).
-    /// That holds because <c>RequestResponseLogger</c> is a FIFO queue, so one test's records keep their
-    /// relative order however many tests run in parallel. The marker's text is checked against the step's,
+    /// <para>A record logged with a step open names that step (<see cref="RequestResponseLog.OpenStep"/>), and reads the
+    /// top-level step it is in, wherever every top-level step that ran carries its id. So a step method that ran with no framework
+    /// step open, or bars hidden, moves no call. A stamp naming no listed step reads no step: the step before it did not make that
+    /// call. A record with no stamp, logged with no step open, reads the step before it.</para>
+    ///
+    /// <para>Everything else (every ingest, a scenario built by hand, a row rebuilt among collected rows) is positional: the
+    /// <em>n</em>th step marker opens the <em>n</em>th step in document order (background steps first, and leaving out what
+    /// <see cref="Scenario.BarlessRows"/> names). That holds because <c>RequestResponseLogger</c> is a FIFO queue, so one test's
+    /// records keep their relative order however many tests run in parallel. The marker's text is checked against the step's,
     /// for a bar that is not its row's, such as a hook's: a disagreement produces a null <c>stepPath</c> and a
     /// diagnostic rather than a confident wrong answer. The check cannot see a record a background thread
     /// enqueues after the marker for the following step, as that changes no marker, and such a record reads
@@ -5401,12 +5406,21 @@ public static class ReportGenerator
             .GroupBy(s => s.Id)
             .ToDictionary(g => g.Key, g => OrderedStepPaths(g.First()));
 
+        var collectedByTestId = features
+            .SelectMany(f => f.Scenarios)
+            .GroupBy(s => s.Id)
+            .Select(g => (g.Key, Paths: CollectedStepPaths(g.First())))
+            .Where(x => x.Paths is not null)
+            .ToDictionary(x => x.Key, x => x.Paths!);
+
         foreach (var perTest in trackedLogs.GroupBy(l => l.TestId))
         {
             var ordered = stepsByTestId.TryGetValue(perTest.Key, out var s) ? s : [];
+            var collected = collectedByTestId.GetValueOrDefault(perTest.Key);
             var paths = new List<string?>();
             var found = new List<ScenarioAnnotation>();
             string? current = null;
+            var latestOpen = 0;
             var stepMarkerCount = 0;
             var interactionIndex = 0;
             var requestPaths = new Dictionary<Guid, string?>();
@@ -5415,10 +5429,24 @@ public static class ReportGenerator
             {
                 if (!log.IsDiagramMarker)
                 {
+                    // The step open when the call was logged, where this scenario's steps carry their ids. With none open,
+                    // or no ids to go by, the step before it. A record a hold let through late names a step already passed and moves
+                    // nothing, so what follows it reads as it would have.
+                    var read = current;
+                    if (collected is not null && log.OpenStep is { } open)
+                    {
+                        read = collected.GetValueOrDefault(open);
+                        if (open > latestOpen)
+                        {
+                            latestOpen = open;
+                            current = read;
+                        }
+                    }
+
                     // A call in flight across a bar is one call: a response takes the step of the request it answers.
                     if (log.Type == RequestResponseType.Request)
-                        requestPaths[log.RequestResponseId] = current;
-                    paths.Add(log.Type == RequestResponseType.Response && requestPaths.TryGetValue(log.RequestResponseId, out var ofRequest) ? ofRequest : current);
+                        requestPaths[log.RequestResponseId] = read;
+                    paths.Add(log.Type == RequestResponseType.Response && requestPaths.TryGetValue(log.RequestResponseId, out var ofRequest) ? ofRequest : read);
                     interactionIndex++;
                     continue;
                 }
@@ -5429,6 +5457,12 @@ public static class ReportGenerator
 
                 switch (log.MarkerKind)
                 {
+                    // A bar a collected step drew names its step, with no counting and no reading of its text.
+                    case DiagramMarkerKind.Step when collected is not null && log.OpenStep is { } drawn:
+                        current = collected.GetValueOrDefault(drawn);
+                        latestOpen = Math.Max(latestOpen, drawn);
+                        break;
+
                     case DiagramMarkerKind.Step:
                         current = stepMarkerCount < ordered.Count && StepMarkerMatches(log.PlantUml, ordered[stepMarkerCount].Keyword, ordered[stepMarkerCount].Text)
                             ? ordered[stepMarkerCount].Path
@@ -5456,9 +5490,10 @@ public static class ReportGenerator
     }
 
     /// <summary>
-    /// The steps of a scenario a marker can arrive for, in order, each with the address it gets in the data file:
-    /// <c>b0</c>, <c>b1</c> for background steps, then <c>0</c>, <c>1</c> for the scenario's own. Only top-level steps
-    /// appear, as a step delimiter is emitted for those alone, and not those <see cref="Scenario.BarlessRows"/> names.
+    /// The steps of a scenario a marker can arrive for, where the steps are read against the bars, in order, each with the
+    /// address it gets in the data file: <c>b0</c>, <c>b1</c> for background steps, then <c>0</c>, <c>1</c> for the scenario's
+    /// own. Only top-level steps appear, as a step delimiter is emitted for those alone, and not those
+    /// <see cref="Scenario.BarlessRows"/> names.
     /// </summary>
     private static List<(string Path, string? Keyword, string Text)> OrderedStepPaths(Scenario scenario)
     {
@@ -5475,6 +5510,36 @@ public static class ReportGenerator
         Add("b", scenario.BackgroundSteps);
         Add("", scenario.Steps);
         return ordered;
+    }
+
+    /// <summary>
+    /// The address a call under each collected step gets: the top-level step it is in. Null for a scenario with a top-level
+    /// step that ran and carries no id (built by hand through the public model, paired by position, or rebuilt among collected
+    /// steps), whose calls are all read against the bars, as a stamp could not name that step.
+    /// </summary>
+    private static Dictionary<int, string?>? CollectedStepPaths(Scenario scenario)
+    {
+        var background = scenario.BackgroundSteps ?? [];
+        var own = scenario.Steps ?? [];
+        var rows = background.Concat(own).ToArray();
+        if (rows.Length == 0 || rows.Any(step => step.CollectedId is null && !step.DidNotRun))
+            return null;
+
+        var paths = new Dictionary<int, string?>();
+
+        void Add(ScenarioStep step, string path)
+        {
+            if (step.CollectedId is { } id)
+                paths.TryAdd(id, path);
+            foreach (var sub in step.SubSteps ?? [])
+                Add(sub, path);
+        }
+
+        for (var i = 0; i < background.Length; i++)
+            Add(background[i], $"b{i}");
+        for (var i = 0; i < own.Length; i++)
+            Add(own[i], $"{i}");
+        return paths;
     }
 
     /// <summary>
@@ -8165,7 +8230,7 @@ public static class ReportGenerator
                             }
                         },
                         ["durationMs"] = new Dictionary<string, object?> { ["type"] = new[] { "number", "null" }, ["description"] = "Wall-clock milliseconds between the request and its response: the capturer's own measurement when the record carried one (durationMs on the NDJSON input), otherwise derived from the two timestamps. Repeated on both halves of the pair; null when the request went unanswered and nothing was measured, when timestamps are absent, or when both records carry the same instant (a call logged after the fact, which measured nothing)." },
-                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, and whenever attribution could not be trusted — see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } },
+                        ["stepPath"] = new Dictionary<string, object?> { ["type"] = new[] { "string", "null" }, ["description"] = "Which step this call happened under: an index into the scenario's steps, prefixed b for a background step (b0, 0, 1, ...). Null before the first step, in a step the report does not list, and whenever attribution could not be trusted: see the StepAttributionMismatch diagnostic.", ["examples"] = new[] { "0", "b0", "2.1" } },
                         ["testDouble"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "What answered the call in its service's place, when its capturer saw a test double answer it (#190): MSW, WireMock, a handler's type name. Written only on a marked call; an unmarked call is unknown, never real.", ["examples"] = new[] { "MSW", "WireMock" } }
                     }
                 }

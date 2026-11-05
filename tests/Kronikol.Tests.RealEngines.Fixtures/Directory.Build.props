@@ -1,0 +1,28 @@
+<Project>
+  <!--
+    Test assemblies that fail on purpose, run by Kronikol.Tests.RealEngines' facts in a child `dotnet test`, which read the
+    report each run wrote: a framework's real engine decides the order of its hooks and steps, and the facts driving the hooks
+    directly cannot show that. They are never run on their own: CI's auto-discovery skips this folder, since no project file
+    sits at its top.
+
+    MSBuild imports the first Directory.Build.props it finds walking up from a project, so this file stops the search here and
+    each fixture builds as a consumer's suite would. The step weaver is the published package, as the fixtures test what the
+    adapters and the core do with a woven step: a build of the weaver from source would have to load a task from a folder a
+    package never has it in.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- Reqnroll generates each feature's class under this namespace, and a name holding TUnit hides TUnit's own. -->
+    <RootNamespace>EngineFixtures</RootNamespace>
+    <ReqnrollUseIntermediateOutputPathForCodeBehind>true</ReqnrollUseIntermediateOutputPathForCodeBehind>
+    <ReqnrollFixtureVersion Condition="'$(ReqnrollFixtureVersion)' == ''">3.3.4</ReqnrollFixtureVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Kronikol.StepTracking" Version="5.29.0" />
+  </ItemGroup>
+</Project>

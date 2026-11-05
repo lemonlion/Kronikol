@@ -441,7 +441,7 @@ public static partial class QueryCommand
         var unattributed = scope is null && byStep.TryGetValue("", out var loose) ? loose.Length : 0;
         if (unattributed > 0)
             writer.Line($"\n  {unattributed} calls belong to no step"
-                        + (index.Enriched ? " (before the first step, or attribution was not trusted)" : " (this report has no step attribution)"));
+                        + (index.Enriched ? " (before the first step, in a step the report does not list, or attribution was not trusted)" : " (this report has no step attribution)"));
 
         writer.Footer($"{scenario.Interactions.Count(i => i.Type == "Request")} calls · interactions {scenario.Address} · flow {scenario.Address}");
         return 0;

@@ -213,17 +213,31 @@ internal static class FeatureResultExtensions
     {
         var stepArray = steps.ToArray();
         if (stepArray.Length == 0) return null;
-        var mapped = new ScenarioStep[stepArray.Length];
         var priorFailure = false;
-        for (var i = 0; i < stepArray.Length; i++)
+        // No step decorator ran (or the results were built by hand): no frames, and they pair by position. Steps that never
+        // ran are not that: a step method ahead of them (a scenario decorator's) stands as itself.
+        if (stepArray.All(s => StepTrackingStepDecorator.FrameOf(s.Info.RuntimeId) is null)
+            && stepArray.Any(s => s.Status != ExecutionStatus.NotRun))
         {
-            var collected = collectedSteps is not null && i < collectedSteps.Length
-                ? collectedSteps[i] : null;
-            mapped[i] = MapStep(stepArray[i], priorFailure, scenarioSkipped, collected);
-            if (stepArray[i].Status == ExecutionStatus.Failed)
-                priorFailure = true;
+            var byPosition = new ScenarioStep[stepArray.Length];
+            for (var i = 0; i < stepArray.Length; i++)
+            {
+                var collected = collectedSteps is not null && i < collectedSteps.Length ? collectedSteps[i] : null;
+                byPosition[i] = MapStep(stepArray[i], priorFailure, scenarioSkipped, collected) with { CollectedId = null };
+                if (stepArray[i].Status == ExecutionStatus.Failed)
+                    priorFailure = true;
+            }
+
+            return byPosition;
         }
-        return mapped;
+
+        return StepPairing.InOrderTheyRan(stepArray, collectedSteps ?? [], s => StepTrackingStepDecorator.FrameOf(s.Info.RuntimeId), (step, collected) =>
+        {
+            var mapped = MapStep(step, priorFailure, scenarioSkipped, collected) with { DidNotRun = StepTrackingStepDecorator.FrameOf(step.Info.RuntimeId) is null };
+            if (step.Status == ExecutionStatus.Failed)
+                priorFailure = true;
+            return mapped;
+        }).ToArray();
     }
 
     private static ScenarioStep MapStep(IStepResult step, bool priorFailure, bool scenarioSkipped,
@@ -260,15 +274,18 @@ internal static class FeatureResultExtensions
 
         // Merge sub-steps: pass collected data recursively so assertions inside sub-steps are preserved
         var collectedSubs = collected?.SubSteps;
-        var nativeSubSteps = MapSteps(step.GetSubSteps(), scenarioSkipped, collectedSubs);
+        var nativeSteps = step.GetSubSteps().ToArray();
+        var nativeSubSteps = MapSteps(nativeSteps, scenarioSkipped, collectedSubs);
         ScenarioStep[]? subSteps;
-        if (nativeSubSteps is not null && collectedSubs is not null && collectedSubs.Length > nativeSubSteps.Length)
+        if (nativeSubSteps is not null && collectedSubs is not null && collectedSubs.Length > nativeSubSteps.Length
+            && nativeSteps.All(s => StepTrackingStepDecorator.FrameOf(s.Info.RuntimeId) is null))
             subSteps = [..nativeSubSteps, ..collectedSubs[nativeSubSteps.Length..]];
         else
             subSteps = nativeSubSteps ?? collectedSubs;
 
         return new ScenarioStep
         {
+            CollectedId = collected?.CollectedId,
             Keyword = keyword,
             Text = text,
             Status = MapStepStatus(step.Status, priorFailure, scenarioSkipped),

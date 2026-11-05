@@ -524,4 +524,60 @@ public class BDDfyScenarioInfoExtensionsTests
             StepCollector.ClearSteps(testId);
         }
     }
+
+    [Fact]
+    public void Steps_built_by_hand_pair_by_position_whatever_was_collected_and_their_rows_carry_no_id()
+    {
+        // With nothing to say which frame a step opened, position is all there is, and an id would make a stamped call certain of a guess.
+        var testId = "bddfy-position-" + Guid.NewGuid();
+        StepCollector.StartStep(testId, null, "A step method ahead of them", null, null);
+        StepCollector.CompleteStep(testId, true);
+        StepCollector.StartStep(testId, "Given", "the second collected", null, null);
+        StepCollector.AddAssertionSubStep(testId, "under the second", passed: true);
+        StepCollector.CompleteStep(testId, true);
+        StepCollector.StartStep(testId, "When", "the third collected", null, null);
+        StepCollector.CompleteStep(testId, true);
+
+        var info = MakeScenario(testId: testId, steps: [new BDDfyStepInfo("Given", "built by hand"), new BDDfyStepInfo("Then", "and another")]);
+
+        try
+        {
+            var steps = new[] { info }.ToFeatures()[0].Scenarios[0].Steps!;
+
+            Assert.Equal(["built by hand", "and another"], steps.Select(s => s.Text));
+            Assert.Null(steps[0].SubSteps);
+            Assert.Equal("under the second", Assert.Single(steps[1].SubSteps!).Text);
+            Assert.All(steps, step => Assert.Null(step.CollectedId));
+            Assert.All(steps, step => Assert.False(step.OutsideFrameworkStep));
+            Assert.All(steps, step => Assert.False(step.DidNotRun));
+        }
+        finally
+        {
+            StepCollector.ClearSteps(testId);
+        }
+    }
+
+    [Fact]
+    public void Steps_no_executor_ran_pair_by_position()
+    {
+        // BDDfy's own step ids with no frame for any of them: the step executor was not installed, so position is all there is.
+        var testId = "bddfy-no-executor-" + Guid.NewGuid();
+        StepCollector.StartStep(testId, "Given", "the first collected", null, null);
+        StepCollector.AddAssertionSubStep(testId, "under the first", passed: true);
+        StepCollector.CompleteStep(testId, true);
+
+        var info = MakeScenario(testId: testId, steps: [new BDDfyStepInfo("Given", "a basket") { StepId = "first" }]);
+
+        try
+        {
+            var step = Assert.Single(new[] { info }.ToFeatures()[0].Scenarios[0].Steps!);
+
+            Assert.Equal("a basket", step.Text);
+            Assert.Equal("under the first", Assert.Single(step.SubSteps!).Text);
+        }
+        finally
+        {
+            StepCollector.ClearSteps(testId);
+        }
+    }
 }

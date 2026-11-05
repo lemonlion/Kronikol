@@ -60,6 +60,8 @@ internal static class ScenarioInfoExtensions
                                 frozenValues is { Count: > 0 } ? x.TestMethodName ?? ParameterParser.ExtractBaseName(frozenTitle) : null,
                                 frozenValues is { Count: > 0 } ? frozenValues : null);
 
+                            BDDfyStepTrackingExecutor.CloseLeftRunning(x.TestId);
+
                             return new Scenario
                             {
                                 Id = x.TestId,
@@ -76,7 +78,7 @@ internal static class ScenarioInfoExtensions
                                 Duration = x.Duration != TimeSpan.Zero ? x.Duration : null,
                                 EndedAt = x.EndedAt,
                                 Steps = x.Steps.Count > 0
-                                    ? MapSteps(x.Steps, StepCollector.GetSteps(x.TestId))
+                                    ? MapSteps(x.Steps, StepCollector.GetSteps(x.TestId), x.TestId)
                                     : StepCollector.GetSteps(x.TestId) is { Length: > 0 } collectedSteps ? collectedSteps : null,
                                 Tags = classified.Tags.Length > 0 ? classified.Tags : null,
                                 OutlineId = outlineId,
@@ -84,7 +86,7 @@ internal static class ScenarioInfoExtensions
                                 OutlineTitleGenerated = outlineId is not null && (x.TestMethodName is not null || x.TitleGenerated),
                                 ExampleValues = exampleValues is { Count: > 0 } ? exampleValues : null,
                                 ExampleRawValues = exampleRawValues,
-                                Attachments = StepCollector.GetScenarioAttachments(x.TestId),
+                                Attachments = ScenarioAttachments(x),
                             };
                         }).ToArray());
 
@@ -101,29 +103,68 @@ internal static class ScenarioInfoExtensions
             }).ToArray();
     }
 
-    private static ScenarioStep[] MapSteps(List<BDDfyStepInfo> steps, ScenarioStep[]? collectedSteps = null)
+    // The scenario's own files, and those of a step the report does not list (a tear down, a later row of an example table).
+    private static FileAttachment[]? ScenarioAttachments(BDDfyScenarioInfo info)
     {
-        var mapped = new ScenarioStep[steps.Count];
+        var own = StepCollector.GetScenarioAttachments(info.TestId);
+        if (info.Steps.Count == 0)
+            return own;
+
+        // By position, a frame past the last row has no row to read it.
+        var collected = StepCollector.GetSteps(info.TestId);
+        var notListed = (PairsByPosition(info.Steps, info.TestId)
+            ? collected.Skip(info.Steps.Count).SelectMany(AllFilesOf)
+            : BDDfyStepTrackingExecutor.FilesNotListed(collected, info.TestId, info.Steps.Select(s => s.StepId).ToArray())).ToArray();
+        return notListed.Length > 0 ? [.. own ?? [], .. notListed] : own;
+    }
+
+    private static IEnumerable<FileAttachment> AllFilesOf(ScenarioStep step) =>
+        (step.Attachments ?? []).Concat((step.SubSteps ?? []).SelectMany(AllFilesOf));
+
+    // Steps built or rebuilt by hand have no step id, and steps no executor ran no frames: a list holding one pairs by position.
+    private static bool PairsByPosition(List<BDDfyStepInfo> steps, string testId) =>
+        steps.Any(s => s.StepId is null) || steps.All(s => BDDfyStepTrackingExecutor.FrameOf(testId, s.StepId) is null);
+
+    private static ScenarioStep[] MapSteps(List<BDDfyStepInfo> steps, ScenarioStep[] collectedSteps, string testId)
+    {
         var priorFailure = false;
-        for (var i = 0; i < steps.Count; i++)
+        if (PairsByPosition(steps, testId))
         {
-            mapped[i] = new ScenarioStep
+            return steps.Select((step, i) =>
             {
-                Keyword = steps[i].Keyword,
-                Text = steps[i].Text,
-                Status = steps[i].Result.ToStepResult(priorFailure),
-                Duration = steps[i].Duration,
-                SubSteps = collectedSteps is not null && i < collectedSteps.Length
-                    ? collectedSteps[i].SubSteps
-                    : null,
-                Attachments = collectedSteps is not null && i < collectedSteps.Length
-                    ? collectedSteps[i].Attachments
-                    : null,
-            };
-            if (steps[i].Result == TestStack.BDDfy.Result.Failed)
-                priorFailure = true;
+                var collected = i < collectedSteps.Length ? collectedSteps[i] : null;
+                var mapped = new ScenarioStep
+                {
+                    Keyword = step.Keyword,
+                    Text = step.Text,
+                    Status = step.Result.ToStepResult(priorFailure),
+                    Duration = step.Duration,
+                    SubSteps = collected?.SubSteps,
+                    Attachments = collected?.Attachments,
+                };
+                if (step.Result == TestStack.BDDfy.Result.Failed)
+                    priorFailure = true;
+                return mapped;
+            }).ToArray();
         }
-        return mapped;
+
+        return StepPairing.InOrderTheyRan(steps, collectedSteps, s => BDDfyStepTrackingExecutor.FrameOf(testId, s.StepId), (step, collected) =>
+        {
+            var mapped = new ScenarioStep
+            {
+                CollectedId = collected?.CollectedId,
+                DidNotRun = BDDfyStepTrackingExecutor.FrameOf(testId, step.StepId) is null,
+                Keyword = step.Keyword,
+                Text = step.Text,
+                Status = step.Result.ToStepResult(priorFailure),
+                Duration = step.Duration,
+                SubSteps = collected?.SubSteps,
+                Attachments = collected?.Attachments,
+            };
+            if (step.Result == TestStack.BDDfy.Result.Failed)
+                priorFailure = true;
+            return mapped;
+        }).ToArray();
     }
 
     /// <summary>

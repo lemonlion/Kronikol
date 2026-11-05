@@ -28,6 +28,20 @@ public class FeatureResultExtensionsTests
     }
 
     [Fact]
+    public void A_step_whose_decorator_ran_ran_though_nothing_collected_is_left_of_it()
+    {
+        var step = new StubStepResult("Given", "a basket", ExecutionStatus.Passed);
+        StepTrackingStepDecorator.Frames[step.Info.RuntimeId] = 1;
+        var other = new StubStepResult("Then", "it never ran", ExecutionStatus.NotRun);
+        var scenario = new StubExecutionResult("s1", "Pay").WithStep(step).WithStep(other);
+
+        var steps = new[] { new StubFeatureResult("F").WithScenario(scenario) }.ToFeatures()[0].Scenarios[0].Steps!;
+
+        Assert.False(steps[0].DidNotRun);
+        Assert.True(steps[1].DidNotRun);
+    }
+
+    [Fact]
     public void ToFeatures_marks_its_names_as_made_so_the_word_list_spells_them()
     {
         // LightBDD names a feature from its class and a scenario from its method, always (plans/TITLES_AS_WRITTEN_PLAN.md 4.5)
@@ -1251,6 +1265,61 @@ public class FeatureResultExtensionsTests
         public IReadOnlyList<ITabularParameterRow> Rows => Array.Empty<ITabularParameterRow>();
         public string VerificationMessage => "";
         public ParameterVerificationStatus VerificationStatus => ParameterVerificationStatus.NotApplicable;
+    }
+
+    // ─── Pairing: by the frame a step decorator opened, else by position ──────────
+
+    [Fact]
+    public void Results_no_step_decorator_ran_for_pair_by_position_and_their_rows_carry_no_id()
+    {
+        // A position is a guess, and an id would make a stamped call certain of it (X1).
+        var scenarioId = Guid.NewGuid().ToString();
+        var scenario = new StubExecutionResult(Guid.Parse(scenarioId), "Test")
+            .WithStep(new StubStepResult("Given", "a valid request", ExecutionStatus.Passed))
+            .WithStep(new StubStepResult("When", "the request is sent", ExecutionStatus.Passed));
+
+        StepCollector.StartStep(scenarioId, "Given", "the first collected", null, null);
+        StepCollector.AddAssertionSubStep(scenarioId, "under the first", passed: true);
+        StepCollector.CompleteStep(scenarioId, passed: true);
+        StepCollector.StartStep(scenarioId, "When", "the second collected", null, null);
+        StepCollector.AddAssertionSubStep(scenarioId, "under the second", passed: true);
+        StepCollector.CompleteStep(scenarioId, passed: true);
+
+        var steps = new[] { new StubFeatureResult("F").WithScenario(scenario) }.ToFeatures()[0].Scenarios[0].Steps!;
+
+        Assert.Equal(2, steps.Length);
+        Assert.Equal("under the second", Assert.Single(steps[1].SubSteps!).Text);
+        Assert.All(steps, step => Assert.Null(step.CollectedId));
+        Assert.All(steps, step => Assert.False(step.OutsideFrameworkStep));
+        StepCollector.ClearSteps(scenarioId);
+    }
+
+    [Fact]
+    public void A_step_method_ahead_of_steps_that_never_ran_stands_as_itself_and_they_say_they_did_not_run()
+    {
+        // L5: position would hand its failure and its call to a step that never ran.
+        var scenarioId = Guid.NewGuid().ToString();
+        var scenario = new StubExecutionResult(Guid.Parse(scenarioId), "Test", ExecutionStatus.Failed)
+            .WithStep(new StubStepResult("Given", "a valid request", ExecutionStatus.NotRun))
+            .WithStep(new StubStepResult("When", "the request is sent", ExecutionStatus.NotRun));
+
+        StepCollector.StartStep(scenarioId, null, "Seeding fails", null, null);
+        StepCollector.CompleteStep(scenarioId, passed: false, "seeding failed");
+
+        var steps = new[] { new StubFeatureResult("F").WithScenario(scenario) }.ToFeatures()[0].Scenarios[0].Steps!;
+
+        Assert.Equal(3, steps.Length);
+        Assert.Equal("Seeding fails", steps[0].Text);
+        Assert.True(steps[0].OutsideFrameworkStep);
+        Assert.NotNull(steps[0].CollectedId);
+        Assert.Equal(ExecutionResult.Failed, steps[0].Status);
+        Assert.All(steps[1..], step =>
+        {
+            Assert.True(step.DidNotRun);
+            Assert.Null(step.CollectedId);
+            Assert.False(step.OutsideFrameworkStep);
+        });
+        StepCollector.ClearSteps(scenarioId);
     }
 
     // ─── Assertion sub-step merging from StepCollector ──────────

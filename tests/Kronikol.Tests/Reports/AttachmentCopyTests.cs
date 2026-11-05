@@ -7,6 +7,32 @@ public class AttachmentCopyTests : IDisposable
 {
     private readonly string _tempDir;
 
+    [Fact]
+    public void A_step_two_scenarios_hold_is_visited_once()
+    {
+        // ScenarioStep and Feature are public, so a caller can list one step twice; a display fault must not lose the report.
+        var shared = new ScenarioStep
+        {
+            Keyword = "Given",
+            Text = "a screenshot",
+            Attachments = [new FileAttachment("shot.png", "shot.png")],
+        };
+        var scenarios = new[]
+        {
+            new Scenario { Id = "a", DisplayName = "a", Steps = [shared] },
+            new Scenario { Id = "b", DisplayName = "b", BackgroundSteps = [shared] },
+        };
+        var visits = 0;
+
+        AttachmentPlacement.ForEachList(scenarios, attachments =>
+        {
+            visits++;
+            return attachments;
+        });
+
+        Assert.Equal(1, visits);
+    }
+
     public AttachmentCopyTests()
     {
         _tempDir = Path.Combine(Path.GetTempPath(), $"kronikol-att-{Guid.NewGuid():N}");

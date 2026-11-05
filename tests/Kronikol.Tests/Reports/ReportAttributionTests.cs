@@ -264,6 +264,259 @@ public class ReportAttributionTests
         Assert.Equal("0", interactions[1].GetProperty("stepPath").GetString());
     }
 
+    [Fact]
+    public void Rows_built_by_hand_over_the_collectors_sub_steps_are_read_against_the_bars()
+    {
+        // An adapter of a consumer's own: its rows, the collector's sub-steps under them. The rows carry no ids, so a stamp
+        // has nothing to name, and a map of the sub-steps alone would leave every call that is not under one with no step.
+        var testId = "attr-own-rows-" + Guid.NewGuid().ToString("N");
+        StepCollector.StartStep(testId, "Given", "a thing", null, null);
+        RequestResponseLogger.Log(Real(testId, "before-sub") with { Timestamp = Start.AddSeconds(1) });
+        StepCollector.StartStep(testId, null, "a sub step", null, null);
+        RequestResponseLogger.Log(Real(testId, "in-sub") with { Timestamp = Start.AddSeconds(2) });
+        StepCollector.CompleteStep(testId, true);
+        RequestResponseLogger.Log(Real(testId, "after-sub") with { Timestamp = Start.AddSeconds(3) });
+        StepCollector.CompleteStep(testId, true);
+        StepCollector.StartStep(testId, "When", "another thing", null, null);
+        RequestResponseLogger.Log(Real(testId, "second-step") with { Timestamp = Start.AddSeconds(4) });
+        StepCollector.CompleteStep(testId, true);
+        Feature[] features =
+        [
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = testId,
+                        DisplayName = "S",
+                        Steps = StepCollector.GetSteps(testId)
+                            .Select(c => new ScenarioStep { Keyword = c.Keyword, Text = c.Text, Status = c.Status, SubSteps = c.SubSteps })
+                            .ToArray(),
+                    },
+                ],
+            },
+        ];
+
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).ToArray();
+        var paths = ReportGenerator.AttributeInteractionsToStepPaths(logs, features)[testId];
+
+        Assert.Equal(["0", "0", "0", "1"], paths);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void A_row_rebuilt_by_hand_among_collected_rows_keeps_its_calls(bool intoTheBackground)
+    {
+        // An adapter of a consumer's own: the collector's rows, with one rebuilt. It has no id, so its stamps name no row, and they
+        // say nothing: the bar it drew and its text place its calls, as they did before anything was stamped.
+        var testId = "attr-mixed-" + Guid.NewGuid().ToString("N");
+        void Step(string keyword, string text, string service)
+        {
+            StepCollector.StartStep(testId, keyword, text, null, null);
+            RequestResponseLogger.Log(Real(testId, service) with { Timestamp = Start.AddSeconds(1) });
+            StepCollector.CompleteStep(testId, true);
+        }
+
+        Step("Given", "a shop", "shop");
+        Step("When", "a basket", "basket");
+        Step("Then", "it is empty", "check");
+        var collected = StepCollector.GetSteps(testId);
+        var scenario = new Scenario { Id = testId, DisplayName = "S" };
+        if (intoTheBackground)
+        {
+            scenario.BackgroundSteps = [new ScenarioStep { Keyword = "Given", Text = "a shop" }];
+            scenario.Steps = [collected[1], collected[2]];
+        }
+        else
+        {
+            scenario.Steps = [collected[0], new ScenarioStep { Keyword = "When", Text = "a basket" }, collected[2]];
+        }
+
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).ToArray();
+        var paths = ReportGenerator.AttributeInteractionsToStepPaths(logs, [new Feature { DisplayName = "F", Scenarios = [scenario] }])[testId];
+
+        Assert.Equal(intoTheBackground ? ["b0", "0", "1"] : ["0", "1", "2"], paths);
+    }
+
+    [Fact]
+    public void A_stamp_that_names_no_row_reads_no_step()
+    {
+        // A hidden step, a later run of a step or a step still open at report time: the row before it did not make that call.
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios = [new Scenario { Id = "t4", DisplayName = "S", Steps = [new ScenarioStep { CollectedId = 1, Keyword = "Given", Text = "a basket" }] }],
+            }
+        };
+        var logs = new[]
+        {
+            Real("t4", "svc-a") with { OpenStep = 1 },
+            Real("t4", "svc-b") with { OpenStep = 99 },
+        };
+
+        Assert.Equal(["0", null], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t4"]);
+    }
+
+    [Fact]
+    public void A_row_that_did_not_run_leaves_the_others_read_by_their_stamps()
+    {
+        // A bar drawn for another step, so the walk would refuse it: only the stamp can place this call.
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "t5",
+                        DisplayName = "S",
+                        Steps =
+                        [
+                            new ScenarioStep { CollectedId = 1, Keyword = "Given", Text = "a basket" },
+                            new ScenarioStep { DidNotRun = true, Keyword = "Then", Text = "it is empty" },
+                        ],
+                    },
+                ],
+            }
+        };
+        var logs = new[]
+        {
+            Marker("t5", DiagramMarkerKind.Step, "hnote across <<stepDelimiter>> #black:<color:white>a hook's step") with { OpenStep = 1 },
+            Real("t5", "svc-a") with { OpenStep = 1 },
+        };
+
+        Assert.Equal(["0"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t5"]);
+    }
+
+    [Fact]
+    public void A_stamped_call_reads_the_step_it_names_and_an_unstamped_one_the_step_before_it()
+    {
+        // The walk stays for what has no stamp: a call between steps, in any lane (P1 to P4, T20, B6).
+        var features = Collected("t6", new ScenarioStep { CollectedId = 1, Keyword = "Given", Text = "a basket" }, new ScenarioStep { CollectedId = 2, Keyword = "When", Text = "checkout" });
+        var logs = new[]
+        {
+            Real("t6", "before"),
+            Bar("t6", "Given a basket", 1),
+            Real("t6", "inside-given") with { OpenStep = 1 },
+            Real("t6", "between"),
+            Bar("t6", "When checkout", 2),
+            Real("t6", "inside-when") with { OpenStep = 2 },
+            Real("t6", "after"),
+        };
+
+        Assert.Equal([null, "0", "0", "1", "1"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t6"]);
+    }
+
+    [Fact]
+    public void A_bar_a_collected_step_drew_is_not_read_against_its_text()
+    {
+        var features = Collected("t7", new ScenarioStep { CollectedId = 1, Keyword = "Given", Text = "a basket" });
+        var logs = new[]
+        {
+            Bar("t7", "a label nothing could match", 1),
+            Real("t7", "between"),
+        };
+
+        Assert.Equal(["0"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t7"]);
+    }
+
+    [Fact]
+    public void A_stamp_on_a_sub_step_reads_the_top_level_step_it_is_in()
+    {
+        var features = Collected("t8", new ScenarioStep
+        {
+            CollectedId = 1,
+            Keyword = "Given",
+            Text = "a basket",
+            SubSteps = [new ScenarioStep { CollectedId = 2, Text = "An item", SubSteps = [new ScenarioStep { CollectedId = 3, Text = "Deeper" }] }],
+        });
+        var logs = new[]
+        {
+            Real("t8", "sub") with { OpenStep = 2 },
+            Real("t8", "deeper") with { OpenStep = 3 },
+        };
+
+        Assert.Equal(["0", "0"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t8"]);
+    }
+
+    [Fact]
+    public void A_later_scenarios_stamp_reads_through_its_own_background_rows()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario { Id = "first", DisplayName = "A", BackgroundSteps = [new ScenarioStep { CollectedId = 1, Keyword = "Given", Text = "shared" }], Steps = [new ScenarioStep { CollectedId = 2, Keyword = "Then", Text = "a" }] },
+                    new Scenario { Id = "later", DisplayName = "B", BackgroundSteps = [new ScenarioStep { CollectedId = 3, Keyword = "Given", Text = "shared" }], Steps = [new ScenarioStep { CollectedId = 4, Keyword = "Then", Text = "b" }] },
+                ],
+            }
+        };
+        var logs = new[]
+        {
+            Real("later", "in-background") with { OpenStep = 3 },
+            Real("later", "in-own") with { OpenStep = 4 },
+        };
+
+        Assert.Equal(["b0", "0"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["later"]);
+    }
+
+    [Fact]
+    public void With_bars_hidden_a_stamped_call_keeps_its_step_and_a_call_after_it_the_same()
+    {
+        // ShowStepDelimiters = false is a display option, and it must not delete data (F10).
+        var features = Collected("t9", new ScenarioStep { CollectedId = 1, Keyword = "Given", Text = "a basket" }, new ScenarioStep { CollectedId = 2, Keyword = "When", Text = "checkout" });
+        var logs = new[]
+        {
+            Real("t9", "inside-given") with { OpenStep = 1 },
+            Real("t9", "between"),
+            Real("t9", "inside-when") with { OpenStep = 2 },
+        };
+
+        Assert.Equal(["0", "0", "1"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t9"]);
+    }
+
+    [Fact]
+    public void A_hook_steps_row_takes_a_call_by_its_stamp_and_no_step_moves()
+    {
+        // #223's own shape: a bar too many at the front used to lose every call after it.
+        var features = Collected("t10",
+            new ScenarioStep { CollectedId = 9, OutsideFrameworkStep = true, Text = "Reference data is seeded" },
+            new ScenarioStep { CollectedId = 1, Keyword = "Given", Text = "a basket" });
+        var logs = new[]
+        {
+            Bar("t10", "Reference data is seeded", 9),
+            Real("t10", "seed") with { OpenStep = 9 },
+            Bar("t10", "Given a basket", 1),
+            Real("t10", "basket") with { OpenStep = 1 },
+        };
+
+        Assert.Equal(["0", "1"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t10"]);
+    }
+
+    [Fact]
+    public void The_stamps_are_never_read_where_every_row_lacks_an_id_as_an_ingest_or_a_hand_built_report_does()
+    {
+        var logs = new[]
+        {
+            Bar("t11", "Given a basket", 41),
+            Real("t11", "a") with { OpenStep = 41 },
+        };
+
+        var features = WithId("t11", new ScenarioStep { Keyword = "Given", Text = "a basket" }, new ScenarioStep { Keyword = "When", Text = "checkout" });
+
+        Assert.Equal(["0"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t11"]);
+    }
+
     // ─── Helpers ───────────────────────────────────────────────
 
     // ─── The walk reads the bars Kronikol draws (plans/CALLS_UNDER_THEIR_STEP_PLAN.md R2, #128) ───
@@ -354,6 +607,16 @@ public class ReportAttributionTests
         new Feature { DisplayName = "F", Scenarios = [new Scenario { Id = "t1", DisplayName = "S" }] }
     ];
 
+    private static RequestResponseLog Bar(string testId, string label, int step) =>
+        Marker(testId, DiagramMarkerKind.Step, "hnote across <<stepDelimiter>> #black:<color:white>" + label) with { OpenStep = step };
+
+    private static Feature[] Collected(string testId, params ScenarioStep[] steps) => WithId(testId, steps);
+
+    private static Feature[] WithId(string testId, params ScenarioStep[] steps) =>
+    [
+        new Feature { DisplayName = "F", Scenarios = [new Scenario { Id = testId, DisplayName = "S", Steps = steps }] }
+    ];
+
     private static Feature[] TwoStepFeature() =>
     [
         new Feature
@@ -394,4 +657,75 @@ public class ReportAttributionTests
 
     private static JsonElement[] Interactions(string path) =>
         Scenario(path).GetProperty("httpInteractions").EnumerateArray().ToArray();
+
+    // A call held until a later step confirms its document reads the step it was logged under, and moves no step: what follows it reads as it would have.
+    [Fact]
+    public void A_held_call_keeps_its_step_and_what_follows_it_reads_the_step_before_it()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "t5",
+                        DisplayName = "S",
+                        Steps =
+                        [
+                            new ScenarioStep { CollectedId = 1, Keyword = "Given", Text = "one" },
+                            new ScenarioStep { CollectedId = 2, Keyword = "When", Text = "two" },
+                        ],
+                    }
+                ],
+            }
+        };
+        var logs = new[]
+        {
+            Real("t5", "first") with { OpenStep = 1 },
+            Real("t5", "second") with { OpenStep = 2 },
+            Real("t5", "held") with { OpenStep = 1 },
+            Real("t5", "confirming"),
+            Real("t5", "between"),
+        };
+
+        Assert.Equal(["0", "1", "0", "1", "1"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t5"]);
+    }
+
+    // The bar moved the walk on with no call in its step, and the held call names a sub-step of the row before it.
+    [Fact]
+    public void A_held_call_moves_nothing_past_a_bar_with_no_call_under_it()
+    {
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "F",
+                Scenarios =
+                [
+                    new Scenario
+                    {
+                        Id = "t5b",
+                        DisplayName = "S",
+                        Steps =
+                        [
+                            new ScenarioStep { CollectedId = 1, Keyword = "Given", Text = "one", SubSteps = [new ScenarioStep { CollectedId = 2, Text = "under one" }] },
+                            new ScenarioStep { CollectedId = 3, Keyword = "When", Text = "two" },
+                        ],
+                    }
+                ],
+            }
+        };
+        var logs = new[]
+        {
+            Real("t5b", "first") with { OpenStep = 1 },
+            Marker("t5b", DiagramMarkerKind.Step, "hnote across <<stepDelimiter>> #black:<color:white>When two") with { OpenStep = 3 },
+            Real("t5b", "held") with { OpenStep = 2 },
+            Real("t5b", "between"),
+        };
+
+        Assert.Equal(["0", "0", "1"], ReportGenerator.AttributeInteractionsToStepPaths(logs, features)["t5b"]);
+    }
 }

@@ -14,12 +14,11 @@ public record ReqNRollStepInfo(
     string? DocString = null,
     InlineParamCapture[]? InlineParams = null)
 {
-    /// <summary>The steps this step's definition ran, in the order they finished. Each step that opened a frame has its own list,
-    /// and StepCollector was told that list as what opened the step, which is how the two are paired.</summary>
-    internal IReadOnlyList<ReqNRollStepInfo>? Nested { get; init; }
+    /// <summary>The step the hooks opened for this Gherkin step (<c>StepCollector.StartFrame</c>); null on a hand-built one, and on one a suite's hook kept them from opening.</summary>
+    internal int? FrameId { get; init; }
 
-    /// <summary>A step definition ran this step, which makes it that step's sub-step and not one of the scenario's own rows.</summary>
-    internal bool RanByAStep { get; init; }
+    /// <summary>For a step the hooks listed with no frame: the id of the step opened last before it, 0 when none was.</summary>
+    internal int? NotRunAfter { get; init; }
 }
 
 /// <summary>

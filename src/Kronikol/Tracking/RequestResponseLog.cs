@@ -34,6 +34,12 @@ public record RequestResponseLog(
     internal bool NamedByRemoteHostFallback { get; init; }
 
     /// <summary>
+    /// The step open when this was logged (<see cref="StepCollector.OpenStepOf"/>), null when none was. Never written to a
+    /// report; a call's stepPath is worked out from it.
+    /// </summary>
+    internal int? OpenStep { get; init; }
+
+    /// <summary>
     /// The call as its tracker recorded it before #192 R1 changed how it records it, when that differs: a SQL Server
     /// batch opening with two SET statements, which the classifier read as neither a statement nor a table. History's
     /// rules 6 and 7 read its method and URI from here, and no call at all when the tracker did not record it then, so a

@@ -157,7 +157,54 @@ public class BackgroundAsWrittenTests
     {
         var steps = ran.Select(text => new ScenarioStep { Keyword = "Given", Text = text }).ToArray();
 
-        Assert.Equal(expected, ScenarioInfoEnumerableExtensions.CountBackgroundSteps(steps, written));
+        var (background, own) = ScenarioInfoEnumerableExtensions.SplitBackground(steps, written);
+
+        Assert.Equal(steps.Take(expected).Select(s => s.Text), (background ?? []).Select(s => s.Text));
+        Assert.Equal(steps.Skip(expected).Select(s => s.Text), (own ?? []).Select(s => s.Text));
+    }
+
+    [Fact]
+    public void A_row_no_framework_step_opened_is_never_the_Background_though_it_reads_the_same()
+    {
+        // A hook's [GivenStep] with the Background's own words stands as what it is, and the Background follows it.
+        ScenarioStep[] ran =
+        [
+            new() { Keyword = "Given", Text = "a", OutsideFrameworkStep = true },
+            new() { Keyword = "Given", Text = "a" },
+            new() { Keyword = "Given", Text = "b" },
+            new() { Keyword = "Then", Text = "c" },
+        ];
+
+        var (background, own) = ScenarioInfoEnumerableExtensions.SplitBackground(ran, ["a", "b"]);
+
+        Assert.Equal([ran[1], ran[2]], background!);
+        Assert.Equal([ran[0], ran[3]], own!);
+    }
+
+    [Fact]
+    public void A_row_no_framework_step_opened_does_not_end_the_Background_it_ran_inside()
+    {
+        ScenarioStep[] ran =
+        [
+            new() { Keyword = "Given", Text = "a" },
+            new() { Text = "a step method", OutsideFrameworkStep = true },
+            new() { Keyword = "Given", Text = "b" },
+            new() { Keyword = "Then", Text = "c" },
+        ];
+
+        var (background, own) = ScenarioInfoEnumerableExtensions.SplitBackground(ran, ["a", "b"]);
+
+        Assert.Equal([ran[0], ran[2]], background!);
+        Assert.Equal([ran[1], ran[3]], own!);
+    }
+
+    [Fact]
+    public void Nothing_listed_is_neither_a_Background_nor_steps()
+    {
+        var (background, own) = ScenarioInfoEnumerableExtensions.SplitBackground([], ["a"]);
+
+        Assert.Null(background);
+        Assert.Null(own);
     }
 
     private static ReqNRollScenarioInfo Collected(string id, string title, int backgroundCount, params ReqNRollStepInfo[] steps) => new()
@@ -276,42 +323,32 @@ public class BackgroundAsWrittenTests
 /// <summary>#222: what the detector, which ingest still calls, and the attachment copier must hold whoever calls them.</summary>
 public class StepsAStepRanTests
 {
-    private static ReqNRollScenarioInfo Ran(string id, ReqNRollStepInfo step, Action collect) => new()
+    private static ReqNRollScenarioInfo Ran(string id, params ReqNRollStepInfo[] finished) => new()
     {
         ScenarioId = id,
         ScenarioTitle = "A",
         FeatureTitle = "Orders",
         ScenarioTags = [],
         CombinedTags = [],
-        Steps = Collecting(id, step, collect),
-        ExecutionStatus = step.Status,
+        Steps = [.. finished],
+        WrittenBackground = [],
+        ExecutionStatus = finished[^1].Status,
     };
-
-    private static List<ReqNRollStepInfo> Collecting(string id, ReqNRollStepInfo step, Action collect)
-    {
-        Kronikol.Tracking.StepCollector.StartStep(id, "Given", step.Text, null, null);
-        collect();
-        Kronikol.Tracking.StepCollector.CompleteStep(id, step.Status == ScenarioExecutionStatus.OK);
-        return [step];
-    }
 
     [Fact]
     public void A_step_a_step_ran_keeps_its_table_doc_string_and_outcome()
     {
         var id = nameof(A_step_a_step_ran_keeps_its_table_doc_string_and_outcome);
-        var inner = new ReqNRollStepInfo("Given", "the basket is listed", ScenarioExecutionStatus.TestError, null, "|sku|\n|APPLE|", "a doc string") { Nested = new List<ReqNRollStepInfo>() };
-        var outer = new ReqNRollStepInfo("Given", "a composite step", ScenarioExecutionStatus.TestError) { Nested = [inner] };
+        var outerFrame = StepCollector.StartFrame(id, "Given", "a composite step");
+        StepCollector.StartStep(id, "Given", "woven first", null, null);
+        StepCollector.CompleteStep(id, true);
+        var innerFrame = StepCollector.StartFrame(id, "Given", "the basket is listed");
+        StepCollector.CompleteFrame(id, innerFrame, false);
+        StepCollector.CompleteFrame(id, outerFrame, false);
+        var inner = new ReqNRollStepInfo("Given", "the basket is listed", ScenarioExecutionStatus.TestError, null, "|sku|\n|APPLE|", "a doc string") { FrameId = innerFrame };
+        var outer = new ReqNRollStepInfo("Given", "a composite step", ScenarioExecutionStatus.TestError) { FrameId = outerFrame };
 
-        var mapped = new[]
-        {
-            Ran(id, outer, () =>
-            {
-                Kronikol.Tracking.StepCollector.StartStep(id, "Given", "woven first", null, null);
-                Kronikol.Tracking.StepCollector.CompleteStep(id, true);
-                Kronikol.Tracking.StepCollector.StartStep(id, "Given", inner.Text, null, null, null, null, inner.Nested);
-                Kronikol.Tracking.StepCollector.CompleteStep(id, false);
-            }),
-        }.ToFeatures()[0].Scenarios[0].Steps![0];
+        var mapped = new[] { Ran(id, inner, outer) }.ToFeatures()[0].Scenarios[0].Steps![0];
 
         Assert.Equal(ExecutionResult.Failed, mapped.Status);
         Assert.Equal(["woven first", inner.Text], mapped.SubSteps!.Select(s => s.Text));
@@ -324,15 +361,17 @@ public class StepsAStepRanTests
 
 public class StepsUnderAWovenStepTests
 {
-    // As the hooks do: a list of its own for each step, which is also what StepCollector is told opened it.
-    private static ReqNRollStepInfo Opened(string text, ScenarioExecutionStatus status = ScenarioExecutionStatus.OK, string? table = null, string? docString = null,
-        InlineParamCapture[]? inlineParams = null, ReqNRollStepInfo[]? nested = null) =>
-        new("Given", text, status, null, table, docString, inlineParams) { Nested = new List<ReqNRollStepInfo>(nested ?? []) };
+    // As the hooks do: a frame for each step, and the step listed once it has finished, with the frame it opened.
+    private static int? Start(string id, string text) => StepCollector.StartFrame(id, "Given", text);
 
-    private static void Start(string id, ReqNRollStepInfo step) =>
-        StepCollector.StartStep(id, step.Keyword, step.Text, null, null, null, null, step.Nested);
+    private static ReqNRollStepInfo Close(string id, int? frame, string text, ScenarioExecutionStatus status = ScenarioExecutionStatus.OK, string? table = null,
+        string? docString = null, InlineParamCapture[]? inlineParams = null)
+    {
+        StepCollector.CompleteFrame(id, frame, status == ScenarioExecutionStatus.OK);
+        return new ReqNRollStepInfo("Given", text, status, null, table, docString, inlineParams) { FrameId = frame };
+    }
 
-    private static ScenarioStep[] SubStepsOf(string id, ReqNRollStepInfo outer)
+    private static ScenarioStep[] SubStepsOf(string id, params ReqNRollStepInfo[] finished)
     {
         var info = new ReqNRollScenarioInfo
         {
@@ -341,9 +380,9 @@ public class StepsUnderAWovenStepTests
             FeatureTitle = "Orders",
             ScenarioTags = [],
             CombinedTags = [],
-            Steps = [outer],
+            Steps = [.. finished],
             WrittenBackground = [],
-            ExecutionStatus = outer.Status,
+            ExecutionStatus = finished[^1].Status,
         };
 
         return new[] { info }.ToFeatures()[0].Scenarios[0].Steps![0].SubSteps!;
@@ -355,17 +394,14 @@ public class StepsUnderAWovenStepTests
     public void A_nested_step_is_not_taken_for_a_woven_step_that_reads_the_same(string? wovenKeyword)
     {
         var id = nameof(A_nested_step_is_not_taken_for_a_woven_step_that_reads_the_same) + wovenKeyword;
-        var inner = Opened("the namesake step", ScenarioExecutionStatus.TestError, "|sku|\n|APPLE|", "a doc string");
-        var outer = Opened("a composite step", ScenarioExecutionStatus.TestError, nested: [inner]);
-
-        Start(id, outer);
-        StepCollector.StartStep(id, wovenKeyword, inner.Text, null, null);
+        var outerFrame = Start(id, "a composite step");
+        StepCollector.StartStep(id, wovenKeyword, "the namesake step", null, null);
         StepCollector.CompleteStep(id, true);
-        Start(id, inner);
-        StepCollector.CompleteStep(id, false);
-        StepCollector.CompleteStep(id, false);
+        var innerFrame = Start(id, "the namesake step");
+        var inner = Close(id, innerFrame, "the namesake step", ScenarioExecutionStatus.TestError, "|sku|\n|APPLE|", "a doc string");
+        var outer = Close(id, outerFrame, "a composite step", ScenarioExecutionStatus.TestError);
 
-        var subSteps = SubStepsOf(id, outer);
+        var subSteps = SubStepsOf(id, inner, outer);
 
         Assert.Equal(ExecutionResult.Passed, subSteps[0].Status);
         Assert.Null(subSteps[0].Parameters);
@@ -379,17 +415,13 @@ public class StepsUnderAWovenStepTests
     public void A_woven_step_that_failed_stays_failed_beside_a_nested_step_that_reads_the_same()
     {
         var id = nameof(A_woven_step_that_failed_stays_failed_beside_a_nested_step_that_reads_the_same);
-        var inner = Opened("the namesake step");
-        var outer = Opened("a composite step", nested: [inner]);
-
-        Start(id, outer);
-        StepCollector.StartStep(id, "Given", inner.Text, null, null);
+        var outerFrame = Start(id, "a composite step");
+        StepCollector.StartStep(id, "Given", "the namesake step", null, null);
         StepCollector.CompleteStep(id, false);
-        Start(id, inner);
-        StepCollector.CompleteStep(id, true);
-        StepCollector.CompleteStep(id, true);
+        var inner = Close(id, Start(id, "the namesake step"), "the namesake step");
+        var outer = Close(id, outerFrame, "a composite step");
 
-        var subSteps = SubStepsOf(id, outer);
+        var subSteps = SubStepsOf(id, inner, outer);
 
         Assert.Equal(ExecutionResult.Failed, subSteps[0].Status);
         Assert.Equal(ExecutionResult.Passed, subSteps[1].Status);
@@ -399,20 +431,14 @@ public class StepsUnderAWovenStepTests
     public void A_step_found_under_a_woven_step_keeps_its_arguments_as_does_the_one_after_it()
     {
         var id = nameof(A_step_found_under_a_woven_step_keeps_its_arguments_as_does_the_one_after_it);
-        var inHelper = Opened("the basket is listed", table: "|sku|\n|APPLE|");
-        var afterHelper = Opened("a note says", docString: "a doc string");
-        var outer = Opened("a composite step", nested: [inHelper, afterHelper]);
-
-        Start(id, outer);
+        var outerFrame = Start(id, "a composite step");
         StepCollector.StartStep(id, "Given", "a woven helper", null, null);
-        Start(id, inHelper);
+        var inHelper = Close(id, Start(id, "the basket is listed"), "the basket is listed", table: "|sku|\n|APPLE|");
         StepCollector.CompleteStep(id, true);
-        StepCollector.CompleteStep(id, true);
-        Start(id, afterHelper);
-        StepCollector.CompleteStep(id, true);
-        StepCollector.CompleteStep(id, true);
+        var afterHelper = Close(id, Start(id, "a note says"), "a note says", docString: "a doc string");
+        var outer = Close(id, outerFrame, "a composite step");
 
-        var subSteps = SubStepsOf(id, outer);
+        var subSteps = SubStepsOf(id, inHelper, afterHelper, outer);
 
         Assert.Equal("table", Assert.Single(subSteps[0].SubSteps![0].Parameters!).Name);
         Assert.Equal("a doc string", subSteps[1].DocString);
@@ -422,33 +448,24 @@ public class StepsUnderAWovenStepTests
     public void A_nested_steps_own_nested_steps_keep_their_arguments()
     {
         var id = nameof(A_nested_steps_own_nested_steps_keep_their_arguments);
-        var leaf = Opened("the card is read", table: "|sku|\n|APPLE|");
-        var middle = Opened("the customer pays", nested: [leaf]);
-        var outer = Opened("a composite step", nested: [middle]);
+        var outerFrame = Start(id, "a composite step");
+        var middleFrame = Start(id, "the customer pays");
+        var leaf = Close(id, Start(id, "the card is read"), "the card is read", table: "|sku|\n|APPLE|");
+        var middle = Close(id, middleFrame, "the customer pays");
+        var outer = Close(id, outerFrame, "a composite step");
 
-        Start(id, outer);
-        Start(id, middle);
-        Start(id, leaf);
-        StepCollector.CompleteStep(id, true);
-        StepCollector.CompleteStep(id, true);
-        StepCollector.CompleteStep(id, true);
-
-        Assert.Equal("table", Assert.Single(Assert.Single(SubStepsOf(id, outer)[0].SubSteps!).Parameters!).Name);
+        Assert.Equal("table", Assert.Single(Assert.Single(SubStepsOf(id, leaf, middle, outer)[0].SubSteps!).Parameters!).Name);
     }
 
     [Fact]
     public void A_nested_step_keeps_its_inline_values()
     {
         var id = nameof(A_nested_step_keeps_its_inline_values);
-        var inner = Opened("the basket holds APPLE", inlineParams: [new InlineParamCapture(17, 5, "APPLE", "sku")]);
-        var outer = Opened("a composite step", nested: [inner]);
+        var outerFrame = Start(id, "a composite step");
+        var inner = Close(id, Start(id, "the basket holds APPLE"), "the basket holds APPLE", inlineParams: [new InlineParamCapture(17, 5, "APPLE", "sku")]);
+        var outer = Close(id, outerFrame, "a composite step");
 
-        Start(id, outer);
-        Start(id, inner);
-        StepCollector.CompleteStep(id, true);
-        StepCollector.CompleteStep(id, true);
-
-        Assert.NotNull(Assert.Single(SubStepsOf(id, outer)).TextSegments);
+        Assert.NotNull(Assert.Single(SubStepsOf(id, inner, outer)).TextSegments);
     }
 
     [Fact]
@@ -456,15 +473,11 @@ public class StepsUnderAWovenStepTests
     {
         // The collector only hears passed or not, so a pending step is failed there and skipped here.
         var id = nameof(A_step_a_step_ran_reads_what_the_hooks_saw_not_what_the_collector_was_told);
-        var inner = Opened("a pending step", ScenarioExecutionStatus.StepDefinitionPending);
-        var outer = Opened("a composite step", ScenarioExecutionStatus.StepDefinitionPending, nested: [inner]);
+        var outerFrame = Start(id, "a composite step");
+        var inner = Close(id, Start(id, "a pending step"), "a pending step", ScenarioExecutionStatus.StepDefinitionPending);
+        var outer = Close(id, outerFrame, "a composite step", ScenarioExecutionStatus.StepDefinitionPending);
 
-        Start(id, outer);
-        Start(id, inner);
-        StepCollector.CompleteStep(id, false);
-        StepCollector.CompleteStep(id, false);
-
-        Assert.Equal(ExecutionResult.Skipped, Assert.Single(SubStepsOf(id, outer)).Status);
+        Assert.Equal(ExecutionResult.Skipped, Assert.Single(SubStepsOf(id, inner, outer)).Status);
     }
 }
 
@@ -860,10 +873,17 @@ public class WhatTheFixLeavesTests
     [Fact]
     public void A_step_a_step_ran_stays_in_the_list_and_is_no_row()
     {
-        var inner = new ReqNRollStepInfo("Given", "the card is read") { RanByAStep = true };
-        var outer = new ReqNRollStepInfo("When", "the customer pays") { Nested = [inner] };
-        var then = new ReqNRollStepInfo("Then", "the order is confirmed");
-        var collected = ByHand("a222left", "A first", inner, outer, then) with { WrittenBackground = [] };
+        const string id = "a222left";
+        var outerFrame = StepCollector.StartFrame(id, "When", "the customer pays");
+        var innerFrame = StepCollector.StartFrame(id, "Given", "the card is read");
+        StepCollector.CompleteFrame(id, innerFrame, true);
+        StepCollector.CompleteFrame(id, outerFrame, true);
+        var thenFrame = StepCollector.StartFrame(id, "Then", "the order is confirmed");
+        StepCollector.CompleteFrame(id, thenFrame, true);
+        var inner = new ReqNRollStepInfo("Given", "the card is read") { FrameId = innerFrame };
+        var outer = new ReqNRollStepInfo("When", "the customer pays") { FrameId = outerFrame };
+        var then = new ReqNRollStepInfo("Then", "the order is confirmed") { FrameId = thenFrame };
+        var collected = ByHand(id, "A first", inner, outer, then) with { WrittenBackground = [] };
 
         var scenario = new[] { collected }.ToFeatures()[0].Scenarios[0];
 

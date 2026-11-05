@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.29.3] - 2026-11-05
+
+The patch part moves (5.29.2 to 5.29.3): bug fixes that change what a report says, with no new option and no new public member (`plans/STEP_IDENTITY_PLAN.md` R1, #223). A step now has an identity: a framework's steps, the steps Kronikol collected and the calls were joined by position, so anything that added a step to one list moved everything after it in the others.
+
+### Fixed
+
+- **A `[Step]` method that runs with no framework step open is a step of the scenario's own (#223).** That is a `[BeforeScenario]` or `[AfterScenario]` hook, a block hook or a step argument transformation in Reqnroll, code before or after `.BDDfy()` or in a constructor in BDDfy, and a composite step's own method in LightBDD. It used to move every Gherkin step's sub-steps, files and durations one step down and cost every call of the scenario its `stepPath`. Now it is listed in the order it ran, with its bar, and every other step keeps its own.
+- **A `[Step]` method left running when its framework step ends** keeps its place under that step, and every later step keeps its own row. It used to take the framework step's place on the stack, so the later steps nested under it.
+- **A Gherkin step that runs another through `ITestRunner`** lists it as a sub-step with its table, doc string and inline values, and reads failed over a failed one. The inner step used to close the outer one's collected step, and the outer one read passed.
+- **Hiding the step bars** (`ShowStepDelimiters = false`) no longer costs a call inside a step its `stepPath`, as a call now names the step open when it was logged. A call held until a later step confirms its document keeps the step it was logged under, and what follows it reads as it would have.
+- **A long step title, a two-line title or a LightBDD step with an object parameter** no longer costs the scenario's calls their `stepPath`: a step Kronikol collected is no longer read against the text of its bar.
+- **With a Background written in the feature file**, a hook's row is never taken for a Background step, even one with the same words, and reads after the Background's rows, though it ran before them. A sibling with no hook step keeps its addresses.
+- **A BDDfy `async Task` step stays open until its task ends (the step-closing half of #122).** Kronikol closed it when BDDfy's call returned, at the step's first `await`. Now what it opens or asserts after that `await` is under it, at any depth, and a failure there reads failed on the step. #122 stays open for the durations, which are BDDfy's own stopwatch.
+- **A BDDfy story run inside a step of another** keeps its rows and files. The outer step lists no row, as the report lists one story per test.
+- **A BDDfy list with a `.When` after a `.Then`** reads in the order the steps ran, with what did not run after the last step that did, and each row once. BDDfy lists its steps by kind.
+- **A file attached in a BDDfy step the report does not list** (a tear down, a hidden `Setup`, a later row of an example table) goes on the scenario. It used to be lost.
+- **A `[Step]` method that skips an xUnit v3 test** reads skipped, with the reason you gave. It used to read failed, with xUnit's internal marker at the head of the message.
+
+### Changed behaviour
+
+- In a scenario with such a row, the addresses after it move by one: a scripted `s1/0` is `s1/1` there. Scenarios with no such row keep every address.
+- A call made with no step open reads the step before it, as it did, so a plain call in an `[AfterScenario]` hook still reads the last step (#147 stays open). With the bars hidden, such a call after a step with no calls can read an earlier step than with them drawn.
+- `kronikol query steps` says "before the first step, in a step the report does not list, or attribution was not trusted" for calls that read no step.
+- A step paired by the frame it opened names its own calls, so it can no longer record `StepAttributionMismatch`. An ingest, steps built by hand and steps an adapter could only pair by position still can, and they alone are still read against their bars.
+- In a BDDfy async step, what a `[Step]` method runs after a call that suspends is now under that method (`1.0.0`, it was `1.1`), and a `[GivenStep]` woven after the first `await` is a sub-step with no bar of its own.
+
+### Limits, stated in the wiki
+
+- A `[BeforeScenario]` hook at `Order = int.MinValue` ties with Kronikol's own and can run before the scenario has an identity: its step method records nothing.
+- A BDDfy test run more than once under one test id lists its first run, and the later runs' calls read no step, as published.
+- A LightBDD retry written as a scenario decorator runs the steps with no step decorators, so a step method in the second run reads as a row of its own.
+- Sub-steps left running can swap their end times and outcomes in an overlap, until #225.
+- A hook that runs a Gherkin step through `ITestRunner` ahead of a written Background leaves that scenario's Background steps among its own.
+- A Gherkin step that starts another through `ITestRunner` without awaiting it leaves the next step under it.
+- A `[Step]` method that skips a TUnit test reads failed on a scenario that reads skipped.
+- A BDDfy step that is `async void`, or any async step with `Configurator.AsyncVoidSupportEnabled` off, closes at its first `await`, as there is no task to wait on.
+- A BDDfy async step under an executor of your own that does not hand BDDfy its task (one that stops waiting at a time limit, say) closes when the next step starts, or when the report reads the scenario.
+
 ## [5.29.2] - 2026-11-05
 
 The patch part moves (5.29.1 to 5.29.2): each change is a bug fix in what the assertion weaver reads of a statement for its note, with nothing new to call (F31 of `plans/STEP_METHOD_SHAPES_PLAN.md`, found by its sixth review).

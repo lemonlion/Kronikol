@@ -61,7 +61,9 @@ public enum DiagnosticKind
     /// <summary>
     /// A step delimiter in the log stream did not match the step it should have opened, as with a bar a hook
     /// drew, so the interactions up to the next delimiter that does match carry no <c>stepPath</c>. Work on a
-    /// background thread does not cause this: a record that enqueues late changes no delimiter.
+    /// background thread does not cause this: a record that enqueues late changes no delimiter. Only a scenario
+    /// read against its bars can record it: an ingest's, one built by hand, or one an adapter could only pair by
+    /// position, as a step paired by the frame it opened names its own calls.
     /// </summary>
     StepAttributionMismatch,
 

@@ -83,6 +83,10 @@ public static class RequestResponseLogger
         if (log.Timestamp is null)
             log = log with { Timestamp = DateTimeOffset.UtcNow };
 
+        // Which step this happened under is known now and only now; before a hold, which can release it much later.
+        if (log.OpenStep is null && StepCollector.OpenStepOf(log.TestId) is { } openStep)
+            log = log with { OpenStep = openStep };
+
         // A call the owner window answered for (DocumentOwnership) is held by its flow until an operation on
         // the owner's document confirms it; a foreign operation or a query drops it instead.
         if (log.AttributionSource == AttributionSource.DocumentFlow && TestIdentityScope.CurrentFlow is { } flow)

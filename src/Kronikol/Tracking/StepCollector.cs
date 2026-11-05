@@ -9,11 +9,17 @@ namespace Kronikol.Tracking;
 /// Collects BDD-style steps (Given/When/Then) per test, keyed by test ID.
 /// Supports nested steps (sub-steps), keyword sequencing (Given/And/And),
 /// parameter capture, and assertion sub-step integration.
+/// Every step has an id, from one counter per process, never written to a report. A step a framework's adapter opens for a
+/// step of the framework's own is a frame: only its id closes it, so a step method left running cannot take its place.
 /// Thread-safe via ConcurrentDictionary.
 /// </summary>
 public static class StepCollector
 {
     private static readonly ConcurrentDictionary<string, TestStepState> States = new();
+
+    private static int _lastStepId;
+
+    private const string XunitSkipMarker = "$XunitDynamicSkip$";
 
     /// <summary>
     /// Configuration options for step tracking behavior.
@@ -53,17 +59,87 @@ public static class StepCollector
     /// </summary>
     public static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
         string[][]? table, string? docString)
-        => StartStep(testId, keyword, text, paramNames, paramValues, table, docString, openedBy: null);
+        => OpenStep(testId, keyword, text, paramNames, paramValues, table, docString);
 
     /// <summary>
-    /// The same, saying what opened the step, which reaches <see cref="ScenarioStep.OpenedBy"/>: an adapter that hears of a
-    /// step twice can then tell its own from one that reads the same.
+    /// Starts a step that a framework's adapter opens for a step of the framework's own, and returns the id the adapter
+    /// closes it by (<see cref="CompleteFrame"/>) and finds it by (<see cref="ScenarioStep.CollectedId"/>). A step method
+    /// that runs with no frame open is not a framework step, whatever the order of the top-level steps says.
     /// </summary>
-    internal static void StartStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
-        string[][]? table, string? docString, object? openedBy)
+    internal static int? StartFrame(string? testId, string? keyword, string text, string[][]? table = null, string? docString = null)
+        => OpenStep(testId, keyword, text, null, null, table, docString, isFrame: true);
+
+    /// <summary>
+    /// Closes the frame <paramref name="frameId"/>. A step still open above it was left running: it keeps its place under
+    /// its parent, and reads as passed with no duration until a completion finds no step of its own to close (<see cref="CompleteStep(string?, bool, string?)"/>).
+    /// </summary>
+    internal static void CompleteFrame(string? testId, int? frameId, bool passed, string? errorMessage = null)
+    {
+        if (testId is null || frameId is null || !States.TryGetValue(testId, out var state))
+            return;
+
+        lock (state)
+        {
+            if (state.StepStack.All(s => s.Id != frameId))
+                return;
+
+            while (state.StepStack.Count > 0)
+            {
+                var open = state.StepStack.Pop();
+                var isFrame = open.Id == frameId;
+                if (isFrame)
+                {
+                    open.EndTime = Stopwatch.GetTimestamp();
+                    open.Passed = passed;
+                    open.ErrorMessage = errorMessage;
+                }
+                else
+                {
+                    LeaveRunning(state, open);
+                    continue;
+                }
+
+                (state.StepStack.Count > 0 ? state.StepStack.Peek().SubSteps : state.CompletedSteps).Add(open);
+                return;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The step open for this test now, which a call logged now happened under; null when none is, and that call reads as
+    /// it always has, as the step before it.
+    /// </summary>
+    internal static int? OpenStepOf(string? testId)
+    {
+        if (testId is null || !States.TryGetValue(testId, out var state))
+            return null;
+
+        lock (state)
+            return state.StepStack.Count > 0 ? state.StepStack.Peek().Id : null;
+    }
+
+    private static void LeaveRunning(TestStepState state, CollectedStep open)
+    {
+        open.Passed = true;
+        state.LeftRunning.Add(open);
+        (state.StepStack.Count > 0 ? state.StepStack.Peek().SubSteps : state.CompletedSteps).Add(open);
+    }
+
+    /// <summary>The id of the step this test opened last, 0 if none; a step listed with no frame stands after it.</summary>
+    internal static int LastStepIdOf(string? testId)
+    {
+        if (testId is null || !States.TryGetValue(testId, out var state))
+            return 0;
+
+        lock (state)
+            return state.LastStepId;
+    }
+
+    private static int? OpenStep(string? testId, string? keyword, string text, string[]? paramNames, object?[]? paramValues,
+        string[][]? table, string? docString, bool isFrame = false)
     {
         if (testId is null)
-            return;
+            return null;
 
         var state = States.GetOrAdd(testId, _ => new TestStepState());
 
@@ -72,13 +148,22 @@ public static class StepCollector
             OriginalKeyword = keyword,
             Text = text,
             StartTime = Stopwatch.GetTimestamp(),
-            Parameters = BuildParameters(paramNames, paramValues),
-            OpenedBy = openedBy
+            Parameters = BuildParameters(paramNames, paramValues)
         };
 
         var isTopLevel = false;
         lock (state)
         {
+            step.Id = Interlocked.Increment(ref _lastStepId);
+            state.LastStepId = step.Id;
+
+            // A framework step opening with no framework step open: whatever is open was left running (a hook's step not
+            // awaited), and it is not this step's parent.
+            if (isFrame && state.StepStack.Count > 0 && state.StepStack.All(s => !s.IsFrame))
+                while (state.StepStack.Count > 0)
+                    LeaveRunning(state, state.StepStack.Pop());
+            step.IsFrame = isFrame;
+
             // Resolve effective keyword (Given/And/And sequencing)
             step.EffectiveKeyword = ResolveKeyword(state, keyword);
 
@@ -125,6 +210,8 @@ public static class StepCollector
                     break;
             }
         }
+
+        return step.Id;
     }
 
     /// <summary>
@@ -141,8 +228,20 @@ public static class StepCollector
         CollectedStep? completed;
         lock (state)
         {
-            if (state.StepStack.Count == 0)
+            // Only CompleteFrame closes a frame. A completion that finds one on top, or nothing, is a step the frame's close
+            // left running finishing; which one is the flow's to know (#225), so it takes the one left last.
+            if (state.StepStack.Count == 0 || state.StepStack.Peek().IsFrame)
+            {
+                if (state.LeftRunning.Count > 0)
+                {
+                    var finished = state.LeftRunning[^1];
+                    state.LeftRunning.RemoveAt(state.LeftRunning.Count - 1);
+                    finished.EndTime = Stopwatch.GetTimestamp();
+                    finished.Passed = passed;
+                    finished.ErrorMessage = errorMessage;
+                }
                 return;
+            }
 
             completed = state.StepStack.Pop();
             completed.EndTime = Stopwatch.GetTimestamp();
@@ -186,7 +285,8 @@ public static class StepCollector
 
         lock (state)
         {
-            if (state.StepStack.Count == 0)
+            // Only CompleteFrame closes a frame: a second bypass of a step already gone must not take the one under it
+            if (state.StepStack.Count == 0 || state.StepStack.Peek().IsFrame)
                 return;
 
             var bypassed = state.StepStack.Pop();
@@ -506,18 +606,22 @@ public static class StepCollector
             ? TimeSpan.FromTicks((long)((step.EndTime - step.StartTime) * ((double)TimeSpan.TicksPerSecond / Stopwatch.Frequency)))
             : (TimeSpan?)null;
 
+        // xUnit v3 skips a test by throwing this in front of the reason, and all a step method hands on is the message.
+        var skipped = !step.Passed && !step.Bypassed && step.ErrorMessage?.StartsWith(XunitSkipMarker, StringComparison.Ordinal) == true;
         var status = step.Bypassed
             ? ExecutionResult.Bypassed
-            : step.Passed ? ExecutionResult.Passed : ExecutionResult.Failed;
+            : skipped ? ExecutionResult.Skipped : step.Passed ? ExecutionResult.Passed : ExecutionResult.Failed;
 
         return new ScenarioStep
         {
+            CollectedId = step.Id == 0 ? null : step.Id,
+            OpenedAsFrame = step.IsFrame,
             Keyword = step.EffectiveKeyword,
             IsAssertion = step.IsAssertion,
             Text = step.Text,
             Status = status,
             BypassReason = step.BypassReason,
-            FailureMessage = step.ErrorMessage,
+            FailureMessage = skipped ? step.ErrorMessage![XunitSkipMarker.Length..] : step.ErrorMessage,
             SourceFile = step.SourceFile,
             SourceLine = step.SourceLine,
             Duration = duration,
@@ -527,8 +631,7 @@ public static class StepCollector
                 : null,
             Attachments = step.Attachments is { Count: > 0 }
                 ? step.Attachments.ToArray()
-                : null,
-            OpenedBy = step.OpenedBy
+                : null
         };
     }
 
@@ -586,12 +689,16 @@ public static class StepCollector
     {
         public Stack<CollectedStep> StepStack { get; } = new();
         public List<CollectedStep> CompletedSteps { get; } = new();
+        public List<CollectedStep> LeftRunning { get; } = new();
         public string? LastKeywordCategory { get; set; }
+        public int LastStepId { get; set; }
         public List<FileAttachment>? ScenarioAttachments { get; set; }
     }
 
     private class CollectedStep
     {
+        public int Id { get; set; }
+        public bool IsFrame { get; set; }
         public bool IsAssertion { get; set; }
         public string? OriginalKeyword { get; set; }
         public string? EffectiveKeyword { get; set; }
@@ -607,6 +714,5 @@ public static class StepCollector
         public StepParameter[]? Parameters { get; set; }
         public List<CollectedStep> SubSteps { get; } = new();
         public List<FileAttachment>? Attachments { get; set; }
-        public object? OpenedBy { get; set; }
     }
 }

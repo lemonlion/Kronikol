@@ -15,6 +15,11 @@ namespace Kronikol.LightBDD;
 /// </summary>
 internal sealed class StepTrackingStepDecorator : IStepDecorator
 {
+    internal static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, int> Frames = new();
+
+    /// <summary>The frame opened for a LightBDD step, if it ran.</summary>
+    internal static int? FrameOf(Guid runtimeId) => Frames.TryGetValue(runtimeId, out var frame) ? frame : null;
+
     public async Task ExecuteAsync(IStep step, Func<Task> stepInvocation)
     {
         var keyword = step.Info.Name.StepTypeName?.OriginalName;
@@ -24,8 +29,9 @@ internal sealed class StepTrackingStepDecorator : IStepDecorator
         try { testId = ScenarioExecutionContext.CurrentScenario.Info.RuntimeId.ToString(); }
         catch { /* not in scenario context */ }
 
-        if (testId is not null)
-            StepCollector.StartStep(testId, keyword, text, null, null);
+        var frame = StepCollector.StartFrame(testId, keyword, text);
+        if (frame is { } opened)
+            Frames[step.Info.RuntimeId] = opened;
 
         try
         {
@@ -33,14 +39,12 @@ internal sealed class StepTrackingStepDecorator : IStepDecorator
         }
         catch
         {
-            if (testId is not null)
-                StepCollector.CompleteStep(testId, passed: false);
+            StepCollector.CompleteFrame(testId, frame, passed: false);
             throw;
         }
         finally
         {
-            if (testId is not null && StepCollector.HasActiveStep(testId))
-                StepCollector.CompleteStep(testId, passed: true);
+            StepCollector.CompleteFrame(testId, frame, passed: true);
         }
     }
 

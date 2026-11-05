@@ -46,9 +46,7 @@ internal static class ScenarioInfoEnumerableExtensions
                             var displayName = x.RowName ?? x.ScenarioTitle;
 
                             // Every step is this scenario's own, as it ran; those a Background: gave it come first (#222).
-                            var rows = x.Steps.Where(step => !step.RanByAStep).ToList();
-                            var ran = rows.Count > 0 ? MapSteps(rows, StepCollector.GetSteps(x.ScenarioId)) : [];
-                            var backgroundCount = CountBackgroundSteps(ran, x.WrittenBackground ?? []);
+                            var (background, own) = SplitBackground(MapSteps(x.Steps, StepCollector.GetSteps(x.ScenarioId)) ?? [], x.WrittenBackground ?? []);
 
                             return new Scenario
                             {
@@ -64,8 +62,8 @@ internal static class ScenarioInfoEnumerableExtensions
                                 ErrorStackTrace = x.TestError?.StackTrace,
                                 Duration = x.Duration,
                                 EndedAt = x.EndedAt,
-                                BackgroundSteps = backgroundCount > 0 ? ran[..backgroundCount] : null,
-                                Steps = ran.Length > backgroundCount ? ran[backgroundCount..] : null,
+                                BackgroundSteps = background,
+                                Steps = own,
                                 Tags = tags.Length > 0 ? tags : null,
                                 Rule = x.Rule,
                                 SourceFile = x.SourceFile,
@@ -103,8 +101,53 @@ internal static class ScenarioInfoEnumerableExtensions
             }).ToArray();
     }
 
-    private static ScenarioStep[] MapSteps(List<ReqNRollStepInfo> steps, ScenarioStep[]? collectedSteps = null)
+    /// <summary>
+    /// What ran, in the order it ran: each Gherkin step on the step its hooks opened, and a step method that ran with no
+    /// Gherkin step open (a hook's) as itself. A step built or rebuilt by hand through the public record carries no frame and
+    /// says nothing about the ones around it, so a list holding one pairs by position, as it did.
+    /// </summary>
+    private static ScenarioStep[]? MapSteps(List<ReqNRollStepInfo> steps, ScenarioStep[] collectedSteps)
     {
+        if (steps.Any(s => s.FrameId is null && s.NotRunAfter is null))
+            return MapStepsByPosition(steps, collectedSteps);
+
+        var priorFailure = false;
+        var mapped = StepPairing.InOrderTheyRan(steps, collectedSteps, s => s.FrameId, (step, collected) =>
+        {
+            var row = MapStep(step, collected, priorFailure);
+            if (step.Status == ScenarioExecutionStatus.TestError || step.Status == ScenarioExecutionStatus.BindingError)
+                priorFailure = true;
+            return row;
+        }, s => s.NotRunAfter);
+
+        return mapped.Count > 0 ? mapped.ToArray() : null;
+    }
+
+    private static ScenarioStep MapStep(ReqNRollStepInfo step, ScenarioStep? collected, bool priorFailure) => new()
+    {
+        CollectedId = collected?.CollectedId,
+        DidNotRun = step.FrameId is null,
+        Keyword = step.Keyword,
+        Text = step.Text,
+        Status = step.Status.ToStepResult(priorFailure),
+        Duration = step.Duration,
+        DocString = step.DocString,
+        Parameters = ParseTableText(step.TableText),
+        TextSegments = BuildTextSegments(step),
+        SubSteps = collected?.SubSteps,
+        Attachments = collected?.Attachments,
+    };
+
+    private static ScenarioStep[] MapStepsByPosition(List<ReqNRollStepInfo> steps, ScenarioStep[] collectedSteps)
+    {
+        // What a Gherkin step ran through ITestRunner is under it in what was collected, with no place of its own to pair with,
+        // and says what it knows about that sub-step.
+        var opened = collectedSteps;
+        bool Nested(ReqNRollStepInfo s) => s.FrameId is { } frame && StepPairing.OpenedInsideAStep(opened, frame);
+        var nested = steps.Where(Nested).ToList();
+        steps = steps.Where(s => !Nested(s)).ToList();
+        collectedSteps = collectedSteps.Select(c => StepPairing.WithNested(c, nested, s => s.FrameId, (s, under) => MapStep(s, under, priorFailure: false))).ToArray();
+
         var mapped = new ScenarioStep[steps.Count];
         var priorFailure = false;
         for (var i = 0; i < steps.Count; i++)
@@ -118,12 +161,8 @@ internal static class ScenarioInfoEnumerableExtensions
                 DocString = steps[i].DocString,
                 Parameters = ParseTableText(steps[i].TableText),
                 TextSegments = BuildTextSegments(steps[i]),
-                SubSteps = collectedSteps is not null && i < collectedSteps.Length
-                    ? DescribeNested(collectedSteps[i].SubSteps, steps[i].Nested)
-                    : null,
-                Attachments = collectedSteps is not null && i < collectedSteps.Length
-                    ? collectedSteps[i].Attachments
-                    : null,
+                SubSteps = i < collectedSteps.Length ? collectedSteps[i].SubSteps : null,
+                Attachments = i < collectedSteps.Length ? collectedSteps[i].Attachments : null,
             };
             if (steps[i].Status == ScenarioExecutionStatus.TestError || steps[i].Status == ScenarioExecutionStatus.BindingError)
                 priorFailure = true;
@@ -132,47 +171,29 @@ internal static class ScenarioInfoEnumerableExtensions
     }
 
     /// <summary>
-    /// How many rows, from the first, are the Background the document writes: a failed step ends a scenario early, and a
-    /// row that disagrees with the document is never counted as it.
+    /// The rows the document writes in a Background, from the first framework step: a failed step ends a scenario early, and
+    /// a row that disagrees with the document is never called a Background step. A row no framework step opened (a hook's
+    /// step method) stays in Steps, as the Cucumber lane has it, whatever it reads.
     /// </summary>
-    internal static int CountBackgroundSteps(IReadOnlyList<ScenarioStep> ran, IReadOnlyList<string> writtenBackground)
+    internal static (ScenarioStep[]? Background, ScenarioStep[]? Own) SplitBackground(IReadOnlyList<ScenarioStep> ran, IReadOnlyList<string> writtenBackground)
     {
-        var count = 0;
-        while (count < ran.Count && count < writtenBackground.Count
-               && string.Equals(ran[count].Text, writtenBackground[count], StringComparison.Ordinal))
+        var background = new List<ScenarioStep>();
+        var own = new List<ScenarioStep>();
+        var closed = false;
+        foreach (var row in ran)
         {
-            count++;
-        }
-        return count;
-    }
-
-    /// <summary>
-    /// The steps a step definition ran, as the hooks saw them. The collector holds their place among the woven steps, but
-    /// not their table, doc string or inline values. Each is found by what opened it, so a woven step that reads the same stays
-    /// what it was, under any woven step between.
-    /// </summary>
-    private static ScenarioStep[]? DescribeNested(ScenarioStep[]? subSteps, IReadOnlyList<ReqNRollStepInfo>? nested)
-    {
-        if (subSteps is null || nested is not { Count: > 0 })
-            return subSteps;
-
-        foreach (var subStep in subSteps)
-        {
-            var step = subStep.OpenedBy is null ? null : nested.FirstOrDefault(s => ReferenceEquals(s.Nested, subStep.OpenedBy));
-            if (step is null)
+            if (!row.OutsideFrameworkStep && !closed && background.Count < writtenBackground.Count
+                && string.Equals(row.Text, writtenBackground[background.Count], StringComparison.Ordinal))
             {
-                DescribeNested(subStep.SubSteps, nested);
+                background.Add(row);
                 continue;
             }
 
-            subStep.Status = step.Status.ToStepResult(false);
-            subStep.DocString = step.DocString;
-            subStep.Parameters = ParseTableText(step.TableText);
-            subStep.TextSegments = BuildTextSegments(step);
-            DescribeNested(subStep.SubSteps, step.Nested);
+            closed |= !row.OutsideFrameworkStep;
+            own.Add(row);
         }
 
-        return subSteps;
+        return (background.Count > 0 ? background.ToArray() : null, own.Count > 0 ? own.ToArray() : null);
     }
 
     private static StepTextSegment[]? BuildTextSegments(ReqNRollStepInfo step)

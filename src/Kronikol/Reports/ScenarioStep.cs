@@ -5,6 +5,18 @@ namespace Kronikol.Reports;
 /// </summary>
 public record ScenarioStep
 {
+    /// <summary>The id <see cref="Tracking.StepCollector"/> gave the step; never written to a report.</summary>
+    internal int? CollectedId { get; init; }
+
+    /// <summary>A step a framework's adapter opened for a step of the framework's own, whatever became of that step; never written to a report.</summary>
+    internal bool OpenedAsFrame { get; init; }
+
+    /// <summary>A row no framework step opened: a step method that ran outside one. It can have a keyword; never written to a report.</summary>
+    internal bool OutsideFrameworkStep { get; init; }
+
+    /// <summary>A framework's step that never ran (skipped after a failure, undefined): listed, and not what ran; never written to a report.</summary>
+    internal bool DidNotRun { get; init; }
+
     public string? Keyword { get; set; }
 
     /// <summary>
@@ -30,9 +42,6 @@ public record ScenarioStep
     public FileAttachment[]? Attachments { get; set; }
     public string? DocString { get; set; }
     public string? DocStringMediaType { get; set; }
-
-    /// <summary>What opened this step, where an adapter has to tell it from one that reads the same (#222). Never written out.</summary>
-    internal object? OpenedBy { get; set; }
 
     /// <summary>
     /// Why this step or assertion failed — the assertion's message, or the exception message that ended

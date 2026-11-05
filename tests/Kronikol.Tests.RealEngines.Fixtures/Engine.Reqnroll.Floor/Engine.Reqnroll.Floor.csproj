@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Reqnroll on xUnit v2 at the floor the adapter asks consumers for, where an undefined step takes another path. -->
+  <PropertyGroup>
+    <ReqnrollFixtureVersion>3.0.1</ReqnrollFixtureVersion>
+  </PropertyGroup>
+
+  <Import Project="..\Reqnroll\Reqnroll.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="Reqnroll.xUnit" Version="$(ReqnrollFixtureVersion)" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <ProjectReference Include="..\..\..\src\Kronikol.ReqNRoll.xUnit2\Kronikol.ReqNRoll.xUnit2.csproj" />
+  </ItemGroup>
+</Project>

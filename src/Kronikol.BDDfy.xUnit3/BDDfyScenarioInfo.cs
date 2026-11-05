@@ -62,4 +62,8 @@ public record BDDfyScenarioInfo
 /// <summary>
 /// Captures information about an individual BDDfy step execution, including its keyword, text, result, and duration.
 /// </summary>
-public record BDDfyStepInfo(string Keyword, string Text, TestStack.BDDfy.Result Result = TestStack.BDDfy.Result.NotExecuted, TimeSpan? Duration = null);
+public record BDDfyStepInfo(string Keyword, string Text, TestStack.BDDfy.Result Result = TestStack.BDDfy.Result.NotExecuted, TimeSpan? Duration = null)
+{
+    /// <summary>BDDfy's id for the step, which finds the frame the step executor opened for it.</summary>
+    internal string? StepId { get; init; }
+}

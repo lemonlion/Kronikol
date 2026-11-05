@@ -871,8 +871,9 @@ internal static class ReportScanner
                 case "traceId": interaction.TraceId = NonEmptyId(reader.GetString()); break;
                 case "stepPath":
                     // Presence of the key, not of a value: a current report writes stepPath on every
-                    // interaction and null is a legitimate answer (before the first step, or attribution
-                    // that could not be trusted). An older report has no such key at all.
+                    // interaction and null is a legitimate answer (before the first step, in a step the
+                    // report does not list, or attribution that could not be trusted). An older report has
+                    // no such key at all.
                     interaction.StepPath = reader.GetString();
                     index.Enriched = true;
                     break;
