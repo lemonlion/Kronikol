@@ -5,6 +5,12 @@ implemented, NOT green-lit; needs D23.** Roadmap items **14.11 to 14.15**; S2 (t
 pulled forward by rule 8. §9 is the assumption ledger. Nothing here has a harness yet; §7.5 says what the
 first script must measure before S1 starts.
 
+**Amended 2026-11-06** (repo 5.31.1, `db26e5cb`, origin/main), after the owner asked that day whether a
+run's calls can yield an OpenAPI spec to compare with the real one, show how much of the real one the tests
+reach, and show where the tests prove it too loose. §2.8 says what a call carries for that, F11 to F16 are
+what follows from it, §4.3 (S3) is rewritten, Q3 is answered by the owner, and Q11, Q12 and A12 to A16 are
+new. The rest is as written on 2026-09-26, and the plan is still not green-lit.
+
 The owner asked on 2026-09-26 how Kronikol should sit in an architecture where every service in a company
 (C#, JavaScript, Java or Python) publishes its `TestRunReport.json` as queryable metadata with high-level
 summaries, and an LLM deciding a feature reads a company-level description, then a service-level one,
@@ -133,6 +139,24 @@ file that is on by default. The skill's rung zero is "read the directory before 
 - `ROADMAP` 10.0: measured, a Mermaid rendering did not help an LLM; the one thing it carried that `flow`
   did not was nesting, which 3.31.0 added to `flow`. Diagrams stay the human channel.
 
+### 2.8 What a call carries for a spec (READ, RUN, 2026-11-06, at 5.31.1)
+
+Added for the owner's OpenAPI questions of 2026-11-06. A call is one record for the request and one for the
+answer, paired by `RequestResponseId` (`Tracking/RequestResponseLog.cs`).
+
+| OpenAPI part | What the data file holds | Basis |
+|---|---|---|
+| Path and method | The concrete URI, absolute, with its query. No route template is recorded anywhere | RUN: `RoutePattern`, `GetEndpoint()`, `RouteTemplate` and `IEndpointFeature` appear nowhere in `src/` |
+| Path parameters | `InteractionShape.Template` writes `{id}` (a GUID, long hex or a ULID), `{ts}` (an ISO date or time), `{n}` (a number) and `{bin}`. A segment that is a name (`/menu/pancakes`) stays literal | READ, `History/InteractionShape.cs:150` |
+| Bodies | The whole text, with no cap at capture; gzip, deflate and br are decoded. A body with 3% control bytes in its first 256 is `[binary content]`, or the JSON documents found inside it, so a multipart or file body loses its shape | READ, `Tracking/HttpContentReader.cs` |
+| Status | `response.StatusCode`. A send that threw has its exception's type behind a bang (`!HttpRequestException`) where the status would be | READ, `TestTrackingMessageHandler.cs:296-325` |
+| Media types | None in process. The handler records `request.Headers` and `response.Headers` and never `Content.Headers`: no `Content-Type`, `Content-Length`, `Last-Modified` or `Allow`. ProxyTap concatenates `Content.Headers`, so a call it captured has them | READ, `TestTrackingMessageHandler.cs:197`, `:327`, `ProxyTap.cs:717`. RUN: of the other files that read a media type, the DynamoDB, EventBridge, SNS and SQS handlers decode their own protocols with it and the OTLP files read OTLP |
+| Request headers | As sent, with `HttpClient`'s default headers. `traceparent` is added before the request is logged, so a reader drops it; Kronikol's own tracking headers are added after | READ, `TestTrackingMessageHandler.cs:179-197`, `:242-245` |
+| Credentials | Capture redaction is opt-in: `RequestResponseLogger.Redaction` is null by default, so a run's `Authorization` values are in its data file. With it on, `DefaultSecretHeaders` keep their names and read `[REDACTED]` | READ, `RequestResponseLogger.cs:43`, `CaptureRedaction.cs` |
+| Who answered | The parties table (#190): `underTest`, `double`, `real`, `test` or `unknown`, and `testDouble` on a call a capturer saw a double answer | READ, §4.1's note, `RequestResponseLog.TestDouble` |
+| What a test checked | An assertion is a sub-step with its text, in a scenario and a step. Nothing ties it to a call or a field | READ (`DiagramMarkerKind.Assertion`); the values in its text, PLAN (#210, #211) |
+| Several runs | `kronikol merge` reads `.krkl` and `TestRunReport.json` files and writes one `.krkl`. The query verbs are in the core library (`Query/QueryCommand.*.cs`), so the tool and each run's `query.cs`, which restores no package, run the same ones | READ, `MergeCommand.cs:81`, `:93`, `QueryScriptGenerator.cs:15` |
+
 ---
 
 ## 3. Findings
@@ -151,6 +175,12 @@ Each is what the architecture would get wrong without a change, or what it gets 
 | F8 | **Publishing bodies company-wide is a data policy.** Redaction exists at capture and at ingest, and the platform plan marks redacted records | READ, PLAN (§4.4 there) | The card carries an attestation: which redaction ran, how many values and headers it touched (§4.4). A fleet shares one policy file (Q5) |
 | F9 | **Thin suites make thin cards.** A service with three integration tests yields a card with three flows | INFERRED | F1's numbers make it visible: "3 of 22 operations exercised" is a card's most useful line to a team, not only to a model |
 | F10 | **The fleet is not in the launch bar.** Section 0 of the roadmap is a first look at one .NET report; nothing there needs a second service | READ | Rule 9 puts the tooling after the launch. Rule 6 puts S1's fields before 14.5. Rule 8 lets S2 move any time (§7.6, D23) |
+| F11 | **A run can test a spec but cannot write one.** It holds concrete paths, and samples from which `required`, an `enum` or a `format` can only be guessed; untested operations are absent (F1) | READ (§2.8) | S3 matches each call against the real spec's templates, and writes an observed spec only for the calls the real one lacks, as a draft (§4.3) |
+| F12 | **An in-process call has no media type** | READ (§2.8) | `content` keys are checked only where a capturer recorded them; Q11 asks whether the handler should |
+| F13 | **Traffic is not verification.** A field that came back and that no assertion read was exercised, not tested | READ (§2.8) | S3 prints the two apart. Its assertion column matches names, says so, and is never added into the counts |
+| F14 | **A run proves a spec too loose in one way only:** a request the spec accepts, answered 400 or 422. Anything else narrower than the spec is a sample | INFERRED | S3 keeps proofs and suggestions in separate sections, and a suggestion carries the calls behind it |
+| F15 | **A double's answers are this service's assumptions about another** (F2 seen from the other side) | INFERRED, from the parties table | The same check against the dependency's spec: a stub answering what the real service may not, and fields every stubbed answer carries that the spec marks optional |
+| F16 | **Several lanes are one merged report.** A spec read at run end sees one run, and none of the reports already written | READ (`MergeCommand.cs`); the owner, 2026-11-06 | The spec is read by the verb, never at capture |
 
 ---
 
@@ -221,23 +251,69 @@ the fleet index reads, and the one an agent reads instead of a diagram.
 
 ### 4.3 S3: `coverage`, the spec against the run
 
-`kronikol query coverage <report> --openapi <file> [--asyncapi <file>] [--json]`, and the same numbers in
-the card when `ReportConfigurationOptions.OpenApiSpecPath` and `AsyncApiSpecPath` are set.
+> **Rewritten 2026-11-06** for the owner's questions of that day (F11 to F16). The AsyncAPI half is as before.
 
-For OpenAPI: operations are (method, path template) pairs from `paths`; requests to the `underTest` party
-match by method and template (a `{segment}` matches one segment; the most literal template wins, as the
-OpenAPI path-matching text has it). Output, in this order: **exercised** (count, statuses seen, p50 ms,
-first address), **unexercised**, **unspecified** (captured, not in the spec), **undeclared statuses**
-(seen, not under `responses`), and **required properties never present** (top-level `required` of the
-matched response schema against the body's keys; v1 goes no deeper). For AsyncAPI: channels against
-`MessageQueue`-category interactions, matching the channel name to the interaction's topic or queue
-(§9 A6 says where that string sits is unread).
+`kronikol query coverage <report> --openapi <file> [--asyncapi <file>] [--party <name>]
+[--write-observed <file>] [--json]`, and the same numbers in the card when
+`ReportConfigurationOptions.OpenApiSpecPath` and `AsyncApiSpecPath` are set.
 
-**JSON specs only in v1** (Q3). The tool has no YAML reader and no third-party dependency; every
-generator emits JSON, and a YAML spec converts in one command. The verb refuses a YAML file by name and
-says so.
+**Matching.** Operations are (method, path template) pairs from `paths`. A call matches by method and
+template (a `{segment}` matches one segment; the most literal template wins, as the OpenAPI path-matching
+text has it), so the spec supplies the templates the run lacks (F11). The calls read are those to the
+service the spec describes: the `underTest` party, exact when `ServiceId` is declared and inferred
+otherwise (§4.1's note). One report per call; several lanes are merged first (F16). The answer opens with
+the runs it covers and their commits, and says so when the commits differ, since a spec describes one.
 
-**Bump:** minor (a verb, two options, the card's section).
+**Output, in this order:**
+
+1. **Operations:** exercised (count, statuses seen, p50 ms, first address), unexercised, and unspecified
+   (captured, not in the spec).
+2. **Responses:** per operation, the declared statuses seen and never seen, and undeclared statuses
+   returned; media types only where a capturer recorded them (F12).
+3. **Parameters:** path, query and header parameters sent and never sent, and the enum members sent.
+4. **Body fields:** request properties ever sent, response properties ever seen, declared nullables seen
+   null, `oneOf` and `anyOf` branches reached, and required properties never present, at every depth the
+   schema declares (the earlier v1 stopped at the top level).
+5. **Named by an assertion:** for each field of level 4, whether an assertion in the same scenario names
+   it (F13). A match by name, so the column says named, never verified.
+
+**Where the spec is looser than the service** (F14), in two sections:
+
+- **Proven.** A request the spec accepts, answered 400 or 422; 401, 403, 404 and 409 depend on state or
+  credentials and are left out. A ProblemDetails `errors` member names the field when the answer has one.
+  Beside them, where the run contradicts the spec: an undeclared status, a required property missing, a
+  type that does not match, a property where `additionalProperties` is false.
+- **Suggested,** each with its calls and scenarios: always present (could be `required`), never null, few
+  distinct values (could be an `enum`), every value a UUID or a date (could be a `format`), only integers,
+  lengths within a range. A suggestion an assertion names (level 5) is listed first.
+
+**Dependencies** (F15). `--party <name>` checks the calls to another party against that party's spec:
+answers a double gave that the spec does not allow, and fields every stubbed answer carries that the spec
+marks optional, which the tests therefore never show this service doing without.
+
+**The observed spec** (F11). `--write-observed <file>` writes an OpenAPI document for the unspecified
+calls only: paths templated as §2.8 says, schemas and examples from the bodies, and no header values (an
+unredacted run's data file holds credentials, §2.8). Its `info.description` says it is a draft for review.
+
+For AsyncAPI: channels against `MessageQueue`-category interactions, matching the channel name to the
+interaction's topic or queue (§9 A6 says where that string sits is unread).
+
+**Spec files** (Q3, the owner's answer of 2026-11-06). JSON only, read in-house, so no package reference
+is added and each run's `query.cs` has the verb too. References inside the file (`#/components/...`) are
+resolved. A YAML file, or a reference to another file, is refused by name with the commands that turn it
+into one JSON file: `npx @redocly/cli bundle openapi.yaml -o openapi.json` for any spec,
+`yq -o=json '.' openapi.yaml > openapi.json` (Mike Farah's yq) for a single file without Node, and the
+`transform` command of `Microsoft.OpenApi.Hidi` where only the .NET SDK is installed. Kronikol publishes
+no converter. Most generators write JSON already (A11); a YAML spec is usually written by hand, and those
+are the ones most often split across files, hence a bundler first. Several lanes then read:
+
+```
+kronikol merge lanes/*.krkl -o merged.krkl
+npx @redocly/cli bundle openapi.yaml -o openapi.json
+kronikol query coverage merged.krkl --openapi openapi.json
+```
+
+**Bump:** minor (a verb, two options, the card's section), or two minors if it ships as S3a and S3b (§7.1).
 
 ### 4.4 S4: the service card
 
@@ -385,7 +461,8 @@ No Playwright: nothing here changes the HTML report.
 
 S1 (contract) → S2 (`graph`) → S3 (`coverage`) → S4 (card) → S5 (fleet index) → S6 (addresses, MCP) →
 S7 (gate). S2 needs nothing and may go first or any time (§4.2). S1 must precede 14.5 (rule 6). S3 and
-S4 may ship as one minor.
+S4 may ship as one minor. S3 may ship as two: S3a the spec reader, levels 1 and 2 and the refusal; S3b
+levels 3 to 5, the two strictness sections, `--party` and `--write-observed` (§4.3).
 
 ### 7.2 Bumps
 
@@ -398,7 +475,7 @@ entry each; the bump follows the nature of the change (a new block, a new file),
 |---|---|
 | S1 | `ReportConfigurationOptions.cs`, a new `Reports/PartyDescriptor.cs`, the report writer, `History/HistoryRunBuilder.cs` (the id on the run line), `QueryCommand.Overview.cs` (`services`), `IngestCommand.cs` (the options section), `PLATFORM_FOUNDATIONS_PLAN.md` §4.7 |
 | S2 | `Query/VerbTable.cs`, a new `QueryCommand.Graph.cs`, both skill copies |
-| S3 | a new `Query/OpenApiReader.cs` and `QueryCommand.Coverage.cs`, `VerbTable.cs`, two options |
+| S3 | a new `Query/OpenApiReader.cs` (in-house JSON, no package reference) and `QueryCommand.Coverage.cs`, `VerbTable.cs`, two options, both skill copies |
 | S4 | a new `Reports/ServiceCardGenerator.cs`, `ReportGenerator.cs` (the call), `AgentInstructionsGenerator.cs`, both skill copies |
 | S5, S6 | a new `FleetCommand.cs` and `Fleet/` folder in the tool, `Query/VerbTable.cs` (the address form), `QueryCommand.Describe.cs`, `MCP_PLAN` §4.3 |
 
@@ -410,7 +487,8 @@ stage (rule 5: `VerbTable` has several claimants).
 Wiki, at execution: a `Service-Card` page, a `Fleet` page, the configuration-options page rows
 (`ServiceId`, `Parties`, `GenerateServiceCard`, the spec paths), the CLI reference (`graph`, `coverage`,
 `fleet`, the address form), and `LLM-Friendly` or its successor page for the ladder. README: one sentence
-under the agent section. Both skill copies. Changelog per release, stating the moved part.
+under the agent section. Both skill copies. Changelog per release, stating the moved part. The `coverage` row of the CLI reference carries §4.3's conversion
+commands.
 
 ### 7.5 Before S1 starts: measure
 
@@ -422,6 +500,9 @@ under the agent section. Both skill copies. Changelog per release, stating the m
 4. The card's size on BreakfastProvider's five lanes with no truncation, to set the 8 KB budget from a
    number.
 5. Re-check §2 against the tree at the time: 3.31.x moves quickly and `VerbTable` has claimants.
+6. Before S3: BreakfastProvider's `docs/openapi.json` against a report merged from its in-memory lanes:
+   operations matched, calls unspecified, and how many of those miss a template only because a segment is a
+   name (§2.8); and whether a lane ProxyTap captured carries the media types the in-memory lanes lack (F12).
 
 ### 7.6 Where it sits in the roadmap
 
@@ -450,6 +531,18 @@ the bar waits for it.
 - **An OTLP capturer as the JavaScript and Python on-ramp.** No bodies (§2.7). Ingest of NDJSON now,
   native ports at 14.9; the OTLP tap stays the tail.
 - **A model inside Kronikol.** The plan gives an agent files and verbs; Kronikol calls no model.
+- **Generating a spec from the run and comparing it with the real one** (2026-11-06). The run has no
+  templates, no media types in process and only samples (F11, F12); matching against the real spec's
+  templates removes the guessing, and an observed spec is written only for what the real one lacks.
+- **Reading the spec at run end, in a test-project package** (`Kronikol.Extensions.OpenApi`, carrying
+  Microsoft.OpenApi and a YAML reader, 2026-11-06). It sees one run: a report already written, or one
+  merged from lanes, would carry no spec (F16).
+- **A YAML reader in the tool** (2026-11-06). The tool's first package reference of its own (A4), for a
+  conversion existing tools do in one command.
+- **A converter published by Kronikol** (2026-11-06). Redocly CLI, yq and Hidi exist; another package to
+  release, for nothing they lack.
+- **Several reports in one `coverage` call.** `kronikol merge` already makes one report of several, and
+  one input keeps the verb like the others.
 
 ### 8.2 Open questions
 
@@ -457,7 +550,7 @@ the bar waits for it.
 |---|---|---|
 | Q1 | Five party kinds, or seven with `container` and `inProcess` split out | Five. A reader's trust has three states; `Note` holds the rest |
 | Q2 | `GenerateServiceCard` default on, and the file's name | On, like `Failures.md`; `Service.md` and `service.json`. A card on every run is what makes it current |
-| Q3 | YAML specs and overlays: a dependency (`YamlDotNet`), a subset reader, or JSON only | JSON only in v1, refused by name with the conversion command. Measure the ask before adding the tool's first or second dependency |
+| Q3 | YAML specs and overlays: a dependency (`YamlDotNet`), a subset reader, or JSON only | **Answered by the owner, 2026-11-06:** JSON only in the tool. A YAML spec is converted outside it with existing tools, and Kronikol publishes no converter (§4.3, §8.1) |
 | Q4 | Marking doubles automatically | Not in core. `Kronikol.Extensions.WireMock` or the like may register its URLs as `double` later, if asked for |
 | Q5 | One redaction policy across a fleet | The platform's options file (F4) is the carrier; a fleet checks each card's attestation against it. Not before F4 |
 | Q6 | Does the inbound surface include requests captured server-side (`HttpContextAccessor`) or only the test client's | READ before S3; the `underTest` party's received requests are the surface either way |
@@ -465,6 +558,8 @@ the bar waits for it.
 | Q8 | After the launch, or beside stages 6 to 12 for the owner's own use | After (rule 9), with S1's two fields decided now in `PLATFORM_FOUNDATIONS` §4 and S2 pulled forward when track A is idle. This is D23 |
 | Q9 | A service with a spec and no report in `Fleet.md` | Yes, marked *no evidence*: a complete map that says where the evidence stops beats a partial one |
 | Q10 | A separate `Kronikol.Fleet` package | No. Verbs on the one tool until a number says otherwise |
+| Q11 | Should the in-process handler record `Content.Headers`, as ProxyTap does (F12)? It gives in-process lanes media types, but changes report output: a drawn note that shows headers gains `Content-Type` and `Content-Length`, golden pins move, and Kronikol4J needs a ledger entry | Record them; whether a drawn note shows them is a separate choice, since showing them moves every diagram with a body. Decide before S3b |
+| Q12 | Record the route template for an in-process service? ASP.NET Core knows the endpoint each request matched, and nothing records it (§2.8). It would template the unspecified calls exactly | Not before §7.5 item 6 says how many calls miss a template only because a segment is a name |
 
 ---
 
@@ -474,8 +569,8 @@ the bar waits for it.
 |---|---|---|---|
 | A1 | An unset `parties` block leaves every existing report byte-identical | INFERRED from `WhenWritingNull` on the record; the report writer unchecked | §7.5 item 1 catches it; emit the block only when declared, which holds regardless |
 | A2 | Twenty verbs, default budget 6,000 bytes, seven address forms | RUN, READ | none |
-| A3 | No spec-reading code anywhere in `src/` | RUN (`grep -ril "openapi\|asyncapi\|swagger"`, empty) | S3 shrinks to wiring |
-| A4 | The tool has no third-party dependency | RUN (`PackageReference` count 0) | Q3's cost changes, not its shape |
+| A3 | No spec-reading code anywhere in `src/` | RUN (`grep -ril "openapi\|asyncapi\|swagger"`, empty; empty again on 2026-11-06 at 5.31.1) | S3 shrinks to wiring |
+| A4 | The tool has no third-party dependency | RUN (`PackageReference` count 0). READ 2026-11-06: true of `Kronikol.Tool.csproj` itself; through its project references it ships the core library's packages (`Microsoft.AspNetCore.Mvc.Testing` on net10.0), so the rule is that the tool adds none of its own | Q3's cost changes, not its shape |
 | A5 | A fleet of twenty fits `Fleet.md` in 4 KB and a card in 8 KB | INFERRED | §7.5 item 4 sets the budgets from BreakfastProvider |
 | A6 | Message trackers put the topic or queue where a matcher can read it | ASSUMED | S3's AsyncAPI half waits for the READ |
 | A7 | .NET adapters carry no feature-file location; Cucumber Messages do | READ (§2.4) | the card's sixth section gains a precision |
@@ -483,3 +578,8 @@ the bar waits for it.
 | A9 | Four bytes a token for the ladder's text | ASSUMED, the usual figure for English | the 19K estimate moves; the ratio to 2.7M does not |
 | A10 | A model given `graph` and a card needs no diagram | PLAN (10.0 measured Mermaid against `flow`) | S7's gate says so before anything ships |
 | A11 | Every OpenAPI generator in the four languages emits JSON, or converts in one command | ASSUMED (Swashbuckle, NSwag, springdoc, FastAPI and swagger-jsdoc do, from memory) | Q3 is decided the other way |
+| A12 | The refusal's commands work as written: `redocly bundle` writes JSON when the output ends `.json`, and `yq -o=json '.'` is Mike Farah's yq 4 syntax | ASSUMED, not run | The message changes, not the design |
+| A13 | yq is on GitHub's hosted Ubuntu 24.04 runners | READ (the runner-images release notes, yq 4.53.2, through a mirror) | The docs say how to install it |
+| A14 | Hidi's `transform` converts YAML to JSON and inlines references to other files (`--inline-external`); its flag names differ between versions | READ (its NuGet page and readme history) | The message names the command and leaves the flags to `-h` |
+| A15 | A validation answer usually names the field (ProblemDetails `errors`, ASP.NET Core's default for model validation) | ASSUMED | The proven section names the rule only where the body does |
+| A16 | An assertion's text names the property it checks closely enough to match by name | ASSUMED | The assertion column is emptier; it never claims more |
