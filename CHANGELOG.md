@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [5.34.4] - DATE
+## [5.34.4] - 2026-11-07
 
 A patch (5.34.3 to 5.34.4): a bug fix with nothing new to call. Closes #241.
 
