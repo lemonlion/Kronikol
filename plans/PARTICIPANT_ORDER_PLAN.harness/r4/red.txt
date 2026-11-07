@@ -1,0 +1,20 @@
+R4's facts on R2's code with only the refactor (DiagramHtml writes today's markup; nothing records the report's links), 2026-11-07:
+
+Failed BDDfyPageDiagramTests.A_scenario_the_report_does_not_hold_says_where_the_diagram_is
+Failed BDDfyPageDiagramTests.A_diagram_the_report_draws_itself_links_to_its_scenario_there
+Failed BDDfyPageDiagramTests.With_no_report_written_the_entry_says_where_the_diagram_is
+Failed BDDfyPageDiagramTests.An_inline_svg_is_drawn_as_it_is
+Failed BDDfyPageDiagramTests.A_file_the_local_renderer_wrote_is_found_from_the_report_folder
+Failed BDDfyPageDiagramTests.A_link_escapes_each_part_of_its_path
+Failed BDDfyPageReportLinkTests.The_report_records_each_scenarios_anchor_as_its_page_names_it
+
+Failed!  - Failed:     7, Passed:     2, Skipped:     0, Total:     9, Duration: 949 ms
+
+Playwright, 2026-11-07, BDDfyPageLinkTests on the real page the BDDfy example writes (R4 over 5.34.2):
+RED with 5.34.2's DiagramEnhancingBatchProcessor.cs and ReportGenerator.cs (git checkout 802a374f -- those two):
+  Failed Kronikol.Tests.EndToEnd.BDDfyPageLinkTests.Each_diagram_on_BDDfys_page_links_to_its_scenario_in_the_report_where_it_is_drawn [364 ms]
+   Assert.DoesNotContain() Failure: Sub-string found
+String: ···"mary><img loading="lazy" src=""></summary><h4>Raw "···
+Found:  "src="""
+Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 390 ms - Kronikol.Tests.EndToEnd.dll (net10.0)
+GREEN on R4: Passed! - Failed: 0, Passed: 1; the page holds 2 links, View this sequence diagram in the Kronikol report.

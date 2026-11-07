@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.34.4] - DATE
+
+A patch (5.34.3 to 5.34.4): a bug fix with nothing new to call. Closes #241.
+
+### Fixed
+
+- **BDDfy's own page, `BDDfy.html`, shows each scenario's sequence diagram, or links to it** (#241). Under the default
+  renderer (`BrowserJs`) the Kronikol report draws every diagram in its own page, so a diagram has no image address,
+  and the page wrote each one into an `<img src="">`: a disclosure with no picture and the raw PlantUML inside. Each
+  entry now takes the form its address allows:
+  - **No address** (the default renderer): a link, *View this sequence diagram in the Kronikol report*, to the
+    scenario's place in the report (`Reports/TestRunReport.html#sid-…`), which opens the report at that scenario with
+    its diagram drawn. With no report written, the entry says the diagram is drawn in the Kronikol report.
+  - **Inline SVG markup** (the server, local or Node.js renderers with inline SVG): drawn as it is, where an `<img>`
+    could load none.
+  - **A file the local renderer wrote**: addressed from the page's folder, as its address starts at the report's.
+  - **A picture's address** (a PlantUML server's, or a data URI): drawn as before, byte for byte.
+  The raw PlantUML stays below each entry. Nothing changes in the Kronikol report itself.
+
+### Tests
+
+- Core facts for each form of address, and for the report recording each scenario's anchor as its page names it
+  (`BDDfyPageDiagramTests`, `BDDfyPageReportLinkTests`).
+- A Playwright fact on the real page: the BDDfy example runs, and following a diagram's link on its `BDDfy.html` opens
+  the report at that scenario with the diagram drawn (`BDDfyPageLinkTests`). Red on 5.34.2's code: the page held
+  `src=""`.
+- Mutations: M13 to M20, each caught (M20 by the Playwright fact). (plans/PARTICIPANT_ORDER_PLAN.harness/r4).
+
 ## [5.34.3] - 2026-11-07
 
 The patch part moves (5.34.2 to 5.34.3): every tracked call that throws now ends with exactly one answer that says it failed and why, and every reader of a call's outcome reads it the same way. These are fixes with nothing new to call: no public member is added, and the new pieces (`OpenCall`, the one reading in `InteractionStatus`, history's rule 12) are internal. It closes #232 (`plans/FAILED_CALLS_PLAN.md` R1 and R2, shipped together as the plan's Q1 recommends; R3, which draws the reason on the diagram, is a later minor).

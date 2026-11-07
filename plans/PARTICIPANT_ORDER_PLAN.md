@@ -1,7 +1,7 @@
 # Participant order plan (#228): the service under test next to the test
 
 **Status:** written 2026-11-07; **green-lit in full** by the owner the same day, each question at its recommendation
-(§12). R1 shipped as 5.33.0 and R2 as 5.34.1; the `BDDfy.html` patch (R4, #241) to come. Written on `896ddad3` (5.31.1) and pushed
+(§12). **Executed**: R1 shipped as 5.33.0, R2 as 5.34.1 and the `BDDfy.html` patch (R4, #241) as 5.34.4; #228 and #241 closed. Written on `896ddad3` (5.31.1) and pushed
 with R1. Checked again the same day on `55999241` (5.31.2), whose only change to
 the code cited here moved one line of the tracking handler; that pass measured R1's rule in full, read BDDfy's own
 code for when its batch processor runs, and corrected what §2.3, §5.3, §8 and §9 said (§11 lists each change).
@@ -621,6 +621,26 @@ own diagrams.
 - **Mutations** (`r2/mutate.py`, `r2/mutations.txt`): M9 to M12, each caught.
 - **Kronikol4J.** F7 mirrored (`actorDefined` set where the loop draws its actor), with
   `PlantUmlParityTest.oneActorWithNoPureCaller`, red before the fix; F2 not mirrored (no parties).
+
+### R4 (5.34.4, #241)
+
+- **Code.** `ReportGenerator` records, after it writes the report, the report's HTML file and each test's anchor in it
+  (`sid-` and the scenario's stable id), in the internal `ReportLinks`. BDDfy's batch processor runs when the process
+  ends, after the report, and writes each diagram's entry with `ReportLinks.DiagramEntryHtml`, by what the renderer
+  gave it: no address (the default renderer) links to the scenario in the report, or says the diagram is drawn there
+  when no report was written; inline SVG markup is drawn as it is; a file the local renderer wrote is addressed from
+  the page's folder; a picture's address (a PlantUML server's, or a data URI) is written as before, byte for byte.
+- **Decided on the way.** F6 was wider than §10 said: the server, local and Node.js renderers can give inline SVG
+  markup, which went into an `img` address too, and the local renderer's file address starts at the report's folder,
+  not the page's, so R4 handles every form, not only the empty one. The entry's markup lives in `ReportLinks`, beside
+  the anchors, rather than in the adapter, so the core facts and the end-to-end project reach it without a reference
+  to the BDDfy adapter. An address is `data:`, `http` or `https`; `file:` is not one, as Kronikol never writes one and
+  a path parsed as a `file:` URI is better rebased. The Playwright fact reads the real page: it runs the BDDfy example
+  once, in the FullPipeline collection so that it never builds Example.Api beside the other example runs.
+- **Tests.** Core: `BDDfyPageDiagramTests` (one fact per form, the escaping of each part of a link, a scenario the
+  report does not hold) and `BDDfyPageReportLinkTests` (the anchor the report records is the one its page names).
+  Playwright: `BDDfyPageLinkTests`, red on 5.34.2's code (the page held `src=""`), green on 5.34.4. M13 to M20, each caught (M20 by the Playwright fact)..
+- **Checks.** the core suite (12,658 passed, 2 skipped); the end-to-end suite (2,193 passed, 28 skipped); the Release build of `release.slnf`.
 
 ## Appendix A. Harness
 

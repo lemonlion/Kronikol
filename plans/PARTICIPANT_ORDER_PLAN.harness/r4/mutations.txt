@@ -1,0 +1,10 @@
+R4 (#241) mutations on e011954f, core facts (FullyQualifiedName~BDDfyPage), 2026-11-07:
+M13 caught by A_diagram_the_report_draws_itself_links_to_its_scenario_there, A_link_escapes_each_part_of_its_path, A_scenario_the_report_does_not_hold_says_where_the_diagram_is, With_no_report_written_the_entry_says_where_the_diagram_is: draw the default renderer's empty address as an img again (F6)
+M14 caught by An_inline_svg_is_drawn_as_it_is: put inline markup into an img's address
+M15 caught by A_file_the_local_renderer_wrote_is_found_from_the_report_folder: leave a local file's address as it is from the report folder
+M16 caught by A_picture_address_is_drawn_as_before: rebase a data URI as if it were a file
+M17 caught by A_link_escapes_each_part_of_its_path: link without escaping each part of the path
+M18 caught by The_report_records_each_scenarios_anchor_as_its_page_names_it: never record where the report put each scenario
+M19 caught by The_report_records_each_scenarios_anchor_as_its_page_names_it: record the test id as the anchor, not the scenario's stable id
+
+M20 caught by Each_diagram_on_BDDfys_page_links_to_its_scenario_in_the_report_where_it_is_drawn: never tell BDDfy's page where the report is (Playwright, BDDfyPageLinkTests, in its own run)

@@ -45,7 +45,7 @@ public sealed class FullPipelineFixture : IAsyncLifetime
         return ValueTask.CompletedTask;
     }
 
-    private static void RunDotnetTest(string projectDir, string? filter = null, bool askedToFail = false)
+    internal static void RunDotnetTest(string projectDir, string? filter = null, bool askedToFail = false)
     {
         // No --no-restore: a clean CI runner has never restored the example projects, and
         // dotnet test would fail with NETSDK1004 (missing assets file) before running anything.

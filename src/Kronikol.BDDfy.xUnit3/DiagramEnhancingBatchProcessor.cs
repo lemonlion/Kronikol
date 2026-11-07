@@ -184,12 +184,8 @@ public class DiagramEnhancingBatchProcessor : IBatchProcessor
             var diagramHtml = new StringBuilder();
             diagramHtml.Append("<li class=\"tracking-diagram\"><h4>Sequence Diagrams</h4>");
             foreach (var diagram in scenarioDiagrams)
-            {
-                var lazyLoadAttr = _fetcherOptions?.LazyLoadDiagramImages ?? true ? " loading=\"lazy\"" : "";
-                diagramHtml.Append($"<details><summary><img{lazyLoadAttr} src=\"{diagram.ImgSrc}\"></summary>");
-                diagramHtml.Append($"<h4>Raw PlantUML</h4><pre>{WebUtility.HtmlEncode(diagram.CodeBehind)}</pre>");
-                diagramHtml.Append("</details>");
-            }
+                diagramHtml.Append(Reports.ReportLinks.DiagramEntryHtml(diagram, _fetcherOptions?.LazyLoadDiagramImages ?? true,
+                    Path.GetDirectoryName(bddifyReportPath)!, Reports.ReportLinks.Last));
             diagramHtml.Append("</li>");
 
             // BDDfy's HTML structure: <ul class='steps' id='scenario-1'>...</ul>
