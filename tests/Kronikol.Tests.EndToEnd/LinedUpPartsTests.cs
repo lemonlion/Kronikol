@@ -474,10 +474,13 @@ public class LinedUpPartsTests : PlaywrightTestBase
         foreach (var (k, v) in times)
             _output.WriteLine($"{(k.lineUp ? "lined up" : "not")}, {k.state}: {string.Join(", ", v.Select(x => x.ToString("F0")))} ms");
         _output.WriteLine($"quicker half of each kind, summed: {withRow:F0} ms lined up, {without:F0} ms not; stretch {stretch:F2}");
-        // 5%, and a frame's worth for each toggle's clock
-        var budget = without * 1.05 + 2 * 17 * stretch;
+        // 5% on a quiet machine, and a frame's worth for each toggle's clock; under load the 5% scales by the stretch, as
+        // ContentionScale's budgets do. Quiet, lining up measured -4 to +1% here, and -1 to +3% at stretch 2, but 7 to 10%
+        // on CI runners at stretch 3.5 to 4 from 5.31.2 on, which changed no page script (2026-11-07), so a fixed 5% failed
+        // most CI runs. At stretch 1 the budget is what it was.
+        var budget = without * (1 + 0.05 * stretch) + 2 * 17 * stretch;
         Assert.True(withRow <= budget,
-            $"toggles lined up took {withRow:F0} ms against {without:F0} ms without, the quicker half of each kind (budget {budget:F0} ms)");
+            $"toggles lined up took {withRow:F0} ms against {without:F0} ms without, the quicker half of each kind (budget {budget:F0} ms, stretch {stretch:F2})");
     }
 
     // 11
