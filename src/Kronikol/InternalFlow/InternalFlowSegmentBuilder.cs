@@ -439,8 +439,13 @@ public static class InternalFlowSegmentBuilder
                 }
             }
 
+            // HttpClient's own span is no library's (#138): every tracker of an HttpClient call logs the call before the span
+            // begins, and a tracked call claims the span its transport started, so one no call claims is an untracked
+            // call's (a token fetch, a client without the handler), the request's work. One under a library's span still
+            // goes with that span.
             var clientSpans = candidates
                 .Where(s => s.Activity is { Kind: ActivityKind.Client or ActivityKind.Producer }
+                            && s.Source != SpanSource.HttpClient
                             && !(claimedByTest.TryGetValue((s.TraceId, testId), out var claimed) && claimed.Contains(s.SpanId))
                             && !answered.Contains((s.TraceId, s.SpanId)))
                 .ToList();

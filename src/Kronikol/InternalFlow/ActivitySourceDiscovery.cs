@@ -16,7 +16,8 @@ public static class ActivitySourceDiscovery
 
         foreach (var span in spans)
         {
-            var name = span.Source.Name;
+            // An activity made without a source is counted under the name its lane gets (SpanSource).
+            var name = SpanSource.Of(span);
             if (string.IsNullOrEmpty(name)) continue;
 
             counts.TryGetValue(name, out var count);

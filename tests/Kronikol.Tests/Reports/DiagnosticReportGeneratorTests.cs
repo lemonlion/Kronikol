@@ -104,6 +104,30 @@ public class DiagnosticReportGeneratorTests : IDisposable
     // ─── What the page says ────────────────────────────────────
 
     [Fact]
+    public void A_source_in_the_namespace_of_a_well_known_name_reads_as_well_known()
+    {
+        // #138: the list names Azure.Cosmos, and the Cosmos DB SDK's source is Azure.Cosmos.Operation.
+        using var cosmos = new System.Diagnostics.ActivitySource("Azure.Cosmos.Operation");
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = s => ReferenceEquals(s, cosmos),
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+        var operation = cosmos.StartActivity("ReadItemAsync orders", System.Diagnostics.ActivityKind.Client)!;
+        operation.Stop();
+        Kronikol.InternalFlow.InternalFlowSpanStore.Add(operation);
+
+        var html = DiagnosticReportGenerator.BuildHtml(
+            [MakeLog("t1", RequestResponseType.Request, Guid.NewGuid())],
+            [],
+            new ReportConfigurationOptions { InternalFlowActivitySources = ["MyApp.Orders"] });
+
+        Assert.Matches(@"<td>Azure\.Cosmos\.Operation</td><td>\d+</td><td>well-known \(auto\)</td>", html);
+    }
+
+    [Fact]
     public void Unused_component_hint_mentions_ResolveDbContextOptions_not_PostConfigure()
     {
         TrackingComponentRegistry.Register(

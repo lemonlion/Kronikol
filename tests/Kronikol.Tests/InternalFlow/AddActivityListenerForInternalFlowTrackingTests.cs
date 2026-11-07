@@ -28,17 +28,23 @@ public class AddActivityListenerForInternalFlowTrackingTests : IDisposable
     }
 
     [Fact]
-    public void Does_not_capture_spans_from_well_known_source()
+    public void Captures_HttpClient_spans_only_under_a_parent()
     {
+        // #138: HttpClient's spans keep their source; one outside a trace is not sampled, so its call sends no traceparent.
         BuildProvider(s => s.AddActivityListenerForInternalFlowTracking());
+        using var parents = new ActivitySource($"Parent.{Guid.NewGuid():N}");
+        using var http = new ActivitySource("System.Net.Http");
+        var root = $"GET-{Guid.NewGuid():N}";
+        var child = $"GET-{Guid.NewGuid():N}";
+        Activity.Current = null;
 
-        var opName = $"GET-{Guid.NewGuid():N}";
-        using var source = new ActivitySource("System.Net.Http");
-        using var activity = source.StartActivity(opName);
-        activity?.Stop();
+        http.StartActivity(root, ActivityKind.Client)?.Stop();
+        using (parents.StartActivity("parent"))
+            http.StartActivity(child, ActivityKind.Client)?.Stop();
 
-        Assert.DoesNotContain(InternalFlowSpanStore.GetSpans(),
-            s => s.DisplayName == opName && s.Source.Name == "System.Net.Http");
+        var spans = InternalFlowSpanStore.GetSpans();
+        Assert.DoesNotContain(spans, s => s.DisplayName == root);
+        Assert.Contains(spans, s => s.DisplayName == child && s.Source.Name == "System.Net.Http");
     }
 
     [Fact]

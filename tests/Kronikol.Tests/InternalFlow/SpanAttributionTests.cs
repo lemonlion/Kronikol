@@ -17,6 +17,9 @@ public class SpanAttributionTests : IDisposable
     private static readonly DateTimeOffset T0 = new(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
 
     private readonly ActivitySource _source = new("Kronikol.Tests.SpanAttribution");
+    // HttpClient's spans, as Kronikol's listener hears them (#138). Heard by reference, not by name, so the transport's
+    // own source, which this listener would sample on every call, is left alone.
+    private readonly ActivitySource _httpSource = new("System.Net.Http");
     private readonly ActivityListener _listener;
     private readonly List<Activity> _activities = [];
 
@@ -24,7 +27,7 @@ public class SpanAttributionTests : IDisposable
     {
         _listener = new ActivityListener
         {
-            ShouldListenTo = s => s.Name == "Kronikol.Tests.SpanAttribution",
+            ShouldListenTo = s => s.Name == "Kronikol.Tests.SpanAttribution" || ReferenceEquals(s, _httpSource),
             Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded
         };
         ActivitySource.AddActivityListener(_listener);
@@ -34,6 +37,7 @@ public class SpanAttributionTests : IDisposable
     {
         foreach (var a in _activities) a.Dispose();
         _listener.Dispose();
+        _httpSource.Dispose();
         _source.Dispose();
     }
 
@@ -773,6 +777,46 @@ public class SpanAttributionTests : IDisposable
     }
 
     [Fact]
+    public void An_untracked_HttpClient_span_stays_out_of_the_untraced_call_beside_it()
+    {
+        // #138: HttpClient's span is a client span once the listener hears System.Net.Http. Inside a request, one that no
+        // tracker logged (a token fetch, a client without Kronikol's handler) began 10 ms before a Blob Storage call,
+        // whose tracker records no trace id, and ran across it. A library's client span goes to such a call because its
+        // tracker logs the call from inside the span; every tracker of an HttpClient call logs it before HttpClient's
+        // span begins, and a tracked call claims its own span, so this one is the request's work: the request's popup
+        // shows it, and the Blob call's does not.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api POST /photos", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        Span("GET", 4, trace, server.SpanId.ToString(), durationMs: 16, kind: ActivityKind.Client, source: _httpSource);
+        var upload = Request("t1", 14, 18, service: "BlobStorage", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. upload], _activities.ToArray());
+
+        Assert.Empty(segments[Key(upload)].Spans);
+        Assert.Equal(["api POST /photos", "GET"], segments[Key(outer)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
+    public void An_HttpClient_span_under_a_library_client_span_still_goes_with_it()
+    {
+        // Cosmos DB's shape with the SDK's request as Kronikol's listener hears it since #138: HttpClient's span, under
+        // the SDK's operation. It is no candidate of its own, but the spans under a client span go with it.
+        var trace = ActivityTraceId.CreateRandom().ToString();
+        var outerSpan = NewSpanId();
+        var outer = Request("t1", 0, 40, trace, outerSpan, service: "Api", caller: "Test");
+        var server = Span("api GET /orders/{id}", 1, trace, outerSpan, durationMs: 38, kind: ActivityKind.Server);
+        var operation = Span("ReadItemAsync orders", 8, trace, server.SpanId.ToString(), durationMs: 9, kind: ActivityKind.Client);
+        Span("POST", 11, trace, operation.SpanId.ToString(), durationMs: 4, kind: ActivityKind.Client, source: _httpSource);
+        var read = Request("t1", 10, 16, service: "CosmosDB", caller: "Api");
+
+        var segments = InternalFlowSegmentBuilder.BuildSegments([.. outer, .. read], _activities.ToArray());
+
+        Assert.Equal(["ReadItemAsync orders", "POST"], segments[Key(read)].Spans.Select(s => s.OperationName));
+    }
+
+    [Fact]
     public void A_client_span_another_call_claims_is_not_taken_by_a_call_with_no_trace_id_logged_while_it_ran()
     {
         // An ingested capture stamps a call with its client's span, begun a moment before the call was logged, and the
@@ -969,12 +1013,12 @@ public class SpanAttributionTests : IDisposable
     private Activity[] Spans(string name, int a, int b, int c, int d, int e, string? traceId) => Spans(name, [a, b, c, d, e], traceId);
 
     private Activity Span(string name, int startMs, string traceId, string? parentSpanId, int durationMs = 5,
-        ActivityKind kind = ActivityKind.Internal)
+        ActivityKind kind = ActivityKind.Internal, ActivitySource? source = null)
     {
         Activity.Current = null;
         var parent = new ActivityContext(ActivityTraceId.CreateFromString(traceId),
             parentSpanId is null ? default : ActivitySpanId.CreateFromString(parentSpanId), ActivityTraceFlags.Recorded);
-        var span = _source.StartActivity(name, kind, parent)!;
+        var span = (source ?? _source).StartActivity(name, kind, parent)!;
         span.SetStartTime(T0.UtcDateTime.AddMilliseconds(startMs));
         span.SetEndTime(T0.UtcDateTime.AddMilliseconds(startMs + durationMs));
         _activities.Add(span);

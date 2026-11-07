@@ -644,4 +644,29 @@ public class InternalFlowRendererTests : IDisposable
 
         Assert.Contains(":" + name + " (12ms);", result);
     }
+
+    [Fact]
+    public void A_span_made_without_a_source_is_drawn_in_a_lane_named_from_its_operation_not_Unknown()
+    {
+        // #138: HttpClient's span made with new Activity(...), as when nothing hears System.Net.Http, under a request.
+        var request = CreateSpan("HTTP GET /api");
+        var previous = Activity.Current;
+        Activity.Current = null;
+        var http = new Activity("System.Net.Http.HttpRequestOut");
+        http.SetParentId(request.TraceId, request.SpanId);
+        http.Start();
+        http.SetEndTime(http.StartTimeUtc + TimeSpan.FromMilliseconds(5));
+        Activity.Current = previous;
+        _activities.Add(http);
+        var segment = MakeSegment(request, http);
+
+        var diagram = InternalFlowRenderer.RenderActivityDiagram(segment);
+        var tree = InternalFlowRenderer.RenderCallTree(segment);
+        var flame = InternalFlowRenderer.GetFlameChartData(segment);
+
+        Assert.Contains("|System.Net.Http|", diagram);
+        Assert.DoesNotContain("Unknown", diagram);
+        Assert.Contains("[System.Net.Http]", tree);
+        Assert.Equal(["Kronikol.Tests.InternalFlow", "System.Net.Http"], flame.Sources);
+    }
 }

@@ -61,4 +61,21 @@ public class ActivitySourceDiscoveryTests : IDisposable
         var discovered = ActivitySourceDiscovery.GetDiscoveredSources();
         Assert.True(discovered[_sourceName] >= 2);
     }
+
+    [Fact]
+    public void Counts_a_span_made_without_a_source_under_the_name_taken_from_its_operation()
+    {
+        // #138: an activity made with new Activity(...) has no source name, and the diagnostics report left it uncounted.
+        var name = $"Discovery{Guid.NewGuid():N}";
+        var previous = Activity.Current;
+        Activity.Current = null;
+        var activity = new Activity($"{name}.Work").Start();
+        activity.Stop();
+        Activity.Current = previous;
+        InternalFlowSpanStore.Add(activity);
+
+        var discovered = ActivitySourceDiscovery.GetDiscoveredSources();
+
+        Assert.Equal(1, discovered.GetValueOrDefault(name));
+    }
 }

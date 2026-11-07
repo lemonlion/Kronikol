@@ -28,6 +28,21 @@ public static class InternalFlowSpanCollector
     ];
 
     /// <summary>
+    /// Whether <paramref name="source"/> is one of <see cref="WellKnownAutoInstrumentationSources"/>, or in the namespace of
+    /// one: the Azure SDK names its sources after the client (<c>Azure.Storage.Blobs.BlobClient</c>) and Cosmos DB's is
+    /// <c>Azure.Cosmos.Operation</c>, so no source is named <c>Azure.Storage</c> or <c>Azure.Cosmos</c> itself.
+    /// </summary>
+    internal static bool IsWellKnown(string source)
+    {
+        if (WellKnownAutoInstrumentationSources.Contains(source))
+            return true;
+        for (var dot = source.LastIndexOf('.'); dot > 0; dot = source.LastIndexOf('.', dot - 1))
+            if (WellKnownAutoInstrumentationSources.Contains(source[..dot]))
+                return true;
+        return false;
+    }
+
+    /// <summary>
     /// Collects spans from <see cref="InternalFlowSpanStore"/> and filters
     /// them according to the specified granularity.
     /// </summary>
@@ -80,8 +95,8 @@ public static class InternalFlowSpanCollector
         var wellKnownTraceIds = new HashSet<string>();
         foreach (var span in spans)
         {
-            if (!string.IsNullOrEmpty(span.Source.Name) &&
-                WellKnownAutoInstrumentationSources.Contains(span.Source.Name))
+            var source = SpanSource.Of(span);
+            if (!string.IsNullOrEmpty(source) && IsWellKnown(source))
                 wellKnownTraceIds.Add(span.TraceId.ToString());
         }
 
@@ -97,8 +112,8 @@ public static class InternalFlowSpanCollector
 
         var sourceSet = new HashSet<string>(sources, StringComparer.OrdinalIgnoreCase);
         return spans
-            .Where(s => !string.IsNullOrEmpty(s.Source.Name) &&
-                        sourceSet.Contains(s.Source.Name))
+            .Where(s => SpanSource.Of(s) is { Length: > 0 } source &&
+                        sourceSet.Contains(source))
             .ToArray();
     }
 }

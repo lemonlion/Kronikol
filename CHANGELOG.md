@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.32.2] - 2026-11-07
+
+The patch part moves (5.32.1 to 5.32.2): HttpClient's spans keep their source in internal flow, a span made without a source is named from its operation, and the default granularity keeps the traces those spans anchor, fixes with nothing new to call (#138, `plans/INTERNAL_FLOW_SOURCES_PLAN.md` R1 and R2).
+
+### Fixed
+
+- **HttpClient calls in internal flow are drawn in a `System.Net.Http` lane, not "Unknown" (#138).** The span listener left `System.Net.Http` unheard, which kept out no span. HttpClient makes its span whenever a span is current, with `new Activity(...)` when nothing hears its source, and that span belongs to no source, so each traced HttpClient call, the request under each gRPC call over a socket among them, reached the report with no source and as an `Internal` span, in an "Unknown" lane. The listener now hears `System.Net.Http` under a parent only: a call made outside a trace still makes no span and sends no `traceparent`, so nothing new goes on the wire.
+- **A span made without a source is named from its operation.** Code that still makes activities with `new Activity(name)` (Application Insights for its own work, the Azure SDK unless its client uses its source) gets the source a known operation comes from (`System.Net.Http.HttpRequestOut`, `Microsoft.AspNetCore.Hosting.HttpRequestIn`, `Grpc.Net.Client.GrpcOut`), else the operation's name up to its last dot, else the name itself. The lane, both granularity filters and the diagnostics report's discovered sources read the same name, and `FlowSpan.Source` carries it.
+- **`AutoInstrumentation`, the default granularity, keeps the traces HttpClient, Cosmos DB and Azure Storage calls anchor.** It lists `System.Net.Http`, `Azure.Cosmos` and `Azure.Storage`, but no captured HttpClient span carried its source's name, and no source is named `Azure.Cosmos` or `Azure.Storage`: the Cosmos DB SDK's is `Azure.Cosmos.Operation`, and the Azure Storage clients' are named after the client (`Azure.Storage.Blobs.BlobClient`). A listed name now covers the sources in its namespace too, so a trace whose only well-known span was one of these calls is no longer dropped. `Manual` with `System.Net.Http` matched no HttpClient span either, and the diagnostics report left them uncounted.
+- **The listener no longer hears .NET's `Experimental.System.Net.*` sources.** From .NET 9 the runtime builds spans for each connection (socket connect, DNS lookup, TLS, connection setup, the wait for a connection) only because something listens, and the store kept them all for the whole run.
+
+### Changed behaviour
+
+- HttpClient steps move from an "Unknown" lane to a `System.Net.Http` lane, labelled with the HTTP method on .NET 9 and later, and their spans are `Client` spans, not `Internal`. An HttpClient span no call claims stays out of the popup of an untraced call made beside it in a request, as before: the rule that gives a library's client span to such a call (Cosmos DB's, 4.26.5) leaves `System.Net.Http`'s spans out, as every tracker of an HttpClient call logs it before the span begins.
+- Under `AutoInstrumentation`, some tests gain internal flow: the traces anchored only by an HttpClient, Cosmos DB or Azure Storage call.
+- An HttpClient span another listener (an app's OpenTelemetry that samples every span) starts for a call made outside a trace is not kept.
+- Application Insights 2.x dependency tracking is unchanged, measured with its SDK: .NET writes the events it reads whichever way it makes the span, so the reason `System.Net.Http` was left unheard since 2.21.1 did not hold. The break 2.21.1 fixed was the tracking handler's own `traceparent`, written ahead of HttpClient's.
+
+### Tests
+
+- `HttpClientSpanCaptureTests`, in a collection of its own that runs alone, makes real HttpClient calls to a loopback server: a call under a span is captured with its source and its kind, and the span captured is the one sent; a call outside any span makes no span and sends no `traceparent`; the runtime's connection spans are not heard; and Application Insights 2.23's dependency collector (a test-only package) records the same three dependencies, ids and correlation with the listener started before it and after it.
+- `SpanSourceTests` covers the naming rule; `InternalFlowSpanCollectorStoreIntegrationTests`, `ActivitySourceDiscoveryTests` and `InternalFlowRendererTests` cover a span made without a source in the filters, the discovered sources, the activity diagram, the call tree and the flame chart, and a source in a listed namespace; `SpanAttributionTests` keeps an untracked HttpClient span out of the untraced call beside it, and keeps one under a library's client span with that span; `GrpcCallSpansTests` leaves no span without a source in a gRPC call's trace over h2c. Each was red on 5.31.2 where the plan says so.
+- The four facts that checked the listener left `System.Net.Http` out now check it hears that source only under a parent, and a new one checks that a root HttpClient span another listener samples is not kept.
+
 ## [5.32.1] - 2026-11-07
 
 The patch part moves (5.32.0 to 5.32.1): each change is a bug fix in which object the assertion weaver reads a field's value off for a note, with nothing new to call (#213, `plans/CAPTURED_FIELD_VALUES_PLAN.md`).

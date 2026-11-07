@@ -19,20 +19,49 @@ public class InternalFlowActivityListenerTests : IDisposable
     }
 
     [Fact]
-    public void Does_not_listen_to_System_Net_Http()
+    public void Hears_System_Net_Http_only_under_a_parent()
     {
+        // #138: HttpClient's spans keep their source and their kind. One with no parent is not sampled, so a call made
+        // outside a trace makes no span and sends no traceparent, as when the source was left out.
         _listener = new InternalFlowActivityListener();
+        using var parents = new ActivitySource($"Parent.{Guid.NewGuid():N}");
+        using var http = new ActivitySource("System.Net.Http");
+        var root = $"root-{Guid.NewGuid():N}";
+        var child = $"child-{Guid.NewGuid():N}";
+        Activity.Current = null;
 
-        foreach (var conflictName in InternalFlowActivityListener.AppInsightsConflictSources)
+        http.StartActivity(root, ActivityKind.Client)?.Stop();
+        using (parents.StartActivity("parent"))
+            http.StartActivity(child, ActivityKind.Client)?.Stop();
+
+        var spans = InternalFlowSpanStore.GetSpans();
+        Assert.DoesNotContain(spans, s => s.DisplayName == root);
+        var captured = Assert.Single(spans, s => s.DisplayName == child);
+        Assert.Equal("System.Net.Http", captured.Source.Name);
+        Assert.Equal(ActivityKind.Client, captured.Kind);
+    }
+
+    [Fact]
+    public void A_root_HttpClient_span_another_listener_samples_is_not_kept()
+    {
+        // A span another listener samples is reported to every listener of its source when it stops, whatever each one
+        // sampled: an app's OpenTelemetry that samples every span makes HttpClient start one for a call outside a trace.
+        // The listener keeps HttpClient's spans only under a parent, so it does not keep that one either.
+        _listener = new InternalFlowActivityListener();
+        using var http = new ActivitySource("System.Net.Http");
+        using var everything = new ActivityListener
         {
-            var opName = $"{conflictName}-{Guid.NewGuid():N}";
-            using var source = new ActivitySource(conflictName);
-            using var activity = source.StartActivity(opName);
-            activity?.Stop();
+            ShouldListenTo = s => ReferenceEquals(s, http),
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded
+        };
+        ActivitySource.AddActivityListener(everything);
+        var root = $"root-{Guid.NewGuid():N}";
+        Activity.Current = null;
 
-            Assert.DoesNotContain(InternalFlowSpanStore.GetSpans(),
-                s => s.DisplayName == opName && s.Source.Name == conflictName);
-        }
+        using (var span = http.StartActivity(root, ActivityKind.Client))
+            Assert.NotNull(span);
+
+        Assert.DoesNotContain(InternalFlowSpanStore.GetSpans(), s => s.DisplayName == root);
     }
 
     [Theory]
@@ -43,7 +72,7 @@ public class InternalFlowActivityListenerTests : IDisposable
     [InlineData("Azure.Cosmos")]
     [InlineData("Azure.Storage")]
     [InlineData("Microsoft.Azure.Cosmos")]
-    public void Does_listen_to_well_known_sources_other_than_AppInsights_conflicts(string sourceName)
+    public void Does_listen_to_well_known_sources(string sourceName)
     {
         _listener = new InternalFlowActivityListener();
 
@@ -56,25 +85,25 @@ public class InternalFlowActivityListenerTests : IDisposable
             s => s.DisplayName == opName && s.Source.Name == sourceName);
     }
 
-    [Fact]
-    public void Does_not_cause_HasListeners_for_well_known_framework_sources()
+    [Theory]
+    [InlineData("Experimental.System.Net.Http.Connections")]
+    [InlineData("Experimental.System.Net.NameResolution")]
+    [InlineData("Experimental.System.Net.Sockets")]
+    [InlineData("Experimental.System.Net.Security")]
+    public void Does_not_listen_to_the_runtimes_connection_sources(string sourceName)
     {
-        // This is the exact gate that DiagnosticsHandler.CreateActivity() checks.
-        // TTD must NOT cause it to return true for System.Net.Http.
-        using var httpSource = new ActivitySource("System.Net.Http.Test." + Guid.NewGuid().ToString("N"));
-        // Use a fresh unique name to avoid interference from other listeners in the process.
-        // The real test: creating our listener should NOT subscribe to well-known sources.
+        // From .NET 9 the runtime builds these spans for every connection, and only because something listens: socket
+        // connect, DNS lookup, TLS and connection setup, never drawn, and the wait for a connection, pool noise.
         _listener = new InternalFlowActivityListener();
+        using var parents = new ActivitySource($"Parent.{Guid.NewGuid():N}");
+        using var source = new ActivitySource(sourceName);
+        var opName = $"connection-{Guid.NewGuid():N}";
+        Activity.Current = null;
 
-        using var wellKnownSource = new ActivitySource("System.Net.Http");
-        // StartActivity returns null when no listener is subscribed
-        var activity = wellKnownSource.StartActivity("should-be-null");
-        // Note: In a test process other listeners may exist, so we can't assert null.
-        // Instead verify our listener didn't capture it.
-        activity?.Stop();
+        using (parents.StartActivity("parent"))
+            source.StartActivity(opName)?.Stop();
 
-        Assert.DoesNotContain(InternalFlowSpanStore.GetSpans(),
-            s => s.DisplayName == "should-be-null" && s.Source.Name == "System.Net.Http");
+        Assert.DoesNotContain(InternalFlowSpanStore.GetSpans(), s => s.DisplayName == opName);
     }
 
     [Fact]

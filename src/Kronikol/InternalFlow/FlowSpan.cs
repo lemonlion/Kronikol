@@ -20,7 +20,7 @@ namespace Kronikol.InternalFlow;
 /// <param name="SpanId">The span id, 16 lowercase hex digits.</param>
 /// <param name="ParentSpanId">The parent's span id, or null (or all zeros) for a root.</param>
 /// <param name="Name">What the span did: an <see cref="System.Diagnostics.Activity"/>'s display name, an OTLP span's name.</param>
-/// <param name="Source">Who recorded it, the diagram's swimlane: the <see cref="ActivitySource"/>'s name, an OTLP span's instrumentation scope.</param>
+/// <param name="Source">Who recorded it, the diagram's swimlane: the <see cref="ActivitySource"/>'s name, an OTLP span's instrumentation scope, or, for an activity made without a source, the name taken from its operation.</param>
 /// <param name="StartTimeUtc">When it started, UTC.</param>
 /// <param name="Duration">How long it ran.</param>
 /// <param name="Service">The service that recorded it, when the exporter said (OTLP's <c>service.name</c>); null in-process.</param>
@@ -46,7 +46,7 @@ public sealed record FlowSpan(
             activity.SpanId.ToString(),
             activity.ParentSpanId.ToString(),
             activity.DisplayName ?? activity.OperationName,
-            activity.Source.Name,
+            SpanSource.Of(activity),
             activity.StartTimeUtc,
             activity.Duration)
         {

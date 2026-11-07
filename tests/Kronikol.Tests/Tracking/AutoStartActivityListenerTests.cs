@@ -54,18 +54,24 @@ public class AutoStartActivityListenerTests
     }
 
     [Fact]
-    public async Task First_SendAsync_does_not_listen_to_System_Net_Http()
+    public async Task First_SendAsync_listens_to_System_Net_Http_under_a_parent()
     {
+        // #138: HttpClient's spans keep their source, and a call outside a trace still makes none.
         using var invoker = CreateInvoker(DefaultOptions());
         await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://target:80/api"), CancellationToken.None);
 
-        var opName = $"http-{Guid.NewGuid():N}";
-        using var source = new ActivitySource("System.Net.Http");
-        using var activity = source.StartActivity(opName);
-        activity?.Stop();
+        using var parents = new ActivitySource($"Parent.{Guid.NewGuid():N}");
+        using var http = new ActivitySource("System.Net.Http");
+        var root = $"http-{Guid.NewGuid():N}";
+        var child = $"http-{Guid.NewGuid():N}";
+        Activity.Current = null;
+        http.StartActivity(root, ActivityKind.Client)?.Stop();
+        using (parents.StartActivity("parent"))
+            http.StartActivity(child, ActivityKind.Client)?.Stop();
 
-        Assert.DoesNotContain(InternalFlowSpanStore.GetSpans(),
-            s => s.DisplayName == opName && s.Source.Name == "System.Net.Http");
+        var spans = InternalFlowSpanStore.GetSpans();
+        Assert.DoesNotContain(spans, s => s.DisplayName == root);
+        Assert.Contains(spans, s => s.DisplayName == child && s.Source.Name == "System.Net.Http");
     }
 
     [Theory]
@@ -74,7 +80,7 @@ public class AutoStartActivityListenerTests
     [InlineData("Npgsql")]
     [InlineData("StackExchange.Redis")]
     [InlineData("Azure.Cosmos")]
-    public async Task First_SendAsync_does_listen_to_well_known_sources_other_than_System_Net_Http(string sourceName)
+    public async Task First_SendAsync_does_listen_to_well_known_sources(string sourceName)
     {
         using var invoker = CreateInvoker(DefaultOptions());
         await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://target:80/api"), CancellationToken.None);

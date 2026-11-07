@@ -173,7 +173,7 @@ public static class DiagnosticReportGenerator
             foreach (var (name, count) in sources.OrderByDescending(s => s.Value))
             {
                 var isTracked = tracked.Count == 0 || tracked.Contains(name);
-                var wellKnown = InternalFlowSpanCollector.WellKnownAutoInstrumentationSources.Contains(name);
+                var wellKnown = InternalFlowSpanCollector.IsWellKnown(name);
                 var status = isTracked ? "<span class=\"info\">✓ tracked</span>" : wellKnown ? "well-known (auto)" : "not tracked";
                 sb.AppendLine($"<tr><td>{Escape(name)}</td><td>{count}</td><td>{status}</td></tr>");
             }

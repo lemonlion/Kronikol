@@ -2,9 +2,10 @@
 
 **Date:** 2026-10-26 · **Repo version:** written against 5.10.1 (`origin/main` at `c37042e2`). Line numbers are for 5.31.2 (`55999241`). 5.12.0 to 5.31.2 moved lines in the two handler files, `ReportConfigurationOptions.cs`, `InternalFlowRenderer.cs` and `GrpcTrackingInterceptor.cs` and changed nothing this plan relies on;
 5.31.2 (#219 R1) moved the handler's chain walk into `HandlerChain.cs`, with the same answers for every chain this plan
-discusses. Every other file cited is unchanged from `1d03279b` through 5.31.2 or changed without moving the lines cited, and `CosmosTrackingMessageHandler.cs`, cited by name only, still records no trace id · **Status:** ❌ plan written, nothing implemented, **NOT green-lit**. Written
-at the owner's request of 2026-10-26: analyse #138 critically, then plan a fix for the underlying problem, which may not be
-the fix the issue proposes.
+discusses. Every other file cited is unchanged from `1d03279b` through 5.31.2 or changed without moving the lines cited, and `CosmosTrackingMessageHandler.cs`, cited by name only, still records no trace id · **Status:** 🚧 green-lit on 2026-11-07, when the owner asked to "implement the plan in
+full" (each question takes its recommended answer); release A (R1 and R2) built, release B (R3 and R4) next, see the log.
+Written at the owner's request of 2026-10-26: analyse #138 critically, then plan a fix for the underlying problem, which
+may not be the fix the issue proposes.
 
 Evidence labels:
 
@@ -633,6 +634,34 @@ moved from `:153` to `:155`; no other line cited here moved.
     and lets `TransportSpan` read a forwarder's copy, so F11's premise holds (section 6.4). It moved the lines cited
     for the `traceparent` logic, `TransportSpan` and `CallOwnSpanThroughTheHandlerTests` by one to three, and
     citations now follow 5.31.2.
+- **2026-11-07, release A (5.32.2):** green-lit the same afternoon ("implement the plan in full"); every question takes
+  its recommended answer. Built in its own worktree on 5.31.2, beside other sessions' releases. What building it found:
+  - **A span another listener samples reaches every listener of its source.** .NET reports a stopped span to each
+    listener that hears its source, whatever each sampled, so an app's OpenTelemetry that samples every span would have
+    put the root span of each call made outside a trace in the store. The listener's `ActivityStopped` now skips an
+    HttpClient span with no parent too, so nothing new is captured outside a trace (fact
+    `A_root_HttpClient_span_another_listener_samples_is_not_kept`).
+  - **F11's case is an untraced call made inside a request.** Outside one, the lead-span rule already gives a span that
+    began up to 50 ms before an untraced call to it, whatever its kind, as it did before #138. Inside one, that rule
+    leaves such a span to the request, and only `ClientSpanOwners` hands a client span to the call, so that is where
+    the kind matters. `SpanAttributionTests`' fact puts the call inside a request.
+  - **A bug of F2's kind in the same filter, fixed in A.** `AutoInstrumentation`'s list names `Azure.Cosmos` and
+    `Azure.Storage`, but the Cosmos DB SDK's source is `Azure.Cosmos.Operation` (azure-cosmos-dotnet-v3,
+    `OpenTelemetryRecorderFactory.cs`) and the Storage clients' are named after the client (F10), so they matched no
+    source. A listed name now covers the sources in its namespace (`InternalFlowSpanCollector.IsWellKnown`), in the
+    filter and in the diagnostics report's well-known status.
+  - **The wire facts run alone.** Six test classes hear every source with a listener that samples every span, which
+    makes every HttpClient call in the process start a span and send a `traceparent`. `HttpClientSpanCaptureTests`
+    runs in a collection with `DisableParallelization`.
+  - Q8: the six suites are not on this machine; the in-repo example suite `Example.Api.Tests.Component.xUnit3`, whose
+    cow service fake listens on a real socket, stood in. Run on 5.32.0 and then on this release and compared by counts
+    alone (`harness/q8/compare.cs` on the decoded pages, `results-example-xunit3.txt`): the same 11 popups and 16 spans,
+    the same span count in every popup, and the one popup that drew an "Unknown" lane, for 4 steps, draws them in a
+    `System.Net.Http` lane. No "Unknown" lane is left.
+  - Checks: the core suite on 5.32.1 with this release (12,550 passed, 2 skipped); the end-to-end suite on 5.32.0 with
+    it (2,151 passed, 28 skipped); the gRPC, OpenTelemetry, Otlp, ProxyTap, Kafka and TcpTap test projects on 5.31.2
+    with it (262; 4; 447; 203, 4 skipped; 400, 3 skipped; 506, 7 skipped). release.slnf was not built in Release here,
+    for disk space; CI builds it.
 
 ## Appendix A. Edit sites at 5.31.2 (`55999241`)
 

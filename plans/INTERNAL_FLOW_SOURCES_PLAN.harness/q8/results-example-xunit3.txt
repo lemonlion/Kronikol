@@ -1,0 +1,9 @@
+Q8 stand-in, 2026-11-07: examples/Example.Api/tests/Example.Api.Tests.Component.xUnit3 (5 tests; the cow service fake
+listens on a real Kestrel socket), run on 5.32.0 (601c1dad) and then on release A, each TestRunReport.html decoded with
+`kronikol decode <page> -o <plain>` and counted with compare.cs (counts only; neither report was read).
+
+5.32.0:    segments=11 withUnknownLane=1 unknownLanes=4 httpLanes=0 grpcLanes=0 spans=16
+           span counts: 1x6 2x2 3x2
+release A: segments=11 withUnknownLane=0 unknownLanes=0 httpLanes=4 grpcLanes=0 spans=16
+           span counts: 1x6 2x2 3x2
+popups by span count that differ: none
