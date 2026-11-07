@@ -86,4 +86,52 @@ public class ParticipantOrderTests : DiagramNotePlaywrightBase
         Assert.True(left["disk"] < left["app"], $"disk {left["disk"]}, app {left["app"]}");
         Assert.True(left["git"] < left["app"], $"git {left["git"]}, app {left["app"]}");
     }
+
+    /// <summary>The diagram context menu's items for a declaring run's scenario, the app under test.</summary>
+    private async Task<IReadOnlyList<string>> MenuItems(bool testCallsTheApp)
+    {
+        var tag = Guid.NewGuid().ToString("N")[..8];
+        var (caller, disk, app) = ("Caller" + tag, "Disk" + tag, "App" + tag);
+        var testId = "participant-shape-" + tag;
+        var reportsDir = Path.Combine(TempDir, testId);
+        Directory.CreateDirectory(reportsDir);
+        lock (ReportTestHelper.WholePipeline)
+        {
+            DefaultDiagramsFetcher.Reset();
+            if (testCallsTheApp)
+                RequestResponseLogger.LogPair("Run", testId, HttpMethod.Post, new Uri("http://app/run"), app, caller,
+                    requestContent: "{\"run\":1}", statusCode: HttpStatusCode.OK);
+            // The app's own call, with a body: in a scenario whose test made no tracked call, the app is the caller
+            // nobody calls (F2), and before R2 its request was offered as the test's.
+            RequestResponseLogger.LogPair("Run", testId, "PUT", new Uri("http://disk/work/out"), disk, app,
+                requestContent: "{\"out\":1}", dependencyCategory: "Database");
+            ReportGenerator.CreateStandardReportsWithDiagrams(
+                [new Feature { DisplayName = "App " + tag, Scenarios = [new Scenario { Id = testId, DisplayName = "Runs the app", Result = ExecutionResult.Passed }] }],
+                DateTime.UtcNow.AddMinutes(-1), DateTime.UtcNow,
+                new ReportConfigurationOptions
+                {
+                    ReportsFolderPath = reportsDir,
+                    GenerateSpecificationsReport = false,
+                    GenerateSpecificationsData = false,
+                    Parties = [new PartyDescriptor(app) { Kind = PartyKind.UnderTest }]
+                });
+            DefaultDiagramsFetcher.Reset();
+        }
+        await Page.GotoReportAsync(new Uri(Path.Combine(reportsDir, "TestRunReport.html")).AbsoluteUri);
+        await Page.Locator("details.feature").First.WaitForAsync();
+        await ExpandFirstScenarioWithDiagram();
+        var svg = (await WaitForDiagramSvg()).First;
+        await DispatchContextMenu(svg);
+        var menu = Page.Locator(".diagram-ctx-menu");
+        await menu.WaitForAsync(new() { Timeout = 5000 });
+        return await menu.Locator("*").EvaluateAllAsync<string[]>("els => els.filter(e => e.children.length === 0).map(e => e.textContent.trim()).filter(Boolean)");
+    }
+
+    [Fact]
+    public async Task A_declaring_runs_diagram_whose_test_made_no_call_offers_no_caller_payloads_to_copy()
+    {
+        // R2 (F2): the app is no longer drawn as the test's actor, so its own requests are not offered as the test's.
+        Assert.DoesNotContain("Copy all caller request payloads", await MenuItems(testCallsTheApp: false));
+        Assert.Contains("Copy all caller request payloads", await MenuItems(testCallsTheApp: true));
+    }
 }

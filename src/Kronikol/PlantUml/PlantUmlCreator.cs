@@ -1396,6 +1396,13 @@ public static partial class PlantUmlCreator
             .Select(t => t.CallerName)
             .FirstOrDefault(c => !allServiceNames.Contains(c));
 
+        // A participant is an alias, and any raw name with it gives it its role (#228, 5.4). The actor is the test's
+        // shape: in a run with roles, a party held as under test is never drawn as one (R2).
+        var rawNames = roles is null ? null : relevantTraces.SelectMany(t => new[] { t.CallerName, t.ServiceName })
+            .Distinct(StringComparer.Ordinal)
+            .ToLookup(SanitizePlantUmlAlias, StringComparer.Ordinal);
+        bool MayBeActor(string alias) => roles is null || roles.GroupOf(rawNames![alias]) != 2;
+
         // Build a lookup: callerName → CallerDependencyCategory (for caller participant shapes)
         var callerCategories = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
         foreach (var trace in relevantTraces)
@@ -1432,6 +1439,15 @@ public static partial class PlantUmlCreator
                     .Append("\" as ")
                     .Append(pureCallerAlias)
                     .AppendLine(pureCallerColor);
+            }
+            else if (!MayBeActor(pureCallerAlias))
+            {
+                // A pure caller the run holds as under test, the service in a scenario whose test made no tracked
+                // call (#228 F2): a box, as a service is.
+                sb.Append("participant \"")
+                    .Append(WrapParticipantName(pureCaller))
+                    .Append("\" as ")
+                    .AppendLine(pureCallerAlias);
             }
             else
             {
@@ -1487,8 +1503,11 @@ public static partial class PlantUmlCreator
                 }
                 else
                 {
-                    // Callers without a category: an actor (the first) or a box, as a service is (5.0.0, P20)
-                    sb.Append(actorDefined ? "participant" : "actor")
+                    // Callers without a category: an actor (the first, and the only one: #228 F7) or a box, as a
+                    // service is (5.0.0, P20). In a run with roles, never a party held as under test (R2).
+                    var actor = !actorDefined && MayBeActor(callerShortName);
+                    actorDefined |= actor;
+                    sb.Append(actor ? "actor" : "participant")
                         .Append(" \"")
                         .Append(WrapParticipantName(trace.CallerName))
                         .Append("\" as ")
@@ -1524,12 +1543,9 @@ public static partial class PlantUmlCreator
         // then the parties under test, then the rest, each group in the order above. Only the lines move, each as the
         // loop wrote it. A participant is an alias, and any raw name with it gives it its role (5.4).
         var firstAlias = pureCaller is null ? null : SanitizePlantUmlAlias(pureCaller);
-        var rawNames = relevantTraces.SelectMany(t => new[] { t.CallerName, t.ServiceName })
-            .Distinct(StringComparer.Ordinal)
-            .ToLookup(SanitizePlantUmlAlias, StringComparer.Ordinal);
         var text = sb.ToString();
         return string.Concat(declared
-            .OrderBy(d => d.Alias == firstAlias ? 0 : roles.GroupOf(rawNames[d.Alias]))
+            .OrderBy(d => d.Alias == firstAlias ? 0 : roles.GroupOf(rawNames![d.Alias]))
             .Select(d => text[d.Start..d.End]));
     }
 

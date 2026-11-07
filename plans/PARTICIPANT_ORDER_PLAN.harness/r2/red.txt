@@ -1,0 +1,15 @@
+R2's facts on R1's code (5.33.0, 455ee7f2), before R2's change, 2026-11-07:
+
+Failed ParticipantOrderTests.T8_a_subject_that_is_the_pure_caller_stays_first_drawn_as_a_service_not_the_actor
+Failed ParticipantOrderTests.T14_in_a_declaring_run_with_no_pure_caller_the_actor_is_the_test_party
+Failed ParticipantOrderTests.T11_with_no_pure_caller_the_test_parties_then_the_subject_then_the_rest
+Failed ParticipantOrderTests.T12_with_no_pure_caller_only_the_first_caller_without_a_category_is_an_actor
+
+T8_a_subject_that_is_the_pure_caller_stays_first_drawn_as_a_service_not_the_actor: Assert.Equal() Failure: Strings differ ↓ (pos 0)
+T14_in_a_declaring_run_with_no_pure_caller_the_actor_is_the_test_party: Assert.Equal() Failure: Collections differ at index 1 ↓ (pos 0)
+T11_with_no_pure_caller_the_test_parties_then_the_subject_then_the_rest: Assert.Equal() Failure: Collections differ at index 2 ↓ (pos 0)
+T12_with_no_pure_caller_only_the_first_caller_without_a_category_is_an_actor: Assert.Equal() Failure: Collections differ at index 2 ↓ (pos 0)
+
+Playwright, tests/Kronikol.Tests.EndToEnd/ParticipantOrderTests.cs, with 5.33.0's PlantUmlCreator.cs (455ee7f2):
+  Failed A_declaring_runs_diagram_whose_test_made_no_call_offers_no_caller_payloads_to_copy:
+    Assert.DoesNotContain() Failure: Item found in collection ("Copy all caller request payloads")

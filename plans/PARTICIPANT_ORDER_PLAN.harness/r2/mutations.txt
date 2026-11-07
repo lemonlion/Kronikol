@@ -1,0 +1,6 @@
+R2 mutations, run on R2's code on 5.33.0 with r2/mutate.py over the ParticipantOrder and DeclaredDouble facts, 2026-11-07.
+
+M9 caught by T11_with_no_pure_caller_the_test_parties_then_the_subject_then_the_rest, T12_with_no_pure_caller_only_the_first_caller_without_a_category_is_an_actor: leave the loop's actor unmarked (F7)
+M10 caught by T8_a_subject_that_is_the_pure_caller_stays_first_drawn_as_a_service_not_the_actor: draw a pure caller under test as the actor (F2)
+M11 caught by T11_with_no_pure_caller_the_test_parties_then_the_subject_then_the_rest, T14_in_a_declaring_run_with_no_pure_caller_the_actor_is_the_test_party: let the loop give the actor to a party under test
+M12 caught by A_declared_double_is_drawn_by_its_name_alone_in_every_diagram_the_run_draws, T2_no_roles_keeps_todays_order_and_every_byte, T8c_a_pure_caller_the_run_holds_as_neither_the_test_nor_under_test_keeps_its_actor: take the actor from every party not held as the test (5.6's first wording)

@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.34.1] - 2026-11-07
+
+The patch part moves (5.34.0 to 5.34.1): two fixes to which participant a sequence diagram draws as the test's stick figure, with nothing new to call (#228, `plans/PARTICIPANT_ORDER_PLAN.md` R2, Q3).
+
+### Fixed
+
+- **A service under test is no longer drawn as the test (#228 F2).** In a scenario whose test made no tracked call, the first caller no service calls is the service itself, and the diagram drew it as the `actor`, the shape it keeps for the test. In a run that declares its parties, a first caller the run holds as under test is now drawn as a service is, a box (or its category's shape, as before), and the stick figure is left to the test. A first caller held as anything else, such as a stub declared a double that starts the scenario, keeps it.
+- **A test with no caller that nobody calls draws one actor (F7).** The diagram drew each caller without a category as an `actor` until one was drawn, but only the first caller no service calls ever marked one drawn, so a test where every caller is also called drew every such caller as an actor, though the code meant only the first. It now draws the first as the actor and the rest as boxes, in every run; in a run that declares its parties, never a party the run holds as under test.
+
+### Changed behaviour
+
+- In a declaring run, a diagram whose test made no tracked call has no actor: the service under test is a box. On the reference consumer's latest run that is five of its 1,396 diagrams, and no other changes. "Copy all caller request payloads", which copies the requests of the diagram's actor, is not offered on such a diagram, where it copied the service's own requests as the test's.
+- A diagram with no caller that nobody calls draws one actor where it drew several. No diagram of the reference consumer's run has that shape.
+
+### Tests
+
+- `ParticipantOrderTests` gains T8b and T8c (a first caller with a category, and one held as neither the test nor under test, keep their shapes), T12 (one actor with no pure caller) and T14 (in a declaring run the actor is kept from the party under test), and T8 and T11 now pin R2's shapes; T8, T11, T12 and T14 fail on 5.34.0. A Playwright fact reads the context menu of a declaring run's diagram whose test made no tracked call, with a control. MUTATIONS.
+
 ## [5.34.0] - 2026-11-07
 
 The minor part moves (5.33.0 to 5.34.0): a parameterless `InternalFlowActivityListener` constructor and an `AddActivityListenerForInternalFlowTracking` overload with no names are new public surface, and three inputs become obsolete. It closes #138 (`plans/INTERNAL_FLOW_SOURCES_PLAN.md` R3 and R4).

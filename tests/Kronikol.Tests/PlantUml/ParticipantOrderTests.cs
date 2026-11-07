@@ -185,14 +185,36 @@ public partial class ParticipantOrderTests
     }
 
     [Fact]
-    public void T8_a_subject_that_is_the_pure_caller_stays_first_with_its_shape_in_R1()
+    public void T8_a_subject_that_is_the_pure_caller_stays_first_drawn_as_a_service_not_the_actor()
     {
+        // R2 (F2): the actor is the test's shape, so a declaring run draws its service under test as a box.
         List<RequestResponseLog> logs = [.. Call("app", "disk", "Database"), .. Call("app", "git", "Database")];
 
         var source = Source(logs, Roles(underTest: ["app"]));
 
-        Assert.Equal(Source(logs, roles: null), source);
-        Assert.StartsWith("actor \"app\" as app", DeclarationLines(source)[0], StringComparison.Ordinal);
+        Assert.Equal(["app", "disk", "git"], Aliases(source));
+        Assert.Equal("participant \"app\" as app", DeclarationLines(source)[0]);
+        Assert.DoesNotContain(DeclarationLines(source), l => l.StartsWith("actor ", StringComparison.Ordinal));
+        // a run that declares nothing still draws it as before
+        Assert.Equal("actor \"app\" as app", DeclarationLines(Source(logs, roles: null))[0]);
+    }
+
+    [Fact]
+    public void T8c_a_pure_caller_the_run_holds_as_neither_the_test_nor_under_test_keeps_its_actor()
+    {
+        // R2 takes the actor from a party under test only: a stub that starts the scenario, declared a double, keeps it.
+        List<RequestResponseLog> logs = [.. Call("stub", "app"), .. Call("app", "disk", "Database")];
+
+        Assert.Equal(["actor \"stub\" as stub", "participant \"app\" as app", "database \"disk\" as disk"],
+            DeclarationLines(Source(logs, Roles(underTest: ["app"]))));
+    }
+
+    [Fact]
+    public void T8b_a_pure_caller_with_a_category_keeps_its_categorys_shape_whatever_its_role()
+    {
+        List<RequestResponseLog> logs = [.. Call("broker", "app", callerCategory: "Kafka"), .. Call("app", "disk", "Database")];
+
+        Assert.Equal(Source(logs, roles: null), Source(logs, Roles(underTest: ["app", "broker"])));
     }
 
     [Fact]
@@ -225,9 +247,9 @@ public partial class ParticipantOrderTests
     }
 
     [Fact]
-    public void T11_with_no_pure_caller_the_test_parties_then_the_subject_then_the_rest_each_line_as_today()
+    public void T11_with_no_pure_caller_the_test_parties_then_the_subject_then_the_rest()
     {
-        // Every caller is also called, so there is no pure caller; each line is the one today's loop writes.
+        // Every caller is also called, so there is no pure caller.
         List<RequestResponseLog> logs =
         [
             .. Call("app", "disk", "Database"),
@@ -238,9 +260,38 @@ public partial class ParticipantOrderTests
 
         var moved = Source(logs, Roles(test: ["runner"], underTest: ["app"]));
 
-        Assert.Equal(["app", "disk", "runner"], Aliases(today));
-        Assert.Equal(["runner", "app", "disk"], Aliases(moved));
-        Assert.Equal(DeclarationLines(today).Order(StringComparer.Ordinal), DeclarationLines(moved).Order(StringComparer.Ordinal));
+        Assert.Equal(["actor \"app\" as app", "database \"disk\" as disk", "participant \"runner\" as runner"], DeclarationLines(today));
+        // R2: in a declaring run the actor is the test's party, and the subject a box
+        Assert.Equal(["actor \"runner\" as runner", "participant \"app\" as app", "database \"disk\" as disk"], DeclarationLines(moved));
+    }
+
+    [Fact]
+    public void T12_with_no_pure_caller_only_the_first_caller_without_a_category_is_an_actor()
+    {
+        // F7: the loop never marked its actor drawn, so every such caller met before it was called was an actor.
+        List<RequestResponseLog> logs =
+        [
+            .. Call("worker", "disk", "Database"),
+            .. Call("scheduler", "worker"),
+            .. Call("worker", "scheduler"),
+        ];
+
+        Assert.Equal(["actor \"worker\" as worker", "database \"disk\" as disk", "participant \"scheduler\" as scheduler"],
+            DeclarationLines(Source(logs, roles: null)));
+    }
+
+    [Fact]
+    public void T14_in_a_declaring_run_with_no_pure_caller_the_actor_is_the_test_party()
+    {
+        List<RequestResponseLog> logs =
+        [
+            .. Call("worker", "disk", "Database"),
+            .. Call("scheduler", "worker"),
+            .. Call("worker", "scheduler"),
+        ];
+
+        Assert.Equal(["actor \"scheduler\" as scheduler", "participant \"worker\" as worker", "database \"disk\" as disk"],
+            DeclarationLines(Source(logs, Roles(test: ["scheduler"], underTest: ["worker"]))));
     }
 
     [Fact]

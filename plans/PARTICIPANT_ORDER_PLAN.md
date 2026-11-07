@@ -1,7 +1,7 @@
 # Participant order plan (#228): the service under test next to the test
 
 **Status:** written 2026-11-07; **green-lit in full** by the owner the same day, each question at its recommendation
-(§12). R1 shipped as 5.33.0; R2 and the `BDDfy.html` patch (R4) to come. Written on `896ddad3` (5.31.1) and pushed
+(§12). R1 shipped as 5.33.0 and R2 as 5.34.1; the `BDDfy.html` patch (R4, #241) to come. Written on `896ddad3` (5.31.1) and pushed
 with R1. Checked again the same day on `55999241` (5.31.2), whose only change to
 the code cited here moved one line of the tracking handler; that pass measured R1's rule in full, read BDDfy's own
 code for when its batch processor runs, and corrected what §2.3, §5.3, §8 and §9 said (§11 lists each change).
@@ -596,6 +596,31 @@ own diagrams.
   sequence diagram's style block satisfies (`sequenceDiagram { partition { ... } }`), so on 5.32.0 it passed and P4 failed
   only at the order. It now matches the partition's own line, and on 5.32.0 P4 fails there: F4 reproduced on its own.
 - **Mutations** (`r1/mutate.py`, `r1/mutations.txt`): M1 to M8 each caught; M3 by P4 alone, M4 by P3 alone.
+
+### R2 (5.34.1)
+
+- **Code.** `CreateEntitiesPlantUml` reads the roles' raw names before it writes any line. In a run with roles, a pure
+  caller the run holds as under test is written as a service is, a `participant` (its category's shape when it has one,
+  as before), so the actor is left to the test (F2). The loop's caller without a category is the actor only while none
+  has been drawn, and it now marks one drawn (F7); in a run with roles, a party held as under test is never it. The pure
+  caller still marks the actor's place as taken whatever its shape, so a broker-first diagram is unchanged.
+- **Decided on the way.** §5.6 said a pure caller held as "anything other than `Test`" loses the actor; §6, Q3 and the
+  measurement say a party under test. The wider reading failed two facts the moment it ran: T2 (a declaring run whose
+  table holds no test and no subject lost its actor, so it no longer drew as a run that declares nothing) and
+  `DeclaredDoubleDiagramTests` (its run declares the scenario's first caller a double, which then lost its actor). R2
+  takes the narrower rule: only a party held as under test is kept from the actor, so F2 is fixed and a stub or a real
+  upstream that starts a scenario keeps the stick figure (T8c, M12). With no pure caller, F7's fix alone would make the
+  first caller the loop meets the actor, which in a declaring run can be the service under test, F2 by another path: in
+  a run with roles the loop skips a party under test (T14, M11).
+- **Measured.** Over the 1,412 diagrams kept from §2.4 and the example reports: 5 draw the service under test as the
+  actor (all `actor "Breakfast Provider"`, F2) and none draws more than one actor (F7), so R2 changes those 5 alone.
+- **Facts.** T8 pins the participant, T8b a pure caller with a category, T8c a pure caller held as neither, T11 the test
+  party as the actor, T12 one actor with no pure caller (F7), T14 the actor kept from the party under test; T8, T11, T12
+  and T14 fail on 5.34.0 (`r2/red.txt`). A Playwright fact: a declaring run's diagram whose test made no tracked call
+  does not offer "Copy all caller request payloads" (on 5.34.0 it offered the app's own request), and a control does.
+- **Mutations** (`r2/mutate.py`, `r2/mutations.txt`): M9 to M12, each caught.
+- **Kronikol4J.** F7 mirrored (`actorDefined` set where the loop draws its actor), with
+  `PlantUmlParityTest.oneActorWithNoPureCaller`, red before the fix; F2 not mirrored (no parties).
 
 ## Appendix A. Harness
 
