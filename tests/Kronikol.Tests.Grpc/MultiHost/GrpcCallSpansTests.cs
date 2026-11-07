@@ -9,7 +9,9 @@ namespace Kronikol.Tests.Grpc.MultiHost;
 /// #138: the spans of a gRPC call over a socket, as internal flow draws them (<c>plans/INTERNAL_FLOW_SOURCES_PLAN.md</c>).
 /// Each call made through the interceptor is Kronikol's span, grpc-dotnet's <c>GrpcOut</c> under it and HttpClient's
 /// request under that. The request's span came from no source, so every gRPC call had a step in an "Unknown" lane: 1,403
-/// of them in one report of the issue.
+/// of them in one report of the issue. Grpc.Net.Client 2.45.0, the floor CI also runs these facts on
+/// (<c>-p:FloorRun=true</c>), makes its span with <c>new Activity(...)</c>, with no
+/// source, and the report names it from its operation as it does any span made that way.
 /// </summary>
 public class GrpcCallSpansTests
 {
@@ -37,8 +39,9 @@ public class GrpcCallSpansTests
         var call = Assert.Single(RequestResponseLogger.RequestAndResponseLogs,
             l => l.TestId == _testId && l.ServiceName == b.Name && l.Type == RequestResponseType.Request);
         var spans = InternalFlowSpanStore.GetSpans().Where(s => s.TraceId.ToString() == call.ActivityTraceId).ToArray();
-        Assert.Contains(spans, s => s.Source.Name == "Grpc.Net.Client");
-        Assert.Contains(spans, s => s.Source.Name == "System.Net.Http");
-        Assert.DoesNotContain(spans, s => s.Source.Name == "");
+        var sources = spans.Select(s => FlowSpan.From(s).Source).ToArray();
+        Assert.Contains("Grpc.Net.Client", sources);
+        Assert.Contains("System.Net.Http", sources);
+        Assert.DoesNotContain("", sources);
     }
 }
