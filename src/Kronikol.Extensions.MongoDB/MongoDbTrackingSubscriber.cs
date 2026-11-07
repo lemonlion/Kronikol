@@ -26,6 +26,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
     private readonly MongoDbTrackingOptions _options;
     private readonly IHttpContextAccessor? _httpContextAccessor;
     private readonly ConcurrentDictionary<int, PendingOperation> _pending = new();
+    private readonly OpenCalls _open = new();
     private int _invocationCount;
 
     /// <summary>
@@ -226,7 +227,7 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             AutoCorrelateIfWrite(pending);
         var operation = pending.OpInfo.Operation;
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        Answer(pending.RequestResponseId, new RequestResponseLog(
             pending.TestInfo.Name, pending.TestInfo.Id,
             pending.Label,
             ReplyNote(reply, operation, effectiveVerbosity), pending.Uri,
@@ -275,18 +276,23 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
             error = message;
         }
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        // The server answered with a failure, or the client failed with no answer from it (a dropped connection, a timeout):
+        // the latter is answered with its exception's type, where it was a 500 no server sent before #232, which history's
+        // earlier rules still read.
+        var clientSide = e.Failure is { } failure && failure is not global::MongoDB.Driver.MongoServerException;
+        Answer(pending.RequestResponseId, new RequestResponseLog(
             pending.TestInfo.Name, pending.TestInfo.Id,
             pending.Label,
             FailureNote(result, message, effectiveVerbosity, _options.LogResponseContent), pending.Uri,
             [], _options.ServiceName, _options.CallerName,
             RequestResponseType.Response, pending.TraceId, pending.RequestResponseId, false,
-            HttpStatusCode.InternalServerError,
+            clientSide ? FailedSend.Status(e.Failure!) : HttpStatusCode.InternalServerError,
             DependencyCategory: DependencyCategories.MongoDB)
         {
-            Error = error,
+            Error = clientSide ? FailedSend.Describe(e.Failure!) : error,
             AttributionSource = pending.TestInfo.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            RecordedBefore12 = clientSide ? RecordedBefore.AnsweredWith(HttpStatusCode.InternalServerError) : null
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 MongoDbOperationClassifier.GetDiagramLabel(pending.OpInfo, v),
@@ -295,11 +301,20 @@ public class MongoDbTrackingSubscriber : ITrackingComponent, IEventSubscriber
                 v == MongoDbTrackingVerbosity.Summarised && pending.OpInfo.Operation == MongoDbOperation.Other)));
     }
 
+    // The answer ends the call its request opened (OpenCall): once, under the request's test and phase.
+    private void Answer(Guid requestResponseId, RequestResponseLog response)
+    {
+        if (_open.Take(requestResponseId) is { } call)
+            call.Answer(response);
+        else
+            RequestResponseLogger.Log(response);
+    }
+
     /// <summary>The request half of a command, with the note <paramref name="note"/> gives it at each verbosity.</summary>
     private void LogRequest(PendingOperation pending, Func<MongoDbTrackingVerbosity, string?> note, MongoDbTrackingVerbosity effectiveVerbosity, DateTimeOffset? timestamp, TestPhase phase)
     {
         var opInfo = pending.OpInfo;
-        RequestResponseLogger.Log(new RequestResponseLog(
+        _open.Open(new RequestResponseLog(
             pending.TestInfo.Name, pending.TestInfo.Id,
             pending.Label,
             note(effectiveVerbosity), pending.Uri,

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Reflection;
+using Kronikol.Tracking;
 using StackExchange.Redis;
 
 namespace Kronikol.Extensions.Redis;
@@ -46,7 +47,7 @@ public class RedisTrackingDatabase : DispatchProxy
         var (command, key) = MapMethodToCommand(targetMethod, args);
 
         if (command is null)
-            return targetMethod.Invoke(_inner, args);
+            return Call(targetMethod, args);
 
         var returnType = targetMethod.ReturnType;
 
@@ -69,13 +70,24 @@ public class RedisTrackingDatabase : DispatchProxy
     private object? InvokeSync(MethodInfo targetMethod, object?[]? args, string command, string? key)
     {
         var content = GetRequestContent(targetMethod, args);
-        var (reqId, traceId) = _tracker.LogRedisRequest(command, key, _inner.Database, content);
+        var call = _tracker.OpenRedisCall(command, key, _inner.Database, content);
 
-        var result = targetMethod.Invoke(_inner, args);
+        object? result;
+        try
+        {
+            result = Call(targetMethod, args);
+        }
+        catch (Exception ex)
+        {
+            // A command that throws is still an answer, its exception's type where the status would be (OpenCall, FailedSend).
+            // Before #232 it left the request alone, which history's earlier rules still read.
+            call?.Threw(ex, OpenCall.UnansweredBefore12);
+            throw;
+        }
 
         var hasResult = DetermineHasResult(result);
         var responseContent = GetResponseContent(result);
-        _tracker.LogRedisResponse(command, key, _inner.Database, hasResult, reqId, traceId, responseContent);
+        _tracker.AnswerRedisCall(call, command, key, _inner.Database, hasResult, responseContent);
 
         return result;
     }
@@ -83,9 +95,19 @@ public class RedisTrackingDatabase : DispatchProxy
     private object InvokeAsyncGeneric(MethodInfo targetMethod, object?[]? args, string command, string? key, Type returnType)
     {
         var content = GetRequestContent(targetMethod, args);
-        var (reqId, traceId) = _tracker.LogRedisRequest(command, key, _inner.Database, content);
+        var call = _tracker.OpenRedisCall(command, key, _inner.Database, content);
 
-        var task = targetMethod.Invoke(_inner, args)!;
+        object task;
+        try
+        {
+            task = Call(targetMethod, args)!;
+        }
+        catch (Exception ex)
+        {
+            // An async command that throws before it has a task.
+            call?.Threw(ex, OpenCall.UnansweredBefore12);
+            throw;
+        }
         var innerType = returnType.GetGenericArguments()[0];
 
         // Use reflection to call TrackAsyncResult<T>
@@ -93,16 +115,25 @@ public class RedisTrackingDatabase : DispatchProxy
             .GetMethod(nameof(TrackAsyncResult), BindingFlags.NonPublic | BindingFlags.Instance)!
             .MakeGenericMethod(innerType);
 
-        return method.Invoke(this, [task, command, key, reqId, traceId])!;
+        return method.Invoke(this, BindingFlags.DoNotWrapExceptions, null, [task, command, key, call], null)!;
     }
 
-    private async Task<T> TrackAsyncResult<T>(object task, string command, string? key, Guid reqId, Guid traceId)
+    private async Task<T> TrackAsyncResult<T>(object task, string command, string? key, OpenCall? call)
     {
-        var result = await ((Task<T>)task);
+        T result;
+        try
+        {
+            result = await ((Task<T>)task);
+        }
+        catch (Exception ex)
+        {
+            call?.Threw(ex, OpenCall.UnansweredBefore12);
+            throw;
+        }
 
         var hasResult = DetermineHasResult(result);
         var responseContent = GetResponseContent(result);
-        _tracker.LogRedisResponse(command, key, _inner.Database, hasResult, reqId, traceId, responseContent);
+        _tracker.AnswerRedisCall(call, command, key, _inner.Database, hasResult, responseContent);
 
         return result;
     }
@@ -110,12 +141,25 @@ public class RedisTrackingDatabase : DispatchProxy
     private async Task InvokeAsyncVoid(MethodInfo targetMethod, object?[]? args, string command, string? key)
     {
         var content = GetRequestContent(targetMethod, args);
-        var (reqId, traceId) = _tracker.LogRedisRequest(command, key, _inner.Database, content);
+        var call = _tracker.OpenRedisCall(command, key, _inner.Database, content);
 
-        await (Task)targetMethod.Invoke(_inner, args)!;
+        try
+        {
+            await (Task)Call(targetMethod, args)!;
+        }
+        catch (Exception ex)
+        {
+            call?.Threw(ex, OpenCall.UnansweredBefore12);
+            throw;
+        }
 
-        _tracker.LogRedisResponse(command, key, _inner.Database, false, reqId, traceId, null);
+        _tracker.AnswerRedisCall(call, command, key, _inner.Database, false, null);
     }
+
+    // The client's own method, its exception handed on as the client threw it: MethodInfo.Invoke wraps one in a
+    // TargetInvocationException, which reached the application in place of the client's own (FAILED_CALLS_PLAN.md F16).
+    private object? Call(MethodInfo targetMethod, object?[]? args) =>
+        targetMethod.Invoke(_inner, BindingFlags.DoNotWrapExceptions, null, args, null);
 
     // ─── Method-to-command mapping ─────────────────────────────
 

@@ -15,6 +15,7 @@ namespace Kronikol;
 /// </summary>
 public class TrackingDbCommand : DbCommand
 {
+    private readonly OpenCalls _open = new();
     private readonly DbCommand _inner;
     private readonly TrackingDbConnection _connection;
     private readonly DapperTrackingOptions _options;
@@ -237,7 +238,7 @@ public class TrackingDbCommand : DbCommand
             ? BuildParameterizedContent()
             : _options.LogSqlText ? CommandText : null;
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        _open.Open(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -272,11 +273,12 @@ public class TrackingDbCommand : DbCommand
         return (traceId, requestResponseId);
     }
 
-    internal void LogResponse(Guid traceId, Guid requestResponseId, int? rowsAffected = null, Exception? exception = null)
+    internal void LogResponse(Guid traceId, Guid requestResponseId, int? rowsAffected = null, Exception? exception = null,
+        RecordedBefore? before12 = null)
     {
         try
         {
-            ResponseLogged(traceId, requestResponseId, rowsAffected, exception);
+            ResponseLogged(traceId, requestResponseId, rowsAffected, exception, before12);
         }
         catch (Exception ex)
         {
@@ -284,14 +286,14 @@ public class TrackingDbCommand : DbCommand
         }
     }
 
-    private void ResponseLogged(Guid traceId, Guid requestResponseId, int? rowsAffected, Exception? exception)
+    private void ResponseLogged(Guid traceId, Guid requestResponseId, int? rowsAffected, Exception? exception, RecordedBefore? before12)
     {
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         var op = DapperOperationClassifier.Classify(CommandText, CommandType);
         if (_options.ExcludedOperations.Contains(op.Operation)) return;
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = IdentityOf(requestResponseId);
         if (testInfo is null) return;
 
         var label = DapperOperationClassifier.GetDiagramLabel(op, effectiveVerbosity);
@@ -303,7 +305,7 @@ public class TrackingDbCommand : DbCommand
             ? null
             : exception is not null ? exception.Message : rowsAffected.HasValue ? $"{rowsAffected.Value.ToString(CultureInfo.InvariantCulture)} rows affected" : null;
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        Answer(requestResponseId, new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -320,7 +322,9 @@ public class TrackingDbCommand : DbCommand
             DependencyCategory: DependencyCategories.SQL)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            Error = exception is null ? null : FailedSend.Describe(exception),
+            RecordedBefore12 = before12
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
             {
@@ -363,7 +367,7 @@ public class TrackingDbCommand : DbCommand
         var op = DapperOperationClassifier.Classify(CommandText, CommandType);
         if (_options.ExcludedOperations.Contains(op.Operation)) return;
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = IdentityOf(requestResponseId);
         if (testInfo is null) return;
 
         var label = DapperOperationClassifier.GetDiagramLabel(op, effectiveVerbosity);
@@ -373,7 +377,7 @@ public class TrackingDbCommand : DbCommand
         var uri = BuildUri(op, effectiveVerbosity);
         var responseContent = effectiveVerbosity == DapperTrackingVerbosity.Summarised && !_options.LogResponseContent ? null : contentAt(effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        Answer(requestResponseId, new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -413,7 +417,24 @@ public class TrackingDbCommand : DbCommand
             _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity, DapperTrackingVerbosity.Summarised);
         return new TrackingDbDataReader(
             inner, detail, _options.MaxResponseRows, _options.MaxValueDisplayLength, behavior,
-            rowsAt => LogRowsResponse(traceId, requestResponseId, rowsAt));
+            rowsAt => LogRowsResponse(traceId, requestResponseId, rowsAt),
+            // A reader that fails partway was answered at Close, as a success with the rows read so far, before #232.
+            ex => LogResponse(traceId, requestResponseId, exception: ex, before12: RecordedBefore.AnsweredWith("OK")));
+    }
+
+    // The test an answer belongs to: its request's, read once, when the request was logged (OpenCall); read now only for a call
+    // this command did not open.
+    private TestIdentity? IdentityOf(Guid requestResponseId) => _open.Find(requestResponseId) is { } call
+        ? new TestIdentity(call.Request.TestName, call.Request.TestId, call.Request.AttributionSource ?? AttributionSource.None)
+        : TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+
+    // The answer ends the call its request opened; one the command did not open is logged as it is.
+    private void Answer(Guid requestResponseId, RequestResponseLog response)
+    {
+        if (_open.Take(requestResponseId) is { } call)
+            call.Answer(response);
+        else
+            RequestResponseLogger.Log(response);
     }
 
     private string? FormatScalar(object? result) =>

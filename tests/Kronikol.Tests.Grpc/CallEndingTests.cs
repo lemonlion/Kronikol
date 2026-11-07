@@ -3,6 +3,7 @@ using System.Net;
 using Grpc.Core;
 using Kronikol.Extensions.Grpc;
 using Kronikol.Tracking;
+using Kronikol.Tests.Tracking;
 
 namespace Kronikol.Tests.Grpc;
 
@@ -26,6 +27,21 @@ public class CallEndingTests
 
     private RequestResponseLog[] Responses() => RequestResponseLogger.RequestAndResponseLogs
         .Where(l => l.TestId == _testId && l.Type == RequestResponseType.Response).ToArray();
+
+    [Fact]
+    public void History_rules_before_12_read_the_500_a_failure_without_an_RpcException_had()
+    {
+        // 5.31.1 answered it 500 (plans/FAILED_CALLS_PLAN.harness/results/failed-calls-5.31.1.txt), and every older rule still
+        // reads that, so a suite that upgrades sees no change there; rule 12 reads the exception's type.
+        var thrown = new InvalidOperationException("the channel is shut down");
+        Assert.ThrowsAny<Exception>(() => new GrpcTrackingInterceptor(Options())
+            .BlockingUnaryCall<string, string>("request", CallKinds.Context(CallKind.BlockingUnary), (_, _) => throw thrown));
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId).ToArray();
+
+        Assert.Equal("!InvalidOperationException", Assert.Single(Kronikol.History.InteractionShape.Calls(logs, null, 12)).Status);
+        foreach (var rule in Kronikol.History.InteractionShape.KeptVersions.Where(v => v < 12))
+            Assert.Equal("500", Assert.Single(Kronikol.History.InteractionShape.Calls(logs, null, rule)).Status);
+    }
 
     public static readonly TheoryData<CallKind> StreamingKinds = new(CallKind.ServerStreaming, CallKind.ClientStreaming, CallKind.Duplex);
 
@@ -177,6 +193,7 @@ public class CallEndingTests
     [InlineData(CallKind.AsyncUnary, "other")]
     [InlineData(CallKind.BlockingUnary, "cancelled")]
     [InlineData(CallKind.BlockingUnary, "other")]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public async Task A_unary_call_that_fails_without_an_RpcException_is_logged_as_its_failure(CallKind kind, string failure)
     {
         // A channel with ThrowOperationCanceledOnCancellation throws OperationCanceledException where it would throw
@@ -208,8 +225,10 @@ public class CallEndingTests
         }
         else
         {
-            Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode!.Value);
-            Assert.Equal("Unknown: the channel is shut down", response.Content);
+            // No gRPC status was sent: answered with the exception's type (FAILED_CALLS_PLAN.md Q2), where it was a made-up 500.
+            Assert.Equal(FailedSend.Status(thrown), response.StatusCode!.Value);
+            Assert.Equal("the channel is shut down", response.Content);
+            Assert.Equal(FailedSend.Describe(thrown), response.Error);
         }
     }
 
@@ -237,8 +256,9 @@ public class CallEndingTests
         }));
 
         var response = Assert.Single(Responses());
-        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode!.Value);
-        Assert.StartsWith("Unknown: ", response.Content);
+        Assert.Equal(FailedSend.Status(thrown), response.StatusCode!.Value);
+        Assert.Equal(thrown.Message, response.Content);
+        Assert.Equal(FailedSend.Describe(thrown), response.Error);
     }
 
     // ─── A stream's other endings ───────────────────────────────
@@ -267,8 +287,9 @@ public class CallEndingTests
         Assert.Same(thrown, await Assert.ThrowsAnyAsync<Exception>(() => call.ResponseStream.MoveNext(CancellationToken.None)));
 
         var response = Assert.Single(Responses());
-        Assert.Equal(failure == "cancelled" ? HttpStatusCode.RequestTimeout : HttpStatusCode.InternalServerError, response.StatusCode!.Value);
-        Assert.Equal(failure == "cancelled" ? "Cancelled: the caller cancelled" : "Unknown: the connection dropped", response.Content);
+        Assert.Equal(failure == "cancelled" ? HttpStatusCode.RequestTimeout : FailedSend.Status(thrown), response.StatusCode!.Value);
+        Assert.Equal(failure == "cancelled" ? "Cancelled: the caller cancelled" : "the connection dropped", response.Content);
+        Assert.Equal(FailedSend.Describe(thrown), response.Error);
     }
 
     [Theory]

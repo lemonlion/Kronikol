@@ -66,6 +66,9 @@ public static class FailuresDigestGenerator
     /// </summary>
     public const int MaxCallsPerFailure = 8;
 
+    /// <summary>The status a call's line gives a request nobody answered (plans/FAILED_CALLS_PLAN.md F27).</summary>
+    internal const string NoAnswer = "no answer";
+
     /// <summary>Characters of a statement or URI kept on its one line.</summary>
     private const int OneLineLimit = 120;
 
@@ -345,7 +348,9 @@ public static class FailuresDigestGenerator
                 $"{address}/i{index}",
                 log.ServiceName,
                 Summarise(log),
-                response?.StatusCode?.Value?.ToString(),
+                // A request nobody answered says so, as query flow does, where it said nothing, as an answer with no status
+                // does (plans/FAILED_CALLS_PLAN.md F27). A user action is never answered.
+                response is null && !log.IsUserAction ? NoAnswer : response?.StatusCode?.Value?.ToString(),
                 Duration(log, response),
                 response?.Error);
         }
@@ -387,11 +392,8 @@ public static class FailuresDigestGenerator
 
         static bool IsError((int Index, RequestResponseLog Log) request, Dictionary<Guid, RequestResponseLog> responses)
         {
-            if (!responses.TryGetValue(request.Log.RequestResponseId, out var response))
-                return false;
-
-            var (code, text) = InteractionStatus.Split(response.StatusCode);
-            return InteractionStatus.IsError(code?.ToString(CultureInfo.InvariantCulture), text);
+            // The one reading of a failed answer: its status, or a reason its capturer read (plans/FAILED_CALLS_PLAN.md §5.4).
+            return responses.TryGetValue(request.Log.RequestResponseId, out var response) && InteractionStatus.Failed(response);
         }
     }
 

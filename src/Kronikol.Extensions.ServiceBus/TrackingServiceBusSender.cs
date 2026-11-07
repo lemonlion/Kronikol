@@ -35,15 +35,15 @@ public class TrackingServiceBusSender : ServiceBusSender
         InjectTestIdentityProperties(message);
         var op = ServiceBusOperationClassifier.Classify("SendMessageAsync", EntityPath, null);
         var content = GetMessageContent(message);
-        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        var call = _tracker.Open(op, content);
         try
         {
             await _inner.SendMessageAsync(message, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
+            _tracker.Answer(call, op, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -60,15 +60,15 @@ public class TrackingServiceBusSender : ServiceBusSender
         var content = ServiceBusTracker.ShowsContent(_options)
             ? $"[{messageList.Count} messages]"
             : null;
-        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        var call = _tracker.Open(op, content);
         try
         {
             await _inner.SendMessagesAsync(messageList, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
+            _tracker.Answer(call, op, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -84,15 +84,15 @@ public class TrackingServiceBusSender : ServiceBusSender
         var content = ServiceBusTracker.ShowsContent(_options)
             ? $"[{messageBatch.Count} messages]"
             : null;
-        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        var call = _tracker.Open(op, content);
         try
         {
             await _inner.SendMessagesAsync(messageBatch, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
+            _tracker.Answer(call, op, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -103,16 +103,16 @@ public class TrackingServiceBusSender : ServiceBusSender
         InjectTestIdentityProperties(message);
         var op = ServiceBusOperationClassifier.Classify("ScheduleMessageAsync", EntityPath, null);
         var content = GetMessageContent(message);
-        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        var call = _tracker.Open(op, content);
         try
         {
             var result = await _inner.ScheduleMessageAsync(message, scheduledEnqueueTime, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, $"SequenceNumber: {result}");
+            _tracker.Answer(call, op, $"SequenceNumber: {result}");
             return result;
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -125,15 +125,15 @@ public class TrackingServiceBusSender : ServiceBusSender
     public override async Task CancelScheduledMessageAsync(long sequenceNumber, CancellationToken cancellationToken = default)
     {
         var op = ServiceBusOperationClassifier.Classify("CancelScheduledMessageAsync", EntityPath, null);
-        var (reqId, traceId) = _tracker.LogRequest(op, $"SequenceNumber: {sequenceNumber}");
+        var call = _tracker.Open(op, $"SequenceNumber: {sequenceNumber}");
         try
         {
             await _inner.CancelScheduledMessageAsync(sequenceNumber, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
+            _tracker.Answer(call, op, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }

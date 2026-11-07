@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using Kronikol.History;
 using Kronikol.InternalFlow;
+using Kronikol.Reports;
 using Kronikol.Tracking;
 
 namespace Kronikol.ComponentDiagram;
@@ -208,9 +209,11 @@ public static class ComponentFlowSegmentBuilder
                 {
                     statusDist.TryAdd(sc, 0);
                     statusDist[sc]++;
-                    if ((int)sc >= 400)
-                        errorCount++;
                 }
+                // Every failed answer counts, a call that threw and a SQL failure among them, where only a numeric code of 400
+                // or more did (plans/FAILED_CALLS_PLAN.md F19).
+                if (InteractionStatus.Failed(call.Response))
+                    errorCount++;
             }
 
             // Payload sizes
@@ -240,7 +243,7 @@ public static class ComponentFlowSegmentBuilder
                 .Select(g =>
                 {
                     var epDurations = g.Select(c => c.DurationMs).OrderBy(d => d).ToArray();
-                    var epErrors = g.Count(c => c.Response.StatusCode?.Value is HttpStatusCode sc && (int)sc >= 400);
+                    var epErrors = g.Count(c => InteractionStatus.Failed(c.Response));
                     return new EndpointStats(
                         Method: g.Key.Method,
                         Path: g.Key.Path,
@@ -494,8 +497,7 @@ public static class ComponentFlowSegmentBuilder
         var testErrorSets = new Dictionary<string, HashSet<string>>();
         foreach (var req in logs.Where(l => l.Type == RequestResponseType.Request && !l.TrackingIgnore && !l.IsOverrideStart && !l.IsOverrideEnd && !l.IsActionStart))
         {
-            if (responseLookup.TryGetValue(req.RequestResponseId, out var res)
-                && res.StatusCode?.Value is System.Net.HttpStatusCode sc && (int)sc >= 400)
+            if (responseLookup.TryGetValue(req.RequestResponseId, out var res) && InteractionStatus.Failed(res))
             {
                 var relKey = $"{req.CallerName} \u2192 {req.ServiceName}";
                 if (!testErrorSets.TryGetValue(req.TestId, out var set))

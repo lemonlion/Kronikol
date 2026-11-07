@@ -85,6 +85,8 @@
 		<InternalsVisibleTo Include="Kronikol.Extensions.S3" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.ServiceBus" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.SNS" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.Elasticsearch" />
+		<InternalsVisibleTo Include="Kronikol.Extensions.TcpTap" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.SQS" />
 		<InternalsVisibleTo Include="Kronikol.Extensions.StorageQueues" />
 		<!-- MessageTable and CallGraphBuilder: each broker package's tests hold its row of the service card's message table
@@ -96,6 +98,14 @@
 		<InternalsVisibleTo Include="Kronikol.Tests.ServiceBus" />
 		<InternalsVisibleTo Include="Kronikol.Tests.SNS" />
 		<InternalsVisibleTo Include="Kronikol.Tests.SQS" />
+		<InternalsVisibleTo Include="Kronikol.Tests.Grpc" />
+		<InternalsVisibleTo Include="Kronikol.Tests.TcpTap" />
+		<InternalsVisibleTo Include="Kronikol.Tests.Elasticsearch" />
+		<InternalsVisibleTo Include="Kronikol.Tests.Sqlite" />
+		<InternalsVisibleTo Include="Kronikol.Tests.CosmosDB" />
+		<InternalsVisibleTo Include="Kronikol.Tests.S3" />
+		<InternalsVisibleTo Include="Kronikol.Tests.DynamoDB" />
+		<InternalsVisibleTo Include="Kronikol.Tests.AtlasDataApi" />
 		<InternalsVisibleTo Include="Kronikol.Tests.StorageQueues" />
 		<InternalsVisibleTo Include="Kronikol.Tests.BigQuery" />
 		<InternalsVisibleTo Include="Kronikol.Tests.CloudStorage" />

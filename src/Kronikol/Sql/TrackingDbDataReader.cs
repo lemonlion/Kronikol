@@ -24,6 +24,7 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
     private readonly int _maxRows;
     private readonly int _maxValueLen;
     private readonly Action<Func<SqlResponseDetail, string>> _onComplete;
+    private readonly Action<Exception>? _onFailure;
     private readonly bool _sequential;
     private readonly List<ResultSet> _sets = [new()];
     private Dictionary<string, object?>? _rowBeingRead;
@@ -76,9 +77,11 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
         int maxRows,
         int maxValueLen,
         CommandBehavior behavior,
-        Action<Func<SqlResponseDetail, string>> onComplete)
+        Action<Func<SqlResponseDetail, string>> onComplete,
+        Action<Exception>? onFailure = null)
     {
         _inner = inner;
+        _onFailure = onFailure;
         _detail = detail;
         _maxRows = Math.Max(0, maxRows);
         _maxValueLen = maxValueLen;
@@ -95,7 +98,17 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
     public override bool Read()
     {
         FinishRowBeingRead();
-        if (!_inner.Read())
+        bool read;
+        try
+        {
+            read = _inner.Read();
+        }
+        catch (Exception ex)
+        {
+            Failed(ex);
+            throw;
+        }
+        if (!read)
             return false;
 
         OnRow();
@@ -105,7 +118,17 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
     public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
     {
         FinishRowBeingRead();
-        if (!await _inner.ReadAsync(cancellationToken))
+        bool read;
+        try
+        {
+            read = await _inner.ReadAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Failed(ex);
+            throw;
+        }
+        if (!read)
             return false;
 
         OnRow();
@@ -115,7 +138,16 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
     public override bool NextResult()
     {
         BeforeNextResult();
-        var more = _inner.NextResult();
+        bool more;
+        try
+        {
+            more = _inner.NextResult();
+        }
+        catch (Exception ex)
+        {
+            Failed(ex);
+            throw;
+        }
         AfterNextResult(more);
         return more;
     }
@@ -123,9 +155,35 @@ public sealed class TrackingDbDataReader : DbDataReader, IDbColumnSchemaGenerato
     public override async Task<bool> NextResultAsync(CancellationToken cancellationToken)
     {
         BeforeNextResult();
-        var more = await _inner.NextResultAsync(cancellationToken);
+        bool more;
+        try
+        {
+            more = await _inner.NextResultAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Failed(ex);
+            throw;
+        }
         AfterNextResult(more);
         return more;
+    }
+
+    // A reader that fails partway answers its call as failed, where it was answered at Close with the rows read so far, as
+    // a success (FAILED_CALLS_PLAN.md F10). Without a failure callback, the public wrapper's, it is answered at Close as before.
+    private void Failed(Exception exception)
+    {
+        if (_onFailure is null || _logged)
+            return;
+        _logged = true;
+        try
+        {
+            _onFailure(exception);
+        }
+        catch (Exception)
+        {
+            // An answer that cannot be made is left out of the report; the caller's exception goes on.
+        }
     }
 
     private void BeforeNextResult()

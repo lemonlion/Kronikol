@@ -39,7 +39,7 @@ public class MassTransitTrackerTests
         var op = new MassTransitOperationInfo(MassTransitOperation.Send, "OrderCreated", new Uri("rabbitmq://localhost/orders"));
         tracker.LogSend(op, new TestMessage("ORD-1", 99.99m));
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 12,
             "TestCaller>MassTransit Send OrderCreated /orders -");
     }
 
@@ -266,6 +266,25 @@ public class MassTransitTrackerTests
 
         var log = GetLogsFromThisTest().First(l => l.Type == RequestResponseType.Response);
         Assert.Equal("Fault", log.StatusCode?.Value?.ToString());
+    }
+
+    public static TheoryData<string> Faults() => ["send", "publish", "consume"];
+
+    [Theory]
+    [Trait(Kronikol.Tests.Tracking.FailedCallContract.Trait, Kronikol.Tests.Tracking.FailedCallContract.Value)]
+    [MemberData(nameof(Faults))]
+    public void A_fault_is_answered_Fault_with_why(string kind)
+    {
+        // MassTransit writes a fault as a call of its own, both halves at once; its answer says why (FAILED_CALLS_PLAN.md F23).
+        var tracker = new MassTransitTracker(MakeOptions());
+        var thrown = new InvalidOperationException("Connection refused", new IOException("broker down"));
+        var op = new MassTransitOperationInfo(MassTransitOperation.SendFault, "OrderCreated", new Uri("rabbitmq://localhost/orders"));
+
+        if (kind == "send") tracker.LogSendFault(op, thrown);
+        else if (kind == "publish") tracker.LogPublishFault(op, thrown);
+        else tracker.LogConsumeFault(op, thrown);
+
+        Kronikol.Tests.Tracking.FailedCallContract.AssertAnswered(GetLogsFromThisTest(), thrown, status: "Fault");
     }
 
     [Fact]

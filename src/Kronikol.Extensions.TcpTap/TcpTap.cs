@@ -1012,6 +1012,7 @@ public class TcpTap : IAsyncDisposable
             ActivityTraceId = activityTraceId,
             ActivitySpanId = activitySpanId,
             Phase = _options.Phase,
+            RecordedBefore12 = interaction.RecordedSince12 ? RecordedBefore.NotRecorded : null,
         });
 
         _options.Sink.Log(new RequestResponseLog(

@@ -480,6 +480,10 @@ public static class OtlpSpanMapper
                     return numeric >= 400
                         ? (OtlpStatusCode.Error, numeric.ToString(CultureInfo.InvariantCulture), ServiceMessage(log))
                         : (OtlpStatusCode.Unset, numeric.ToString(CultureInfo.InvariantCulture), null);
+                // A failure's message is its reason where it has one, not its status word (plans/FAILED_CALLS_PLAN.md F21), and a
+                // reason beside a word the list does not name is a failure, as every reader of a call's outcome reads it (§5.4).
+                if (ServiceMessage(log) is { } reason)
+                    return (OtlpStatusCode.Error, null, reason);
                 return IsFailureText(text) ? (OtlpStatusCode.Error, null, text) : (OtlpStatusCode.Unset, null, null);
             }
         }

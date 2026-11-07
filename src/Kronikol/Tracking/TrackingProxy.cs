@@ -112,7 +112,9 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
 
         try
         {
-            var result = targetMethod.Invoke(_target, args);
+            // The target's own exception, its stack as it was: MethodInfo.Invoke wraps one in a TargetInvocationException,
+            // which was unwrapped with `throw ex.InnerException;` and so lost the frames that threw it (FAILED_CALLS_PLAN.md F17).
+            var result = targetMethod.Invoke(_target, BindingFlags.DoNotWrapExceptions, null, args, null);
 
             if (result is Task task)
             {
@@ -133,25 +135,22 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
                     .MakeGenericMethod(valueTaskType.GetGenericArguments()[0])
                     .Invoke(this, [result, methodName, uri, requestContent, activity, startedAt]);
 
+            // A stream is answered when its enumeration ends, or fails, where it was answered as it was returned, with the
+            // iterator's type name as its note (FAILED_CALLS_PLAN.md F24).
+            if (targetMethod.ReturnType is { IsGenericType: true } streamType && streamType.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>) && result is not null)
+                return typeof(TrackingProxy<T>)
+                    .GetMethod(nameof(TrackStream), BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .MakeGenericMethod(streamType.GetGenericArguments()[0])
+                    .Invoke(this, BindingFlags.DoNotWrapExceptions, null, [result, methodName, uri, requestContent, activity, startedAt, CancellationToken.None], null);
+
             var responseContent = TrackingSafeSerializer.Serialize(result, _options.SerializerOptions);
             LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.OK, activity, startedAt);
             InternalFlowSpanStore.Complete(activity);
             return result;
         }
-        catch (TargetInvocationException ex) when (ex.InnerException is not null)
-        {
-            var responseContent = $"{ex.InnerException.GetType().Name}: {ex.InnerException.Message}";
-            activity?.SetStatus(ActivityStatusCode.Error, responseContent);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity, startedAt);
-            InternalFlowSpanStore.Complete(activity);
-            throw ex.InnerException;
-        }
         catch (Exception ex)
         {
-            var responseContent = $"{ex.GetType().Name}: {ex.Message}";
-            activity?.SetStatus(ActivityStatusCode.Error, responseContent);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity, startedAt);
-            InternalFlowSpanStore.Complete(activity);
+            LogFailure(methodName, uri, requestContent, ex, activity, startedAt, HttpStatusCode.InternalServerError);
             throw;
         }
     }
@@ -169,10 +168,7 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
         }
         catch (Exception ex)
         {
-            var responseContent = $"{ex.GetType().Name}: {ex.Message}";
-            activity?.SetStatus(ActivityStatusCode.Error, responseContent);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity, startedAt);
-            InternalFlowSpanStore.Complete(activity);
+            LogFailure(methodName, uri, requestContent, ex, activity, startedAt, HttpStatusCode.InternalServerError);
             throw;
         }
     }
@@ -192,10 +188,7 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
         }
         catch (Exception ex)
         {
-            var responseContent = $"{ex.GetType().Name}: {ex.Message}";
-            activity?.SetStatus(ActivityStatusCode.Error, responseContent);
-            LogInteraction(methodName, uri, requestContent, responseContent, HttpStatusCode.InternalServerError, activity, startedAt);
-            InternalFlowSpanStore.Complete(activity);
+            LogFailure(methodName, uri, requestContent, ex, activity, startedAt, HttpStatusCode.InternalServerError);
             throw;
         }
     }
@@ -217,8 +210,73 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
         return HandleAsyncResultVoid(task, methodName, uri, requestContent, activity, startedAt);
     }
 
+    private async IAsyncEnumerable<TItem> TrackStream<TItem>(IAsyncEnumerable<TItem> stream, string methodName, Uri uri,
+        string? requestContent, Activity? activity, DateTimeOffset startedAt,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var count = 0;
+        var answered = false;
+        IAsyncEnumerator<TItem> items;
+        try
+        {
+            items = stream.GetAsyncEnumerator(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            LogFailure(methodName, uri, requestContent, ex, activity, startedAt, HttpStatusCode.OK);
+            throw;
+        }
+        await using var _ = items;
+        try
+        {
+            while (true)
+            {
+                bool more;
+                try
+                {
+                    more = await items.MoveNextAsync();
+                }
+                catch (Exception ex)
+                {
+                    answered = true;
+                    LogFailure(methodName, uri, requestContent, ex, activity, startedAt, HttpStatusCode.OK);
+                    throw;
+                }
+                if (!more)
+                    break;
+                count++;
+                yield return items.Current;
+            }
+        }
+        finally
+        {
+            // Read to its end, or left by its caller: answered with how many items it gave.
+            if (!answered)
+            {
+                LogInteraction(methodName, uri, requestContent,
+                    count.ToString(System.Globalization.CultureInfo.InvariantCulture) + (count == 1 ? " item" : " items"),
+                    HttpStatusCode.OK, activity, startedAt);
+                InternalFlowSpanStore.Complete(activity);
+            }
+        }
+    }
+
+    // A call that threw: the exception's type where the status would be and its message chain as the error (FailedSend), its
+    // type and message kept as the note. Before #232 the proxy made up a 500 for it, or answered a stream that failed as the
+    // success it was returned as, which history's earlier rules still read: statusThen.
+    private void LogFailure(string methodName, Uri uri, string? requestContent, Exception exception, Activity? activity,
+        DateTimeOffset startedAt, HttpStatusCode statusThen)
+    {
+        var responseContent = $"{exception.GetType().Name}: {exception.Message}";
+        activity?.SetStatus(ActivityStatusCode.Error, responseContent);
+        LogInteraction(methodName, uri, requestContent, responseContent, FailedSend.Status(exception), activity, startedAt,
+            FailedSend.Describe(exception), RecordedBefore.AnsweredWith(statusThen));
+        InternalFlowSpanStore.Complete(activity);
+    }
+
     private void LogInteraction(string methodName, Uri uri, string? requestContent,
-        string? responseContent, HttpStatusCode statusCode, Activity? activity, DateTimeOffset startedAt)
+        string? responseContent, OneOf<HttpStatusCode, string> statusCode, Activity? activity, DateTimeOffset startedAt,
+        string? error = null, RecordedBefore? before12 = null)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
@@ -227,9 +285,15 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
         {
             PendingRequestResponseLogs.Enqueue(new PendingLogEntry(
                 _options.ServiceName, _options.CallerName,
-                methodName, requestContent, responseContent, uri, statusCode,
+                methodName, requestContent, responseContent, uri,
+                statusCode.Value is HttpStatusCode code ? code : HttpStatusCode.InternalServerError,
                 activity?.TraceId.ToString(), activity?.SpanId.ToString(),
-                _options.DependencyCategory));
+                _options.DependencyCategory)
+            {
+                Status = statusCode,
+                Error = error,
+                ResponseBefore12 = before12
+            });
             return;
         }
 
@@ -247,6 +311,7 @@ public partial class TrackingProxy<T> : DispatchProxy where T : class
             statusCode,
             TestPhaseContext.Current,
             _options.DependencyCategory, testInfo.Value.Source,
-            requestAt: startedAt, responseAt: DateTimeOffset.UtcNow);
+            requestAt: startedAt, responseAt: DateTimeOffset.UtcNow,
+            error: error, responseBefore12: before12);
     }
 }

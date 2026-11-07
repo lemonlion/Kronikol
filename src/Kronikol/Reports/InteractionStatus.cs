@@ -110,4 +110,20 @@ public static class InteractionStatus
                && !text.StartsWith("OK", StringComparison.OrdinalIgnoreCase)
                && !NonErrorStatuses.Contains(text);
     }
+
+    /// <summary>
+    /// The one reading of how an answered call ended (plans/FAILED_CALLS_PLAN.md §5.4): it failed when its status says so
+    /// (<see cref="IsError"/>), or when it carries a reason in <c>Error</c>, which every failed answer a Kronikol tracker writes
+    /// does. The digest, <c>query flow --errors-only</c>, <c>query failures</c>, the component diagram and the OTLP export all
+    /// read it, where they read four rules between them.
+    /// </summary>
+    internal static bool Failed(string? statusCode, string? statusText, string? error) =>
+        IsError(statusCode, statusText) || !string.IsNullOrWhiteSpace(error);
+
+    /// <summary>The same reading of a logged answer.</summary>
+    internal static bool Failed(RequestResponseLog response)
+    {
+        var (code, text) = Split(response.StatusCode);
+        return Failed(code?.ToString(CultureInfo.InvariantCulture), text, response.Error);
+    }
 }

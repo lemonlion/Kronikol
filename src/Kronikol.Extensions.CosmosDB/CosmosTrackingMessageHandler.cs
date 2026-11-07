@@ -81,7 +81,7 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
             ? request.RequestUri!
             : BuildCleanUri(request.RequestUri!, cosmosOp, effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        var call = OpenCall.Open(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -118,33 +118,15 @@ public class CosmosTrackingMessageHandler : DelegatingHandler, ITrackingComponen
         }
         catch (Exception ex)
         {
-            // A call that threw (an emulator refusing the connection, a timeout) is still an answer: the
-            // exception's type where the status would be and its message chain in Error. See FailedSend.
-            RequestResponseLogger.Log(new RequestResponseLog(
-                testInfo.Value.Name,
-                testInfo.Value.Id,
-                method,
-                null,
-                requestUri,
-                [],
-                _options.ServiceName,
-                _options.CallerName,
-                RequestResponseType.Response,
-                traceId,
-                requestResponseId,
-                false,
-                FailedSend.Status(ex),
-                DependencyCategory: DependencyCategories.CosmosDB)
-            {
-                Error = FailedSend.Describe(ex),
-                AttributionSource = testInfo.Value.Source,
-                Phase = TestPhaseContext.Current
-            });
+            // A call that threw (an emulator refusing the connection, a timeout) is still an answer: the exception's type where
+            // the status would be and its message chain in Error, the request's phase variants among what it takes from the
+            // request (OpenCall, FailedSend).
+            call.Threw(ex);
             throw;
         }
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        call.Answer(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,

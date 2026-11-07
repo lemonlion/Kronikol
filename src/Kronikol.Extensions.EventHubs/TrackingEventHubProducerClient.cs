@@ -54,18 +54,18 @@ public class TrackingEventHubProducerClient : EventHubProducerClient
             "SendAsync", _inner.EventHubName, null, events.Count);
         var content = EventHubsTracker.ShowsContent(_options)
             ? SerializeEvents(events) : null;
-        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        var call = _tracker.Open(op, content);
 
         try
         {
             await _inner.SendAsync(events, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
+        _tracker.Answer(call, op, content: null, rawContent: null);
     }
 
     public override async Task SendAsync(
@@ -80,18 +80,18 @@ public class TrackingEventHubProducerClient : EventHubProducerClient
             "SendAsync", _inner.EventHubName, partitionId, events.Count);
         var content = EventHubsTracker.ShowsContent(_options)
             ? SerializeEvents(events) : null;
-        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        var call = _tracker.Open(op, content);
 
         try
         {
             await _inner.SendAsync(events, sendOptions, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
+        _tracker.Answer(call, op, content: null, rawContent: null);
     }
 
     public override async Task SendAsync(
@@ -100,18 +100,18 @@ public class TrackingEventHubProducerClient : EventHubProducerClient
     {
         var op = EventHubsOperationClassifier.Classify(
             "SendAsync", _inner.EventHubName, null, eventBatch.Count);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        var call = _tracker.Open(op, null);
 
         try
         {
             await _inner.SendAsync(eventBatch, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
+        _tracker.Answer(call, op, content: null, rawContent: null);
     }
 
     public override async ValueTask<EventDataBatch> CreateBatchAsync(

@@ -161,7 +161,8 @@ public static class RequestResponseLogger
         // Logged after the call, so both records carry this one instant, which the data files read as a call that
         // measured nothing (no durationMs) rather than one that took no time.
         var now = DateTimeOffset.UtcNow;
-        LogPair(testName, testId, method, uri, serviceName, callerName, requestContent, responseContent, statusCode, phase,
+        LogPair(testName, testId, method, uri, serviceName, callerName, requestContent, responseContent,
+            statusCode is not null ? (OneOf<HttpStatusCode, string>)statusCode.Value : null, phase,
             dependencyCategory, source, requestAt: now, responseAt: now);
     }
 
@@ -177,12 +178,14 @@ public static class RequestResponseLogger
         string callerName,
         string? requestContent,
         string? responseContent,
-        HttpStatusCode? statusCode,
+        OneOf<HttpStatusCode, string>? statusCode,
         TestPhase phase,
         string? dependencyCategory,
         AttributionSource? source,
         DateTimeOffset requestAt,
-        DateTimeOffset responseAt)
+        DateTimeOffset responseAt,
+        string? error = null,
+        RecordedBefore? responseBefore12 = null)
     {
         var traceId = Guid.NewGuid();
         var requestResponseId = Guid.NewGuid();
@@ -198,12 +201,14 @@ public static class RequestResponseLogger
 
         Log(new RequestResponseLog(testName, testId, method, responseContent, uri,
             [], serviceName, callerName, RequestResponseType.Response, traceId, requestResponseId, false,
-            statusCode is not null ? (OneOf<HttpStatusCode, string>)statusCode.Value : null,
+            statusCode,
             DependencyCategory: dependencyCategory)
         {
             Timestamp = responseAt,
             Phase = phase,
-            AttributionSource = source
+            AttributionSource = source,
+            Error = error,
+            RecordedBefore12 = responseBefore12
         });
     }
 

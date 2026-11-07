@@ -109,11 +109,23 @@ public class TrackingEventHubConsumerClient : EventHubConsumerClient
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var op = EventHubsOperationClassifier.Classify(operation, _inner.EventHubName, partitionId);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        var call = _tracker.Open(op, null);
 
         var eventCount = 0;
         var failed = false;
-        await using var events = read(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        IAsyncEnumerator<PartitionEvent> reader;
+        try
+        {
+            reader = read(cancellationToken).GetAsyncEnumerator(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // A reader that cannot be made (a closed client, a bad position) is the read's answer: before #232 it left the
+            // request alone.
+            _tracker.Threw(call, ex);
+            throw;
+        }
+        await using var events = reader;
         try
         {
             while (true)
@@ -126,7 +138,7 @@ public class TrackingEventHubConsumerClient : EventHubConsumerClient
                 catch (Exception ex)
                 {
                     failed = true;
-                    _tracker.LogResponse(op, reqId, traceId, ex.Message);
+                    _tracker.Threw(call, ex);
                     throw;
                 }
                 if (!more)
@@ -139,7 +151,7 @@ public class TrackingEventHubConsumerClient : EventHubConsumerClient
         finally
         {
             if (!failed)
-                _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: $"Events: {eventCount}");
+                _tracker.Answer(call, op, content: null, rawContent: $"Events: {eventCount}");
         }
     }
 

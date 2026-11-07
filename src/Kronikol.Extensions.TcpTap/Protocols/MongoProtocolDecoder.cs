@@ -214,6 +214,20 @@ public sealed class MongoProtocolDecoder : IProtocolDecoder
             _context.ReportClosedMidMessage(detail);
         }
 
+        // A command the server never answered is still a call: answered with the close, where it was dropped (FAILED_CALLS_PLAN.md Q5).
+        var closedAt = DateTimeOffset.UtcNow;
+        foreach (var pending in _pending.Values.OrderBy(p => p.Timestamp))
+        {
+            var closed = TapInteraction.ClosedBeforeTheReply();
+            var label = MongoDbOperationClassifier.GetDiagramLabel(pending.Info, _verbosity);
+            _context.Record(new TapInteraction(
+                label, label, pending.Uri, Redact(pending.RequestContent), null, FailedSend.Status(closed), pending.Timestamp, closedAt)
+            {
+                Error = FailedSend.Describe(closed),
+                RecordedSince12 = true,
+            });
+        }
+
         Clear();
     }
 

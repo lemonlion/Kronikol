@@ -37,19 +37,20 @@ public class TrackingPublisherClient : PublisherClient
             "PublishAsync", _inner.TopicName?.ToString(), null, 1);
         var content = PubSubTracker.DrawnAt(_options).Any(v => v != PubSubTrackingVerbosity.Summarised)
             ? message.Data?.ToStringUtf8() : null;
-        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        var call = _tracker.Open(op, content, rawContent: null);
 
+        string messageId;
         try
         {
-            var messageId = await _inner.PublishAsync(message);
-            _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: $"MessageId: {messageId}");
-            return messageId;
+            messageId = await _inner.PublishAsync(message);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
+        _tracker.Answer(call, op, content: null, rawContent: $"MessageId: {messageId}");
+        return messageId;
     }
 
     /// <summary>
@@ -64,22 +65,21 @@ public class TrackingPublisherClient : PublisherClient
         var bodies = PubSubTracker.DrawnAt(_options).Contains(PubSubTrackingVerbosity.Raw)
             ? string.Join(", ", messageList.Select(m => m.Data?.ToStringUtf8() ?? ""))
             : null;
-        var (reqId, traceId) = _tracker.LogRequest(op, content: null, rawContent: bodies);
+        var call = _tracker.Open(op, content: null, rawContent: bodies);
 
+        var ids = new List<string>();
         try
         {
-            var ids = new List<string>();
             foreach (var msg in messageList)
                 ids.Add(await _inner.PublishAsync(msg));
-
-            _tracker.LogResponse(op, reqId, traceId, null);
-            return ids;
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
+        _tracker.Answer(call, op, content: null, rawContent: null);
+        return ids;
     }
 
     public override Task ShutdownAsync(TimeSpan timeout) => _inner.ShutdownAsync(timeout);

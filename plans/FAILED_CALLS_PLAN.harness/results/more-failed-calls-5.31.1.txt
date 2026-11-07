@@ -1,0 +1,29 @@
+== 1. DeferredLogFlushHandler, a send that throws, then one that does not (F28)
+  caller caught InvalidOperationException: the app threw
+  pending after test-A's call: 1
+  records under test-A: 0
+  test-B's call answered 200
+  pending after test-B's call: 0
+  records under test-A: 0
+  records under test-B: 4
+    Request  Do           mock://work/IWork/Do status=(none) content="[   1 ]" error=(null) id=bbcda975
+    Response Do           mock://work/IWork/Do status=OK content="2" error=(null) id=bbcda975
+    Request  Do           mock://work/IWork/Do status=(none) content="[   1 ]" error=(null) id=814eb916
+    Response Do           mock://work/IWork/Do status=OK content="2" error=(null) id=814eb916
+== 2. EF Core: the token cancelled after the interceptor logged the request (F8)
+  caller caught OperationCanceledException: The operation was canceled.
+  EF Core called: CommandCanceledAsync
+  records under ef-cancel: 1
+    Request  Select       sql://localhost/main/Rows status=(none) content="SELECT "r"."Id" FROM "Rows" AS "r"" error=(null) id=70b1f8f9
+== 3. Sqlite: a reader whose second row fails (F10)
+  row: 1
+  caller caught SqliteException: SQLite Error 1: 'integer overflow'.
+  records under partial-reader: 2
+    Request  SELECT FROM ? sqlite://localhost/main status=(none) content="SELECT 1 UNION ALL SELECT abs(-9223372036854775808)" error=(null) id=ffdfef87
+    Response              sqlite:/// status=OK content="[{"1":1}]" error=(null) id=ffdfef87
+== 4. TrackingProxy: an IAsyncEnumerable that throws after one item (F24)
+  item: 1
+  caller caught InvalidOperationException: the stream broke
+  records under proxy-stream: 2
+    Request  Items        mock://streamer/IStreamer/Items status=(none) content=(null) error=(null) id=61f49b21
+    Response Items        mock://streamer/IStreamer/Items status=OK content=""Streamer+<Items>d__0"" error=(null) id=61f49b21

@@ -9,6 +9,7 @@ using Kronikol.Extensions.ClickHouse.Driver;
 using Kronikol.PlantUml;
 using Kronikol.Sql;
 using Kronikol.Tests.ClickHouse.Fakes;
+using Kronikol.Tests.Tracking;
 using Kronikol.Tracking;
 using Xunit;
 
@@ -347,6 +348,7 @@ public class TrackingClickHouseClientTests : IDisposable
 
     [Theory]
     [MemberData(nameof(RecordedMembers))]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public async Task A_call_that_fails_records_an_Error_response_with_its_message_and_rethrows_the_same_exception(string member)
     {
         var rejected = new InvalidOperationException("Code: 60. DB::Exception: Unknown table expression identifier 'orders'");
@@ -358,6 +360,7 @@ public class TrackingClickHouseClientTests : IDisposable
         var (_, response) = Single(Logs());
         Assert.Equal("Error", response.StatusCode?.Value?.ToString());
         Assert.Equal(rejected.Message, response.Content);
+        FailedCallContract.AssertAnswered(Logs(), rejected, "Error");
     }
 
     [Fact]

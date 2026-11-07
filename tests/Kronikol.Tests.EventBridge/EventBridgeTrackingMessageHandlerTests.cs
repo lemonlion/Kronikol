@@ -110,7 +110,7 @@ public class EventBridgeTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(MakeOptions());
         await invoker.SendAsync(MakePutEventsRequest(), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 12,
             "TestCaller>EventBridge PutEvents [OrderCreated] /default/ 200");
     }
 

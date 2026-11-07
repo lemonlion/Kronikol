@@ -40,6 +40,7 @@
 
   <ItemGroup>
     <Compile Include="..\Kronikol.Tests\History\HistoryGuard.cs" Link="HistoryGuard.cs" />
+    <Compile Include="..\Kronikol.Tests\Tracking\FailedCallContract.cs" Link="FailedCallContract.cs" />
   </ItemGroup>
 
 </Project>

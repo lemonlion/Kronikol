@@ -41,14 +41,21 @@ public class ServiceBusTracker : ITrackingComponent
 
     public (Guid RequestResponseId, Guid TraceId) LogRequest(
         ServiceBusOperationInfo operation, string? content)
+        => Open(operation, content) is { } call ? (call.Request.RequestResponseId, call.Request.TraceId) : (Guid.Empty, Guid.Empty);
+
+    /// <summary>
+    /// Logs a request and opens its call (<see cref="OpenCall"/>), which the client ends with <see cref="Answer"/> or
+    /// <see cref="Threw"/>. Null when the call is not tracked.
+    /// </summary>
+    internal OpenCall? Open(ServiceBusOperationInfo operation, string? content)
     {
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return (Guid.Empty, Guid.Empty);
+        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return null;
 
         Interlocked.Increment(ref _invocationCount);
 
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
-            return (Guid.Empty, Guid.Empty);
+            return null;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
@@ -67,7 +74,7 @@ public class ServiceBusTracker : ITrackingComponent
             ? RequestResponseMetaType.Event
             : RequestResponseMetaType.Default;
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        return OpenCall.Open(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -92,22 +99,52 @@ public class ServiceBusTracker : ITrackingComponent
                 BuildUri(operation, v),
                 v == ServiceBusTrackingVerbosity.Summarised ? null : content,
                 [], false)));
-
-        return (requestResponseId, traceId);
     }
 
     public void LogResponse(
         ServiceBusOperationInfo operation,
         Guid requestResponseId, Guid traceId, string? content)
     {
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
+        if (Response(operation, requestResponseId, traceId, content) is { } response)
+            RequestResponseLogger.Log(response);
+    }
+
+    /// <summary>Ends <paramref name="call"/> with its answer, <paramref name="content"/> its note.</summary>
+    internal void Answer(OpenCall? call, ServiceBusOperationInfo operation, string? content)
+    {
+        if (call is not null && Response(operation, call.Request.RequestResponseId, call.Request.TraceId, content) is { } response)
+            call.Answer(response);
+    }
+
+    /// <summary>
+    /// Ends <paramref name="call"/> for a call that threw: the exception's type where the status would be and its message chain
+    /// as the error (<see cref="OpenCall.Threw"/>), and its message as the note at each verbosity that draws one, as a failure
+    /// was drawn before #232, when it was answered with no status, which history's earlier rules read as no answer alike.
+    /// </summary>
+    internal void Threw(OpenCall? call, Exception exception) =>
+        call?.Threw(exception, answer => answer with
+        {
+            Content = Note(exception.Message, PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity)),
+            SetupVariant = answer.SetupVariant is { } setup ? setup with { Content = Note(exception.Message, _options.SetupVerbosity ?? _options.Verbosity) } : null,
+            ActionVariant = answer.ActionVariant is { } action ? action with { Content = Note(exception.Message, _options.ActionVerbosity ?? _options.Verbosity) } : null,
+            RecordedBefore12 = RecordedBefore.NotRecorded
+        });
+
+    private static string? Note(string? content, ServiceBusTrackingVerbosity verbosity) =>
+        verbosity == ServiceBusTrackingVerbosity.Summarised ? null : content;
+
+    private RequestResponseLog? Response(
+        ServiceBusOperationInfo operation,
+        Guid requestResponseId, Guid traceId, string? content)
+    {
+        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return null;
 
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
-            return;
+            return null;
 
         if (requestResponseId == Guid.Empty)
-            return;
+            return null;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
@@ -123,7 +160,7 @@ public class ServiceBusTracker : ITrackingComponent
             ? RequestResponseMetaType.Event
             : RequestResponseMetaType.Default;
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        return new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -147,7 +184,7 @@ public class ServiceBusTracker : ITrackingComponent
                 ServiceBusOperationClassifier.GetDiagramLabel(operation, v),
                 BuildUri(operation, v),
                 v == ServiceBusTrackingVerbosity.Summarised ? null : content,
-                [], false)));
+                [], false));
     }
 
     private Uri BuildUri(ServiceBusOperationInfo op, ServiceBusTrackingVerbosity effectiveVerbosity)

@@ -40,7 +40,7 @@ public class KafkaTrackerTests
         var op = new KafkaOperationInfo(KafkaOperation.ProduceAsync, "orders-topic");
         tracker.LogProduce(op, "hello");
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 12,
             "TestCaller>Kafka Produce → orders-topic /orders-topic -");
     }
 

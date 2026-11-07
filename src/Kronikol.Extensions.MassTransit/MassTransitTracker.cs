@@ -237,7 +237,9 @@ public class MassTransitTracker : ITrackingComponent
             DependencyCategory: DependencyCategories.MessageQueue)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            // Why the message faulted, as every failed answer says (FAILED_CALLS_PLAN.md F23).
+            Error = FailedSend.Describe(exception)
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 MassTransitOperationClassifier.GetDiagramLabel(op, v),

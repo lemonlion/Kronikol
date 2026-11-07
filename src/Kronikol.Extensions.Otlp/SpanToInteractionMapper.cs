@@ -408,8 +408,15 @@ public static class SpanToInteractionMapper
             span.StartTime,
             span.EndTime,
             span.TraceId,
-            span.SpanId);
+            span.SpanId)
+        {
+            // The span's message is the failure's reason as well as its note; a span that names no reason still says it failed.
+            Error = !failed ? null : string.IsNullOrWhiteSpace(responseContent) ? NoMessage : responseContent,
+        };
     }
+
+    /// <summary>The reason an ERROR span's answer carries when the span gives no message of its own.</summary>
+    internal const string NoMessage = "The span's status is ERROR, with no message.";
 
     /// <summary>The test id a trace belongs to: the trace id itself on the exact-attribution path, else the fallback.</summary>
     internal static string ResolveTestId(string traceId, OtlpTapOptions options)

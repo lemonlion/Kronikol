@@ -204,7 +204,35 @@ public sealed class RedisProtocolDecoder : IProtocolDecoder
             _context.ReportClosedMidMessage(detail);
         }
 
+        // A command the server never answered is still a call: answered with the close, where it was dropped (FAILED_CALLS_PLAN.md Q5).
+        var closedAt = DateTimeOffset.UtcNow;
+        foreach (var pending in _pending)
+            if (pending.Record)
+                RecordUnanswered(pending, closedAt);
+
         Clear();
+    }
+
+    private void RecordUnanswered(PendingCommand pending, DateTimeOffset closedAt)
+    {
+        var key = pending.Key is null ? null : Redact(_options.KeyRedaction, pending.Key);
+        var operation = RedisOperationClassifier.Classify(pending.Verb, hasResult: false, key, pending.Database);
+        if (_verbosity == RedisTrackingVerbosity.Summarised && operation.Operation == RedisOperation.Other)
+            return;
+
+        var label = RedisOperationClassifier.GetDiagramLabel(operation, _verbosity) ?? operation.Operation.ToString();
+        OneOf<HttpMethod, string> method = _verbosity == RedisTrackingVerbosity.Raw ? pending.Verb : label;
+        var requestContent = _verbosity == RedisTrackingVerbosity.Summarised || pending.RequestContent is null
+            ? null
+            : Redact(_options.ValueRedaction, pending.RequestContent);
+        var closed = TapInteraction.ClosedBeforeTheReply();
+
+        _context.Record(new TapInteraction(
+            method, method, BuildUri(key, pending.Database), requestContent, null, FailedSend.Status(closed), pending.Timestamp, closedAt)
+        {
+            Error = FailedSend.Describe(closed),
+            RecordedSince12 = true,
+        });
     }
 
     /// <inheritdoc />

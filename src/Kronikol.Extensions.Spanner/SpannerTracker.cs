@@ -15,6 +15,7 @@ public class SpannerTracker : ITrackingComponent
 {
     private readonly SpannerTrackingOptions _options;
     private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly OpenCalls _open = new();
     private int _invocationCount;
 
     public SpannerTracker(SpannerTrackingOptions options, IHttpContextAccessor? httpContextAccessor = null)
@@ -58,7 +59,7 @@ public class SpannerTracker : ITrackingComponent
         var logContent = effectiveVerbosity == SpannerTrackingVerbosity.Summarised ? null :
             effectiveVerbosity == SpannerTrackingVerbosity.Raw ? (rawContent ?? content) : content;
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        _open.Open(new RequestResponseLog(
             testInfo.Value.Name, testInfo.Value.Id,
             method, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
@@ -97,16 +98,20 @@ public class SpannerTracker : ITrackingComponent
             verbosity => contentAt(_options.ResolveResponseDetail(verbosity)), rawContent, status: null);
 
     /// <summary>
-    /// Logs the response of a call that failed: status <c>Error</c>, with the exception's message as its content.
-    /// Without it a failed call is drawn as an answer with nothing in it.
+    /// Logs the response of a call that failed: status <c>Error</c>, with the exception's message as its content and its
+    /// message chain as the error (<see cref="FailedSend.Describe"/>). Without it a failed call is drawn as an answer with
+    /// nothing in it. <paramref name="answeredSince12"/>: the call was left unanswered, or answered as a success, before #232,
+    /// which history's earlier rules still read (<see cref="RequestResponseLog.RecordedBefore12"/>).
     /// </summary>
-    internal void LogFailure(SpannerOperationInfo operation, Guid requestResponseId, Guid traceId, Exception exception)
-        => LogResponseCore(operation, requestResponseId, traceId, _ => exception.Message, rawContent: null, status: "Error");
+    internal void LogFailure(SpannerOperationInfo operation, Guid requestResponseId, Guid traceId, Exception exception,
+        bool answeredSince12 = false)
+        => LogResponseCore(operation, requestResponseId, traceId, _ => exception.Message, rawContent: null, status: "Error",
+            error: FailedSend.Describe(exception), before12: answeredSince12 ? RecordedBefore.NotRecorded : null);
 
     private void LogResponseCore(
         SpannerOperationInfo operation,
         Guid requestResponseId, Guid traceId, Func<SpannerTrackingVerbosity, string?> contentAt, string? rawContent,
-        OneOf<HttpStatusCode, string>? status)
+        OneOf<HttpStatusCode, string>? status, string? error = null, RecordedBefore? before12 = null)
     {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
         if (_options.ExcludedOperations.Contains(operation.Operation)) return;
@@ -126,7 +131,7 @@ public class SpannerTracker : ITrackingComponent
         var logContent = effectiveVerbosity == SpannerTrackingVerbosity.Summarised && !_options.LogResponseContent ? null :
             effectiveVerbosity == SpannerTrackingVerbosity.Raw ? (rawContent ?? contentAt(effectiveVerbosity)) : contentAt(effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        Answer(requestResponseId, new RequestResponseLog(
             testInfo.Value.Name, testInfo.Value.Id,
             method, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
@@ -134,7 +139,9 @@ public class SpannerTracker : ITrackingComponent
             DependencyCategory: DependencyCategories.Spanner)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            Error = error,
+            RecordedBefore12 = before12
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 v == SpannerTrackingVerbosity.Raw
@@ -144,6 +151,15 @@ public class SpannerTracker : ITrackingComponent
                 v == SpannerTrackingVerbosity.Summarised && !_options.LogResponseContent ? null :
                     v == SpannerTrackingVerbosity.Raw ? (rawContent ?? contentAt(v)) : contentAt(v),
                 [], false)));
+    }
+
+    // The answer ends the call its request opened (OpenCall); one the tracker did not open, a consumer's own pair, is logged as it is.
+    private void Answer(Guid requestResponseId, RequestResponseLog response)
+    {
+        if (_open.Take(requestResponseId) is { } call)
+            call.Answer(response);
+        else
+            RequestResponseLogger.Log(response);
     }
 
     private static Uri BuildUri(SpannerOperationInfo op, SpannerTrackingVerbosity effectiveVerbosity)
@@ -219,7 +235,7 @@ public class SpannerTracker : ITrackingComponent
             // A call that failed is drawn with its error, as through the ADO.NET command and the interceptor: the
             // status is all the observer has of it, so the status names it.
             if (statusCode is { } code && code != StatusCode.OK)
-                tracker.LogResponseCore(op, reqId, traceId, _ => code.ToString(), rawContent: null, status: "Error");
+                tracker.LogResponseCore(op, reqId, traceId, _ => code.ToString(), rawContent: null, status: "Error", error: code.ToString());
             else
                 tracker.LogResponse(op, reqId, traceId, null);
         }

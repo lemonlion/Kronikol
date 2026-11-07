@@ -84,4 +84,16 @@ public sealed record TapInteraction(
 
     /// <summary>Why a failed exchange failed, in the server's words; stamped on the response half's <c>Error</c>. Null when it did not fail.</summary>
     internal string? Error { get; init; }
+
+    /// <summary>
+    /// A command the tap recorded no interaction for before #232: one whose connection closed before its reply, which it dropped
+    /// and only counted. History's earlier rules read no call here (<see cref="RequestResponseLog.RecordedBefore12"/>).
+    /// </summary>
+    internal bool RecordedSince12 { get; init; }
+
+    /// <summary>
+    /// The reply a command never got: its connection closed first. Answered as a call that threw is (<see cref="FailedSend"/>),
+    /// with the close standing for the exception.
+    /// </summary>
+    internal static IOException ClosedBeforeTheReply() => new("The connection closed before the server replied.");
 }

@@ -91,7 +91,7 @@ public class TestTrackingMessageHandlerTests : IDisposable
         using var invoker = CreateInvoker(DefaultOptions());
         await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Post, "http://target-service:5000/api/items/42?expand=1"), CancellationToken.None);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 12,
             "TestCaller>TargetService POST /api/items/{n}?expand 200");
     }
 
@@ -109,6 +109,7 @@ public class TestTrackingMessageHandlerTests : IDisposable
     }
 
     [Fact]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public async Task A_send_that_throws_leaves_a_response_naming_the_exception_and_rethrows()
     {
         // Before: the request stood alone, the template read "-" for its status and nothing said why.
@@ -127,6 +128,28 @@ public class TestTrackingMessageHandlerTests : IDisposable
         Assert.Equal("Error while copying content to a stream. Caused by: The pipe was advanced too far.", response.Error);
         Assert.Null(response.Content);
         Assert.NotNull(response.Timestamp);
+    }
+
+    [Fact]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
+    public async Task A_response_whose_body_breaks_off_is_answered_with_the_exceptions_type_and_the_responses_focus()
+    {
+        // The body is read inside the same try as the send (3.18.0); on OpenCall the answer still takes the response's own
+        // focus, which the request never had (FAILED_CALLS_PLAN.md §5.2's adjust).
+        var thrown = new InvalidOperationException("The response body broke off.");
+        DiagramFocus.Response("id");
+        using var invoker = new HttpMessageInvoker(new TestTrackingMessageHandler(DefaultOptions())
+        {
+            InnerHandler = new FailedCallContract.AnsweringHandler(() => FailedCallContract.BrokenBody(thrown))
+        });
+
+        var caught = await Assert.ThrowsAsync<InvalidOperationException>(() => invoker.SendAsync(MakeGetRequest(), CancellationToken.None));
+
+        FailedCallContract.AssertUntouched(caught, thrown);
+        var (_, answer) = FailedCallContract.AssertAnswered(GetLogsFromThisTest(), thrown);
+        Assert.Equal(["id"], answer.FocusFields);
+        foreach (var rule in Kronikol.History.InteractionShape.KeptVersions)
+            Assert.Equal("!InvalidOperationException", Assert.Single(Kronikol.History.InteractionShape.Calls(GetLogsFromThisTest(), null, rule)).Status);
     }
 
     [Fact]

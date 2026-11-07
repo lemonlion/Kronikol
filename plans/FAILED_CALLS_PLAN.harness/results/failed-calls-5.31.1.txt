@@ -1,0 +1,525 @@
+Kronikol 5.31.1+db26e5cb56bbee3547127b8e5e5469b5ea7e1357
+Kronikol packages: 5.31.1, for all 20 (Kronikol, Kronikol.Extensions.AtlasDataApi, Kronikol.Extensions.BigQuery, Kronikol.Extensions.CosmosDB, Kronikol.Extensions.DispatchProxy, Kronikol.Extensions.DynamoDB, Kronikol.Extensions.Elasticsearch, Kronikol.Extensions.EventBridge, Kronikol.Extensions.EventHubs, Kronikol.Extensions.Grpc, Kronikol.Extensions.Kafka, Kronikol.Extensions.MassTransit, Kronikol.Extensions.PubSub, Kronikol.Extensions.Redis, Kronikol.Extensions.S3, Kronikol.Extensions.ServiceBus, Kronikol.Extensions.SNS, Kronikol.Extensions.Spanner, Kronikol.Extensions.SQS, Kronikol.Extensions.StorageQueues)
+SDKs: AWSSDK.Core 4.0.3.3, AWSSDK.SQS 4.0.2.5, AWSSDK.SimpleNotificationService 4.0.2.7, AWSSDK.EventBridge 4.0.5.7, AWSSDK.S3 4.0.13.1, AWSSDK.DynamoDBv2 4.0.10.1, Azure.Core 1.44.1, Azure.Storage.Queues 12.11.0, Azure.Messaging.EventHubs 5.6.0, Azure.Messaging.ServiceBus 7.11.0, Microsoft.Azure.Cosmos 3.46.0, Google.Cloud.BigQuery.V2 3.0.0, Google.Cloud.PubSub.V1 3.35.0, Google.Cloud.Spanner.Data 5.0.0, Grpc.Core.Api 2.71.0, Grpc.Net.Client 2.71.0, Google.Protobuf 3.31.1, Confluent.Kafka 2.2.0, MassTransit 9.0.0, StackExchange.Redis 2.6.80, Elastic.Clients.Elasticsearch 9.0.0, Elastic.Transport 0.5.9
+
+SQS: a send that throws
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    1 records
+    Request  SendMessage                        kind Event   status -                        content other                error none                 variants none         table Publishes
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>SQS SendMessage /orders -
+    arrow: caller -[#9B59B6]> sQS: SendMessage: /orders
+    event card <color:#686868>[Host=sqs.us-east-1.amazonaws.com] <color:#686868>[x-amz-api-vers...
+
+SNS: a publish that throws
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    1 records
+    Request  Publish                            kind Event   status -                        content other                error none                 variants none         table Publishes
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>SNS Publish / -
+    arrow: caller -[#9B59B6]> sNS: Publish: /
+    event card <color:#686868>[Host=sns.us-east-1.amazonaws.com] <color:#686868>[X-Amz-Content-...
+
+EventBridge: a put that throws
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    1 records
+    Request  PutEvents [OrderPlaced]            kind Event   status -                        content other                error none                 variants none         table Publishes
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>EventBridge PutEvents [OrderPlaced] /orders-bus/ -
+    arrow: caller -[#9B59B6]> eventBridge: PutEvents <U+005B>OrderPlaced<U+005D>: /
+    event card <color:#686868>[Host=events.us-east-1.amazonaws.com] <color:#686868>[x-amz-api-v...
+
+Storage Queues: a send that throws
+    the caller saw: RequestFailedException from its task; the very object the inner threw: no, it wraps it (the HttpRequestException thrown is 1 deep, and that one's own stack names Throws.SendAsync: yes); its stack names Throws.SendAsync: no
+    its message: "call-refused"
+    its stack starts: "at Azure.Core.Pipeline.HttpClientTransport.ProcessSyncOrAsync(HttpMessage message, Boolean async)"
+    2 records
+    Request  Send → orders                      kind Event   status -                        content other                error none                 variants none         table Publishes
+    Response Send → orders                      kind Event   status !HttpRequestException    content none                 error the exception's text variants none         table Publishes
+             its content none; its error "call-refused"
+    1 requests, 1 responses
+    fingerprint line: Caller>Storage Queues Send → orders /orders !HttpRequestException
+    arrow: caller -[#9B59B6]> storageQueues: Send → orders: /orders
+    arrow: storageQueues -[#9B59B6]-> caller: !HttpRequestException
+    event card <color:#686868>[Accept=application/xml] ﻿~<QueueMessage>~<MessageText>hello~</Me...
+
+Pub/Sub: a publish that throws
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names ThrowingPublisher.PublishAsync: yes
+    2 records
+    Request  Publish → orders                   kind Event   status -                        content other                error none                 variants none         table Publishes
+    Response Publish → orders                   kind Event   status -                        content the exception's text error none                 variants none         table Publishes
+             its content "call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Pub/Sub Publish → orders /orders -
+    arrow: caller -[#9B59B6]> pub_Sub: Publish → orders: /orders
+    arrow: pub_Sub -[#9B59B6]-> caller:
+    event card hello
+    event card call-refused
+
+Event Hubs: a send that throws
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names ThrowingProducer.SendAsync: yes
+    2 records
+    Request  Send → orders                      kind Event   status -                        content other                error none                 variants none         table Publishes
+    Response Send → orders                      kind Event   status -                        content the exception's text error none                 variants none         table Publishes
+             its content "call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Event Hubs Send → orders /orders -
+    arrow: caller -[#9B59B6]> eventHubs: Send → orders: /orders
+    arrow: eventHubs -[#9B59B6]-> caller:
+    event card hello
+    event card call-refused
+
+Service Bus: a send that throws
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names ThrowingSender.SendMessageAsync: yes
+    2 records
+    Request  Send → orders                      kind Event   status -                        content other                error none                 variants none         table Publishes
+    Response Send → orders                      kind Event   status -                        content the exception's text error none                 variants none         table Publishes
+             its content "call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Service Bus Send → orders /orders/ -
+    arrow: caller -[#9B59B6]> serviceBus: Send → orders: /
+    arrow: serviceBus -[#9B59B6]-> caller:
+    event card hello
+    event card call-refused
+
+Kafka: a produce whose delivery fails (the tracking TrackingKafkaProducer holds, Failed being what it calls)
+    the caller saw: nothing
+    2 records
+    Request  Produce → orders                   kind Event   status -                        content other                error none                 variants none         table Publishes
+    Response Produce → orders                   kind Event   status !Local_MsgTimedOut       content none                 error the exception's text variants none         table Publishes
+             its content none; its error "call-refused"
+    1 requests, 1 responses
+    fingerprint line: Caller>Kafka Produce → orders /orders !Local_MsgTimedOut
+    arrow: caller -[#9B59B6]> kafka: Produce → orders: /orders
+    arrow: kafka -[#9B59B6]-> caller: !Local_MsgTimedOut
+    event card <b>Key</b> k v
+
+MassTransit control: a send that works (PostSend)
+    the caller saw: nothing
+    2 records
+    Request  Send OrderPlaced                   kind Event   status -                        content other                error none                 variants none         table Publishes
+    Response Send OrderPlaced                   kind Event   status -                        content none                 error none                 variants none         table Publishes
+    1 requests, 1 responses
+    fingerprint line: Test>RabbitMQ Send OrderPlaced /orders -
+    arrow: test -[#9B59B6]> rabbitMQ: Send OrderPlaced: /orders
+    arrow: rabbitMQ -[#9B59B6]-> test:
+    event card { "OrderId": "1" }
+
+MassTransit control: a publish that works (PostPublish)
+    the caller saw: nothing
+    2 records
+    Request  Publish OrderPlaced                kind Event   status -                        content other                error none                 variants none         table Publishes
+    Response Publish OrderPlaced                kind Event   status -                        content none                 error none                 variants none         table Publishes
+    1 requests, 1 responses
+    fingerprint line: Test>RabbitMQ Publish OrderPlaced /orders -
+    arrow: test -[#9B59B6]> rabbitMQ: Publish OrderPlaced: /orders
+    arrow: rabbitMQ -[#9B59B6]-> test:
+    event card { "OrderId": "1" }
+
+MassTransit control: a consume that works (PostConsume)
+    the caller saw: nothing
+    2 records
+    Request  Consume OrderPlaced                kind Event   status -                        content other                error none                 variants none         table Delivers
+    Response Consume OrderPlaced                kind Event   status -                        content none                 error none                 variants none         table Delivers
+    1 requests, 1 responses
+    fingerprint line: RabbitMQ>Test Consume OrderPlaced /unknown -
+    arrow: rabbitMQ -[#9B59B6]> test: Consume OrderPlaced: /unknown
+    arrow: test -[#9B59B6]-> rabbitMQ:
+    event card { "OrderId": "1" }
+
+MassTransit: a send that fails (SendFault)
+    the caller saw: nothing
+    2 records
+    Request  Send Fault OrderPlaced             kind Default status -                        content the exception's text error none                 variants none         table Neither
+    Response Send Fault OrderPlaced             kind Default status Fault                    content none                 error none                 variants none         table Neither
+    1 requests, 1 responses
+    fingerprint line: Test>RabbitMQ Send Fault OrderPlaced /orders Fault
+    arrow: test -[#9B59B6]> rabbitMQ: Send Fault OrderPlaced: /orders
+    arrow: rabbitMQ -[#9B59B6]-> test: Fault
+    plain note call-refused
+
+MassTransit: a publish that fails (PublishFault)
+    the caller saw: nothing
+    2 records
+    Request  Publish Fault OrderPlaced          kind Default status -                        content the exception's text error none                 variants none         table Neither
+    Response Publish Fault OrderPlaced          kind Default status Fault                    content none                 error none                 variants none         table Neither
+    1 requests, 1 responses
+    fingerprint line: Test>RabbitMQ Publish Fault OrderPlaced /orders Fault
+    arrow: test -[#9B59B6]> rabbitMQ: Publish Fault OrderPlaced: /orders
+    arrow: rabbitMQ -[#9B59B6]-> test: Fault
+    plain note call-refused
+
+MassTransit: a consumer that throws (ConsumeFault)
+    the caller saw: nothing
+    2 records
+    Request  Consume Fault OrderPlaced          kind Default status -                        content the exception's text error none                 variants none         table Neither
+    Response Consume Fault OrderPlaced          kind Default status Fault                    content none                 error none                 variants none         table Neither
+    1 requests, 1 responses
+    fingerprint line: RabbitMQ>Test Consume Fault OrderPlaced /unknown Fault
+    arrow: rabbitMQ -[#9B59B6]> test: Consume Fault OrderPlaced: /unknown
+    arrow: test -[#9B59B6]-> rabbitMQ: Fault
+    plain note call-refused
+
+F22: one SQS send that throws, as the handler logs it, and with the response Storage Queues' catch writes in its place
+    as logged:  Caller>SQS SendMessage /orders -
+    answered:   Caller>SQS SendMessage /orders !HttpRequestException
+    the same line: False
+
+S3: a PutObject that throws
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    1 records
+    Request  PutObject                          kind Default status -                        content other                error none                 variants none         table Unknown
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>S3 PutObject /orders/order-{n}.json -
+    arrow: caller -[#2ECC71]> s3: PutObject: /order-1.json
+    plain note <color:#686868>[Expect=100-continue] <color:#686868>[Host=orders.s3.us-east-1.am...
+
+DynamoDB: a PutItem that throws
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    1 records
+    Request  PutItem                            kind Default status -                        content other                error none                 variants none         table Unknown
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>DynamoDB PutItem /Orders {"Item":{"id":{"S":"{v}"}},"TableName":"{v}"} -
+    arrow: caller -[#0E7C86]> dynamoDB: PutItem: /Orders
+    plain note <color:#686868>[Host=dynamodb.us-east-1.amazonaws.com] <color:#686868>[x-amz-api...
+
+Atlas Data API: an insertOne that throws
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    1 records
+    Request  InsertOne → orders                 kind Default status -                        content other                error none                 variants none         table Unknown
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>AtlasDataApi InsertOne → orders /orders_db/orders {"dataSource":"{v}","database":"{v}","collection":"{v}","document":{"name":"{v}"}} -
+    arrow: caller -[#95A5A6]> atlasDataApi: InsertOne → orders: /orders_db/orders
+    plain note { "dataSource": "Cluster0", "database": "orders_db", "collection": "orders", "do...
+
+Cosmos: a create that throws
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    2 records
+    Request  Create                             kind Default status -                        content other                error none                 variants none         table Unknown
+    Response Create                             kind Default status !HttpRequestException    content none                 error the exception's text variants none         table Unknown
+             its content none; its error "call-refused"
+    1 requests, 1 responses
+    fingerprint line: Caller>CosmosDB Create /colls/orders {"id":"{v}","total":{n}.{n}} !HttpRequestException
+    arrow: caller -[#0E7C86]> cosmosDB: Create: /colls/orders
+    arrow: cosmosDB -[#0E7C86]-> caller: !HttpRequestException
+    plain note { "id": "order-1", "total": 42.50 }
+
+Cosmos: a create that throws, under SetupVerbosity Summarised and ActionVerbosity Detailed, so a call of no known phase carries phase variants
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    2 records
+    Request  Create                             kind Default status -                        content other                error none                 variants setup+action table Unknown
+    Response Create                             kind Default status !HttpRequestException    content none                 error the exception's text variants none         table Unknown
+             its content none; its error "call-refused"
+    1 requests, 1 responses
+    fingerprint line: Caller>CosmosDB Create /colls/orders {"id":"{v}","total":{n}.{n}} !HttpRequestException
+    arrow: caller -[#0E7C86]> cosmosDB: Create: /colls/orders
+    arrow: cosmosDB -[#0E7C86]-> caller: !HttpRequestException
+    plain note { "id": "order-1", "total": 42.50 }
+
+BigQuery control: an insert job that throws
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    2 records
+    Request  Insert                             kind Default status -                        content none                 error none                 variants none         table Unknown
+    Response Insert                             kind Default status !HttpRequestException    content none                 error the exception's text variants none         table Unknown
+             its content none; its error "call-refused"
+    1 requests, 1 responses
+    fingerprint line: Caller>BigQuery Insert /job !HttpRequestException
+    arrow: caller -[#0E7C86]> bigQuery: Insert: /job
+    arrow: bigQuery -[#0E7C86]-> caller: !HttpRequestException
+
+BigQuery control: the same, under SetupVerbosity Summarised and ActionVerbosity Detailed
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    2 records
+    Request  Insert                             kind Default status -                        content none                 error none                 variants setup+action table Unknown
+    Response Insert                             kind Default status !HttpRequestException    content none                 error the exception's text variants setup+action table Unknown
+             its content none; its error "call-refused"
+    1 requests, 1 responses
+    fingerprint line: Caller>BigQuery Insert /job !HttpRequestException
+    arrow: caller -[#0E7C86]> bigQuery: Insert: /job
+    arrow: bigQuery -[#0E7C86]-> caller: !HttpRequestException
+
+Kronikol's HTTP handler control (TestTrackingMessageHandler): a GET that throws
+    the caller saw: HttpRequestException from its task; the very object the inner threw: yes; its stack names Throws.SendAsync: yes
+    2 records
+    Request  GET                                kind Default status -                        content none                 error none                 variants none         table Unknown
+    Response GET                                kind Default status !HttpRequestException    content none                 error the exception's text variants none         table Unknown
+             its content none; its error "call-refused"
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders API GET /orders/{n} !HttpRequestException
+    arrow: caller -[#438DD5]> ordersAPI: GET: /orders/1
+    arrow: ordersAPI -[#438DD5]-> caller: !HttpRequestException
+    plain note <color:#686868>[traceparent=00-7f577598f1546082d28ff84131520ee9-9a577d32837c4685...
+
+Pub/Sub: a subscriber whose handler throws (StartAsync(SubscriptionHandler), the inner handing it one message)
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names ThrowingSubscriptionHandler.HandleMessage: yes
+    1 records
+    Request  Receive ← orders-subscription      kind Event   status -                        content other                error none                 variants none         table Delivers
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>Pub/Sub Receive ← orders-subscription /orders-subscription -
+    arrow: caller -[#9B59B6]> pub_Sub: Receive ← orders-subscription: /orders-subscription
+    event card hello
+
+Event Hubs: a read whose MoveNextAsync throws
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names MoveNextFails.Fail: yes
+    2 records
+    Request  Read ← orders                      kind Event   status -                        content none                 error none                 variants none         table Receives
+    Response Read ← orders                      kind Event   status -                        content the exception's text error none                 variants none         table Receives
+             its content "call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Event Hubs Read ← orders /orders -
+    arrow: caller -[#9B59B6]> eventHubs: Read ← orders: /orders
+    arrow: eventHubs -[#9B59B6]-> caller:
+    event card call-refused
+
+Event Hubs: a read whose inner ReadEventsAsync throws as it is called, before it has an enumerator to hand back
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names ReadThrowsAtOnce.ReadEventsAsync: yes
+    1 records
+    Request  Read ← orders                      kind Event   status -                        content none                 error none                 variants none         table Receives
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>Event Hubs Read ← orders /orders -
+    arrow: caller -[#9B59B6]> eventHubs: Read ← orders: /orders
+
+Service Bus: a ReceiveMessageAsync that throws ServiceBusException
+    the caller saw: ServiceBusException from its task; the very object the inner threw: yes; its stack names ThrowingReceiver.ReceiveMessageAsync: yes
+    2 records
+    Request  Receive ← orders                   kind Event   status -                        content none                 error none                 variants none         table Receives
+    Response Receive ← orders                   kind Event   status -                        content the exception's text error none                 variants none         table Receives
+             its content "call-refused (ServiceCommunicationProblem). For troubleshooting inform..."; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Service Bus Receive ← orders /orders/ -
+    arrow: caller -[#9B59B6]> serviceBus: Receive ← orders: /
+    arrow: serviceBus -[#9B59B6]-> caller:
+    event card call-refused (ServiceCommunicationProblem). For troubleshooting information, see...
+
+Kafka: a handler that throws inside TrackConsume's scope
+    the caller saw: InvalidOperationException at the call; the very object the inner threw: yes; its stack names KafkaInner.Handle: yes
+    2 records
+    Request  Consume ← orders                   kind Event   status -                        content other                error none                 variants none         table Delivers
+    Response Consume ← orders                   kind Event   status -                        content none                 error none                 variants none         table Delivers
+    1 requests, 1 responses
+    fingerprint line: Kafka>Caller Consume ← orders /orders -
+    arrow: kafka -[#9B59B6]> caller: Consume ← orders: /orders
+    arrow: caller -[#9B59B6]-> kafka:
+    event card <b>Key</b> order-1 { "Status": "Placed" }
+
+Kafka: TrackingKafkaConsumer under TraceMessageProcessing, the loop's handler throwing after a Consume, the consumer disposed on the way out
+    the caller saw: InvalidOperationException at the call; the very object the inner threw: yes; its stack names KafkaInner.Handle: yes
+    2 records
+    Request  Consume ← orders                   kind Event   status -                        content other                error none                 variants none         table Delivers
+    Response Consume ← orders                   kind Event   status -                        content none                 error none                 variants none         table Delivers
+    1 requests, 1 responses
+    fingerprint line: Kafka>Caller Consume ← orders /orders -
+    arrow: kafka -[#9B59B6]> caller: Consume ← orders: /orders
+    arrow: caller -[#9B59B6]-> kafka:
+    event card <b>Key</b> order-1 { "Status": "Placed" }
+
+TrackingProxy: a sync method that throws InvalidOperationException
+    the caller saw: InvalidOperationException at the call; the very object the inner threw: yes; its stack names FailingOrders.Place: no
+    its stack starts: "at Kronikol.Tracking.TrackingProxy`1.Invoke(MethodInfo targetMethod, Object[] args)"
+    2 records
+    Request  Place                              kind Default status -                        content other                error none                 variants none         table Unknown
+    Response Place                              kind Default status InternalServerError      content the exception's text error none                 variants none         table Unknown
+             its content "InvalidOperationException: call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders Place /IOrders/Place 500
+    arrow: caller -[#438DD5]> orders: Place: /IOrders/Place
+    arrow: orders -[#438DD5]-> caller: Internal Server Error
+    plain note [ "order-1" ]
+    plain note InvalidOperationException: call-refused
+
+TrackingProxy: an async Task<T> method that throws InvalidOperationException
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names FailingOrders.PlaceAsync: yes
+    2 records
+    Request  PlaceAsync                         kind Default status -                        content other                error none                 variants none         table Unknown
+    Response PlaceAsync                         kind Default status InternalServerError      content the exception's text error none                 variants none         table Unknown
+             its content "InvalidOperationException: call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders PlaceAsync /IOrders/PlaceAsync 500
+    arrow: caller -[#438DD5]> orders: PlaceAsync: /IOrders/PlaceAsync
+    arrow: orders -[#438DD5]-> caller: Internal Server Error
+    plain note [ "order-1" ]
+    plain note InvalidOperationException: call-refused
+
+TrackingProxy: a Task<T> method that throws InvalidOperationException as it is called, before it has a task
+    the caller saw: InvalidOperationException at the call; the very object the inner threw: yes; its stack names FailingOrders.PlaceNowAsync: no
+    its stack starts: "at Kronikol.Tracking.TrackingProxy`1.Invoke(MethodInfo targetMethod, Object[] args)"
+    2 records
+    Request  PlaceNowAsync                      kind Default status -                        content other                error none                 variants none         table Unknown
+    Response PlaceNowAsync                      kind Default status InternalServerError      content the exception's text error none                 variants none         table Unknown
+             its content "InvalidOperationException: call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders PlaceNowAsync /IOrders/PlaceNowAsync 500
+    arrow: caller -[#438DD5]> orders: PlaceNowAsync: /IOrders/PlaceNowAsync
+    arrow: orders -[#438DD5]-> caller: Internal Server Error
+    plain note [ "order-1" ]
+    plain note InvalidOperationException: call-refused
+
+TrackingProxy: an async ValueTask<T> method that throws InvalidOperationException
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names FailingOrders.PlaceValueAsync: yes
+    2 records
+    Request  PlaceValueAsync                    kind Default status -                        content other                error none                 variants none         table Unknown
+    Response PlaceValueAsync                    kind Default status InternalServerError      content the exception's text error none                 variants none         table Unknown
+             its content "InvalidOperationException: call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders PlaceValueAsync /IOrders/PlaceValueAsync 500
+    arrow: caller -[#438DD5]> orders: PlaceValueAsync: /IOrders/PlaceValueAsync
+    arrow: orders -[#438DD5]-> caller: Internal Server Error
+    plain note [ "order-1" ]
+    plain note InvalidOperationException: call-refused
+
+DispatchProxy ReplaceWithTracked: a sync method that throws InvalidOperationException
+    the caller saw: InvalidOperationException at the call; the very object the inner threw: yes; its stack names FailingOrders.Place: no
+    its stack starts: "at Kronikol.Tracking.TrackingProxy`1.Invoke(MethodInfo targetMethod, Object[] args)"
+    2 records
+    Request  Place                              kind Default status -                        content other                error none                 variants none         table Unknown
+    Response Place                              kind Default status InternalServerError      content the exception's text error none                 variants none         table Unknown
+             its content "InvalidOperationException: call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders (DI) Place /IOrders/Place 500
+    arrow: caller -[#438DD5]> orders_DI_: Place: /IOrders/Place
+    arrow: orders_DI_ -[#438DD5]-> caller: Internal Server Error
+    plain note [ "order-1" ]
+    plain note InvalidOperationException: call-refused
+
+DispatchProxy ReplaceWithTracked: an async Task<T> method that throws InvalidOperationException
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names FailingOrders.PlaceAsync: yes
+    2 records
+    Request  PlaceAsync                         kind Default status -                        content other                error none                 variants none         table Unknown
+    Response PlaceAsync                         kind Default status InternalServerError      content the exception's text error none                 variants none         table Unknown
+             its content "InvalidOperationException: call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders (DI) PlaceAsync /IOrders/PlaceAsync 500
+    arrow: caller -[#438DD5]> orders_DI_: PlaceAsync: /IOrders/PlaceAsync
+    arrow: orders_DI_ -[#438DD5]-> caller: Internal Server Error
+    plain note [ "order-1" ]
+    plain note InvalidOperationException: call-refused
+
+gRPC: AsyncUnaryCall, the continuation's response failing with RpcException(Unavailable)
+    the caller saw: RpcException from its task; the very object the inner threw: yes; its stack names GrpcInner.Fail: yes
+    2 records
+    Request  Place                              kind Default status -                        content other                error none                 variants none         table Unknown
+    Response Place                              kind Default status ServiceUnavailable       content the exception's text error none                 variants none         table Unknown
+             its content "Unavailable: Status(StatusCode="Unavailable", Detail="call-refused")"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders gRPC Place /shop.Orders/Place 503
+    arrow: caller -[#438DD5]> ordersGRPC: Place: /shop.Orders/Place
+    arrow: ordersGRPC -[#438DD5]-> caller: Service Unavailable
+    plain note order-1
+    plain note Unavailable: Status(StatusCode="Unavailable", Detail="call-refused")
+
+gRPC: AsyncUnaryCall, the continuation's response failing with InvalidOperationException
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names GrpcInner.Fail: yes
+    2 records
+    Request  Place                              kind Default status -                        content other                error none                 variants none         table Unknown
+    Response Place                              kind Default status InternalServerError      content the exception's text error none                 variants none         table Unknown
+             its content "Unknown: call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders gRPC Place /shop.Orders/Place 500
+    arrow: caller -[#438DD5]> ordersGRPC: Place: /shop.Orders/Place
+    arrow: ordersGRPC -[#438DD5]-> caller: Internal Server Error
+    plain note order-1
+    plain note Unknown: call-refused
+
+gRPC: AsyncUnaryCall, the continuation itself throwing RpcException(Unavailable) as the call starts
+    the caller saw: RpcException at the call; the very object the inner threw: yes; its stack names GrpcInner.Refuse: yes
+    2 records
+    Request  Place                              kind Default status -                        content other                error none                 variants none         table Unknown
+    Response Place                              kind Default status ServiceUnavailable       content the exception's text error none                 variants none         table Unknown
+             its content "Unavailable: Status(StatusCode="Unavailable", Detail="call-refused")"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders gRPC Place /shop.Orders/Place 503
+    arrow: caller -[#438DD5]> ordersGRPC: Place: /shop.Orders/Place
+    arrow: ordersGRPC -[#438DD5]-> caller: Service Unavailable
+    plain note order-1
+    plain note Unavailable: Status(StatusCode="Unavailable", Detail="call-refused")
+
+gRPC: AsyncUnaryCall, the continuation itself throwing InvalidOperationException as the call starts
+    the caller saw: InvalidOperationException at the call; the very object the inner threw: yes; its stack names GrpcInner.Refuse: yes
+    2 records
+    Request  Place                              kind Default status -                        content other                error none                 variants none         table Unknown
+    Response Place                              kind Default status InternalServerError      content the exception's text error none                 variants none         table Unknown
+             its content "Unknown: call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Orders gRPC Place /shop.Orders/Place 500
+    arrow: caller -[#438DD5]> ordersGRPC: Place: /shop.Orders/Place
+    arrow: ordersGRPC -[#438DD5]-> caller: Internal Server Error
+    plain note order-1
+    plain note Unknown: call-refused
+
+Redis: a StringGet (sync) that throws RedisConnectionException
+    the caller saw: TargetInvocationException at the call; the very object the inner threw: no, it wraps it (the RedisConnectionException thrown is 1 deep, and that one's own stack names RedisStub.Invoke: yes); its stack names RedisStub.Invoke: no
+    its message: "Exception has been thrown by the target of an invocation."
+    its stack starts: "at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAt..."
+    1 records
+    Request  Get                                kind Default status -                        content none                 error none                 variants none         table Unknown
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>Redis Get /db0/order:{n} -
+    arrow: caller -[#F39C12]> redis: Get: /order:1
+
+Redis: a StringGetAsync whose task faults with RedisConnectionException
+    the caller saw: RedisConnectionException from its task; the very object the inner threw: yes; its stack names RedisStub.Faulted: yes
+    1 records
+    Request  Get                                kind Default status -                        content none                 error none                 variants none         table Unknown
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>Redis Get /db0/order:{n} -
+    arrow: caller -[#F39C12]> redis: Get: /order:1
+
+Redis: a StringSetAsync that throws RedisConnectionException as it is called, before it has a task
+    the caller saw: TargetInvocationException at the call; the very object the inner threw: no, it wraps it (the RedisConnectionException thrown is 1 deep, and that one's own stack names RedisStub.Invoke: yes); its stack names RedisStub.Invoke: no
+    its message: "Exception has been thrown by the target of an invocation."
+    its stack starts: "at System.Reflection.MethodBaseInvoker.InvokeWithManyArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] p..."
+    1 records
+    Request  Set                                kind Default status -                        content other                error none                 variants none         table Unknown
+    1 requests, 0 responses, so an orphan request
+    fingerprint line: Caller>Redis Set /db0/order:{n} placed -
+    arrow: caller -[#F39C12]> redis: Set: /order:1
+    plain note placed
+
+Spanner: an ExecuteNonQuery that throws
+    the caller saw: InvalidOperationException at the call; the very object the inner threw: yes; its stack names FailingSpannerCommand.ExecuteNonQuery: yes
+    2 records
+    Request  INSERT INTO Orders                 kind Default status -                        content other                error none                 variants none         table Unknown
+    Response INSERT INTO Orders                 kind Default status Error                    content the exception's text error none                 variants none         table Unknown
+             its content "call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Spanner INSERT INTO Orders /Orders INSERT INTO Orders (Id) VALUES ('{s}') Error
+    arrow: caller -[#0E7C86]> spanner: INSERT INTO Orders: /Orders
+    arrow: spanner -[#0E7C86]-> caller: Error
+    plain note INSERT INTO Orders (Id) VALUES ('order-1')
+    plain note call-refused
+
+Spanner: an ExecuteNonQueryAsync whose task faults (DbCommand's own, over the ExecuteNonQuery that throws)
+    the caller saw: InvalidOperationException from its task; the very object the inner threw: yes; its stack names FailingSpannerCommand.ExecuteNonQuery: yes
+    2 records
+    Request  INSERT INTO Orders                 kind Default status -                        content other                error none                 variants none         table Unknown
+    Response INSERT INTO Orders                 kind Default status Error                    content the exception's text error none                 variants none         table Unknown
+             its content "call-refused"; its error none
+    1 requests, 1 responses
+    fingerprint line: Caller>Spanner INSERT INTO Orders /Orders INSERT INTO Orders (Id) VALUES ('{s}') Error
+    arrow: caller -[#0E7C86]> spanner: INSERT INTO Orders: /Orders
+    arrow: spanner -[#0E7C86]-> caller: Error
+    plain note INSERT INTO Orders (Id) VALUES ('order-1')
+    plain note call-refused
+
+Elasticsearch: an IndexAsync to http://127.0.0.1:1, which refuses (nothing stubbed)
+    the caller saw: nothing
+    it returned: IsValidResponse False; HttpStatusCode none; OriginalException HttpRequestException > SocketException ("No connection could be made because the target machine actively refused it. (127...")
+    2 records
+    Request  Index → orders                     kind Default status -                        content other                error none                 variants none         table Unknown
+    Response Index → orders                     kind Default status -                        content none                 error none                 variants none         table Unknown
+    1 requests, 1 responses
+    fingerprint line: Caller>Elasticsearch Index → orders /orders {"id":"{v}"} -
+    arrow: caller -[#0E7C86]> elasticsearch: Index → orders: /orders
+    arrow: elasticsearch -[#0E7C86]-> caller:
+    plain note { "id": "order-1" }
+
+Elasticsearch: a GetAsync to http://127.0.0.1:1, which refuses (nothing stubbed)
+    the caller saw: nothing
+    it returned: IsValidResponse False; HttpStatusCode none; OriginalException HttpRequestException > SocketException ("No connection could be made because the target machine actively refused it. (127...")
+    2 records
+    Request  Get ← orders                       kind Default status -                        content none                 error none                 variants none         table Unknown
+    Response Get ← orders                       kind Default status -                        content none                 error none                 variants none         table Unknown
+    1 requests, 1 responses
+    fingerprint line: Caller>Elasticsearch Get ← orders /orders -
+    arrow: caller -[#0E7C86]> elasticsearch: Get ← orders: /orders
+    arrow: elasticsearch -[#0E7C86]-> caller:

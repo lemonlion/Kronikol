@@ -1,0 +1,73 @@
+same   SQS: a send that throws
+    rule 12:       ['Caller>SQS SendMessage /orders !HttpRequestException']
+same   SNS: a publish that throws
+    rule 12:       ['Caller>SNS Publish / !HttpRequestException']
+same   EventBridge: a put that throws
+    rule 12:       ['Caller>EventBridge PutEvents [OrderPlaced] /orders-bus/ !HttpRequestException']
+same   Storage Queues: a send that throws
+same   Pub/Sub: a publish that throws
+    rule 12:       ['Caller>Pub/Sub Publish → orders /orders !InvalidOperationException']
+same   Event Hubs: a send that throws
+    rule 12:       ['Caller>Event Hubs Send → orders /orders !InvalidOperationException']
+same   Service Bus: a send that throws
+    rule 12:       ['Caller>Service Bus Send → orders /orders/ !InvalidOperationException']
+same   Kafka: a produce whose delivery fails (the tracking TrackingKafkaProducer holds, Failed being what it calls)
+same   MassTransit control: a send that works (PostSend)
+same   MassTransit control: a publish that works (PostPublish)
+same   MassTransit control: a consume that works (PostConsume)
+same   MassTransit: a send that fails (SendFault)
+same   MassTransit: a publish that fails (PublishFault)
+same   MassTransit: a consumer that throws (ConsumeFault)
+same   F22: one SQS send that throws, as the handler logs it, and with the response Storage Queues' catch writes in its place
+same   S3: a PutObject that throws
+    rule 12:       ['Caller>S3 PutObject /orders/order-{n}.json !HttpRequestException']
+same   DynamoDB: a PutItem that throws
+    rule 12:       ['Caller>DynamoDB PutItem /Orders {"Item":{"id":{"S":"{v}"}},"TableName":"{v}"} !HttpRequestException']
+same   Atlas Data API: an insertOne that throws
+    rule 12:       ['Caller>AtlasDataApi InsertOne → orders /orders_db/orders {"dataSource":"{v}","database":"{v}","collection":"{v}","document":{"name":"{v}"}} !HttpRequestException']
+same   Cosmos: a create that throws
+same   Cosmos: a create that throws, under SetupVerbosity Summarised and ActionVerbosity Detailed, so a call of no known phase carries phase variants
+same   BigQuery control: an insert job that throws
+same   BigQuery control: the same, under SetupVerbosity Summarised and ActionVerbosity Detailed
+same   Pub/Sub: a subscriber whose handler throws (StartAsync(SubscriptionHandler), the inner handing it one message)
+    rule 12:       ['Caller>Pub/Sub Receive ← orders-subscription /orders-subscription !InvalidOperationException']
+same   Event Hubs: a read whose MoveNextAsync throws
+    rule 12:       ['Caller>Event Hubs Read ← orders /orders !InvalidOperationException']
+same   Event Hubs: a read whose inner ReadEventsAsync throws as it is called, before it has an enumerator to hand back
+    rule 12:       ['Caller>Event Hubs Read ← orders /orders !InvalidOperationException']
+same   Service Bus: a ReceiveMessageAsync that throws ServiceBusException
+    rule 12:       ['Caller>Service Bus Receive ← orders /orders/ !ServiceBusException']
+same   Kafka: a handler that throws inside TrackConsume's scope
+same   Kafka: TrackingKafkaConsumer under TraceMessageProcessing, the loop's handler throwing after a Consume, the consumer disposed on the way out
+same   TrackingProxy: a sync method that throws InvalidOperationException
+    rule 12:       ['Caller>Orders Place /IOrders/Place !InvalidOperationException']
+same   TrackingProxy: an async Task<T> method that throws InvalidOperationException
+    rule 12:       ['Caller>Orders PlaceAsync /IOrders/PlaceAsync !InvalidOperationException']
+same   TrackingProxy: a Task<T> method that throws InvalidOperationException as it is called, before it has a task
+    rule 12:       ['Caller>Orders PlaceNowAsync /IOrders/PlaceNowAsync !InvalidOperationException']
+same   TrackingProxy: an async ValueTask<T> method that throws InvalidOperationException
+    rule 12:       ['Caller>Orders PlaceValueAsync /IOrders/PlaceValueAsync !InvalidOperationException']
+same   DispatchProxy ReplaceWithTracked: a sync method that throws InvalidOperationException
+    rule 12:       ['Caller>Orders (DI) Place /IOrders/Place !InvalidOperationException']
+same   DispatchProxy ReplaceWithTracked: an async Task<T> method that throws InvalidOperationException
+    rule 12:       ['Caller>Orders (DI) PlaceAsync /IOrders/PlaceAsync !InvalidOperationException']
+same   gRPC: AsyncUnaryCall, the continuation's response failing with RpcException(Unavailable)
+same   gRPC: AsyncUnaryCall, the continuation's response failing with InvalidOperationException
+    rule 12:       ['Caller>Orders gRPC Place /shop.Orders/Place !InvalidOperationException']
+same   gRPC: AsyncUnaryCall, the continuation itself throwing RpcException(Unavailable) as the call starts
+same   gRPC: AsyncUnaryCall, the continuation itself throwing InvalidOperationException as the call starts
+    rule 12:       ['Caller>Orders gRPC Place /shop.Orders/Place !InvalidOperationException']
+same   Redis: a StringGet (sync) that throws RedisConnectionException
+    rule 12:       ['Caller>Redis Get /db0/order:{n} !RedisConnectionException']
+same   Redis: a StringGetAsync whose task faults with RedisConnectionException
+    rule 12:       ['Caller>Redis Get /db0/order:{n} !RedisConnectionException']
+same   Redis: a StringSetAsync that throws RedisConnectionException as it is called, before it has a task
+    rule 12:       ['Caller>Redis Set /db0/order:{n} placed !RedisConnectionException']
+same   Spanner: an ExecuteNonQuery that throws
+same   Spanner: an ExecuteNonQueryAsync whose task faults (DbCommand's own, over the ExecuteNonQuery that throws)
+same   Elasticsearch: an IndexAsync to http://127.0.0.1:1, which refuses (nothing stubbed)
+    rule 12:       ['Caller>Elasticsearch Index → orders /orders {"id":"{v}"} !HttpRequestException']
+same   Elasticsearch: a GetAsync to http://127.0.0.1:1, which refuses (nothing stubbed)
+    rule 12:       ['Caller>Elasticsearch Get ← orders /orders !HttpRequestException']
+
+45 cases, 0 whose rule-11 line moved

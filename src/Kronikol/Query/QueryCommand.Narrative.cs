@@ -688,7 +688,9 @@ public static partial class QueryCommand
                 continue;
 
             var response = FindResponse(scenario, interaction);
-            if (options.ErrorsOnly && !IsError(response?.StatusCode, response?.StatusText))
+            // The one reading of a failed answer (InteractionStatus.Failed), as query failures reads it: a reason beside a
+            // status the text rule takes for a success is a failure too.
+            if (options.ErrorsOnly && !Failed(response))
                 continue;
 
             shown.Add((interaction, response));
@@ -1090,7 +1092,7 @@ public static partial class QueryCommand
 
     /// <summary>Whether a call's response says it failed: an error status, or a reason its capturer read.</summary>
     private static bool Failed(InteractionEntry? response) =>
-        response is not null && (IsError(response.StatusCode, response.StatusText) || !string.IsNullOrWhiteSpace(response.Error));
+        response is not null && InteractionStatus.Failed(response.StatusCode, response.StatusText, response.Error);
 
     /// <summary>A failed call's status and reason, after its line in a step's list, as Failures.md prints them.</summary>
     private static string Failure(InteractionEntry? response)

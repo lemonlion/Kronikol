@@ -37,7 +37,10 @@ public class ElasticsearchTrackingCallbackHandler : ITrackingComponent
             details.Uri,
             details.HttpStatusCode,
             details.RequestBodyInBytes,
-            details.ResponseBodyInBytes);
+            details.ResponseBodyInBytes,
+            // A call that never reached the server (a refused connection) throws nothing at the caller: the client hands back
+            // a response with no status and the failure in OriginalException, which said nothing before #232 (F22).
+            details.HttpStatusCode is null ? details.OriginalException : null);
     }
 
     internal void LogOperation(
@@ -45,7 +48,8 @@ public class ElasticsearchTrackingCallbackHandler : ITrackingComponent
         Uri requestUri,
         int? statusCode,
         byte[]? requestBodyBytes,
-        byte[]? responseBodyBytes)
+        byte[]? responseBodyBytes,
+        Exception? failure = null)
     {
         Interlocked.Increment(ref _invocationCount);
 
@@ -114,13 +118,18 @@ public class ElasticsearchTrackingCallbackHandler : ITrackingComponent
             [],
             _options.ServiceName, _options.CallerName,
             RequestResponseType.Response, traceId, requestResponseId, false,
-            StatusCode: statusCode.HasValue
-                ? (System.Net.HttpStatusCode)statusCode.Value
-                : null,
+            StatusCode: failure is not null
+                ? FailedSend.Status(failure)
+                : statusCode.HasValue
+                    ? (System.Net.HttpStatusCode)statusCode.Value
+                    : null,
             DependencyCategory: DependencyCategories.Elasticsearch)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            Error = failure is null ? null : FailedSend.Describe(failure),
+            // Answered with no status before #232, which history's earlier rules read as no answer.
+            RecordedBefore12 = failure is null ? null : RecordedBefore.NotRecorded
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v =>
             {

@@ -85,6 +85,17 @@ public record RequestResponseLog(
     internal RecordedBefore? RecordedBefore11 { get; init; }
 
     /// <summary>
+    /// The call as its tracker recorded it before #232 made every call end with an answer (plans/FAILED_CALLS_PLAN.md), when
+    /// that differs. On a response: <see cref="RecordedBefore.Absent"/> when the tracker recorded no response then (a call that
+    /// threw), or no status, which every older rule reads alike; or the status it recorded then (<see cref="RecordedBefore.Status"/>),
+    /// where a failure was answered as a success or with a status the tracker made up. On a request: <see cref="RecordedBefore.Absent"/>
+    /// when the call was not recorded under this test then. History's rules 6 to 11 read it, so a run still compares with runs
+    /// fingerprinted under them (<see cref="Kronikol.History.InteractionShape"/>). Null for every call recorded as before. Set by
+    /// the trackers alone and never written out.
+    /// </summary>
+    internal RecordedBefore? RecordedBefore12 { get; init; }
+
+    /// <summary>
     /// The method is its author's own words (<see cref="MessageTracker"/>'s <c>protocol</c>), so the OTLP exporter takes no operation
     /// from it, whatever it says. Set by <c>MessageTracker</c> alone and never written out, so a reader of a data file reads the label as it reads any.
     /// </summary>
@@ -217,6 +228,15 @@ internal sealed record RecordedBefore(OneOf<HttpMethod, string> Method, Uri Uri,
 {
     /// <summary>A call the tracker did not record then.</summary>
     public static RecordedBefore NotRecorded { get; } = new("", new Uri("about:blank"), Absent: true);
+
+    /// <summary>
+    /// On a response: the status the tracker recorded then, where it now records another, such as a success it answered a
+    /// failure with. Null for a mark that says nothing about the status.
+    /// </summary>
+    public OneOf<HttpStatusCode, string>? Status { get; init; }
+
+    /// <summary>A response the tracker recorded then with <paramref name="status"/>.</summary>
+    public static RecordedBefore AnsweredWith(OneOf<HttpStatusCode, string> status) => new("", new Uri("about:blank")) { Status = status };
 }
 
 /// <summary>

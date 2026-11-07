@@ -301,9 +301,11 @@ public class InteractionShapeTests
         // the path as the data file writes it, an entity in the authority, a GraphQL operation, a statement past its SET
         // prologue; 6 and 7 are kept. 9: what the BigQuery and Cloud Storage handlers name (#125 R1). 10: where an Oracle
         // call is drawn, the server and the service its data source names (CLIENT_FLOORS_PLAN.md F26); 6 to 9 are kept. 11: what the Blob Storage
-        // and Storage Queues handlers name against Azurite (#125 R2); 6 to 10 are kept.
-        Assert.Equal(11, InteractionShape.Version);
-        Assert.Equal([6, 7, 8, 9, 10, 11], InteractionShape.KeptVersions);
+        // and Storage Queues handlers name against Azurite (#125 R2); 6 to 10 are kept. 12: a call that threw is answered where
+        // it had no answer, a made-up 500 is the exception's type, and TcpTap records a command whose connection closed before
+        // its reply (#232); 6 to 11 are kept.
+        Assert.Equal(12, InteractionShape.Version);
+        Assert.Equal([6, 7, 8, 9, 10, 11, 12], InteractionShape.KeptVersions);
     }
 
     [Fact]

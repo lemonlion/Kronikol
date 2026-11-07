@@ -9,6 +9,7 @@ using Kronikol.PlantUml;
 using Kronikol.Reports;
 using Kronikol.Tracking;
 using Tap = Kronikol.Extensions.ProxyTap.ProxyTap;
+using Kronikol.Tests.Tracking;
 
 namespace Kronikol.Tests.ProxyTap;
 
@@ -213,6 +214,7 @@ public class ProxyTapFailureTests
     // ---- R1 ---------------------------------------------------------------------------------
 
     [Fact]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public async Task A_forward_the_upstream_refused_is_recorded_as_a_failed_call()
     {
         using var dead = new ClosedPort();

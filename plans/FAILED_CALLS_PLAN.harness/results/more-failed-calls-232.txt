@@ -1,0 +1,32 @@
+== 1. DeferredLogFlushHandler, a send that throws, then one that does not (F28)
+  caller caught InvalidOperationException: the app threw
+  pending after test-A's call: 0
+  records under test-A: 2
+    Request  Do           mock://work/IWork/Do status=(none) content="[   1 ]" error=(null) id=ace9d460
+    Response Do           mock://work/IWork/Do status=OK content="2" error=(null) id=ace9d460
+  test-B's call answered 200
+  pending after test-B's call: 0
+  records under test-A: 2
+    Request  Do           mock://work/IWork/Do status=(none) content="[   1 ]" error=(null) id=ace9d460
+    Response Do           mock://work/IWork/Do status=OK content="2" error=(null) id=ace9d460
+  records under test-B: 2
+    Request  Do           mock://work/IWork/Do status=(none) content="[   1 ]" error=(null) id=b12887fa
+    Response Do           mock://work/IWork/Do status=OK content="2" error=(null) id=b12887fa
+== 2. EF Core: the token cancelled after the interceptor logged the request (F8)
+  caller caught OperationCanceledException: The operation was canceled.
+  EF Core called: CommandCanceledAsync
+  records under ef-cancel: 2
+    Request  Select       sql://localhost/main/Rows status=(none) content="SELECT "r"."Id" FROM "Rows" AS "r"" error=(null) id=0c4ad2c7
+    Response Select       sql://localhost/main/Rows status=Error content="The command was cancelled." error="The command was cancelled." id=0c4ad2c7
+== 3. Sqlite: a reader whose second row fails (F10)
+  row: 1
+  caller caught SqliteException: SQLite Error 1: 'integer overflow'.
+  records under partial-reader: 2
+    Request  SELECT FROM ? sqlite://localhost/main status=(none) content="SELECT 1 UNION ALL SELECT abs(-9223372036854775808)" error=(null) id=b3a1b916
+    Response              sqlite:/// status=Error content="SQLite Error 1: 'integer overflow'." error="SQLite Error 1: 'integer overflow'." id=b3a1b916
+== 4. TrackingProxy: an IAsyncEnumerable that throws after one item (F24)
+  item: 1
+  caller caught InvalidOperationException: the stream broke
+  records under proxy-stream: 2
+    Request  Items        mock://streamer/IStreamer/Items status=(none) content=(null) error=(null) id=809e1d0b
+    Response Items        mock://streamer/IStreamer/Items status=!InvalidOperationException content="InvalidOperationException: the stream broke" error="the stream broke" id=809e1d0b

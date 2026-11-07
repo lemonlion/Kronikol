@@ -54,14 +54,15 @@ internal sealed class TrackingAsyncStreamReader<TResponse> : IAsyncStreamReader<
 
             return hasNext;
         }
-        catch (RpcException ex)
+        catch (Exception ex)
         {
-            // A read that fails is drawn as a unary call that fails is: status Error, with the call's message.
+            // A read that fails is drawn as a unary call that fails is: status Error, with the call's message. Anything but
+            // an RpcException was answered as a success when the call was disposed before #232.
             if (!_logged)
             {
                 _logged = true;
                 _chunks.Clear();
-                _tracker.LogFailure(_opInfo, _reqId, _traceId, ex);
+                _tracker.LogFailure(_opInfo, _reqId, _traceId, ex, answeredSince12: ex is not RpcException);
             }
             throw;
         }

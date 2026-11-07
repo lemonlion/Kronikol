@@ -530,6 +530,41 @@ public class FlowTests : IDisposable
         return _report = path;
     }
 
+    [Fact]
+    public void Errors_only_shows_every_answer_the_one_reading_calls_failed()
+    {
+        // An answer failed when its status says so or it carries a reason (plans/FAILED_CALLS_PLAN.md §5.4), as query failures
+        // already read it: a reason beside a status the text rule takes for a success is a failure too.
+        var output = Run("flow", FailedAnswersReport(), "s0", "--errors-only");
+
+        Assert.Contains("/refused", output);
+        Assert.Contains("/thrown", output);
+        Assert.DoesNotContain("/fine", output);
+    }
+
+    private string FailedAnswersReport()
+    {
+        Feature[] features = [new Feature { DisplayName = "Orders", Scenarios = [Scenario("t0", "Send the order", ("When", "sending"))] }];
+        var at = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+        var fine = Call("t0", "api", "GET", "http://api/fine", null, HttpStatusCode.OK, at, at.AddMilliseconds(10));
+        var refused = Call("t0", "bus", "Send", "bus:///refused", null, "Sent", at.AddMilliseconds(20), at.AddMilliseconds(30));
+        var thrown = Call("t0", "api", "GET", "http://api/thrown", null, "!HttpRequestException", at.AddMilliseconds(40), at.AddMilliseconds(50));
+        RequestResponseLog[] logs =
+        [
+            StepMarker("t0", "sending"), .. fine, refused[0], refused[1] with { Error = "The broker refused the message." },
+            thrown[0], thrown[1] with { Error = "Connection refused" }
+        ];
+
+        var written = ReportGenerator.GenerateTestRunReportData(
+            features,
+            new DateTime(2026, 1, 1, 10, 0, 0, DateTimeKind.Utc),
+            new DateTime(2026, 1, 1, 10, 5, 0, DateTimeKind.Utc),
+            "FlowFailed_" + Guid.NewGuid().ToString("N")[..8] + ".json", DataFormat.Json, diagrams: null, logs);
+        var path = Path.Combine(_directory, "FailedAnswers.json");
+        File.Move(written, path, overwrite: true);
+        return path;
+    }
+
     /// <summary>A shard as a runner wrote it before 3.1.0: the mergeable format, which then carried no calls.</summary>
     private string OldMergeableReport()
     {

@@ -36,18 +36,18 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         TimeSpan? maxWaitTime = null, CancellationToken cancellationToken = default)
     {
         var op = ServiceBusOperationClassifier.Classify("ReceiveMessageAsync", EntityPath, null);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        var call = _tracker.Open(op, null);
         try
         {
             var result = await _inner.ReceiveMessageAsync(maxWaitTime, cancellationToken);
             if (result is not null) EstablishTestIdentityFromProperties(result);
             var content = result is not null ? GetReceivedMessageContent(result) : null;
-            _tracker.LogResponse(op, reqId, traceId, content);
+            _tracker.Answer(call, op, content);
             return result;
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -56,7 +56,7 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         int maxMessages, TimeSpan? maxWaitTime = null, CancellationToken cancellationToken = default)
     {
         var op = ServiceBusOperationClassifier.Classify("ReceiveMessagesAsync", EntityPath, null);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        var call = _tracker.Open(op, null);
         try
         {
             var result = await _inner.ReceiveMessagesAsync(maxMessages, maxWaitTime, cancellationToken);
@@ -64,12 +64,12 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
             var content = ServiceBusTracker.ShowsContent(_options)
                 ? $"[{result.Count} messages received]"
                 : null;
-            _tracker.LogResponse(op, reqId, traceId, content);
+            _tracker.Answer(call, op, content);
             return result;
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -78,17 +78,17 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         long? fromSequenceNumber = null, CancellationToken cancellationToken = default)
     {
         var op = ServiceBusOperationClassifier.Classify("PeekMessageAsync", EntityPath, null);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        var call = _tracker.Open(op, null);
         try
         {
             var result = await _inner.PeekMessageAsync(fromSequenceNumber, cancellationToken);
             var content = result is not null ? GetReceivedMessageContent(result) : null;
-            _tracker.LogResponse(op, reqId, traceId, content);
+            _tracker.Answer(call, op, content);
             return result;
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -101,15 +101,15 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         ServiceBusReceivedMessage message, CancellationToken cancellationToken = default)
     {
         var op = ServiceBusOperationClassifier.Classify("CompleteMessageAsync", EntityPath, null);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        var call = _tracker.Open(op, null);
         try
         {
             await _inner.CompleteMessageAsync(message, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
+            _tracker.Answer(call, op, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -120,15 +120,15 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         CancellationToken cancellationToken = default)
     {
         var op = ServiceBusOperationClassifier.Classify("AbandonMessageAsync", EntityPath, null);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        var call = _tracker.Open(op, null);
         try
         {
             await _inner.AbandonMessageAsync(message, propertiesToModify, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
+            _tracker.Answer(call, op, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -163,15 +163,15 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         var content = deadLetterReason is not null && ServiceBusTracker.ShowsContent(_options)
             ? $"Reason: {deadLetterReason}"
             : null;
-        var (reqId, traceId) = _tracker.LogRequest(op, content);
+        var call = _tracker.Open(op, content);
         try
         {
             await deadLetter();
-            _tracker.LogResponse(op, reqId, traceId, null);
+            _tracker.Answer(call, op, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -182,15 +182,15 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         CancellationToken cancellationToken = default)
     {
         var op = ServiceBusOperationClassifier.Classify("DeferMessageAsync", EntityPath, null);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        var call = _tracker.Open(op, null);
         try
         {
             await _inner.DeferMessageAsync(message, propertiesToModify, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
+            _tracker.Answer(call, op, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }
@@ -207,15 +207,15 @@ public class TrackingServiceBusReceiver : ServiceBusReceiver
         ServiceBusReceivedMessage message, CancellationToken cancellationToken = default)
     {
         var op = ServiceBusOperationClassifier.Classify("RenewMessageLockAsync", EntityPath, null);
-        var (reqId, traceId) = _tracker.LogRequest(op, null);
+        var call = _tracker.Open(op, null);
         try
         {
             await _inner.RenewMessageLockAsync(message, cancellationToken);
-            _tracker.LogResponse(op, reqId, traceId, null);
+            _tracker.Answer(call, op, null);
         }
         catch (Exception ex)
         {
-            _tracker.LogResponse(op, reqId, traceId, ex.Message);
+            _tracker.Threw(call, ex);
             throw;
         }
     }

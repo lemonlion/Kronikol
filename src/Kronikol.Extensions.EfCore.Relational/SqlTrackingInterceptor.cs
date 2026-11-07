@@ -22,6 +22,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
     // Maps each DbCommand instance to its correlated IDs so that
     // LogCommandExecuted can pair with the LogCommandExecuting entry.
     private readonly ConcurrentDictionary<DbCommand, (Guid TraceId, Guid RequestResponseId)> _pendingIds = new();
+    private readonly OpenCalls _open = new();
 
     // The commands whose reader went back to EF Core as the provider made it, logged when EF Core closes it; the value
     // says whether the command is a SaveChanges batch.
@@ -98,7 +99,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => BuildVariant(command, sqlOp, v));
 
-        RequestResponseLogger.Log(log);
+        _open.Open(log);
     }
 
     public void LogCommandExecuted(DbCommand command, int? rowsAffected = null)
@@ -112,13 +113,13 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         if (effectiveVerbosity == SqlTrackingVerbosity.Summarised && sqlOp.Operation == SqlOperation.Other)
             return;
 
-        var testInfo = GetTestInfo();
-        if (testInfo is null)
-            return;
-
         // Retrieve the IDs from the executing phase, or create new ones as fallback
         if (!_pendingIds.TryRemove(command, out var ids))
             ids = (Guid.NewGuid(), Guid.NewGuid());
+
+        var testInfo = IdentityOf(ids.RequestResponseId);
+        if (testInfo is null)
+            return;
 
         var label = SqlOperationClassifier.GetDiagramLabel(sqlOp, effectiveVerbosity);
 
@@ -155,23 +156,28 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => BuildResponseVariant(command, sqlOp, v, rowsAffected));
 
-        RequestResponseLogger.Log(log);
+        Answer(ids.RequestResponseId, log);
     }
 
     // A command that fails still gets its response, with the error: without one the diagram shows a call that
     // never answered, and the command stayed in _pendingIds for the life of the interceptor.
-    private void LogCommandFailed(DbCommand command, Exception exception)
+    private void LogCommandFailed(DbCommand command, Exception exception, RecordedBefore? before12 = null)
     {
         if (!_pendingIds.TryRemove(command, out var ids))
             return;
+        AnswerFailure(command, ids, exception, before12);
+    }
 
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+    private void AnswerFailure(DbCommand command, (Guid TraceId, Guid RequestResponseId) ids, Exception exception, RecordedBefore? before12)
+    {
+        if (_open.Find(ids.RequestResponseId) is null
+            && !PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
         var sqlOp = SqlOperationClassifier.Classify(command.CommandText, command.CommandType);
 
-        var testInfo = GetTestInfo();
+        var testInfo = IdentityOf(ids.RequestResponseId);
         if (testInfo is null)
             return;
 
@@ -203,13 +209,15 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         )
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            Error = FailedSend.Describe(exception),
+            RecordedBefore12 = before12
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => BuildResponseVariantWithContent(command, sqlOp, v, exception.Message));
 
-        RequestResponseLogger.Log(log);
+        Answer(ids.RequestResponseId, log);
     }
 
     // ─── EF Core DbCommandInterceptor overrides ────────────────
@@ -228,6 +236,22 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         Safe(() => LogCommandFailed(command, eventData.Exception));
         return base.CommandFailedAsync(command, eventData, cancellationToken);
     }
+
+    // A cancelled command goes to CommandCanceled, not CommandFailed, and its event data holds no exception: it is answered with
+    // the one its caller catches, as no answer before #232 (FAILED_CALLS_PLAN.md F8).
+    public override void CommandCanceled(DbCommand command, CommandEndEventData eventData)
+    {
+        Safe(() => LogCommandFailed(command, Cancelled(), RecordedBefore.NotRecorded));
+        base.CommandCanceled(command, eventData);
+    }
+
+    public override Task CommandCanceledAsync(DbCommand command, CommandEndEventData eventData, CancellationToken cancellationToken = default)
+    {
+        Safe(() => LogCommandFailed(command, Cancelled(), RecordedBefore.NotRecorded));
+        return base.CommandCanceledAsync(command, eventData, cancellationToken);
+    }
+
+    private static OperationCanceledException Cancelled() => new("The command was cancelled.");
 
     public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result)
     {
@@ -447,6 +471,21 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
 
     // ─── Test identity resolution ────────────────────────────────
 
+    // The test an answer belongs to: its request's, read once, when the request was logged (OpenCall); read now only for a call
+    // this interceptor did not open.
+    private TestIdentity? IdentityOf(Guid requestResponseId) => _open.Find(requestResponseId) is { } call
+        ? new TestIdentity(call.Request.TestName, call.Request.TestId, call.Request.AttributionSource ?? AttributionSource.None)
+        : GetTestInfo();
+
+    // The answer ends the call its request opened; one the interceptor did not open is logged as it is.
+    private void Answer(Guid requestResponseId, RequestResponseLog response)
+    {
+        if (_open.Take(requestResponseId) is { } call)
+            call.Answer(response);
+        else
+            RequestResponseLogger.Log(response);
+    }
+
     private TestIdentity? GetTestInfo()
         => TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
 
@@ -593,12 +632,12 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         if (effectiveVerbosity == SqlTrackingVerbosity.Summarised && sqlOp.Operation == SqlOperation.Other)
             return;
 
-        var testInfo = GetTestInfo();
-        if (testInfo is null)
-            return;
-
         if (!_pendingIds.TryRemove(command, out var ids))
             ids = (Guid.NewGuid(), Guid.NewGuid());
+
+        var testInfo = IdentityOf(ids.RequestResponseId);
+        if (testInfo is null)
+            return;
 
         var label = SqlOperationClassifier.GetDiagramLabel(sqlOp, effectiveVerbosity);
         OneOf<HttpMethod, string> method = effectiveVerbosity == SqlTrackingVerbosity.Raw
@@ -632,7 +671,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => BuildResponseVariantWithContent(command, sqlOp, v, content));
 
-        RequestResponseLogger.Log(log);
+        Answer(ids.RequestResponseId, log);
     }
 
     private TrackingDbDataReader? WrapReaderIfTracked(DbCommand command, DbDataReader result)
@@ -665,7 +704,9 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
             result, detail, _options.MaxResponseRows, _options.MaxValueDisplayLength, System.Data.CommandBehavior.Default,
             rowsAt => LogCommandExecutedWithContentDirect(command, capturedIds.TraceId, capturedIds.RequestResponseId,
                 verbosity => rowsAt(SqlResponseDetailResolver.Resolve(
-                    _options.ResponseDetail, verbosity == SqlTrackingVerbosity.Summarised))));
+                    _options.ResponseDetail, verbosity == SqlTrackingVerbosity.Summarised))),
+            // A reader that fails partway was answered at Close, as a success with the rows read so far, before #232.
+            ex => Safe(() => AnswerFailure(command, capturedIds, ex, RecordedBefore.AnsweredWith("OK"))));
     }
 
     private string? FormatScalar(object? result) =>
@@ -680,7 +721,7 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         if (effectiveVerbosity == SqlTrackingVerbosity.Summarised && sqlOp.Operation == SqlOperation.Other)
             return;
 
-        var testInfo = GetTestInfo();
+        var testInfo = IdentityOf(requestResponseId);
         if (testInfo is null)
             return;
 
@@ -720,6 +761,6 @@ public class SqlTrackingInterceptor : DbCommandInterceptor, ITrackingComponent
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => BuildResponseVariantWithContent(command, sqlOp, v, contentAt(v)));
 
-        RequestResponseLogger.Log(log);
+        Answer(requestResponseId, log);
     }
 }

@@ -407,7 +407,7 @@ public class KafkaTracker : ITrackingComponent
             v == KafkaTrackingVerbosity.Summarised ? null : payload.Body,
             v == KafkaTrackingVerbosity.Summarised ? [] : payload.Headers, false));
 
-        RequestResponseLogger.Log(request);
+        entry.Call = OpenCall.Open(request);
         return entry;
     }
 
@@ -425,6 +425,9 @@ public class KafkaTracker : ITrackingComponent
         internal string Label => label;
         internal Uri Uri => uri;
         internal Guid RequestResponseId => requestResponseId;
+
+        // The call the request opened, which this entry's answer ends (OpenCall).
+        internal OpenCall? Call { get; set; }
 
         internal void Answer(DateTimeOffset at, string? failureStatus, string? error)
         {
@@ -450,7 +453,10 @@ public class KafkaTracker : ITrackingComponent
                 KafkaOperationClassifier.BuildUri(op, v),
                 null, [], false));
 
-            RequestResponseLogger.Log(response);
+            if (Call is { } open)
+                open.Answer(response);
+            else
+                RequestResponseLogger.Log(response);
         }
     }
 

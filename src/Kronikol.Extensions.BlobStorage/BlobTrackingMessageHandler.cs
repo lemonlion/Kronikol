@@ -66,7 +66,7 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             ? request.RequestUri!
             : BuildCleanUri(request.RequestUri!, blobOp, effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        var call = OpenCall.Open(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -94,50 +94,27 @@ public class BlobTrackingMessageHandler : DelegatingHandler, ITrackingComponent
                 Skip: false)));
 
         HttpResponseMessage response;
+        string? responseBody;
+        var sent = false;
         try
         {
             response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            sent = true;
+            responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         }
         catch (Exception ex)
         {
-            // A send that throws is still an answer, as the HTTP handler records it: the exception's type where the
-            // status would be, its message chain in Error, and the exception on its way (FailedSend). Before #125 it left
-            // a request with no response, which history's earlier rules still read.
-            RequestResponseLogger.Log(new RequestResponseLog(
-                testInfo.Value.Name,
-                testInfo.Value.Id,
-                method,
-                null,
-                requestUri,
-                [],
-                _options.ServiceName,
-                _options.CallerName,
-                RequestResponseType.Response,
-                traceId,
-                requestResponseId,
-                false,
-                FailedSend.Status(ex),
-                DependencyCategory: DependencyCategories.BlobStorage
-            )
-            {
-                Error = FailedSend.Describe(ex),
-                AttributionSource = testInfo.Value.Source,
-                Phase = TestPhaseContext.Current,
-                RecordedBefore11 = RecordedBefore.NotRecorded
-            }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
-                v => new PhaseVariant(
-                    v == BlobTrackingVerbosity.Raw ? request.Method : BlobOperationClassifier.GetDiagramLabel(blobOp, v),
-                    v == BlobTrackingVerbosity.Raw ? request.RequestUri! : BuildCleanUri(request.RequestUri!, blobOp, v),
-                    null,
-                    [],
-                    Skip: false)));
+            // A call that throws is still an answer, as the HTTP handler records it: the exception's type where the status
+            // would be, its message chain in Error, and the exception on its way (OpenCall, FailedSend). Before #125 a send
+            // that threw left a request with no response, and before #232 so did a body that broke off as it was read, which
+            // history's earlier rules still read.
+            call.Threw(ex, sent ? OpenCall.UnansweredBefore12 : answer => answer with { RecordedBefore11 = RecordedBefore.NotRecorded });
             throw;
         }
 
-        var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        call.Answer(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,

@@ -46,7 +46,17 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         if (reqId == Guid.Empty)
             return continuation(request, context);
 
-        var call = continuation(request, context);
+        AsyncUnaryCall<TResponse> call;
+        try
+        {
+            call = continuation(request, context);
+        }
+        catch (Exception ex)
+        {
+            // A call that throws before it has a response is still answered: before #232 it left the request alone.
+            _tracker.LogFailure(opInfo, reqId, traceId, ex, answeredSince12: true);
+            throw;
+        }
 
         var wrappedResponse = WrapUnaryResponse(call.ResponseAsync, opInfo, reqId, traceId);
 
@@ -76,7 +86,16 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
         if (reqId == Guid.Empty)
             return continuation(request, context);
 
-        var call = continuation(request, context);
+        AsyncServerStreamingCall<TResponse> call;
+        try
+        {
+            call = continuation(request, context);
+        }
+        catch (Exception ex)
+        {
+            _tracker.LogFailure(opInfo, reqId, traceId, ex, answeredSince12: true);
+            throw;
+        }
 
         // Wrapped with LogResponseContent off too, which collects no rows: the response waits for the stream to end, so a
         // read that fails is drawn as a failure, where logging it here drew every read as answered before it was read.
@@ -218,9 +237,10 @@ public class SpannerTrackingInterceptor : Interceptor, ITrackingComponent
             _tracker.LogResponseAtDetail(opInfo, reqId, traceId, contentAt, rawContent);
             return response;
         }
-        catch (RpcException ex)
+        catch (Exception ex)
         {
-            _tracker.LogFailure(opInfo, reqId, traceId, ex);
+            // Whatever the call fails with: anything but an RpcException left the request alone before #232.
+            _tracker.LogFailure(opInfo, reqId, traceId, ex, answeredSince12: ex is not RpcException);
             throw;
         }
     }

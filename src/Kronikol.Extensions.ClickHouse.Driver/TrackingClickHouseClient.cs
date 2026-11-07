@@ -22,7 +22,8 @@ namespace Kronikol.Extensions.ClickHouse.Driver;
 /// <item><c>InsertBinaryAsync</c> (both overloads) is one call, <c>INSERT INTO {table}</c>, whatever the batching, with
 /// the rows it sent as the request's body, formatted as a tracked reader formats rows, and the count it returns.</item>
 /// <item><c>ExecuteNonQueryAsync</c> records no count: the client returns 0 for every write.</item>
-/// <item><c>ExecuteReaderAsync</c> records the call but not its rows: the driver's reader cannot be wrapped.</item>
+/// <item><c>ExecuteReaderAsync</c> records the call but not its rows: the driver's reader cannot be wrapped, so the call is
+/// answered when the reader is returned, and a read that fails after that is not seen.</item>
 /// <item><c>QueryAsync</c> is recorded when it is enumerated, with the rows read.</item>
 /// <item><c>PingAsync</c>, the <c>Register*</c> members and <c>CreateConnection</c> are forwarded, not recorded; a
 /// connection from <c>CreateConnection</c> is not tracked unless it is wrapped as a connection is.</item>
@@ -115,7 +116,8 @@ public sealed class TrackingClickHouseClient : IClickHouseClient, ITrackingCompo
             throw;
         }
         // The rows cannot be captured: the driver's reader has only a private constructor, so no tracking reader can
-        // stand in for it. QueryAsync and a tracked connection show rows.
+        // stand in for it. QueryAsync and a tracked connection show rows. For the same reason a read that fails after this
+        // answer is not seen (plans/FAILED_CALLS_PLAN.md F11): only the driver's internals could show it.
         LogResponse(ids);
         return reader;
     }

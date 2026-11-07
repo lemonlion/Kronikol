@@ -67,7 +67,7 @@ public class SqlTrackingInterceptorTests : IDisposable
         interceptor.LogCommandExecuting(command);
         interceptor.LogCommandExecuted(command);
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 12,
             "TestCaller>Database Select /OrdersDb/Users SELECT [u].[Id] FROM [dbo].[Users] AS [u] OK");
     }
 

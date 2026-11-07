@@ -27,7 +27,7 @@ public class SpanToInteractionMapperTests
         // call line history fingerprints, pinned under the rule it was pinned with (HistoryGuard).
         var (request, response) = SpanToInteractionMapper.Map(Single(OtlpGoldens.MongoFindOldSemconv), Options())!.ToLogs();
 
-        HistoryGuard.Pin([request, response], 11,
+        HistoryGuard.Pin([request, response], 12,
             "data-insights>mongo Find ← Trial /data-insights-Development/Trial OK");
     }
 

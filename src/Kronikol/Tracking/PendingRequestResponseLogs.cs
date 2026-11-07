@@ -20,6 +20,15 @@ public record PendingLogEntry(
     string? DependencyCategory = null)
 {
     internal DateTimeOffset Timestamp { get; } = DateTimeOffset.UtcNow;
+
+    /// <summary>The answer's status when it is not <see cref="StatusCode"/>'s: a call that threw, <c>!InvalidOperationException</c>.</summary>
+    internal OneOf<HttpStatusCode, string>? Status { get; init; }
+
+    /// <summary>Why the call failed (<see cref="RequestResponseLog.Error"/>).</summary>
+    internal string? Error { get; init; }
+
+    /// <summary>The answer's history mark (<see cref="RequestResponseLog.RecordedBefore12"/>).</summary>
+    internal RecordedBefore? ResponseBefore12 { get; init; }
 }
 
 /// <summary>
@@ -34,7 +43,14 @@ public static class PendingRequestResponseLogs
 
     public static int Count => Pending.Count;
 
-    public static void FlushAll(string testName, string testId)
+    public static void FlushAll(string testName, string testId) => FlushAll(testName, testId, afterAThrow: false);
+
+    /// <summary>
+    /// <see cref="FlushAll(string, string)"/>, for a flush after a send that threw (<paramref name="afterAThrow"/>): before #232
+    /// that send flushed nothing, so its calls went to the next send that succeeded, under that send's test, which history's
+    /// earlier rules still read as no call under this one (<see cref="RequestResponseLog.RecordedBefore12"/>).
+    /// </summary>
+    internal static void FlushAll(string testName, string testId, bool afterAThrow)
     {
         while (Pending.TryDequeue(out var entry))
         {
@@ -49,19 +65,22 @@ public static class PendingRequestResponseLogs
             {
                 Timestamp = entry.Timestamp,
                 ActivityTraceId = entry.ActivityTraceId,
-                ActivitySpanId = entry.ActivitySpanId
+                ActivitySpanId = entry.ActivitySpanId,
+                RecordedBefore12 = afterAThrow ? RecordedBefore.NotRecorded : null
             });
 
             RequestResponseLogger.Log(new RequestResponseLog(
                 testName, testId, entry.Method, entry.ResponseContent, entry.Uri,
                 [], entry.ServiceName, entry.CallerName, RequestResponseType.Response,
                 traceId, requestResponseId, false,
-                (OneOf<HttpStatusCode, string>)entry.StatusCode,
+                entry.Status ?? (OneOf<HttpStatusCode, string>)entry.StatusCode,
                 DependencyCategory: entry.DependencyCategory)
             {
                 Timestamp = entry.Timestamp,
                 ActivityTraceId = entry.ActivityTraceId,
-                ActivitySpanId = entry.ActivitySpanId
+                ActivitySpanId = entry.ActivitySpanId,
+                Error = entry.Error,
+                RecordedBefore12 = entry.ResponseBefore12
             });
         }
     }

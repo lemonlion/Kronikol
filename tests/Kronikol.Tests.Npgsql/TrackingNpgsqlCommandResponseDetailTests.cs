@@ -8,6 +8,7 @@ using Kronikol.Tracking;
 using Npgsql;
 using Xunit;
 using Kronikol.Tests.History;
+using Kronikol.Tests.Tracking;
 
 namespace Kronikol.Tests.Npgsql;
 
@@ -70,12 +71,13 @@ public class TrackingNpgsqlCommandResponseDetailTests : IDisposable
             while (reader.Read()) { }
         }
 
-        HistoryGuard.Pin(GetLogsForTest(), 11,
+        HistoryGuard.Pin(GetLogsForTest(), 12,
             "Caller>PostgreSQL SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK");
     }
 
     [Theory]
     [MemberData(nameof(ExecutePaths))]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public async Task A_statement_that_fails_records_an_Error_response_with_its_message_and_rethrows_the_same_exception(string path)
     {
         var rejected = new InvalidOperationException("relation \"no_such_table_126\" does not exist");
@@ -92,11 +94,13 @@ public class TrackingNpgsqlCommandResponseDetailTests : IDisposable
         Assert.Equal(logs[0].RequestResponseId, logs[1].RequestResponseId);
         Assert.Equal("Error", logs[1].StatusCode?.Value?.ToString());
         Assert.Equal(rejected.Message, logs[1].Content);
+        FailedCallContract.AssertAnswered(logs, rejected, "Error");
     }
 
     [Theory]
     [InlineData("Commit")]
     [InlineData("Rollback")]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public void A_commit_or_rollback_that_fails_records_an_Error_response_with_its_message_and_rethrows_the_same_exception(string operation)
     {
         var rejected = new InvalidOperationException("the transaction was aborted by the server");
@@ -117,6 +121,7 @@ public class TrackingNpgsqlCommandResponseDetailTests : IDisposable
         Assert.Equal(logs[2].RequestResponseId, logs[3].RequestResponseId);
         Assert.Equal("Error", logs[3].StatusCode?.Value?.ToString());
         Assert.Equal(rejected.Message, logs[3].Content);
+        FailedCallContract.AssertAnswered(logs[2..], rejected, "Error");
     }
 
     private string? RunSelectAndGetResponseContent() => RunSelectAndGetResponse().Content;

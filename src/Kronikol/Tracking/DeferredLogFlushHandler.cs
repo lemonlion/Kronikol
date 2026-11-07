@@ -25,22 +25,35 @@ public class DeferredLogFlushHandler : DelegatingHandler
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var response = await base.SendAsync(request, cancellationToken);
-
-        if (PendingRequestResponseLogs.Count > 0)
+        // The calls queued during a send are its own whether it answered or threw: a send that threw (TestServer hands the
+        // client an app's unhandled exception) flushed nothing, so its calls went out with the next send that succeeded,
+        // under that send's test (FAILED_CALLS_PLAN.md F28).
+        var threw = true;
+        try
         {
-            try
-            {
-                var (testName, testId) = _testInfoFetcher();
-                PendingRequestResponseLogs.FlushAll(testName, testId);
-            }
-            catch
-            {
-                // Fetcher threw (e.g. no test context during startup) — skip flush.
-                // Entries remain pending for the next successful invocation.
-            }
+            var response = await base.SendAsync(request, cancellationToken);
+            threw = false;
+            return response;
         }
+        finally
+        {
+            Flush(threw);
+        }
+    }
 
-        return response;
+    private void Flush(bool afterAThrow)
+    {
+        if (PendingRequestResponseLogs.Count == 0)
+            return;
+        try
+        {
+            var (testName, testId) = _testInfoFetcher();
+            PendingRequestResponseLogs.FlushAll(testName, testId, afterAThrow);
+        }
+        catch
+        {
+            // Fetcher threw (e.g. no test context during startup) — skip flush.
+            // Entries remain pending for the next successful invocation.
+        }
     }
 }

@@ -41,12 +41,22 @@ public class TrackingSubscriberClient : SubscriberClient
                 "Receive", null, _inner.SubscriptionName?.ToString(), 1);
             var content = PubSubTracker.DrawnAt(_options).Any(v => v != PubSubTrackingVerbosity.Summarised)
                 ? msg.Data?.ToStringUtf8() : null;
-            var (reqId, traceId) = _tracker.LogRequest(op, content);
+            var call = _tracker.Open(op, content, rawContent: null);
 
-            var reply = await messageHandler(msg, ct);
+            Reply reply;
+            try
+            {
+                reply = await messageHandler(msg, ct);
+            }
+            catch (Exception ex)
+            {
+                // A handler that throws is the receive's answer too: before #232 it left the receive alone.
+                _tracker.Threw(call, ex);
+                throw;
+            }
 
             var replyLabel = reply == Reply.Ack ? "Ack" : "Nack";
-            _tracker.LogResponse(op, reqId, traceId, content: null, rawContent: replyLabel);
+            _tracker.Answer(call, op, content: null, rawContent: replyLabel);
 
             return reply;
         }

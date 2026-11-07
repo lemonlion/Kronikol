@@ -328,6 +328,29 @@ public class RelationshipStatsTests
     }
 
     [Fact]
+    public void ComputeRelationshipStats_error_rate_counts_every_failed_answer()
+    {
+        // A call that threw is answered with its exception's type, a SQL failure with the word Error, and a failure its capturer
+        // read with a reason in Error: each is a failure, where only a numeric code of 400 or more was counted
+        // (plans/FAILED_CALLS_PLAN.md F19).
+        OneOf<HttpStatusCode, string>?[] statuses = [HttpStatusCode.OK, "!HttpRequestException", "Error", "Sent", HttpStatusCode.OK];
+        var logs = new List<RequestResponseLog>();
+        for (var i = 0; i < statuses.Length; i++)
+        {
+            var (req, res) = MakeRequestResponsePair(testId: $"test-{i}",
+                requestTime: BaseTime.AddSeconds(i), responseTime: BaseTime.AddSeconds(i).AddMilliseconds(10));
+            logs.Add(req);
+            logs.Add(res with { StatusCode = statuses[i], Error = i == 3 ? "The broker refused the message." : null });
+        }
+
+        var logsArray = logs.ToArray();
+        var stats = ComponentFlowSegmentBuilder.ComputeRelationshipStats(ComponentDiagramGenerator.ExtractRelationships(logsArray), logsArray).Values.First();
+
+        Assert.Equal(0.6, stats.ErrorRate, 2); // the thrown call, the SQL failure and the one with a reason: 3 of 5
+        Assert.Equal(0.6, Assert.Single(stats.EndpointBreakdown).ErrorRate, 2);
+    }
+
+    [Fact]
     public void ComputeRelationshipStats_status_code_distribution()
     {
         var logs = new List<RequestResponseLog>();
@@ -821,6 +844,27 @@ public class RelationshipStatsTests
         var logsArray = logs.ToArray();
         var rels = ComponentDiagramGenerator.ExtractRelationships(logsArray);
         var correlations = ComponentFlowSegmentBuilder.ComputeErrorCorrelations(rels, logsArray);
+
+        Assert.NotEmpty(correlations);
+        Assert.True(correlations[0].CoOccurrencePct >= 50);
+    }
+
+    [Fact]
+    public void ComputeErrorCorrelations_reads_every_failed_answer()
+    {
+        // Calls that threw, answered with their exception's type, fail together as a 500 and a 500 do (plans/FAILED_CALLS_PLAN.md F19).
+        var logs = new List<RequestResponseLog>();
+        for (var i = 0; i < 3; i++)
+        {
+            var (req1, res1) = MakeRequestResponsePair(testId: $"test-{i}", service: "OrderService",
+                requestTime: BaseTime.AddSeconds(i * 2), responseTime: BaseTime.AddSeconds(i * 2).AddMilliseconds(100));
+            var (req2, res2) = MakeRequestResponsePair(testId: $"test-{i}", service: "PaymentService", uri: "http://sut/api/payments",
+                requestTime: BaseTime.AddSeconds(i * 2).AddMilliseconds(200), responseTime: BaseTime.AddSeconds(i * 2).AddMilliseconds(300));
+            logs.AddRange([req1, res1 with { StatusCode = "!HttpRequestException", Error = "Connection refused" }, req2, res2 with { StatusCode = "Error", Error = "deadlock" }]);
+        }
+
+        var logsArray = logs.ToArray();
+        var correlations = ComponentFlowSegmentBuilder.ComputeErrorCorrelations(ComponentDiagramGenerator.ExtractRelationships(logsArray), logsArray);
 
         Assert.NotEmpty(correlations);
         Assert.True(correlations[0].CoOccurrencePct >= 50);

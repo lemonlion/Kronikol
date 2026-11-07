@@ -71,7 +71,7 @@ public class S3TrackingMessageHandler : DelegatingHandler, ITrackingComponent
             ? request.RequestUri!
             : BuildCleanUri(s3Op, effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        var call = OpenCall.Open(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -97,12 +97,25 @@ public class S3TrackingMessageHandler : DelegatingHandler, ITrackingComponent
                 GetFilteredHeaders(request, v),
                 v == S3TrackingVerbosity.Summarised && s3Op.Operation == S3Operation.Other)));
 
-        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        HttpResponseMessage response;
+        string? responseBody;
+        try
+        {
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // A call that throws is still an answer: the exception's type where the status would be, its message chain in
+            // Error, and the exception on its way (OpenCall, FailedSend). Before #232 it left the request alone, which
+            // history's earlier rules still read.
+            call.Threw(ex, OpenCall.UnansweredBefore12);
+            throw;
+        }
 
-        var responseBody = await ReadResponseBody(response, drawnAt, cancellationToken);
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        call.Answer(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,

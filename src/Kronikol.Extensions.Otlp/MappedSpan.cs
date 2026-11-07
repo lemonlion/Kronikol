@@ -54,6 +54,12 @@ public sealed record MappedSpan(
     internal RequestResponseMetaType MetaType { get; init; }
 
     /// <summary>
+    /// Why the call failed, for a span whose status is ERROR: its status message, stamped on the answer's <c>Error</c> as every
+    /// failed answer's reason is (plans/FAILED_CALLS_PLAN.md C2). Null when it did not fail.
+    /// </summary>
+    internal string? Error { get; init; }
+
+    /// <summary>
     /// The <see cref="InteractionRecord"/> pair for this call: request at <see cref="Start"/>, response at
     /// <see cref="End"/>, both stamped <c>capturedBy: span</c> so the ingest-time merge
     /// (<see cref="InteractionMerger"/>) can tell them from a wire capture of the same call.
@@ -79,7 +85,7 @@ public sealed record MappedSpan(
 
         var metaType = MetaType == RequestResponseMetaType.Default ? null : MetaType.ToString();
         return (request with { CapturedBy = InteractionMerger.SpanSource, MetaType = metaType },
-                response with { CapturedBy = InteractionMerger.SpanSource, MetaType = metaType });
+                response with { CapturedBy = InteractionMerger.SpanSource, MetaType = metaType, Error = Error });
     }
 
     /// <summary>The same pair as <see cref="RequestResponseLog"/> entries, ready for any <see cref="IRequestResponseSink"/>.</summary>
@@ -120,6 +126,7 @@ public sealed record MappedSpan(
             ActivitySpanId = SpanId,
             Phase = phase,
             CapturedBy = InteractionMerger.SpanSource,
+            Error = Error,
         };
 
         return (request, response);

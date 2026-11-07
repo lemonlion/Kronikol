@@ -137,6 +137,39 @@ public class DigestCallScopeTests
     }
 
     [Fact]
+    public void A_call_nobody_answered_says_so_where_its_status_goes()
+    {
+        // A request with no answer said nothing in the status column, as an answer with no status does, where query flow
+        // said "no response" (plans/FAILED_CALLS_PLAN.md F27).
+        var digest = Generate(WithNestedFailure(),
+        [
+            Marker("t0", "a basket"),
+            Marker("t0", "the order is placed"),
+            Pair("t0", "payments", "http://payments/charge", HttpStatusCode.OK)[0]
+        ]);
+
+        Assert.Contains("| no answer |", digest.Markdown, StringComparison.Ordinal);
+        Assert.Equal("no answer", Record(digest).GetProperty("calls")[0].GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public void The_scenario_fallback_puts_an_answer_with_a_reason_first()
+    {
+        // The one reading of a failed answer (plans/FAILED_CALLS_PLAN.md §5.4): a reason beside a status the text rule takes for
+        // a success is a failure, and the one a reader needs.
+        var logs = new List<RequestResponseLog> { Marker("t0", "a basket") };
+        var refused = Pair("t0", "bus", "http://bus/send", HttpStatusCode.OK);
+        logs.AddRange([refused[0], refused[1] with { StatusCode = "Sent", Error = "The broker refused the message." }]);
+        for (var i = 0; i < 9; i++)
+            logs.AddRange(Pair("t0", $"fine{i}", $"http://fine{i}/thing", HttpStatusCode.OK));
+        logs.Add(Marker("t0", "the order is placed"));
+
+        var calls = Record(Generate(WithNestedFailure(), logs.ToArray())).GetProperty("calls").EnumerateArray().ToArray();
+
+        Assert.Equal("bus", calls[0].GetProperty("service").GetString());
+    }
+
+    [Fact]
     public void The_scenario_fallback_puts_the_failures_first()
     {
         // Nine successes and one error, none of them in the failing step. The error is the one a reader

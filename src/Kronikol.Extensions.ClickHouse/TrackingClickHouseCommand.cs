@@ -238,7 +238,8 @@ public class TrackingClickHouseCommand : DbCommand
         var opts = _connection.Options;
         return new TrackingDbDataReader(
             inner, SqlResponseDetailResolver.ResolveKept(opts), opts.MaxResponseRows, opts.MaxValueDisplayLength, behavior,
-            rowsAt => _connection.Tracker.LogRowsResponse(traceId, requestResponseId, rowsAt));
+            rowsAt => _connection.Tracker.LogRowsResponse(traceId, requestResponseId, rowsAt),
+            ex => _connection.Tracker.LogReaderFailure(traceId, requestResponseId, ex));
     }
 
     private string? FormatScalar(object? result) =>

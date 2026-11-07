@@ -61,6 +61,59 @@ public class ShapeGuardTests
         ];
     }
 
+    // A Redis command that threw: 12 answers it with the exception's type (#232's R1), where 11 and earlier recorded no answer.
+    private static RequestResponseLog[] UnansweredRedisCommand()
+    {
+        var pair = Guid.NewGuid();
+        var uri = new Uri("redis://db0/user:42");
+        return
+        [
+            new RequestResponseLog("t", "c", "Get", "GET user:42", uri, [], "Redis", "TestCaller", RequestResponseType.Request, Guid.NewGuid(), pair,
+                TrackingIgnore: false, DependencyCategory: DependencyCategories.Redis),
+            new RequestResponseLog("t", "c", "Get", null, uri, [], "Redis", "TestCaller", RequestResponseType.Response, Guid.NewGuid(), pair,
+                TrackingIgnore: false, StatusCode: "!RedisConnectionException", DependencyCategory: DependencyCategories.Redis)
+            {
+                RecordedBefore12 = RecordedBefore.NotRecorded
+            }
+        ];
+    }
+
+    // A handler that threw behind TrackingProxy: 12 answers it with the exception's type (#232's Q2), where 11 and earlier
+    // answered a 500 no service sent.
+    private static RequestResponseLog[] ProxyFailure()
+    {
+        var pair = Guid.NewGuid();
+        var uri = new Uri("mock://Application/IMediator/Send");
+        return
+        [
+            new RequestResponseLog("t", "c", "Send", null, uri, [], "Application", "Caller", RequestResponseType.Request, Guid.NewGuid(), pair,
+                TrackingIgnore: false),
+            new RequestResponseLog("t", "c", "Send", null, uri, [], "Application", "Caller", RequestResponseType.Response, Guid.NewGuid(), pair,
+                TrackingIgnore: false, StatusCode: "!InvalidOperationException")
+            {
+                RecordedBefore12 = RecordedBefore.AnsweredWith(HttpStatusCode.InternalServerError)
+            }
+        ];
+    }
+
+    // A command TcpTap decoded whose connection closed before its reply: 12 records the call, answered with the close (#232's
+    // Q5), where 11 and earlier recorded no call at all.
+    private static RequestResponseLog[] ClosedBeforeTheReply()
+    {
+        var pair = Guid.NewGuid();
+        var uri = new Uri("redis://db0/cart:1");
+        return
+        [
+            new RequestResponseLog("t", "c", "Get", null, uri, [], "Redis", "TestCaller", RequestResponseType.Request, Guid.NewGuid(), pair,
+                TrackingIgnore: false, DependencyCategory: DependencyCategories.Redis)
+            {
+                RecordedBefore12 = RecordedBefore.NotRecorded
+            },
+            new RequestResponseLog("t", "c", "Get", null, uri, [], "Redis", "TestCaller", RequestResponseType.Response, Guid.NewGuid(), pair,
+                TrackingIgnore: false, StatusCode: "!IOException", DependencyCategory: DependencyCategories.Redis)
+        ];
+    }
+
     /// <summary>One capture of each form, in the order the pins list them.</summary>
     private static readonly (string Name, RequestResponseLog[] Logs)[] Corpus =
     [
@@ -131,6 +184,10 @@ public class ShapeGuardTests
         ("storagequeue summarised drop", [.. Call("c", "Other", "storagequeue:///orders", "StorageQueue", category: DependencyCategories.MessageQueue,
             status: HttpStatusCode.OK, request: r => r with { RecordedBefore11 = RecordedBefore.NotRecorded })]),
         ("blob failed send", ThrownBlobSend()),
+        // The calls #232 answers or records where 11 and earlier did not, and the made-up status it replaces.
+        ("redis unanswered", UnansweredRedisCommand()),
+        ("proxy failure", ProxyFailure()),
+        ("tcptap closed before the reply", ClosedBeforeTheReply()),
     ];
 
     /// <summary>
@@ -190,7 +247,10 @@ public class ShapeGuardTests
             "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK",
             "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
             "",
-            "TestCaller>BlobStorage Upload /orders/receipt.json -"
+            "TestCaller>BlobStorage Upload /orders/receipt.json -",
+            "TestCaller>Redis Get /user:{n} GET user:{n} -",
+            "Caller>Application Send /IMediator/Send 500",
+            ""
         ],
         [7] =
         [
@@ -242,7 +302,10 @@ public class ShapeGuardTests
             "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK",
             "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
             "",
-            "TestCaller>BlobStorage Upload /orders/receipt.json -"
+            "TestCaller>BlobStorage Upload /orders/receipt.json -",
+            "TestCaller>Redis Get /user:{n} GET user:{n} -",
+            "Caller>Application Send /IMediator/Send 500",
+            ""
         ],
         [8] =
         [
@@ -294,7 +357,10 @@ public class ShapeGuardTests
             "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK",
             "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
             "",
-            "TestCaller>BlobStorage Upload /orders/receipt.json -"
+            "TestCaller>BlobStorage Upload /orders/receipt.json -",
+            "TestCaller>Redis Get /db0/user:{n} GET user:{n} -",
+            "Caller>Application Send /IMediator/Send 500",
+            ""
         ],
         [9] =
         [
@@ -346,7 +412,10 @@ public class ShapeGuardTests
             "TestCaller>Oracle SELECT FROM breakfasts /unknown/breakfasts SELECT id, name FROM breakfasts OK",
             "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
             "",
-            "TestCaller>BlobStorage Upload /orders/receipt.json -"
+            "TestCaller>BlobStorage Upload /orders/receipt.json -",
+            "TestCaller>Redis Get /db0/user:{n} GET user:{n} -",
+            "Caller>Application Send /IMediator/Send 500",
+            ""
         ],
         [10] =
         [
@@ -398,7 +467,10 @@ public class ShapeGuardTests
             "TestCaller>Oracle SELECT FROM breakfasts /FREEPDB1/breakfasts SELECT id, name FROM breakfasts OK",
             "TestCaller>BlobStorage Upload /devstoreaccount1/orders 201",
             "",
-            "TestCaller>BlobStorage Upload /orders/receipt.json -"
+            "TestCaller>BlobStorage Upload /orders/receipt.json -",
+            "TestCaller>Redis Get /db0/user:{n} GET user:{n} -",
+            "Caller>Application Send /IMediator/Send 500",
+            ""
         ],
         [11] =
         [
@@ -450,7 +522,65 @@ public class ShapeGuardTests
             "TestCaller>Oracle SELECT FROM breakfasts /FREEPDB1/breakfasts SELECT id, name FROM breakfasts OK",
             "TestCaller>BlobStorage CreateContainer /orders 201",
             "TestCaller>StorageQueue Other /orders 200",
-            "TestCaller>BlobStorage Upload /orders/receipt.json !HttpRequestException"
+            "TestCaller>BlobStorage Upload /orders/receipt.json !HttpRequestException",
+            "TestCaller>Redis Get /db0/user:{n} GET user:{n} -",
+            "Caller>Application Send /IMediator/Send 500",
+            ""
+        ],
+        [12] =
+        [
+            "TestCaller>TargetService POST /api/items/{n}?b&expand 200",
+            "TestCaller>orders-host:8080 GET /orders/{n} 200",
+            "TestCaller>Api PUT /relative/{n} 204",
+            "TestCaller>Files GET /a%2Fb/c d/café/{bin} 200",
+            "TestCaller>Api POST /graphql query GetUser 200",
+            "TestCaller>Api POST /graphql query { menu } 200",
+            "TestCaller>Api GET /graphql?query query Menu 200",
+            "TestCaller>Api POST /graphql batch 200",
+            "TestCaller>Database INSERT INTO Orders /app/Orders INSERT INTO [Orders] ([Total]) VALUES ({n}) OK",
+            "TestCaller>Database INSERT INTO Audit /app/Audit INSERT INTO [Audit] VALUES ({n}) OK",
+            "TestCaller>Database Select /OrdersDb/Users SELECT [u].[Id] FROM [dbo].[Users] AS [u] WHERE [u].[Id] = {n} OK",
+            "TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} OK",
+            "TestCaller>SQL Server SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>PostgreSQL SELECT FROM breakfasts /analytics/breakfasts SELECT id, name FROM breakfasts WHERE name = '{s}' OK",
+            "TestCaller>Analytics INSERT INTO events /analytics/events INSERT INTO events (name) VALUES ('{s}') OK",
+            "TestCaller>Redis Get /db0/user:{n} GET user:{n} OK",
+            "TestCaller>Redis Get /{n}/user:{n} GET user:{n} OK",
+            "TestCaller>MongoDB Find ← testcollection /testdb/testcollection {\"find\":\"{v}\",\"filter\":{\"_id\":\"{v}\",\"n\":{n},\"ok\":{b}}} 200",
+            "TestCaller>CosmosDB Create /dbs/mydb/colls/orders/docs {\"id\":\"{v}\",\"total\":{n}.{n}} 201",
+            "TestCaller>CosmosDB Query /dbs/mydb/colls/orders/docs SELECT * FROM c WHERE c.id = @id 200",
+            "TestCaller>BigQuery Query /myproject SELECT name FROM ds.t WHERE id = {n} 200",
+            "TestCaller>Spanner SELECT FROM Users /Users SELECT * FROM Users WHERE Id = {n} -",
+            "TestCaller>DynamoDB PutItem /Users {\"TableName\":\"{v}\",\"Item\":{\"id\":{\"S\":\"{v}\"}}} 200",
+            "TestCaller>Elasticsearch Search → orders /orders {\"query\":{\"match\":{\"name\":\"{v}\"}}} 200",
+            "TestCaller>Bigtable ReadRows ← my-table /my-table -",
+            "TestCaller>AtlasDataApi insertOne → orders /orders_db/orders {\"document\":{\"name\":\"{v}\"}} 200",
+            "TestCaller>S3 GetObject /my-bucket/path/to/file.json 200",
+            "TestCaller>BlobStorage Upload /mycontainer/myblob.txt 201",
+            "TestCaller>CloudStorage Download → my-bucket/file.txt /my-bucket/file.txt 200",
+            "TestCaller>ServiceBus Send → orders-queue /orders-queue/ -",
+            "TestCaller>SQS SendMessage /orders-queue 200",
+            "TestCaller>SNS Publish /my-topic 200",
+            "TestCaller>EventBridge PutEvents [OrderCreated] /default/ 200",
+            "TestCaller>EventHubs Send → telemetry /telemetry -",
+            "TestCaller>Kafka Produce → orders-topic /orders-topic -",
+            "TestCaller>PubSub Publish → my-topic /my-topic -",
+            "TestCaller>StorageQueue Receive ← my-queue /my-queue 200",
+            "TestCaller>MassTransit Send OrderCreated /orders -",
+            "TestCaller>GrpcService SayHello /greet.Greeter/SayHello 200",
+            "Caller>Application Send /IMediator/Send 200",
+            "data-insights>mongo Find ← Trial /data-insights-Development/Trial {\"find\":\"{v}\"} OK",
+            "web>graphql POST /sidekick?x query { me } 201",
+            "TestCaller>BigQuery Read /sales 200",
+            "TestCaller>BigQuery Other /projects/shop/unknown 200",
+            "TestCaller>BigQuery Insert /upload/bigquery/v2/projects/shop/jobs?uploadType&upload_id !HttpRequestException",
+            "TestCaller>Oracle SELECT FROM breakfasts /FREEPDB1/breakfasts SELECT id, name FROM breakfasts OK",
+            "TestCaller>BlobStorage CreateContainer /orders 201",
+            "TestCaller>StorageQueue Other /orders 200",
+            "TestCaller>BlobStorage Upload /orders/receipt.json !HttpRequestException",
+            "TestCaller>Redis Get /db0/user:{n} GET user:{n} !RedisConnectionException",
+            "Caller>Application Send /IMediator/Send !InvalidOperationException",
+            "TestCaller>Redis Get /db0/cart:{n} !IOException"
         ]
     };
 
@@ -460,13 +590,15 @@ public class ShapeGuardTests
     [Fact]
     public void Every_kept_version_computes_its_lines_from_the_raw_call()
     {
-        foreach (var version in InteractionShape.KeptVersions)
-        {
-            var actual = LinesUnder(version);
-            Assert.True(Pins.TryGetValue(version, out var pinned) && actual.SequenceEqual(pinned, StringComparer.Ordinal),
-                $"rule {version} reads the corpus otherwise; it reads:{Environment.NewLine}" +
-                string.Join(Environment.NewLine, actual.Select(line => "            \"" + line.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\",")));
-        }
+        // Every rule that reads the corpus otherwise, not only the first, so a move that reaches several is read at once.
+        var otherwise = InteractionShape.KeptVersions
+            .Select(version => (Version: version, Actual: LinesUnder(version)))
+            .Where(rule => !(Pins.TryGetValue(rule.Version, out var pinned) && rule.Actual.SequenceEqual(pinned, StringComparer.Ordinal)))
+            .Select(rule => $"rule {rule.Version} reads the corpus otherwise; it reads:{Environment.NewLine}" +
+                string.Join(Environment.NewLine, rule.Actual.Select(line => "            \"" + line.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal) + "\",")))
+            .ToArray();
+
+        Assert.True(otherwise.Length == 0, string.Join(Environment.NewLine + Environment.NewLine, otherwise));
     }
 
     [Fact]

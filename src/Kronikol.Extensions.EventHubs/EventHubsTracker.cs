@@ -39,13 +39,20 @@ public class EventHubsTracker : ITrackingComponent
 
     public (Guid RequestResponseId, Guid TraceId) LogRequest(
         EventHubsOperationInfo operation, string? content)
+        => Open(operation, content) is { } call ? (call.Request.RequestResponseId, call.Request.TraceId) : (Guid.Empty, Guid.Empty);
+
+    /// <summary>
+    /// Logs a request and opens its call (<see cref="OpenCall"/>), which the client ends with <see cref="Answer"/> or
+    /// <see cref="Threw"/>. Null when the call is not tracked.
+    /// </summary>
+    internal OpenCall? Open(EventHubsOperationInfo operation, string? content)
     {
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return (Guid.Empty, Guid.Empty);
+        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return null;
 
         Interlocked.Increment(ref _invocationCount);
 
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
-        if (testInfo is null) return (Guid.Empty, Guid.Empty);
+        if (testInfo is null) return null;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
@@ -56,7 +63,7 @@ public class EventHubsTracker : ITrackingComponent
 
         var logContent = effectiveVerbosity == EventHubsTrackingVerbosity.Summarised ? null : content;
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        return OpenCall.Open(new RequestResponseLog(
             testInfo.Value.Name, testInfo.Value.Id,
             label, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
@@ -72,27 +79,48 @@ public class EventHubsTracker : ITrackingComponent
                 BuildUri(operation, v),
                 v == EventHubsTrackingVerbosity.Summarised ? null : content,
                 [], false)));
-
-        return (requestResponseId, traceId);
     }
 
     public void LogResponse(
         EventHubsOperationInfo operation,
         Guid requestResponseId, Guid traceId, string? content)
-        => LogResponse(operation, requestResponseId, traceId, content, rawContent: null);
+    {
+        if (Response(operation, requestResponseId, traceId, content, rawContent: null) is { } response)
+            RequestResponseLogger.Log(response);
+    }
 
     /// <summary>
-    /// A response whose note at Raw is <paramref name="rawContent"/> when it has one, and <paramref name="content"/>
-    /// otherwise: the consumer's count of the events it read, which Raw alone shows.
+    /// Ends <paramref name="call"/> with its answer, whose note at Raw is <paramref name="rawContent"/> when it has one, and
+    /// <paramref name="content"/> otherwise: the consumer's count of the events it read, which Raw alone shows.
     /// </summary>
-    internal void LogResponse(
+    internal void Answer(OpenCall? call, EventHubsOperationInfo operation, string? content, string? rawContent)
+    {
+        if (call is not null && Response(operation, call.Request.RequestResponseId, call.Request.TraceId, content, rawContent) is { } response)
+            call.Answer(response);
+    }
+
+    /// <summary>
+    /// Ends <paramref name="call"/> for a call that threw: the exception's type where the status would be and its message chain
+    /// as the error (<see cref="OpenCall.Threw"/>), and its message as the note at each verbosity that draws one, as a failure
+    /// was drawn before #232, when it was answered with no status, which history's earlier rules read as no answer alike.
+    /// </summary>
+    internal void Threw(OpenCall? call, Exception exception) =>
+        call?.Threw(exception, answer => answer with
+        {
+            Content = Note(exception.Message, null, PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity)),
+            SetupVariant = answer.SetupVariant is { } setup ? setup with { Content = Note(exception.Message, null, _options.SetupVerbosity ?? _options.Verbosity) } : null,
+            ActionVariant = answer.ActionVariant is { } action ? action with { Content = Note(exception.Message, null, _options.ActionVerbosity ?? _options.Verbosity) } : null,
+            RecordedBefore12 = RecordedBefore.NotRecorded
+        });
+
+    private RequestResponseLog? Response(
         EventHubsOperationInfo operation,
         Guid requestResponseId, Guid traceId, string? content, string? rawContent)
     {
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return;
+        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction)) return null;
 
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
-        if (testInfo is null) return;
+        if (testInfo is null) return null;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
@@ -101,7 +129,7 @@ public class EventHubsTracker : ITrackingComponent
 
         var logContent = Note(content, rawContent, effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        return new RequestResponseLog(
             testInfo.Value.Name, testInfo.Value.Id,
             label, logContent, uri, [],
             _options.ServiceName, _options.CallerName,
@@ -116,7 +144,7 @@ public class EventHubsTracker : ITrackingComponent
                 EventHubsOperationClassifier.GetDiagramLabel(operation, v),
                 BuildUri(operation, v),
                 Note(content, rawContent, v),
-                [], false)));
+                [], false));
     }
 
     // A call that moves a message is an event: making a batch, reading a hub's properties or starting a processor is not.

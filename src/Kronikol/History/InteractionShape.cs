@@ -63,19 +63,23 @@ public static partial class InteractionShape
     /// R2 - no rule changed, but what the Blob Storage and Storage Queues handlers record did: a call against Azurite is
     /// named from the container, blob or queue after the account wherever the URL puts it, a call <c>Summarised</c> could
     /// not name is drawn as <c>Other</c> rather than dropped, and a send that throws is answered
-    /// (<see cref="RequestResponseLog.RecordedBefore11"/> keeps how 10 and earlier read each such call).
+    /// (<see cref="RequestResponseLog.RecordedBefore11"/> keeps how 10 and earlier read each such call). 12: #232 - no rule
+    /// changed, but what the trackers record for a call that fails did: every call ends with an answer, so a call that threw is
+    /// answered with the exception's type where the status would be, a failure once answered with no status, as a success or
+    /// with a status its tracker made up says it failed, and a call is filed under the test that made it
+    /// (<see cref="RequestResponseLog.RecordedBefore12"/> keeps how 11 and earlier read each such call).
     /// <para>From 6 on, a released rule is kept as a function of the raw call (<see cref="KeptVersions"/>): while the
     /// window holds runs fingerprinted under one, each run also fingerprints its own calls under it, its
     /// <see cref="HistoryRun.Bridge"/>, so a move costs no quiet run (plans/CALL_OPERATION_AND_ORIGIN_PLAN.md §4.8, built
     /// for #190). A window holding runs under 5 or earlier compares from the next run, as before.</para>
     /// </summary>
-    public const int Version = 11;
+    public const int Version = 12;
 
     /// <summary>
     /// The released rules a run can fingerprint its own calls under (<see cref="Calls(IEnumerable{RequestResponseLog}, HistoryShapeRules, int)"/>),
     /// the current one last. A rule is kept from 6 on: what each recorded is a function of what the current one records.
     /// </summary>
-    internal static IReadOnlyList<int> KeptVersions { get; } = [6, 7, 8, 9, 10, Version];
+    internal static IReadOnlyList<int> KeptVersions { get; } = [6, 7, 8, 9, 10, 11, Version];
 
     /// <summary>How much of a statement's first line is templated, and how much of the templated head is kept.</summary>
     private const int HeadRaw = 2000;
@@ -270,9 +274,21 @@ public static partial class InteractionShape
         var shaped = new List<ShapeCall>(calls.Count);
         foreach (var call in calls)
         {
-            if (version >= 11)
+            if (version >= 12)
             {
                 shaped.Add(new ShapeCall(call.Caller, call.Service, call.Method, CallOperation.Key((call.Path, call.Head, call.Operation), rules), call.Status));
+                continue;
+            }
+
+            // Under 11, the call as its tracker recorded it before 12, or none, and its response's status then
+            // (RequestResponseLog.RecordedBefore12). Every older rule reads that status too.
+            var status11 = call.Status11 ?? call.Status;
+            if (version == 11)
+            {
+                if (call.Absent11)
+                    continue;
+                shaped.Add(new ShapeCall(call.Caller, call.Service, call.Method, CallOperation.Key((call.Path, call.Head, call.Operation), rules),
+                    call.Unanswered11 ? null : status11));
                 continue;
             }
 
@@ -282,7 +298,7 @@ public static partial class InteractionShape
                 if (call.Absent10)
                     continue;
                 shaped.Add(new ShapeCall(call.Caller, call.Service, call.Method10 ?? call.Method,
-                    CallOperation.Key((call.Path10 ?? call.Path, call.Head, call.Operation), rules), call.Unanswered10 ? null : call.Status));
+                    CallOperation.Key((call.Path10 ?? call.Path, call.Head, call.Operation), rules), call.Unanswered10 ? null : status11));
                 continue;
             }
 
@@ -293,7 +309,7 @@ public static partial class InteractionShape
                 if (call.Absent9)
                     continue;
                 shaped.Add(new ShapeCall(call.Caller, call.Service, call.Method9 ?? call.Method,
-                    CallOperation.Key((call.Path9 ?? call.Path, call.Head, call.Operation), rules), call.Unanswered9 ? null : call.Status));
+                    CallOperation.Key((call.Path9 ?? call.Path, call.Head, call.Operation), rules), call.Unanswered9 ? null : status11));
                 continue;
             }
 
@@ -303,7 +319,7 @@ public static partial class InteractionShape
                 if (call.Absent8)
                     continue;
                 shaped.Add(new ShapeCall(call.Caller, call.Service, call.Method8 ?? call.Method,
-                    CallOperation.Key((call.Path8 ?? call.Path, call.Head, call.Operation), rules), call.Unanswered8 ? null : call.Status));
+                    CallOperation.Key((call.Path8 ?? call.Path, call.Head, call.Operation), rules), call.Unanswered8 ? null : status11));
                 continue;
             }
 
@@ -315,7 +331,7 @@ public static partial class InteractionShape
             if ((call.Head7 ?? call.Head) is { } head)
                 target += " " + StatementHead(head, rules);
             shaped.Add(new ShapeCall(call.Caller, version < 7 ? call.Service6 ?? call.Service : call.Service, call.Method7 ?? call.Method, target,
-                call.Unanswered8 ? null : call.Status));
+                call.Unanswered8 ? null : status11));
         }
         return shaped;
     }
@@ -350,9 +366,26 @@ public static partial class InteractionShape
             var (path, head, operation) = CallOperation.Untemplated(method, request.Uri.ToString(), request.DependencyCategory, request.Content, queryKeys: true);
             var call = new HistoryRawCall(request.CallerName, request.ServiceName, method, path, operation, head, status);
 
+            // Rule 11 reads no call where the call was not recorded under this test before 12 (RequestResponseLog.RecordedBefore12),
+            // no response where its tracker recorded none or one with no status then, and the status it recorded then where that
+            // differs; the older rules read that status too.
+            if (request.RecordedBefore12 is { Absent: true })
+                call = call with { Absent11 = true };
+            if (response?.RecordedBefore12 is { Absent: true })
+            {
+                call = call with { Unanswered11 = true };
+            }
+            else if (response?.RecordedBefore12 is { Status: { } then })
+            {
+                var (codeThen, textThen) = InteractionStatus.Split(then);
+                var status11 = codeThen?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? textThen;
+                if (status11 != status)
+                    call = call with { Status11 = status11 };
+            }
+
             // Rule 10 reads a call as its tracker recorded it before 11 (RequestResponseLog.RecordedBefore11), or no call;
             // and no response when its tracker recorded none then.
-            if (request.RecordedBefore11 is { Absent: true })
+            if ((request.RecordedBefore11 ?? request.RecordedBefore12) is { Absent: true })
             {
                 call = call with { Absent10 = true };
             }
@@ -366,13 +399,13 @@ public static partial class InteractionShape
                     Path10 = path10 == path ? null : path10
                 };
             }
-            if (response?.RecordedBefore11 is { Absent: true })
+            if ((response?.RecordedBefore11 ?? response?.RecordedBefore12) is { Absent: true })
                 call = call with { Unanswered10 = true };
 
             // Rule 9 reads a call as its tracker recorded it before 10 (RequestResponseLog.RecordedBefore10), which 10
             // never left out, or, for a tracker that changed only at 11, as it recorded it before 11; or no call; and no
             // response when its tracker recorded none then.
-            var before10 = request.RecordedBefore10 ?? request.RecordedBefore11;
+            var before10 = request.RecordedBefore10 ?? request.RecordedBefore11 ?? request.RecordedBefore12;
             if (before10 is { Absent: true })
             {
                 call = call with { Absent9 = true };
@@ -387,13 +420,13 @@ public static partial class InteractionShape
                     Path9 = path9 == path ? null : path9
                 };
             }
-            if ((response?.RecordedBefore10 ?? response?.RecordedBefore11) is { Absent: true })
+            if ((response?.RecordedBefore10 ?? response?.RecordedBefore11 ?? response?.RecordedBefore12) is { Absent: true })
                 call = call with { Unanswered9 = true };
 
             // Rule 8 reads a call as its tracker recorded it before 9 (RequestResponseLog.RecordedBefore9), or, for a
             // tracker that changed only at 10 or 11, as it recorded it before then; or no call; and no response when its
             // tracker recorded none then.
-            var before9 = request.RecordedBefore9 ?? request.RecordedBefore10 ?? request.RecordedBefore11;
+            var before9 = request.RecordedBefore9 ?? request.RecordedBefore10 ?? request.RecordedBefore11 ?? request.RecordedBefore12;
             if (before9 is { Absent: true })
             {
                 call = call with { Absent8 = true };
@@ -408,14 +441,15 @@ public static partial class InteractionShape
                     Path8 = path8 == path ? null : path8
                 };
             }
-            if ((response?.RecordedBefore9 ?? response?.RecordedBefore10 ?? response?.RecordedBefore11) is { Absent: true })
+            if ((response?.RecordedBefore9 ?? response?.RecordedBefore10 ?? response?.RecordedBefore11 ?? response?.RecordedBefore12) is { Absent: true })
                 call = call with { Unanswered8 = true };
 
             // Rules 6 and 7 read a call as its tracker recorded it before 8 (RequestResponseLog.RecordedBefore8), or, for
             // a tracker that changed only at 9, 10 or 11, as it recorded it before then; or no call, with its escaped path
             // and its statement's own first line; 6 named a host by its address localhost.
             var service6 = ServiceNameUnder(request, 6);
-            var before8 = request.RecordedBefore8 ?? request.RecordedBefore9 ?? request.RecordedBefore10 ?? request.RecordedBefore11;
+            var before8 = request.RecordedBefore8 ?? request.RecordedBefore9 ?? request.RecordedBefore10 ?? request.RecordedBefore11
+                          ?? request.RecordedBefore12;
             if (before8 is { Absent: true })
             {
                 call = call with { Absent7 = true };

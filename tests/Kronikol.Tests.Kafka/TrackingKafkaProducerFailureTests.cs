@@ -1,6 +1,7 @@
 using Confluent.Kafka;
 using Kronikol.Extensions.Kafka;
 using Kronikol.Tracking;
+using Kronikol.Tests.Tracking;
 
 namespace Kronikol.Tests.Kafka;
 
@@ -86,6 +87,7 @@ public class TrackingKafkaProducerFailureTests
 
     [Theory]
     [MemberData(nameof(BothOverloads))]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public async Task A_ProduceAsync_that_throws_ProduceException_is_drawn_with_its_error_code_and_rethrown(bool byTopic)
     {
         var options = MakeOptions();

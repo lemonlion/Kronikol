@@ -34,22 +34,29 @@ public class RedisTracker : ITrackingComponent
     public int InvocationCount => _invocationCount;
     public bool HasHttpContextAccessor => _httpContextAccessor is not null;
 
-    public (Guid RequestResponseId, Guid TraceId) LogRedisRequest(string command, string? key, int db, string? content)
+    public (Guid RequestResponseId, Guid TraceId) LogRedisRequest(string command, string? key, int db, string? content) =>
+        OpenRedisCall(command, key, db, content) is { } call ? (call.Request.RequestResponseId, call.Request.TraceId) : (Guid.Empty, Guid.Empty);
+
+    /// <summary>
+    /// Logs the command's request and opens its call (<see cref="OpenCall"/>), which the database ends with
+    /// <see cref="AnswerRedisCall"/> or, when the command throws, <see cref="OpenCall.Threw"/>. Null when the command is not tracked.
+    /// </summary>
+    internal OpenCall? OpenRedisCall(string command, string? key, int db, string? content)
     {
         Interlocked.Increment(ref _invocationCount);
 
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
-            return (Guid.Empty, Guid.Empty);
+            return null;
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         var op = RedisOperationClassifier.Classify(command, hasResult: false, key, db);
 
         if (effectiveVerbosity == RedisTrackingVerbosity.Summarised && op.Operation == RedisOperation.Other)
-            return (Guid.Empty, Guid.Empty);
+            return null;
 
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
-            return (Guid.Empty, Guid.Empty);
+            return null;
 
         var requestResponseId = Guid.NewGuid();
         var traceId = Guid.NewGuid();
@@ -65,7 +72,7 @@ public class RedisTracker : ITrackingComponent
         var requestUri = BuildUri(key, db, effectiveVerbosity);
         var logContent = effectiveVerbosity == RedisTrackingVerbosity.Summarised ? null : content;
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        return OpenCall.Open(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -97,24 +104,35 @@ public class RedisTracker : ITrackingComponent
                     [],
                     v == RedisTrackingVerbosity.Summarised && op.Operation == RedisOperation.Other);
             }));
-
-        return (requestResponseId, traceId);
     }
 
     public void LogRedisResponse(string command, string? key, int db, bool hasResult, Guid requestResponseId, Guid traceId, string? content)
     {
+        if (Response(command, key, db, hasResult, requestResponseId, traceId, content) is { } response)
+            RequestResponseLogger.Log(response);
+    }
+
+    /// <summary>Ends <paramref name="call"/> with the command's answer: its result, a hit or a miss.</summary>
+    internal void AnswerRedisCall(OpenCall? call, string command, string? key, int db, bool hasResult, string? content)
+    {
+        if (call is not null && Response(command, key, db, hasResult, call.Request.RequestResponseId, call.Request.TraceId, content) is { } response)
+            call.Answer(response);
+    }
+
+    private RequestResponseLog? Response(string command, string? key, int db, bool hasResult, Guid requestResponseId, Guid traceId, string? content)
+    {
         if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
-            return;
+            return null;
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
         var op = RedisOperationClassifier.Classify(command, hasResult, key, db);
 
         if (effectiveVerbosity == RedisTrackingVerbosity.Summarised && op.Operation == RedisOperation.Other)
-            return;
+            return null;
 
         var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
         if (testInfo is null)
-            return;
+            return null;
 
         var label = RedisOperationClassifier.GetDiagramLabel(op, effectiveVerbosity);
 
@@ -125,7 +143,7 @@ public class RedisTracker : ITrackingComponent
         var requestUri = BuildUri(key, db, effectiveVerbosity);
         var logContent = effectiveVerbosity == RedisTrackingVerbosity.Summarised ? null : content;
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        return new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -154,7 +172,7 @@ public class RedisTracker : ITrackingComponent
                     v == RedisTrackingVerbosity.Summarised ? null : content,
                     [],
                     v == RedisTrackingVerbosity.Summarised && op.Operation == RedisOperation.Other);
-            }));
+            });
     }
 
     private static Uri BuildUri(string endpoint, string? key, int db) =>

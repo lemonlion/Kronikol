@@ -10,6 +10,7 @@ using Kronikol.Extensions.MongoDB;
 using Kronikol.History;
 using Kronikol.Tracking;
 using Kronikol.Tests.History;
+using Kronikol.Tests.Tracking;
 
 namespace Kronikol.Tests.MongoDB;
 
@@ -71,7 +72,7 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         subscriber.OnCommandStarted(MakeStartedEvent("find"));
         subscriber.OnCommandSucceeded(MakeSucceededEvent("find"));
 
-        HistoryGuard.Pin(GetLogsFromThisTest(), 11,
+        HistoryGuard.Pin(GetLogsFromThisTest(), 12,
             "MyService>MongoDB Find ← testcollection /testdb/testcollection 200");
     }
 
@@ -90,6 +91,7 @@ public class MongoDbTrackingSubscriberTests : IDisposable
     }
 
     [Fact]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public void CommandStartedAndFailed_LogsRequestAndErrorResponse()
     {
         var subscriber = new MongoDbTrackingSubscriber(MakeOptions());
@@ -100,7 +102,8 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         var logs = GetLogsFromThisTest();
         Assert.Equal(2, logs.Length);
         Assert.Equal(RequestResponseType.Response, logs[1].Type);
-        Assert.Equal(HttpStatusCode.InternalServerError, logs[1].StatusCode?.Value);
+        // A client-side failure, no reply from the server: answered with its type (FAILED_CALLS_PLAN.md F25, Q2), not a 500.
+        Assert.Equal("!Exception", logs[1].StatusCode?.Value);
         Assert.Contains("Connection lost", logs[1].Content!);
     }
 
@@ -660,6 +663,7 @@ public class MongoDbTrackingSubscriberTests : IDisposable
     }
 
     [Fact]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public void IEventSubscriber_RoutesCommandFailedEvent_ProducesErrorLog()
     {
         var subscriber = (IEventSubscriber)new MongoDbTrackingSubscriber(MakeOptions());
@@ -672,7 +676,25 @@ public class MongoDbTrackingSubscriberTests : IDisposable
         var logs = GetLogsFromThisTest();
         Assert.Equal(2, logs.Length);
         Assert.Equal(RequestResponseType.Response, logs[1].Type);
-        Assert.Equal(HttpStatusCode.InternalServerError, logs[1].StatusCode?.Value);
+        // A client-side failure, no reply from the server: answered with its type (FAILED_CALLS_PLAN.md F25, Q2), not a 500.
+        Assert.Equal("!Exception", logs[1].StatusCode?.Value);
+    }
+
+    [Fact]
+    public void History_rules_before_12_read_the_500_a_client_side_failure_had()
+    {
+        // Every older rule reads the 500 it had before #232, so a suite that upgrades sees no change there; rule 12 reads the type.
+        var subscriber = (IEventSubscriber)new MongoDbTrackingSubscriber(MakeOptions());
+        subscriber.TryGetEventHandler<CommandStartedEvent>(out var startHandler);
+        subscriber.TryGetEventHandler<CommandFailedEvent>(out var failHandler);
+
+        startHandler!(MakeStartedEvent("delete"));
+        failHandler!(MakeFailedEvent("delete"));
+
+        var logs = GetLogsFromThisTest();
+        Assert.Equal("!Exception", Assert.Single(Kronikol.History.InteractionShape.Calls(logs, null, 12)).Status);
+        foreach (var rule in Kronikol.History.InteractionShape.KeptVersions.Where(v => v < 12))
+            Assert.Equal("500", Assert.Single(Kronikol.History.InteractionShape.Calls(logs, null, rule)).Status);
     }
 
     // ─── Summarised + LogResponseContent ─────────────────────

@@ -46,7 +46,7 @@ public class TrackingDbCommandTests : IDisposable
         using var cmd = CreateCommand("SELECT * FROM Users WHERE Id = 1");
         cmd.ExecuteReader();
 
-        HistoryGuard.Pin(GetLogsForTest(), 11,
+        HistoryGuard.Pin(GetLogsForTest(), 12,
             "TestCaller>TestDB SELECT FROM Users /localhost/TestDb/Users SELECT * FROM Users WHERE Id = {n} -");
     }
 
@@ -100,6 +100,7 @@ public class TrackingDbCommandTests : IDisposable
 
     [Theory]
     [MemberData(nameof(ExecutePaths))]
+    [Trait(FailedCallContract.Trait, FailedCallContract.Value)]
     public async Task A_statement_that_fails_records_an_Error_response_with_its_message_and_rethrows_the_same_exception(string path)
     {
         using var cmd = CreateCommand("SELECT * FROM no_such_table_126");
@@ -116,6 +117,7 @@ public class TrackingDbCommandTests : IDisposable
         Assert.Equal(logs[0].RequestResponseId, logs[1].RequestResponseId);
         Assert.Equal("Error", logs[1].StatusCode?.Value?.ToString());
         Assert.Equal(rejected.Message, logs[1].Content);
+        FailedCallContract.AssertAnswered(logs, rejected, "Error");
     }
 
     // ─── Response detail follows verbosity ──────────────────────

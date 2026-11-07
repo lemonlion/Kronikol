@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.34.3] - 2026-11-07
+
+The patch part moves (5.34.2 to 5.34.3): every tracked call that throws now ends with exactly one answer that says it failed and why, and every reader of a call's outcome reads it the same way. These are fixes with nothing new to call: no public member is added, and the new pieces (`OpenCall`, the one reading in `InteractionStatus`, history's rule 12) are internal. It closes #232 (`plans/FAILED_CALLS_PLAN.md` R1 and R2, shipped together as the plan's Q1 recommends; R3, which draws the reason on the diagram, is a later minor).
+
+### Fixed
+
+- **A call that throws is answered, by every tracker (#232).** A tracker logged the request, and when the call threw, it rethrew and wrote no answer, so the diagram drew an arrow with no return, history read the call as unanswered, and the failure's reason was lost. The answer is now written by the code that opened the call, through one internal `OpenCall`: the status `!` and the exception's type (`!HttpRequestException`), the message chain in `Error`, no body, and the request's test and phase. Calls that had no answer before:
+  - SQS, SNS, EventBridge, S3, DynamoDB and the Atlas Data API, when the send or the reading of the response body throws;
+  - every Redis command, on its synchronous and asynchronous paths;
+  - a Pub/Sub subscriber whose handler throws;
+  - an Event Hubs read whose reader cannot be made;
+  - a Spanner call that fails with anything but an `RpcException`, and a sync throw in its interceptor;
+  - an EF Core command that is cancelled (answered as an `OperationCanceledException`, which is what its caller catches);
+  - BigQuery, Cloud Storage, Blob Storage and Storage Queues when the response body breaks off as it is read (all four read it outside their `try`);
+  - a command TcpTap decoded whose connection closed before its reply, which it dropped and only counted.
+- **A failure is no longer recorded as a success.**
+  - A SQL reader that fails partway (on Sqlite, the second row's `SqliteException`) was answered at `Close` as `OK` with the rows read so far. It is now answered `Error`, with the reason.
+  - A Spanner stream that faults with a non-gRPC exception was answered as a success.
+  - A `TrackingProxy` stream (MediatR, DispatchProxy) was answered `200` as soon as it was returned, with the iterator's type name as its note. It is now answered when it ends: `N items` (or `1 item`), or the failure that ended it.
+  - An Elasticsearch call that never reached the server throws nothing at its caller: the client hands back a response with no status and the failure in `OriginalException`. It was answered with no status, no note and no reason. It is now answered `!` and the failure's type, with `Error`.
+- **A failed answer says why.** Every failed answer a Kronikol tracker writes carries its reason in `Error`: the SQL family's and Spanner's `Error` answers, gRPC's, MassTransit's `Fault` call, MongoDB's client-side failures, and the OTLP tap's `ERROR` spans (the span's status message; a span with none says so).
+- **A made-up status is the exception's type (Q2).** `TrackingProxy` (MediatR, DispatchProxy) answered a handler that threw `500`, gRPC answered a failure without an `RpcException` `500`, and MongoDB answered a client-side failure with no reply from the server `500`. No service sent those codes. They are now `!` and the exception's type, with `Error`.
+- **Pub/Sub, Event Hubs and Service Bus failures have a status.** A failed publish, send or receive was answered with no status and the message as its note, the same as a success. It is now `!` and the exception's type, with `Error`, and the note is kept.
+- **The exception reaches the caller as it was thrown.** Redis's `MethodInfo.Invoke` wrapped what the client threw in a `TargetInvocationException`, and `TrackingProxy` rethrew a synchronous throw with its stack replaced. Both now hand on the exception itself, with its stack. A Redis call on a path the tracker does not record is no longer wrapped either.
+- **A failed answer is filed under the call's own test and phase.** The SQL family read the test and phase again when the answer came, so a call that ended after its test had moved on was filed elsewhere.
+- **The deferred queue flushes after a send that throws (F28).** With `TrackingProxy` in `Deferred` mode, the calls a server made during an HTTP call that threw waited for the next send that succeeded, and were written under that send's test, or never.
+- **One reading of how a call ended.** `query failures` read a failure as an error status or a reason. `query flow --errors-only` read the status only, the component diagram's `% errors` counted only numeric codes of 400 or more, `Failures.md` read the status alone when it chose which calls to list first, and the OTLP export used a word list. All now read a failed answer one way: its status says so, or it carries a reason.
+- **`Failures.md` and `Failures.jsonl` say `no answer`** in the status column for a request nobody answered, where they said nothing, as for an answer with no status.
+- **The OTLP export's message is a failure's reason.** A SQL failure was exported with its status word, `Error`, as the span's message. It now has the failure's reason.
+
+### Changed behaviour
+
+- **Diagrams:** a call that threw now draws a return arrow, labelled with the exception's type.
+- **History** moves to rule 12, and bridges the move: every older rule reads each moved call as the release that made it recorded it, so a suite that upgrades sees no quiet run and no changed scenario where nothing changed. Checked against the published 5.31.1: the plan's 45 probed failures each read the same under rule 11 on this build. Calls the deferred queue filed under another test move back to their own, and the scenario that had them reads changed once.
+- **Component diagram:** `% errors` rises wherever calls threw, or failed with a SQL `Error` or a `Fault`.
+- **OTLP export:** an answer with a reason and a status the word list does not name is exported as an `ERROR` span.
+
+### Known
+
+- **ClickHouse.Driver's `ExecuteReaderAsync`** is still answered when the reader is returned. The driver's reader has only a private constructor and an internal factory, so no tracker can see its reads, and a read that fails later is not recorded.
+- **A Kafka consume scope whose handler throws** is still answered as handled. It needs an API to report the outcome, and is left to #242.
+
+### Tests
+
+- `OpenCallTests` (16 facts) and a contract fact in every tracker's test project, `[Trait("Contract", "FailedCall")]`, which drives the shipped tracker over an inner client that throws. They assert one request and one answer that says why, and the exception the caller gets is the one thrown, its stack kept. `FailedCallGuardTests` reads the source: every request built under `src/` goes through `OpenCall`, or its file is on a list with the reason its calls are still answered; and every extension that logs a request has a contract fact.
+- `FailedAnswerReadersTests` reads every failure shape, and a call nobody answered, through each reader. `ShapeGuardTests` pins the corpus under every kept rule, with three new captures for rule 12, and every tracker's history pin moved to 12.
+- The plan's probe of 45 failures, run again on this build, reads every one the same under rule 11 as the published 5.31.1 recorded it (`plans/FAILED_CALLS_PLAN.harness/results/across-the-fix-232.txt`).
+- `OpenCallTests`, the readers' facts and most trackers' facts were red before their change. The contract traits on SqlClient's, Npgsql's, MySqlConnector's, Oracle's, Dapper's and ClickHouse's existing failure facts, and the MediatR and DispatchProxy facts, were added after the shared change they cover, whose own facts were red first. Four mutations from the plan's §6.7 are each caught: dropping the catch, swapping the exception, dropping the phase variants, and reading the test at the end.
+
 ## [5.34.2] - 2026-11-07
 
 The patch part moves (5.34.1 to 5.34.2): bug fixes in how the report's page keeps the reader's place when a control draws its diagrams again, or a diagram is zoomed, with nothing new to call or set (#227, `plans/TOGGLE_JUMP_PLAN.md`).

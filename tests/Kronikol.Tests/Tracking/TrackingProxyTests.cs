@@ -401,7 +401,9 @@ public class TrackingProxyTests
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await proxy.FailAsync());
 
         var response = GetLogsForTest().Single(l => l.Type == RequestResponseType.Response);
-        Assert.Equal(System.Net.HttpStatusCode.InternalServerError, response.StatusCode!.Value);
+        // A call that threw is answered with its exception's type (FAILED_CALLS_PLAN.md Q2), where the proxy made up a 500.
+        Assert.Equal("!InvalidOperationException", response.StatusCode!.Value);
+        Assert.Equal("no square today", response.Error);
         Assert.Equal("InvalidOperationException: no square today", response.Content);
     }
 

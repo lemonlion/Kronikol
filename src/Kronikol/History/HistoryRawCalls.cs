@@ -66,6 +66,18 @@ internal sealed record HistoryRawCall(string Caller, string Service, string Meth
 
     /// <summary>Whether rule 10 reads no response here: its tracker recorded none before 11, as for a send that threw.</summary>
     public bool Unanswered10 { get; init; }
+
+    /// <summary>Whether rule 11 reads no call here: it was not recorded under this test before 12 (<see cref="Tracking.RequestResponseLog.RecordedBefore12"/>).</summary>
+    public bool Absent11 { get; init; }
+
+    /// <summary>Whether rule 11 reads no response here: its tracker recorded none before 12, or one with no status, as for a call that threw.</summary>
+    public bool Unanswered11 { get; init; }
+
+    /// <summary>
+    /// The response's status as rules 6 to 11 read it, when that differs from <see cref="Status"/>: its tracker answered the call
+    /// with another before 12, a failure read as a success or a status the tracker made up.
+    /// </summary>
+    public string? Status11 { get; init; }
 }
 
 /// <summary>

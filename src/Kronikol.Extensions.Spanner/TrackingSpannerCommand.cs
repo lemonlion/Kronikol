@@ -242,7 +242,10 @@ public class TrackingSpannerCommand : DbCommand
             inner, detail, _options.MaxResponseRows, 500, behavior,
             rowsAt => _connection.Tracker.LogResponseAtDetail(
                 SpannerOperationClassifier.ClassifySql(CommandText, CommandType), requestResponseId, traceId,
-                spannerDetail => rowsAt((SqlResponseDetail)(int)spannerDetail)));
+                spannerDetail => rowsAt((SqlResponseDetail)(int)spannerDetail)),
+            // A reader that fails partway was answered at Close, as a success with the rows read so far, before #232.
+            ex => _connection.Tracker.LogFailure(SpannerOperationClassifier.ClassifySql(CommandText, CommandType), requestResponseId, traceId, ex,
+                answeredSince12: true));
     }
 
     private string? FormatScalar(object? result) =>

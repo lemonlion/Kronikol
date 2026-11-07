@@ -59,6 +59,13 @@ public class HistoryRawCallsTests : IDisposable
     // The same for a tracker that began to answer one at 11; the rules before 11 read it unanswered.
     private static RequestResponseLog[] FailedBefore11(RequestResponseLog[] pair) => [pair[0], pair[1] with { RecordedBefore11 = RecordedBefore.NotRecorded }];
 
+    // #232's: a call that threw, which 12 answers where 11 and earlier read no answer, and one whose made-up status 12 reads as
+    // the exception's type, where 11 and earlier read the status it had then.
+    private static RequestResponseLog[] AnsweredSince12(RequestResponseLog[] pair) => [pair[0], pair[1] with { RecordedBefore12 = RecordedBefore.NotRecorded }];
+
+    private static RequestResponseLog[] StatusBefore12(RequestResponseLog[] pair, OneOf<HttpStatusCode, string> then) =>
+        [pair[0], pair[1] with { RecordedBefore12 = RecordedBefore.AnsweredWith(then) }];
+
     /// <summary>
     /// A call of every form a rule reads differently: ids a pattern folds, a GraphQL operation in a body, in a query
     /// string and as a batch, a statement after a SET prologue that 6 and 7 read as their tracker recorded it then, one
@@ -104,6 +111,14 @@ public class HistoryRawCallsTests : IDisposable
             r => r with { RecordedBefore11 = RecordedBefore.NotRecorded }),
         .. FailedBefore11(Pair(second, "Upload", new Uri("http://127.0.0.1:10000/orders/order-1.json"), service: "BlobStorage",
             category: DependencyCategories.BlobStorage, status: "!HttpRequestException")),
+        // #232's: a Redis command that threw, a handler's failure behind TrackingProxy that 11 read as a 500, and a command TcpTap
+        // saw closed before its reply, which 6 to 11 did not record at all.
+        .. AnsweredSince12(Pair(first, "Get", new Uri("redis://db0/user:7"), service: "Redis", category: DependencyCategories.Redis,
+            status: "!RedisConnectionException")),
+        .. StatusBefore12(Pair(second, "Send", new Uri("mock://Application/IMediator/Send"), service: "Application",
+            status: "!InvalidOperationException"), HttpStatusCode.InternalServerError),
+        .. With(Pair(second, "Get", new Uri("redis://db0/cart:1"), service: "Redis", category: DependencyCategories.Redis, status: "!IOException"),
+            r => r with { RecordedBefore12 = RecordedBefore.NotRecorded }),
         // What a writer escapes: quotes, a backslash, angle brackets, a plus, non-ASCII and a control character.
         .. Pair(second, "SELECT", new Uri("sql:///Menu/Items"), "\"select a\\b <b>+ 'café'\u0001 FROM [Items] WHERE [Name] = 'crêpe' + '<i>'", service: "MenuDb",
             category: DependencyCategories.SqlServer)

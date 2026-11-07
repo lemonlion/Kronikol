@@ -20,6 +20,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     private static readonly ActivitySource GrpcActivitySource = new("Kronikol.Grpc");
     private readonly GrpcTrackingOptions _options;
     private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly OpenCalls _open = new();
     private int _invocationCount;
     private bool _listenerStarted;
 
@@ -101,9 +102,9 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             // A continuation that throws as the call starts (a disposed channel does) is the call's answer.
             if (requestLogged)
             {
-                var (status, content) = Failure(ex);
+                var (status, content, error, before12) = Failure(ex);
                 LogResponse(testInfo, label, _ => content, effectiveVerbosity, uri, serviceName, traceId, requestResponseId, status,
-                    activityTraceId, activitySpanId, opInfo);
+                    activityTraceId, activitySpanId, opInfo, error: error, before12: before12);
             }
             InternalFlowSpanStore.Complete(activity);
             throw;
@@ -164,9 +165,9 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         }
         catch (Exception ex)
         {
-            var (status, content) = Failure(ex);
+            var (status, content, error, before12) = Failure(ex);
             LogResponse(testInfo, label, _ => content, effectiveVerbosity, uri, serviceName,
-                traceId, requestResponseId, status, activityTraceId, activitySpanId, opInfo);
+                traceId, requestResponseId, status, activityTraceId, activitySpanId, opInfo, error: error, before12: before12);
             throw;
         }
     }
@@ -389,9 +390,9 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         }
         catch (Exception ex)
         {
-            var (status, content) = Failure(ex);
+            var (status, content, error, before12) = Failure(ex);
             LogResponse(testInfo, label, _ => content, effectiveVerbosity, uri, serviceName,
-                traceId, requestResponseId, status, activityTraceId, activitySpanId, opInfo);
+                traceId, requestResponseId, status, activityTraceId, activitySpanId, opInfo, error: error, before12: before12);
             throw;
         }
         finally
@@ -405,17 +406,22 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     /// <see cref="OperationCanceledException"/> as <c>Cancelled</c> (a channel with
     /// <c>ThrowOperationCanceledOnCancellation</c> throws one where it would throw <c>RpcException(Cancelled)</c>), and
     /// anything else as <c>Unknown</c>, each with <c>"{code}: {message}"</c>, its note at every verbosity. Every failure is
-    /// recorded, so no request is left without its response.
+    /// recorded, so no request is left without its response, and its message chain is its error. Anything but those two is
+    /// answered with its type where the status would be (<see cref="FailedSend"/>) and its message as the note: no gRPC status
+    /// was sent for it, where it was answered <c>Unknown</c> as a made-up 500 before #232, which history's earlier rules still
+    /// read (<see cref="RequestResponseLog.RecordedBefore12"/>).
     /// </summary>
-    private static (HttpStatusCode Status, string Content) Failure(Exception exception)
+    private static (OneOf<HttpStatusCode, string> Status, string Content, string Error, RecordedBefore? Before12) Failure(Exception exception)
     {
         var (code, message) = exception switch
         {
             RpcException rpc => (rpc.StatusCode, rpc.Message),
             OperationCanceledException => (StatusCode.Cancelled, exception.Message),
-            _ => (StatusCode.Unknown, exception.Message),
+            _ => ((StatusCode?)null, exception.Message),
         };
-        return (MapGrpcStatusToHttp(code), $"{code}: {message}");
+        return code is { } status
+            ? (MapGrpcStatusToHttp(status), $"{status}: {message}", FailedSend.Describe(exception), null)
+            : (FailedSend.Status(exception), message, FailedSend.Describe(exception), RecordedBefore.AnsweredWith(HttpStatusCode.InternalServerError));
     }
 
     /// <summary>A client stream's response, recorded as an async unary call's is, through its outcome.</summary>
@@ -454,8 +460,8 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
 
         public void Failed(Exception exception)
         {
-            var (status, content) = Failure(exception);
-            Record(_ => content, status);
+            var (status, content, error, before12) = Failure(exception);
+            Record(_ => content, status, error, before12);
         }
 
         /// <summary>
@@ -489,13 +495,14 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             }
         }
 
-        private void Record(Func<GrpcTrackingVerbosity, string?> note, HttpStatusCode statusCode)
+        private void Record(Func<GrpcTrackingVerbosity, string?> note, OneOf<HttpStatusCode, string> statusCode,
+            string? error = null, RecordedBefore? before12 = null)
         {
             if (Interlocked.Exchange(ref _recorded, 1) != 0)
                 return;
 
             owner.LogResponse(testInfo, label, note, verbosity, uri, serviceName, traceId, requestResponseId, statusCode,
-                activityTraceId, activitySpanId, opInfo, phase);
+                activityTraceId, activitySpanId, opInfo, phase, error, before12);
             InternalFlowSpanStore.Complete(activity);
         }
     }
@@ -535,7 +542,7 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
         string? activityTraceId, string? activitySpanId,
         GrpcOperationInfo? opInfo = null)
     {
-        RequestResponseLogger.Log(new RequestResponseLog(
+        _open.Open(new RequestResponseLog(
             testInfo.Name, testInfo.Id,
             label, note(verbosity), uri,
             headers, serviceName, _options.CallerName,
@@ -559,11 +566,11 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
     private void LogResponse(
         TestIdentity testInfo, string label, Func<GrpcTrackingVerbosity, string?> note, GrpcTrackingVerbosity verbosity,
         Uri uri, string serviceName,
-        Guid traceId, Guid requestResponseId, HttpStatusCode statusCode,
+        Guid traceId, Guid requestResponseId, OneOf<HttpStatusCode, string> statusCode,
         string? activityTraceId, string? activitySpanId,
-        GrpcOperationInfo? opInfo = null, TestPhase? phase = null)
+        GrpcOperationInfo? opInfo = null, TestPhase? phase = null, string? error = null, RecordedBefore? before12 = null)
     {
-        RequestResponseLogger.Log(new RequestResponseLog(
+        Answer(requestResponseId, new RequestResponseLog(
             testInfo.Name, testInfo.Id,
             label, note(verbosity), uri,
             [], serviceName, _options.CallerName,
@@ -575,13 +582,24 @@ public class GrpcTrackingInterceptor : Interceptor, ITrackingComponent
             AttributionSource = testInfo.Source,
             Timestamp = DateTimeOffset.UtcNow,
             ActivityTraceId = activityTraceId,
-            ActivitySpanId = activitySpanId
+            ActivitySpanId = activitySpanId,
+            Error = error,
+            RecordedBefore12 = before12
         }.WithVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => new PhaseVariant(
                 GrpcOperationClassifier.GetDiagramLabel(opInfo!, v),
                 BuildUri(opInfo!, v),
                 note(v),
                 [], false)));
+    }
+
+    // The answer ends the call its request opened (OpenCall): once, under the request's test and phase.
+    private void Answer(Guid requestResponseId, RequestResponseLog response)
+    {
+        if (_open.Take(requestResponseId) is { } call)
+            call.Answer(response);
+        else
+            RequestResponseLogger.Log(response);
     }
 
     /// <summary>A message's note: its JSON at Detailed and Raw, none at Summarised.</summary>

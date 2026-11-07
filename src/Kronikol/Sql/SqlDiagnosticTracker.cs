@@ -20,6 +20,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     private int _invocationCount;
 
     private readonly ConcurrentDictionary<Guid, (Guid TraceId, Guid RequestResponseId, DateTimeOffset StartTime)> _pendingCommands = new();
+    private readonly OpenCalls _open = new();
 
     protected SqlDiagnosticTracker(SqlTrackingOptionsBase options, IHttpContextAccessor? httpContextAccessor = null)
     {
@@ -113,7 +114,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => BuildRequestVariant(commandText, dataSource, database, BuildRequestContent(commandText, parameters, v), op, v));
 
-        RequestResponseLogger.Log(log);
+        _open.Open(log);
     }
 
     /// <summary>
@@ -135,14 +136,15 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     {
         if (!_pendingCommands.TryRemove(executionId, out var ids))
             return;
+        var call = _open.Take(ids.RequestResponseId);
 
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+        if (call is null && !PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
             _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = IdentityOf(call);
         if (testInfo is null)
             return;
 
@@ -173,7 +175,8 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             DependencyCategory: _options.DependencyCategory)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            Error = exception is null ? null : FailedSend.Describe(exception)
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
@@ -189,7 +192,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
                 return new PhaseVariant("", new Uri($"{_options.UriScheme}:///"), vContent, [], false);
             });
 
-        RequestResponseLogger.Log(log);
+        Answer(call, log);
     }
 
     /// <summary>
@@ -290,7 +293,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
             v => BuildRequestVariant(commandText, dataSource, database, contentFor(v), op, v));
 
-        RequestResponseLogger.Log(log);
+        _open.Open(log);
 
         return (traceId, requestResponseId);
     }
@@ -309,13 +312,14 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
 
     private void ResponseLogged(Guid traceId, Guid requestResponseId, int? rowsAffected, Exception? exception)
     {
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+        var call = _open.Take(requestResponseId);
+        if (call is null && !PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
             _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = IdentityOf(call);
         if (testInfo is null)
             return;
 
@@ -346,7 +350,8 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             DependencyCategory: _options.DependencyCategory)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            Error = exception is null ? null : FailedSend.Describe(exception)
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
@@ -362,7 +367,7 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
                 return new PhaseVariant("", new Uri($"{_options.UriScheme}:///"), vContent, [], false);
             });
 
-        RequestResponseLogger.Log(log);
+        Answer(call, log);
     }
 
     /// <summary>
@@ -402,15 +407,16 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
     }
 
     private void ResponseLoggedWithContent(Guid traceId, Guid requestResponseId,
-        Func<SqlTrackingVerbosityLevel, string?> contentAt, Exception? exception)
+        Func<SqlTrackingVerbosityLevel, string?> contentAt, Exception? exception, RecordedBefore? before12 = null)
     {
-        if (!PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
+        var call = _open.Take(requestResponseId);
+        if (call is null && !PhaseConfiguration.ShouldTrack(_options.TrackDuringSetup, _options.TrackDuringAction))
             return;
 
         var effectiveVerbosity = PhaseConfiguration.GetEffectiveVerbosity(
             _options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
 
-        var testInfo = TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+        var testInfo = IdentityOf(call);
         if (testInfo is null)
             return;
 
@@ -439,7 +445,9 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
             DependencyCategory: _options.DependencyCategory)
         {
             AttributionSource = testInfo.Value.Source,
-            Phase = TestPhaseContext.Current
+            Phase = TestPhaseContext.Current,
+            Error = exception is null ? null : FailedSend.Describe(exception),
+            RecordedBefore12 = before12
         };
 
         log.AttachVariants(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity,
@@ -453,7 +461,39 @@ public abstract class SqlDiagnosticTracker : ITrackingComponent
                 return new PhaseVariant("", new Uri($"{_options.UriScheme}:///"), vContent, [], false);
             });
 
-        RequestResponseLogger.Log(log);
+        Answer(call, log);
+    }
+
+    /// <summary>
+    /// Logs the answer of a call whose reader failed partway: status <c>Error</c>, the exception's message as its note and its
+    /// message chain as the error. Before #232 such a reader was answered when it was closed, as a success with the rows read so
+    /// far, which history's earlier rules still read (<see cref="RequestResponseLog.RecordedBefore12"/>).
+    /// </summary>
+    internal void LogReaderFailure(Guid traceId, Guid requestResponseId, Exception exception)
+    {
+        try
+        {
+            ResponseLoggedWithContent(traceId, requestResponseId, _ => null, exception, RecordedBefore.AnsweredWith("OK"));
+        }
+        catch (Exception ex)
+        {
+            NotRecorded(ex);
+        }
+    }
+
+    // The test an answer belongs to: its request's, read once, when the request was logged (OpenCall); read now only for a call
+    // this tracker did not open.
+    private TestIdentity? IdentityOf(OpenCall? call) => call is not null
+        ? new TestIdentity(call.Request.TestName, call.Request.TestId, call.Request.AttributionSource ?? AttributionSource.None)
+        : TestInfoResolver.ResolveWithSource(_httpContextAccessor, _options.CurrentTestInfoFetcher);
+
+    // The answer ends the call its request opened; one the tracker did not open, a consumer's own pair, is logged as it is.
+    private static void Answer(OpenCall? call, RequestResponseLog log)
+    {
+        if (call is not null)
+            call.Answer(log);
+        else
+            RequestResponseLogger.Log(log);
     }
 
     private Uri BuildUri(string? dataSource, string? database, UnifiedSqlOperationInfo op, SqlTrackingVerbosityLevel verbosity)

@@ -88,7 +88,7 @@ public class SqsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
             ? request.RequestUri!
             : BuildCleanUri(sqsOp);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        var call = OpenCall.Open(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
@@ -117,18 +117,30 @@ public class SqsTrackingMessageHandler : DelegatingHandler, ITrackingComponent
 
         ReconstructContent(request, requestBody);
 
-        var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
         // Each note is made at its own verbosity from a body read once, when any of them shows it: a phase's variant
         // was given the effective verbosity's note, so a Detailed phase of a Summarised handler had no response body.
         var drawnAt = PhaseConfiguration.DrawnAt(_options.Verbosity, _options.SetupVerbosity, _options.ActionVerbosity);
-        var responseBody = drawnAt.All(v => v == SqsTrackingVerbosity.Summarised)
-            ? null
-            : await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
+        HttpResponseMessage response;
+        string? responseBody;
+        try
+        {
+            response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            responseBody = drawnAt.All(v => v == SqsTrackingVerbosity.Summarised)
+                ? null
+                : await HttpContentReader.ReadContentAsStringAsync(response.Content, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // A call that throws is still an answer: the exception's type where the status would be, its message chain in
+            // Error, and the exception on its way (OpenCall, FailedSend). Before #232 it left the request alone, which
+            // history's earlier rules still read.
+            call.Threw(ex, OpenCall.UnansweredBefore12);
+            throw;
+        }
 
         var responseHeaders = GetFilteredHeaders(response, effectiveVerbosity);
 
-        RequestResponseLogger.Log(new RequestResponseLog(
+        call.Answer(new RequestResponseLog(
             testInfo.Value.Name,
             testInfo.Value.Id,
             method,
