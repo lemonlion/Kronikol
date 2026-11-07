@@ -649,6 +649,12 @@ S0's red facts come first and are committed with the fix in one release commit. 
   suite, 12,592 with its three script-text facts moved to `showFromControl` and the pan's instant scroll. The disk
   filled for a few minutes during the mutations (another session's build), and the eight mutations it broke were run
   again. Logs: `TOGGLE_JUMP_PLAN.harness/execution/`.
+- **2026-11-07 (kronikol-8b), CI after the release.** On 802a374f the E2E (Diagram Interactions) lane failed five of the
+  facts on its Linux runner, each on a premise, the keeper holding in all: its fonts put the nearest text drawn once 54 px
+  from the reading line where T18 allowed 40 (now 100); P6's second click there comes before the first click's picture of
+  the diagram read, which puts back the drawing it still has and draws nothing, so P6 no longer waits for a new picture
+  of it; and Direction's page there, 351 px taller than the window, kept the text read 4 px down the page, which the
+  premise refused as it asked for half a window of room either way (now: the page at neither end). A test-only commit.
 
 ## Appendix A. Harness
 

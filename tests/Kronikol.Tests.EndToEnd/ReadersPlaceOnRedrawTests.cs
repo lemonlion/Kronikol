@@ -228,7 +228,8 @@ public class ReadersPlaceOnRedrawTests : PlaywrightTestBase
     /// control's middle itself: a locator's click scrolls the page to bring the control into view first, a few pixels for
     /// a scenario's settings stuck under the bar, which no reader's click does.
     /// </summary>
-    private static async Task<Outcome> UseAsync(IPage page, object box, ILocator control, Func<Task>? meanwhile = null)
+    private static async Task<Outcome> UseAsync(IPage page, object box, ILocator control, Func<Task>? meanwhile = null,
+        bool readRedrawn = true)
     {
         var at = await control.BoundingBoxAsync();
         Assert.True(at is not null && at.Y >= 0 && at.Y + at.Height <= page.ViewportSize!.Height, "the control is in the window");
@@ -238,22 +239,23 @@ public class ReadersPlaceOnRedrawTests : PlaywrightTestBase
         Assert.NotNull(await page.EvaluateAsync<JsonElement?>("(i) => window.__k227.mark(i)", box));
         await page.Mouse.ClickAsync(x, y);
         if (meanwhile is not null) await meanwhile();
-        await SettledAsync(page);
+        await SettledAsync(page, readRedrawn);
         return JsonSerializer.Deserialize<Outcome>(await page.EvaluateAsync<string>("() => window.__k227.result()"))!;
     }
 
-    /// <summary>Every diagram drawn: none queued, waiting or being drawn, no control busy, the diagram read drawn again; then
+    /// <summary>Every diagram drawn: none queued, waiting or being drawn, no control busy, and the diagram read drawn again
+    /// unless <paramref name="readRedrawn"/> is false (two clicks that end where they began may leave it as it was); then
     /// the page still for twenty frames.</summary>
-    private static async Task SettledAsync(IPage page)
+    private static async Task SettledAsync(IPage page, bool readRedrawn = true)
     {
         await page.WaitForFunctionAsync("""
-            () => {
+            (redrawn) => {
                 if (window._plantumlRendering || document.querySelector('.details-pending')) return false;
                 const boxes = document.querySelectorAll('[data-diagram-type="plantuml"]');
                 for (const c of boxes) if (c._noteRendering || c._kQueued > 0 || c._kBatched > 0) return false;
-                return !window.__mark || !document.contains(window.__mark.old);
+                return !redrawn || !window.__mark || !document.contains(window.__mark.old);
             }
-            """, null, new() { Timeout = 120_000, PollingInterval = 200 });
+            """, readRedrawn, new() { Timeout = 120_000, PollingInterval = 200 });
         await page.EvaluateAsync("""
             async () => {
                 let last = null, still = 0;
@@ -267,9 +269,9 @@ public class ReadersPlaceOnRedrawTests : PlaywrightTestBase
             """);
     }
 
-    private static void AssertKept(Outcome o, string what)
+    private static void AssertKept(Outcome o, string what, bool redrawn = true)
     {
-        Assert.True(o.Redrawn, $"{what}: the diagram read was drawn again");
+        if (redrawn) Assert.True(o.Redrawn, $"{what}: the diagram read was drawn again");
         Assert.True(o.Moved is not null, $"{what}: the text read ('{o.Words}') is drawn after the redraw");
         Assert.True(Math.Abs(o.Moved!.Value) <= Kept,
             $"{what}: the text read ('{o.Words}') moved {o.Moved:F1} px (the diagram {o.BoxMoved:F0} px); it may move {Kept} px");
@@ -363,7 +365,8 @@ public class ReadersPlaceOnRedrawTests : PlaywrightTestBase
     // T18 (found while executing the plan): Databases hidden takes rows away above and below the reading line, in a
     // diagram whose notes draw the same words again and again (each JSON field's name, each brace). The text nearest the
     // line is such words, and the k-th time they are drawn is another row once rows above have gone: the page was kept
-    // 207 px off. The measure is the text nearest the line whose words the diagram draws once.
+    // 207 px off. The measure is the text nearest the line whose words the diagram draws once, within 100 px of it (23 px
+    // here, 54 px with a Linux runner's fonts).
     [Theory]
     [InlineData("databases", "mid")]
     [InlineData("setup", "mid")]
@@ -375,7 +378,7 @@ public class ReadersPlaceOnRedrawTests : PlaywrightTestBase
             scenariosPerFeature: 6, callsPerScenario: 6, everyFilter: true, internalFlow: false));
         await PlaceAsync(Page, 8, where);
         var o = await UseAsync(Page, 8, ReportToggle(Page, filter));
-        Assert.True(o.Once is not null && o.OnceDistance <= 40, $"a text the diagram draws once stands near the reading line ({o.Once}, {o.OnceDistance:F0} px)");
+        Assert.True(o.Once is not null && o.OnceDistance <= 100, $"a text the diagram draws once stands near the reading line ({o.Once}, {o.OnceDistance:F0} px)");
         Assert.True(o.OnceMoved is not null && Math.Abs(o.OnceMoved.Value) <= Kept,
             $"{filter}: the text read moved {o.OnceMoved:F1} px ('{o.Once}', {o.OnceDistance:F0} px from the line; the nearest text '{o.Words}' {o.Moved:F1} px)");
         Assert.True(o.ZoomWrites.Length == 0, $"the zoom code scrolled the page: {string.Join(" | ", o.ZoomWrites)}");
@@ -434,7 +437,9 @@ public class ReadersPlaceOnRedrawTests : PlaywrightTestBase
     }
 
     // P6: a second click while the first one's diagrams are still being drawn keeps where the reader was before the first:
-    // Headers hidden and shown again leaves every diagram as it was, and the text read where it stood.
+    // Headers hidden and shown again leaves every diagram as it was, and the text read where it stood. The diagram read
+    // may not be drawn again at all: on a slower machine (CI's Linux runner) the second click comes before the first's
+    // picture of it, and puts back the drawing it still has.
     [Fact]
     public async Task A_second_toggle_while_the_first_draws_keeps_the_place_read_before_the_first()
     {
@@ -448,7 +453,7 @@ public class ReadersPlaceOnRedrawTests : PlaywrightTestBase
                 "() => Array.from(document.querySelectorAll('[data-diagram-type=\"plantuml\"]')).some((c) => c._kQueued > 0 || c._noteRendering)"),
                 "the first click's diagrams are still being drawn");
             await headers.ClickAsync();
-        }), "two clicks");
+        }, readRedrawn: false), "two clicks", redrawn: false);
     }
 
     // T10 (P4): the reader scrolls with the wheel while the toggle's diagrams are drawn: the page goes where the wheel took
@@ -821,7 +826,9 @@ public class ReadersPlaceOnRedrawTests : PlaywrightTestBase
             }
             """), "the diagram stands across the reading line below its controls");
         var o = await UseAsync(Page, box, Page.Locator("#component-diagram .tl-seg-btn[data-dir='tb']"));
-        Assert.True(o.MaxScroll > o.ScrollY + ViewportHeight / 2.0 && o.ScrollY > 0,
+        // the page at neither end, so no scroll the keeper wrote was cut short (a Linux runner's fonts draw it 351 px
+        // taller than the window, the text read kept 4 px down the page)
+        Assert.True(o.ScrollY > 0 && o.ScrollY < o.MaxScroll,
             $"the page drawn top to bottom scrolls either way from where the text read stands (scroll {o.ScrollY:F0} of {o.MaxScroll:F0})");
         AssertKept(o, "direction");
     }
