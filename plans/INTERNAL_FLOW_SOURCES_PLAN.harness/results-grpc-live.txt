@@ -1,0 +1,66 @@
+runtime=.NET 8.0.27 mode=exclude ai=False parent=True order=ai-first
+  captured spans: 5
+    x3 source='' op='System.Net.Http.HttpRequestOut' display='System.Net.Http.HttpRequestOut' kind=Internal recorded=False allData=True underParent=True server.address=- grpc.method=-
+    x1 source='' op='System.Net.Http.HttpRequestOut' display='System.Net.Http.HttpRequestOut' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+    span op=System.Net.Http.HttpRequestOut display=System.Net.Http.HttpRequestOut parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=System.Net.Http.HttpRequestOut parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=System.Net.Http.HttpRequestOut parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=System.Net.Http.HttpRequestOut parentOp=Grpc.Net.Client.GrpcOut status=Unset err=
+    span op=Grpc.Net.Client.GrpcOut display=Grpc.Net.Client.GrpcOut parentOp=Probe.Parent status=Unset err=
+  traceparents at server: =captured http span, =captured http span, =captured http span, none, none
+runtime=.NET 8.0.27 mode=include ai=False parent=True order=ai-first
+  captured spans: 5
+    x3 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='System.Net.Http.HttpRequestOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=-
+    x1 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='System.Net.Http.HttpRequestOut' kind=Client recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+    span op=System.Net.Http.HttpRequestOut display=System.Net.Http.HttpRequestOut parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=System.Net.Http.HttpRequestOut parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=System.Net.Http.HttpRequestOut parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=System.Net.Http.HttpRequestOut parentOp=Grpc.Net.Client.GrpcOut status=Unset err=
+    span op=Grpc.Net.Client.GrpcOut display=Grpc.Net.Client.GrpcOut parentOp=Probe.Parent status=Unset err=
+  traceparents at server: =captured http span, =captured http span, =captured http span, none, none
+runtime=.NET 9.0.16 mode=exclude ai=False parent=True order=ai-first
+  captured spans: 9
+    x3 source='' op='System.Net.Http.HttpRequestOut' display='GET' kind=Internal recorded=False allData=True underParent=True server.address=127.0.0.1 grpc.method=-
+    x1 source='' op='System.Net.Http.HttpRequestOut' display='POST' kind=Internal recorded=False allData=True underParent=False server.address=127.0.0.1 grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=POST parentOp=Grpc.Net.Client.GrpcOut status=Error err=http_protocol_error
+    span op=Grpc.Net.Client.GrpcOut display=Grpc.Net.Client.GrpcOut parentOp=Probe.Parent status=Unset err=
+  traceparents at server: =captured http span, =captured http span, =captured http span, none, none
+runtime=.NET 9.0.16 mode=include ai=False parent=True order=ai-first
+  captured spans: 11
+    x3 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='GET' kind=Client recorded=False allData=True underParent=True server.address=127.0.0.1 grpc.method=-
+    x1 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='POST' kind=Client recorded=False allData=True underParent=False server.address=127.0.0.1 grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=POST parentOp=Grpc.Net.Client.GrpcOut status=Error err=http_protocol_error
+    span op=Grpc.Net.Client.GrpcOut display=Grpc.Net.Client.GrpcOut parentOp=Probe.Parent status=Unset err=
+  traceparents at server: =captured http span, =captured http span, =captured http span, none, none
+runtime=.NET 10.0.11 mode=exclude ai=False parent=True order=ai-first
+  captured spans: 9
+    x3 source='' op='System.Net.Http.HttpRequestOut' display='GET' kind=Internal recorded=False allData=True underParent=True server.address=127.0.0.1 grpc.method=-
+    x1 source='' op='System.Net.Http.HttpRequestOut' display='POST' kind=Internal recorded=False allData=True underParent=False server.address=127.0.0.1 grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=POST parentOp=Grpc.Net.Client.GrpcOut status=Error err=http_protocol_error
+    span op=Grpc.Net.Client.GrpcOut display=Grpc.Net.Client.GrpcOut parentOp=Probe.Parent status=Unset err=
+  traceparents at server: =captured http span, =captured http span, =captured http span, none, none
+runtime=.NET 10.0.11 mode=include ai=False parent=True order=ai-first
+  captured spans: 11
+    x3 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='GET' kind=Client recorded=False allData=True underParent=True server.address=127.0.0.1 grpc.method=-
+    x1 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='POST' kind=Client recorded=False allData=True underParent=False server.address=127.0.0.1 grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=GET parentOp=Probe.Parent status=Unset err=
+    span op=System.Net.Http.HttpRequestOut display=POST parentOp=Grpc.Net.Client.GrpcOut status=Error err=http_protocol_error
+    span op=Grpc.Net.Client.GrpcOut display=Grpc.Net.Client.GrpcOut parentOp=Probe.Parent status=Unset err=
+  traceparents at server: =captured http span, =captured http span, =captured http span, none, none

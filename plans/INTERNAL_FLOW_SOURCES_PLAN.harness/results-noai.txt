@@ -1,0 +1,55 @@
+runtime=.NET 8.0.27 mode=none ai=False parent=True order=ai-first
+  captured spans: 0
+  traceparents at server: uncaptured span, uncaptured span, uncaptured span
+runtime=.NET 8.0.27 mode=exclude ai=False parent=True order=ai-first
+  captured spans: 4
+    x3 source='' op='System.Net.Http.HttpRequestOut' display='System.Net.Http.HttpRequestOut' kind=Internal recorded=False allData=True underParent=True server.address=- grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+  traceparents at server: =captured http span, =captured http span, =captured http span
+runtime=.NET 8.0.27 mode=include ai=False parent=True order=ai-first
+  captured spans: 4
+    x3 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='System.Net.Http.HttpRequestOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+  traceparents at server: =captured http span, =captured http span, =captured http span
+runtime=.NET 8.0.27 mode=include ai=True parent=True order=listener-first
+  captured spans: 4
+    x1 source='' op='Microsoft.ApplicationInsights.Init' display='Microsoft.ApplicationInsights.Init' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x3 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='System.Net.Http.HttpRequestOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=-
+  traceparents at server: =captured http span, =captured http span, =captured http span
+  AI http dependencies: 3
+    'GET /item/0' id==captured span op.id==parent trace op.parentId==parent span success=True
+    'GET /item/1' id==captured span op.id==parent trace op.parentId==parent span success=True
+    'GET /item/2' id==captured span op.id==parent trace op.parentId==parent span success=True
+runtime=.NET 10.0.11 mode=none ai=False parent=True order=ai-first
+  captured spans: 0
+  traceparents at server: uncaptured span, uncaptured span, uncaptured span
+runtime=.NET 10.0.11 mode=exclude ai=False parent=True order=ai-first
+  captured spans: 7
+    x1 source='Experimental.System.Net.Sockets' op='Experimental.System.Net.Sockets.Connect' display='socket connect ::ffff:127.0.0.1:54577' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x1 source='Experimental.System.Net.Http.Connections' op='Experimental.System.Net.Http.Connections.ConnectionSetup' display='HTTP connection_setup 127.0.0.1:54577' kind=Internal recorded=False allData=True underParent=False server.address=127.0.0.1 grpc.method=-
+    x3 source='' op='System.Net.Http.HttpRequestOut' display='GET' kind=Internal recorded=False allData=True underParent=True server.address=127.0.0.1 grpc.method=-
+    x1 source='Experimental.System.Net.Sockets' op='Experimental.System.Net.Sockets.Connect' display='socket connect ::ffff:127.0.0.1:54579' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+  traceparents at server: =captured http span, =captured http span, =captured http span
+runtime=.NET 10.0.11 mode=include ai=False parent=True order=ai-first
+  captured spans: 8
+    x1 source='Experimental.System.Net.Sockets' op='Experimental.System.Net.Sockets.Connect' display='socket connect ::ffff:127.0.0.1:54583' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x1 source='Experimental.System.Net.Http.Connections' op='Experimental.System.Net.Http.Connections.ConnectionSetup' display='HTTP connection_setup 127.0.0.1:54583' kind=Internal recorded=False allData=True underParent=False server.address=127.0.0.1 grpc.method=-
+    x1 source='Experimental.System.Net.Http.Connections' op='Experimental.System.Net.Http.Connections.WaitForConnection' display='HTTP wait_for_connection 127.0.0.1:54583' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x3 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='GET' kind=Client recorded=False allData=True underParent=True server.address=127.0.0.1 grpc.method=-
+    x1 source='Experimental.System.Net.Sockets' op='Experimental.System.Net.Sockets.Connect' display='socket connect ::ffff:127.0.0.1:54585' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x1 source='Grpc.Net.Client' op='Grpc.Net.Client.GrpcOut' display='Grpc.Net.Client.GrpcOut' kind=Client recorded=False allData=True underParent=True server.address=- grpc.method=/probe.Svc/Do
+  traceparents at server: =captured http span, =captured http span, =captured http span
+runtime=.NET 10.0.11 mode=include ai=True parent=True order=listener-first
+  captured spans: 8
+    x1 source='' op='Microsoft.ApplicationInsights.Init' display='Microsoft.ApplicationInsights.Init' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x1 source='Experimental.System.Net.Sockets' op='Experimental.System.Net.Sockets.Connect' display='socket connect ::ffff:127.0.0.1:54589' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x1 source='Experimental.System.Net.Http.Connections' op='Experimental.System.Net.Http.Connections.ConnectionSetup' display='HTTP connection_setup 127.0.0.1:54589' kind=Internal recorded=False allData=True underParent=False server.address=127.0.0.1 grpc.method=-
+    x1 source='Experimental.System.Net.Http.Connections' op='Experimental.System.Net.Http.Connections.WaitForConnection' display='HTTP wait_for_connection 127.0.0.1:54589' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x1 source='Experimental.System.Net.NameResolution' op='Experimental.System.Net.NameResolution.DnsLookup' display='DNS lookup ' kind=Internal recorded=False allData=True underParent=False server.address=- grpc.method=-
+    x3 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='GET' kind=Client recorded=False allData=True underParent=True server.address=127.0.0.1 grpc.method=-
+  traceparents at server: =captured http span, =captured http span, =captured http span
+  AI http dependencies: 3
+    'GET /item/0' id==captured span op.id==parent trace op.parentId==parent span success=True
+    'GET /item/1' id==captured span op.id==parent trace op.parentId==parent span success=True
+    'GET /item/2' id==captured span op.id==parent trace op.parentId==parent span success=True

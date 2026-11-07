@@ -1,0 +1,20 @@
+runtime=.NET 8.0.27 mode=exclude ai=False parent=False order=ai-first
+  captured spans: 0
+  traceparents at server: none, none, none
+runtime=.NET 8.0.27 mode=include ai=False parent=False order=ai-first
+  captured spans: 3
+    x3 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='System.Net.Http.HttpRequestOut' kind=Client recorded=False allData=True underParent=False server.address=- grpc.method=-
+  traceparents at server: =captured http span, =captured http span, =captured http span
+runtime=.NET 8.0.27 mode=include-parented ai=False parent=False order=ai-first
+  captured spans: 0
+  traceparents at server: none, none, none
+runtime=.NET 10.0.11 mode=exclude ai=False parent=False order=ai-first
+  captured spans: 2
+  traceparents at server: none, none, none
+runtime=.NET 10.0.11 mode=include ai=False parent=False order=ai-first
+  captured spans: 6
+    x3 source='System.Net.Http' op='System.Net.Http.HttpRequestOut' display='GET' kind=Client recorded=False allData=True underParent=False server.address=127.0.0.1 grpc.method=-
+  traceparents at server: =captured http span, =captured http span, =captured http span
+runtime=.NET 10.0.11 mode=include-parented ai=False parent=False order=ai-first
+  captured spans: 2
+  traceparents at server: none, none, none
