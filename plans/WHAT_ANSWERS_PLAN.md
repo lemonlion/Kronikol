@@ -3,8 +3,8 @@
 **Written:** 2026-10-29, kronikol-07, at `753f17f9` (5.27.2), and moved onto `54e8ee82` (5.27.5). Checked again on
 2026-11-07 and moved onto `896ddad3` (5.31.1): its claims hold there, its probes answer as before on the published
 5.31.1, and its handler citations are three lines higher, as 5.30.2 shortened the handler above the walk (section 11)
-· **Status:** a draft, not green-lit. Nothing in `src/` is changed; a
-prototype of R1 is a patch in the harness. · **Issue:** #219, open, filed by the owner on 2026-10-28 on 5.17.0. ·
+· **Status:** green-lit by the owner on 2026-11-07 ("can you implement the plan in full"), each question
+taking its recommended answer: R1 released as 5.31.2, R2 next. · **Issue:** #219, open, filed by the owner on 2026-10-28 on 5.17.0. ·
 **Harness:** [`WHAT_ANSWERS_PLAN.harness/`](WHAT_ANSWERS_PLAN.harness/README.md), every probe re-runnable.
 
 Code citations are to `896ddad3` (5.31.1), checked there; wiki citations are to the wiki's `origin/master` at
@@ -249,8 +249,8 @@ the answer is today's, with nothing allocated (P2: 23 ns against today's 4 to 8 
   - **socket transport**: `SocketsHttpHandler`, `HttpClientHandler` and any handler built on it;
   - **other transport**: TestServer's handler, `WinHttpHandler`, and the browser, Apple and Android handlers, named
     rather than referenced as today;
-  - **no handler** (a delegating handler with no inner handler): an end of unknown kind, as today (Q4 asks whether it
-    should answer);
+  - **a delegating handler with no inner handler**: read as any other handler (Q4), so looked into, and the answerer
+    when it holds no way on;
   - **anything else**, which is looked into.
 - A handler that is looked into hands the call on to every handler it holds. "Holds" means an instance field, of its
   type or of a base type below `HttpMessageHandler`, declared as an `HttpMessageHandler` or an `HttpMessageInvoker`
@@ -302,7 +302,7 @@ gives no span. The send-that-threw path has no response and keeps reading the re
 | `Onward` over TestServer; `SendingThrough` a WAF-style client | the forwarder | **none** | handler | handler |
 | Moq's `Mock<HttpMessageHandler>` | `HttpMessageHandlerProxy` | the same | handler | handler |
 | MockHttp, with and without a fallback client | `MockHttpMessageHandler` | the same | handler | handler |
-| JustEat's interceptor (no inner handler) | none | none | handler | handler |
+| JustEat's interceptor (no inner handler) | none | **`InterceptingHttpMessageHandler`** (Q4) | handler | handler |
 | a router of two stubs | `Router` | **`CannedMilk`** | handler | handler |
 | a router of a stub and sockets | `Router` | **none** | handler | handler |
 | a stub holding a transport it never uses | `Hoarder` | **none** | handler | **transport** |
@@ -381,14 +381,13 @@ public string? TestDouble { get; set; }
 a. **The issue's option alone.** See 3.5.
 
 b. **Watching the transport**: listening to `System.Net.Http`'s activities, and calling a call carried when the
-   transport starts its span inside the send. Four reasons rule it out:
-   - Kronikol's own span listener leaves that source alone on purpose. When the source has a listener, DiagnosticsHandler
-     takes a code path that skips the events Application Insights' dependency tracking reads
-     (`src/Kronikol/InternalFlow/InternalFlowActivityListener.cs:10-16`).
-   - A sampling listener would make the transport start a span, and write a `traceparent`, on every request in the
-     process, tracked or not.
-   - TestServer and the platform transports start no span.
-   - The trace context has to be decided before the send.
+   transport starts its span inside the send. Two reasons rule it out:
+   - TestServer and the platform transports start no span, so an in-memory transport would read as a stub.
+   - The trace context has to be decided before the send, and the span starts inside it.
+
+   The plan first gave two more, and #138's plan (`INTERNAL_FLOW_SOURCES_PLAN.md`, a draft on 2026-11-07) measured both
+   false. On .NET 8 to 11 DiagnosticsHandler writes the events Application Insights reads whether `System.Net.Http` has
+   a listener or not. A listener that samples that source only under a parent starts no span outside a trace.
 
 c. **Reading `response.RequestMessage` as evidence of a transport.** Any handler can set it, a stub included, so it says
    nothing about who answered. R1 reads it for one thing only: which request carried the transport's header.
@@ -459,7 +458,8 @@ bind free loopback ports only.
 8. `A_stub_that_holds_a_transport_is_read_as_handing_calls_to_it`. Red: `Hoarder`. It pins 5.5's rule.
 9. `A_chain_longer_than_the_walk_follows_marks_nothing`: 65 forwarders over a stub. Red.
 10. `A_service_reached_only_through_a_forwarder_to_a_real_server_is_not_a_double`: the resolver over the logs reads it
-    as `unknown`. Red: `double`.
+    as no double (with that one call in the run, its inference reads it as the subject). Red: `double`.
+19. `A_delegating_handler_with_no_inner_handler_answers_the_call` (Q4). Red: no mark.
 
 `HandlerChainTests` (new):
 
@@ -481,7 +481,7 @@ bind free loopback ports only.
 16. `A_call_a_forwarder_hands_to_a_socket_names_the_span_its_transport_started`, over `Onward` and `SendingThrough`.
     Red: the response names the host's span.
 17. `Calls_a_host_makes_at_once_through_a_forwarder_each_open_the_spans_of_their_own_call`, P3's shape. Red: each
-    holds all three services' work. It asserts which services a popup holds, never a count, which varies (2).
+    holds the other calls' service work too. It names the spans a popup holds, as the red counts vary (2).
 
 **Playwright** (CLAUDE.md: what a reader sees). `ArrowLinkOpensPopupTests`:
 
@@ -490,7 +490,9 @@ bind free loopback ports only.
     pipeline wrote from real calls.
     - The calls go through the real handler and a forwarder to a socket server, as `CallOwnSpanThroughTheHandlerTests`
       makes them, from a new `ReportTestHelper` method.
-    - Each arrow is clicked by a dispatched event and its popup is read: 2 spans and its own service only.
+    - Each arrow is clicked by a dispatched event and its popup is read: its own service only, and its transport's span.
+      No count is pinned: a call that opens a connection also has the transport's `HTTP wait_for_connection` span,
+      which Kronikol's listener hears from `Experimental.System.Net.Http.Connections`.
     - Red on 5.27.2 and 5.31.1: each popup holds all three services' work.
     - It keeps the suite's rules: `PollingInterval = 200`, `.First` on shared selectors, no forced click, no network
       mock.
@@ -506,7 +508,8 @@ bind free loopback ports only.
 - the passed-handler check dropped;
 - the 64 cap dropped;
 - the fast path answering "socket" for any end;
-- an unreadable invoker read as a stub.
+- an unreadable invoker read as a stub;
+- a delegating handler with no inner handler read as an end of unknown kind (Q4).
 
 Run the full core and E2E suites, as each release does.
 
@@ -598,6 +601,9 @@ Run the full core and E2E suites, as each release does.
 
 ## 9. Questions for the owner
 
+The owner green-lit the plan on 2026-11-07 ("can you implement the plan in full"), so each question below takes its
+recommended answer.
+
 1. **Two releases or one?** R1 as a patch, then R2 as a minor, or both in one minor. **Recommended: two.** R1 fixes
    every suite with a forwarder without a change to its code, and by the repository's rule is a patch.
 
@@ -685,3 +691,16 @@ Run the full core and E2E suites, as each release does.
     forwarder (A7); no code that copies the options member by member, so R2's option reaches every record copy.
     #219, #157, #207 and #208 are open, with no comment since.
   - Added 5.5's collection limit, 5.8 k and 5.7's history line.
+- 2026-11-07, kronikol-07, at the owner's word "can you implement the plan in full", each question of section 9 taking
+  its recommended answer, in the same worktree, with kronikol-13 (#213) and kronikol-70 (#138) told of every heavy run:
+  - R1 released as 5.31.2. Each fact was red on 5.31.1 first, but the two guards (6 and 7) and facts 11, 12, 14 and
+    15, which pass on it as the plan says. `HandlerChain` is the prototype's, with Q4 (a delegating handler with no inner
+    handler is read as any other handler, so it answers the call unless it holds a way on) and a cap on its fast path,
+    so a loop of delegating handlers cannot hang it.
+  - Three facts were corrected against the code. Fact 10 asserts no double: with that one call in the run, the
+    resolver's inference reads the service as the subject, not `unknown`. Fact 17 names the spans a popup holds, not a
+    count. Fact 18 pins no count either: a call that opens a connection also has the transport's
+    `HTTP wait_for_connection` span, which Kronikol's listener hears from `Experimental.System.Net.Http.Connections`.
+  - Eleven mutations, the plan's ten and Q4's, are each caught (`WHAT_ANSWERS_PLAN.harness/r1/mutations.txt`). The core
+    suite and the end-to-end suite passed on the release.
+  - 5.8 b now rests on its two reasons that stand: #138's plan measured the other two false (kronikol-70).

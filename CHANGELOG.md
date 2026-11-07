@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.31.2] - 2026-11-07
+
+The patch part moves (5.31.1 to 5.31.2): the tracking handler follows a call past a handler that hands it on, a fix with nothing new to call (#219, `plans/WHAT_ANSWERS_PLAN.md` R1).
+
+### Fixed
+
+- **A call a forwarder hands on is no longer marked as a test double's answer (#219).** The handler read the end of its chain past delegating handlers alone, so a handler that sends the call on through an `HttpMessageInvoker` or an `HttpClient` it holds read as the stub that answered: every call through the issue's `Onward` and `SendingThrough` carried their names as `testDouble`, and a real service on a socket or an app on TestServer read as a `double`, `observed`. The handler now follows a handler that holds another handler, an invoker or a client, along every way on, and marks a call only when every end answers it itself, with the first end's name.
+- **A forwarded call over a socket sends its transport's span.** The handler wrote the caller's span as the `traceparent` of any call whose end was no socket transport, which pre-empted the framework's DiagnosticsHandler behind a forwarder: the next host's spans hung under the caller's request, and each call a host made at once opened that request's whole internal flow, the fault 4.26.5 fixed for a direct call. The handler leaves the `traceparent` to the transport when every way on ends in one, and reads the span the transport started from the request it sent, which is a copy when the forwarder sends one.
+- **A delegating handler with no inner handler answers the call.** At the end of a chain, as JustEat's interceptor is when used on its own, it can only answer the call itself, and its calls carry its type name as `testDouble`, unless it holds a way on of its own.
+
+### Changed behaviour
+
+- Calls through a forwarder to a transport lose their mark, and those to a stub carry the stub's name. A party read as a `double` through one may read `unknown`, or be inferred, and its `doubleCalls` in `kronikol query parties`, the call graph and `service.json`, and the card's `behaviourHash`, move once.
+- The calls to a delegating handler with no inner handler are marked, so its party reads `double`, `observed`.
+- A forwarded socket call made under a span sends the transport's span, as a direct one always did.
+
+### Known
+
+- A forwarder that finds its way on only when the call comes (one that asks an `IHttpClientFactory` or an `IServiceProvider`, uses a static, or sends through a delegate), and one that keeps its ways on in a collection, still read as the double that answered. A stub on a socket (WireMock) still reads as no double. The plan's R2, a `TestDouble` option, covers both.
+
+### Tests
+
+- `HandlerTestDoubleTests`, the new `HandlerChainTests`, `TestTrackingMessageHandlerTests` and `CallOwnSpanThroughTheHandlerTests` gain the plan's facts 1 to 17 and 19, each red on 5.31.1 where the plan says so, and `ArrowLinkOpensPopupTests` fact 18: three popups of a report the whole pipeline wrote from real calls through a forwarder, each its own call's two spans. Eleven mutations of the walk are each caught.
+
 ## [5.31.1] - 2026-11-05
 
 The patch part moves (5.31.0 to 5.31.1): bug fixes in what a BDDfy scenario reads, with nothing new to call. It closes #122, with what 5.29.3 left of it: a step's and a scenario's time.

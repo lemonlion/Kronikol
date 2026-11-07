@@ -5213,6 +5213,126 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// A run report the whole pipeline wrote from real calls (#219, plans/WHAT_ANSWERS_PLAN.md fact 18): a host makes three
+    /// calls at once under its request span, each through the real tracking handler and a forwarder that holds the rest of
+    /// the chain behind an invoker, to a server on a loopback socket that does each call's work under the span its
+    /// <c>traceparent</c> names. Each call's popup holds its transport's span and its own service's work.
+    /// </summary>
+    public static string GenerateRunReportWithHealthCheckThroughForwarder(string tempDir, string outputDir, string fileName)
+    {
+        var reportsDir = Path.Combine(tempDir, "health-check-forwarded-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(reportsDir);
+        var testId = "health-check-forwarded-" + Guid.NewGuid().ToString("N");
+        var sourceName = "Kronikol.Tests.HealthCheckForwarded.E2E." + Guid.NewGuid().ToString("N");
+        using var source = new System.Diagnostics.ActivitySource(sourceName);
+        var spans = new System.Collections.Concurrent.ConcurrentQueue<System.Diagnostics.Activity>();
+        using var listener = new System.Diagnostics.ActivityListener
+        {
+            // The host's and the services' spans, and the transport's: System.Net.Http's source starts the span of each call.
+            ShouldListenTo = s => s.Name == sourceName || s.Name == "System.Net.Http",
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllDataAndRecorded,
+            ActivityStopped = spans.Enqueue,
+        };
+        System.Diagnostics.ActivitySource.AddActivityListener(listener);
+
+        var free = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        free.Start();
+        var port = ((System.Net.IPEndPoint)free.LocalEndpoint).Port;
+        free.Stop();
+        var server = new System.Net.HttpListener();
+        server.Prefixes.Add($"http://localhost:{port}/");
+        server.Start();
+        using var stop = new CancellationTokenSource();
+        _ = Task.Run(async () =>
+        {
+            while (!stop.IsCancellationRequested)
+            {
+                System.Net.HttpListenerContext context;
+                try { context = await server.GetContextAsync(); }
+                catch (Exception) when (stop.IsCancellationRequested || !server.IsListening) { return; }
+                _ = Task.Run(() =>
+                {
+                    var sent = context.Request.Headers["traceparent"];
+                    var parent = sent is not null && System.Diagnostics.ActivityContext.TryParse(sent, null, out var carried) ? carried : default;
+                    System.Diagnostics.Activity.Current = null;
+                    using (source.StartActivity($"{context.Request.Url!.AbsolutePath.Split('/')[1]} GET /health", System.Diagnostics.ActivityKind.Server, parent))
+                        Thread.Sleep(5);
+                    context.Response.StatusCode = 200;
+                    context.Response.Close();
+                });
+            }
+        });
+
+        try
+        {
+            lock (WholePipeline)
+            {
+                DefaultDiagramsFetcher.Reset();
+                var started = DateTime.UtcNow.AddSeconds(-1);
+                string trace;
+                System.Diagnostics.Activity.Current = null;
+                using (var host = source.StartActivity("api GET /health")!)
+                {
+                    trace = host.TraceId.ToString();
+                    async Task Call(int i)
+                    {
+                        var handler = new TestTrackingMessageHandler(new TestTrackingMessageHandlerOptions
+                        {
+                            CallerName = "Api",
+                            FixedNameForReceivingService = $"Service{i}",
+                            CurrentTestInfoFetcher = () => ("Health check", testId),
+                        }) { InnerHandler = new Onward(new SocketsHttpHandler()) };
+                        using var invoker = new HttpMessageInvoker(handler);
+                        using var response = await invoker.SendAsync(
+                            new HttpRequestMessage(HttpMethod.Get, $"http://localhost:{port}/service-{i}/health"), CancellationToken.None);
+                    }
+                    Task.WhenAll(Enumerable.Range(0, 3).Select(Call)).GetAwaiter().GetResult();
+                }
+                // Kronikol's own listener, which the handler started, keeps the spans of every source it hears; the rest of the
+                // trace (System.Net.Http's, which it leaves alone) goes in here, each span once.
+                var kept = Kronikol.InternalFlow.InternalFlowSpanStore.GetSpans().ToHashSet();
+                foreach (var span in spans.Where(s => s.TraceId.ToString() == trace && !kept.Contains(s)))
+                    Kronikol.InternalFlow.InternalFlowSpanStore.Add(span);
+
+                ReportGenerator.CreateStandardReportsWithDiagrams(
+                    [new Feature { DisplayName = "Health check", Scenarios = [new Scenario { Id = testId, DisplayName = "Health check", Result = ExecutionResult.Passed }] }],
+                    started, DateTime.UtcNow,
+                    new ReportConfigurationOptions
+                    {
+                        ReportsFolderPath = reportsDir,
+                        PlantUmlRendering = PlantUmlRendering.BrowserJs,
+                        InternalFlowTracking = true,
+                        InternalFlowSpanGranularity = InternalFlowSpanGranularity.Full,
+                        GenerateComponentDiagram = false,
+                        GenerateSpecificationsReport = false,
+                        GenerateSpecificationsData = false,
+                    });
+                DefaultDiagramsFetcher.Reset();
+            }
+        }
+        finally
+        {
+            stop.Cancel();
+            // No Stop() before Close: on Linux that binds the port again.
+            server.Close();
+        }
+
+        var html = Path.Combine(reportsDir, "TestRunReport.html");
+        File.Copy(html, Path.Combine(outputDir, fileName), true);
+        return new Uri(html).AbsoluteUri;
+    }
+
+    /// <summary>The issue's first forwarder (#219): the rest of the chain behind an invoker it holds.</summary>
+    private sealed class Onward(HttpMessageHandler next) : HttpMessageHandler
+    {
+        private readonly HttpMessageInvoker _next = new(next, disposeHandler: false);
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            _next.SendAsync(request, cancellationToken);
+    }
+
+    /// <summary>
     /// A run report written by the whole pipeline with internal-flow tracking on and its defaults: one scenario whose
     /// call to <c>/shared-outer</c> (300 ms) holds its call to <c>/shared-inner</c> (from 50 to 150 ms), neither
     /// recording a trace id, and two queries inside both. The two popups show the same flow, which the segment map

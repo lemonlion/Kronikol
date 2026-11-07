@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net;
 using Kronikol.InternalFlow;
 using Kronikol.Tracking;
+using static Kronikol.Tests.Tracking.ForwardingShapes;
 
 namespace Kronikol.Tests.InternalFlow;
 
@@ -128,6 +129,61 @@ public class CallOwnSpanThroughTheHandlerTests : IDisposable
             Assert.Equal(2, own.Length);
             Assert.Contains(own, s => s.Source.Name == "System.Net.Http");
             Assert.Contains(own, s => s.DisplayName == $"server {path}");
+            Assert.DoesNotContain(own, s => s.DisplayName == "host request");
+        }
+    }
+
+    // #219: a forwarder between the handler and the socket. The transport puts its span on the request it sends, which is
+    // a copy when the forwarder sends one, and the response names that request.
+    [Theory]
+    [InlineData(nameof(Onward))]
+    [InlineData(nameof(SendingThrough))]
+    public async Task A_call_a_forwarder_hands_to_a_socket_names_the_span_its_transport_started(string forwarder)
+    {
+        var testId = "own-span-forwarded-" + Guid.NewGuid().ToString("N");
+        using var downstream = new Downstream(_source);
+
+        Activity.Current = null;
+        string hostSpan;
+        using (var host = _source.StartActivity("host request")!)
+        {
+            hostSpan = host.SpanId.ToString();
+            await Call(testId, downstream.Url("/health"), inner: Forwarder(forwarder, new SocketsHttpHandler()));
+        }
+
+        var (request, response) = Logs(testId);
+        var sent = ActivityContext.Parse(Assert.Single(downstream.TraceParents), null);
+        Assert.Equal(hostSpan, request.ActivitySpanId);
+        Assert.Equal(request.ActivityTraceId, sent.TraceId.ToString());
+        Assert.NotEqual(hostSpan, sent.SpanId.ToString());
+        Assert.Equal(sent.SpanId.ToString(), response.ActivitySpanId);
+    }
+
+    // P3 of plans/WHAT_ANSWERS_PLAN.md: through a forwarder each popup held the other calls' work too.
+    [Theory]
+    [InlineData(nameof(Onward))]
+    [InlineData(nameof(SendingThrough))]
+    public async Task Calls_a_host_makes_at_once_through_a_forwarder_each_open_the_spans_of_their_own_call(string forwarder)
+    {
+        var testId = "own-span-many-forwarded-" + Guid.NewGuid().ToString("N");
+        using var downstream = new Downstream(_source);
+
+        Activity.Current = null;
+        using (_source.StartActivity("host request")!)
+            await Task.WhenAll(Enumerable.Range(0, 3).Select(i =>
+                Call(testId, downstream.Url($"/service-{i}/health"), inner: Forwarder(forwarder, new SocketsHttpHandler()))));
+
+        var logs = RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == testId).ToArray();
+        var segments = InternalFlowSegmentBuilder.BuildSegments(logs, _spans.ToArray());
+
+        var requests = logs.Where(l => l.Type == RequestResponseType.Request).ToArray();
+        Assert.Equal(3, requests.Length);
+        foreach (var request in requests)
+        {
+            var own = segments[$"iflow-{request.RequestResponseId}"].Spans;
+            var path = request.Uri.AbsolutePath;
+            Assert.Equal([$"server {path}"], own.Where(s => s.DisplayName.StartsWith("server ", StringComparison.Ordinal)).Select(s => s.DisplayName));
+            Assert.Single(own, s => s.Source.Name == "System.Net.Http");
             Assert.DoesNotContain(own, s => s.DisplayName == "host request");
         }
     }

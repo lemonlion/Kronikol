@@ -170,6 +170,38 @@ public class ArrowLinkOpensPopupTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task Each_call_a_host_makes_at_once_through_a_forwarder_opens_its_own_flow()
+    {
+        // #219: the host's calls go through the real handler and a forwarder that holds the rest of the chain behind an
+        // invoker, to a server on a socket. Each arrow opens its own call's spans, as a direct call's does (4.26.5);
+        // before the handler followed the forwarder, every popup held all three services' work.
+        var uri = ReportTestHelper.GenerateRunReportWithHealthCheckThroughForwarder(TempDir, OutputDir, "ArrowLink_HealthCheckThroughForwarder.html");
+        await OpenAndDraw(uri);
+
+        var opened = new List<string>();
+        for (var arrow = 0; arrow < 3; arrow++)
+        {
+            // SVG rule: a dispatched click, on the arrow's own text, in the order the diagram draws them.
+            await Page.EvaluateAsync("""
+                i => Array.from(document.querySelectorAll('.plantuml-browser:not(.iflow-diagram) svg text'))
+                    .filter(t => t.textContent.includes('/health'))[i]
+                    .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+                """, arrow);
+
+            var popup = Page.Locator(".iflow-popup");
+            await popup.Locator(".iflow-diagram svg").First.WaitForAsync(new() { Timeout = PopupFirstDrawTimeout });
+            var drawn = await popup.Locator(".iflow-diagram svg").First.TextContentAsync() ?? "";
+            // Its transport's span, the connection it waited for when it opened one, and its service's work: no count is
+            // pinned, as a call that reuses a connection waits for none.
+            Assert.Contains("System.Net.Http", drawn);
+            opened.Add(Assert.Single(Enumerable.Range(0, 3).Select(i => $"service-{i} GET /health"), drawn.Contains));
+            Assert.DoesNotContain("api GET /health", drawn);
+            await Page.Locator(".iflow-popup-close").ClickAsync();
+        }
+        Assert.Equal(3, opened.Distinct().Count());
+    }
+
+    [Fact]
     public async Task Arrows_with_one_label_in_a_diagram_drawn_in_fragments_each_open_their_own_popup()
     {
         // A diagram past the fragment height is drawn in parts, and each part's links were bound from the whole

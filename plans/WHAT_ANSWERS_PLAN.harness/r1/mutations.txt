@@ -1,0 +1,38 @@
+- the walk stops at the first non-delegating handler: caught: 19 failed
+    A_call_a_forwarder_hands_to_TestServer_is_not_marked
+    A_call_a_forwarder_hands_to_a_server_on_this_machine_is_not_marked
+    A_call_a_forwarder_hands_to_a_socket_names_the_span_its_transport_started
+    A_call_a_forwarder_hands_to_a_stub_is_marked_with_the_stubs_type
+    A_call_with_two_ways_on_is_marked_only_when_both_answer_and_then_by_the_first
+    A_chain_longer_than_the_walk_follows_marks_nothing
+- an invoker is not looked through: caught: 18 failed
+    A_call_a_forwarder_hands_to_TestServer_is_not_marked
+    A_call_a_forwarder_hands_to_a_server_on_this_machine_is_not_marked
+    A_call_a_forwarder_hands_to_a_socket_names_the_span_its_transport_started
+    A_call_a_forwarder_hands_to_a_stub_is_marked_with_the_stubs_type
+    A_call_with_two_ways_on_is_marked_only_when_both_answer_and_then_by_the_first
+    A_chain_longer_than_the_walk_follows_marks_nothing
+- only the first handler held is followed: caught: 1 failed
+    Traceparent_carries_the_current_span_when_one_way_on_is_in_memory
+- any end answers in place of every end: caught: 1 failed
+    A_call_with_two_ways_on_is_marked_only_when_both_answer_and_then_by_the_first
+- any end a socket in place of every end: caught: 1 failed
+    Traceparent_carries_the_current_span_when_one_way_on_is_in_memory
+- response.RequestMessage not read: caught: 2 failed
+    A_call_a_forwarder_hands_to_a_socket_names_the_span_its_transport_started
+    Calls_a_host_makes_at_once_through_a_forwarder_each_open_the_spans_of_their_own_call
+- the passed-handler check dropped: caught: 1 failed
+    A_handler_that_holds_only_itself_answers_the_call
+- the 64 cap dropped: caught: 1 failed
+    A_chain_longer_than_the_walk_follows_marks_nothing
+- the fast path answering socket for any end: caught: 14 failed
+    A_call_a_forwarder_hands_to_a_stub_is_marked_with_the_stubs_type
+    A_call_a_stub_answered_is_marked_with_the_stubs_type_on_both_halves
+    A_call_that_threw_in_a_stub_is_marked_too
+    A_call_with_two_ways_on_is_marked_only_when_both_answer_and_then_by_the_first
+    A_delegating_handler_with_no_inner_handler_answers_the_call
+    A_handler_that_holds_only_itself_answers_the_call
+- an unreadable invoker read as a stub: caught: 1 failed
+    An_invoker_whose_handler_cannot_be_read_is_an_end_of_unknown_kind
+- Q4: a delegating handler with no inner handler read as unknown: caught: 1 failed
+    A_delegating_handler_with_no_inner_handler_answers_the_call

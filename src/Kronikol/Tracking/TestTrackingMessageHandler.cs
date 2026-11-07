@@ -160,6 +160,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         ForwardHeaders(request);
 
         var requestResponseId = Guid.NewGuid();
+        var chain = HandlerChain.Of(InnerHandler);
 
         // Ensure trace context propagation for in-process (TestServer) scenarios
         // where no framework DiagnosticsHandler exists in the pipeline.
@@ -176,7 +177,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         {
             activityTraceId = current.TraceId.ToString();
             activitySpanId = current.SpanId.ToString();
-            if (!request.Headers.Contains("traceparent") && !TransportPropagatesTraceContext())
+            if (!request.Headers.Contains("traceparent") && !chain.TransportWritesTraceContext)
             {
                 request.Headers.TryAddWithoutValidation("traceparent",
                     $"00-{activityTraceId}-{activitySpanId}-{(current.Recorded ? "01" : "00")}");
@@ -256,7 +257,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         var trackingIgnore = requestHeaders.Any(x => string.Equals(x.Key, TestTrackingHttpHeaders.Ignore, StringComparison.OrdinalIgnoreCase))
                              || !PhaseConfiguration.ShouldTrack(_trackDuringSetup, _trackDuringAction);
         var currentPhase = TestPhaseContext.Current;
-        var testDouble = AnsweringTestDouble();
+        var testDouble = chain.AnsweredBy;
 
         RequestResponseLogger.Log(new RequestResponseLog(
             currentTestInfo.Name,
@@ -344,7 +345,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         {
             FocusFields = responseFocusFields,
             Timestamp = DateTimeOffset.UtcNow,
-            ActivitySpanId = TransportSpan(request, carriedTraceParent, activityTraceId) ?? activitySpanId,
+            // A forwarder that sends a copy hands the transport another request, so its span is on that one (#219).
+            ActivitySpanId = TransportSpan(response.RequestMessage ?? request, carriedTraceParent, activityTraceId) ?? activitySpanId,
             ActivityTraceId = activityTraceId,
             Phase = currentPhase,
             AttributionSource = currentTestInfo.Source,
@@ -358,8 +360,9 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
     /// <summary>
     /// The span the transport started for the call: the one in the <c>traceparent</c> it put on the request while
     /// sending it (SocketsHttpHandler's and HttpClientHandler's DiagnosticsHandler do), when the request carried none
-    /// before the send and the trace is the call's. Null otherwise: a caller's own header, or a transport that starts no
-    /// span and sends the one this handler wrote.
+    /// before the send and the trace is the call's. The request is the one the response names when it names one, which
+    /// is the copy a forwarder sent. Null otherwise: a caller's own header, or a transport that starts no span and sends
+    /// the one this handler wrote.
     /// </summary>
     private static string? TransportSpan(HttpRequestMessage request, bool carriedTraceParent, string? traceId)
     {
@@ -395,48 +398,6 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         headers.TryGetValues(TestTrackingHttpHeaders.TraceIdHeader, out var values) && Guid.TryParse(values.FirstOrDefault(), out var traceId)
             ? traceId
             : null;
-
-    /// <summary>
-    /// Whether the transport at the end of this handler's chain injects the trace context itself: SocketsHttpHandler,
-    /// and HttpClientHandler on top of it, run the framework's DiagnosticsHandler.
-    /// </summary>
-    private bool TransportPropagatesTraceContext() => EndOfChain() is SocketsHttpHandler or HttpClientHandler;
-
-    /// <summary>The handler at the end of this handler's chain, past every delegating handler: what answers the call.</summary>
-    private HttpMessageHandler? EndOfChain()
-    {
-        HttpMessageHandler? handler = InnerHandler;
-        while (handler is DelegatingHandler delegating)
-            handler = delegating.InnerHandler;
-        return handler;
-    }
-
-    /// <summary>
-    /// What answered in the service's place (#190): the type name of the handler at the end of the chain when it is no
-    /// transport, so a stub, a fake or a mock library's handler. A transport carries the call to the service: the socket
-    /// handler, the client handler and any handler built on it, a platform's handler, and TestServer's, which is the
-    /// service under test answering in process. An interceptor in the middle of the chain and a stub on a socket
-    /// (WireMock) are not seen, and nothing is read from a port.
-    /// </summary>
-    private string? AnsweringTestDouble() => EndOfChain() switch
-    {
-        null or SocketsHttpHandler or HttpClientHandler => null,
-        var handler when Transports.Contains(handler.GetType().FullName ?? "") => null,
-        var handler => handler.GetType().Name,
-    };
-
-    // Named rather than referenced: TestServer's handler is internal to Microsoft.AspNetCore.TestHost, and the platform
-    // handlers live in assemblies a test project seldom loads.
-    private static readonly HashSet<string> Transports = new(StringComparer.Ordinal)
-    {
-        "Microsoft.AspNetCore.TestHost.ClientHandler",
-        "System.Net.Http.WinHttpHandler",
-        "System.Net.Http.BrowserHttpHandler",
-        "System.Net.Http.NSUrlSessionHandler",
-        "System.Net.Http.CFNetworkHandler",
-        "Foundation.NSUrlSessionHandler",
-        "Xamarin.Android.Net.AndroidMessageHandler",
-    };
 
     private static void AddIfAbsent(HttpRequestMessage request, string name, string? value)
     {

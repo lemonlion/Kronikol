@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.TestHost;
+using static Kronikol.Tests.Tracking.ForwardingShapes;
 using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Http;
@@ -1885,6 +1887,61 @@ public class TestTrackingMessageHandlerTests : IDisposable
         await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
 
         Assert.False(capture.CapturedRequest!.Headers.Contains("traceparent"));
+        existingActivity.Stop();
+    }
+
+    // #219: a forwarder that hands the call to SocketsHttpHandler reaches the framework's DiagnosticsHandler as a direct
+    // call does, so its traceparent is the transport's to write.
+    [Theory]
+    [InlineData(nameof(Onward))]
+    [InlineData(nameof(SendingThrough))]
+    public async Task Traceparent_is_left_to_the_framework_when_a_forwarder_hands_the_call_to_SocketsHttpHandler(string forwarder)
+    {
+        var capture = new CapturingDelegatingHandler { InnerHandler = new SocketsHttpHandler() };
+        using var invoker = new HttpMessageInvoker(new TestTrackingMessageHandler(DefaultOptions()) { InnerHandler = Forwarder(forwarder, capture) });
+        using var existingActivity = new Activity("ExistingTest");
+        existingActivity.SetIdFormat(ActivityIdFormat.W3C);
+        existingActivity.Start();
+
+        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+
+        Assert.False(capture.CapturedRequest!.Headers.Contains("traceparent"));
+        existingActivity.Stop();
+    }
+
+    [Fact]
+    public async Task Traceparent_carries_the_current_span_when_a_forwarder_hands_the_call_to_TestServer()
+    {
+        await using var app = await InProcess();
+        var capture = new CapturingDelegatingHandler { InnerHandler = app.GetTestServer().CreateHandler() };
+        using var invoker = new HttpMessageInvoker(new TestTrackingMessageHandler(DefaultOptions()) { InnerHandler = new Onward(capture) });
+        using var existingActivity = new Activity("ExistingTest");
+        existingActivity.SetIdFormat(ActivityIdFormat.W3C);
+        existingActivity.Start();
+
+        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+
+        Assert.Equal([$"00-{existingActivity.TraceId}-{existingActivity.SpanId}-00"], capture.CapturedRequest!.Headers.GetValues("traceparent"));
+        existingActivity.Stop();
+    }
+
+    // Every end, not any end: a router whose second way on is in memory could send the call where nothing writes it.
+    [Fact]
+    public async Task Traceparent_carries_the_current_span_when_one_way_on_is_in_memory()
+    {
+        await using var app = await InProcess();
+        var capture = new CapturingDelegatingHandler { InnerHandler = new SocketsHttpHandler() };
+        using var invoker = new HttpMessageInvoker(new TestTrackingMessageHandler(DefaultOptions())
+        {
+            InnerHandler = new Router(capture, app.GetTestServer().CreateHandler()),
+        });
+        using var existingActivity = new Activity("ExistingTest");
+        existingActivity.SetIdFormat(ActivityIdFormat.W3C);
+        existingActivity.Start();
+
+        await invoker.SendAsync(MakeGetRequest(), CancellationToken.None);
+
+        Assert.Equal([$"00-{existingActivity.TraceId}-{existingActivity.SpanId}-00"], capture.CapturedRequest!.Headers.GetValues("traceparent"));
         existingActivity.Stop();
     }
 
