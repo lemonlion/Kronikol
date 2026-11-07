@@ -17,6 +17,18 @@ internal sealed record PartyTable(IReadOnlyList<Party> Parties, string? ServiceI
     internal IReadOnlyList<DiagnosticEntry> Notes => Findings;
 
     /// <summary>
+    /// The roles the sequence diagrams are laid out by (#228): every party the table holds as the test or under test,
+    /// whatever its kind's source, when the run declared something; null otherwise, so a run that declares nothing keeps
+    /// today's order and its bytes.
+    /// </summary>
+    internal PlantUml.DiagramRoles? DiagramRoles => Declared
+        ? new PlantUml.DiagramRoles(NamesOf(PartyKind.Test), NamesOf(PartyKind.UnderTest))
+        : null;
+
+    private HashSet<string> NamesOf(PartyKind kind) =>
+        Parties.Where(p => p.Kind == kind).Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
+
+    /// <summary>
     /// The table of a report already written, and the subject the report is about (#192 R3): the report's <c>parties</c>
     /// block as written when it has one, else the table its run would have inferred from its calls, those outside every
     /// scenario included, with nothing declared, since a report without the block declared nothing. The subject is the

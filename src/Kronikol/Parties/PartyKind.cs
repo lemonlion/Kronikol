@@ -6,10 +6,16 @@ namespace Kronikol.Parties;
 /// </summary>
 public enum PartyKind
 {
-    /// <summary>The test itself: what drove the run, such as the test's HTTP client or a user of an ingested UI test.</summary>
+    /// <summary>
+    /// The test itself: what drove the run, such as the test's HTTP client or a user of an ingested UI test. In a run that
+    /// declares something, each sequence diagram declares the test's parties first (#228).
+    /// </summary>
     Test,
 
-    /// <summary>The service the tests are about.</summary>
+    /// <summary>
+    /// The service the tests are about. In a run that declares something, each sequence diagram declares the parties under
+    /// test right after the test's, then everyone else in the order of their first call (#228).
+    /// </summary>
     UnderTest,
 
     /// <summary>

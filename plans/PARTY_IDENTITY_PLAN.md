@@ -785,7 +785,9 @@ The limits, stated in the docs:
 - **Diagrams:** a double is still drawn as the party it stands for, as the wiki intends, with one addition the owner
   asked for (Q11): a party declared `double` carries the stereotype «test double» on its participant, in the sequence
   and the component diagrams. An observed or inferred kind draws nothing, so no suite's diagrams change until it
-  declares a double.
+  declares a double. (5.16.2 removed the stereotype. From 5.33.0 a run that declares something orders its sequence
+  diagrams by the table, the test's parties, then the parties under test, then the rest, whatever source each kind
+  has: `PARTICIPANT_ORDER_PLAN.md`, #228.)
 - **Names:** every name a tracker writes is unchanged, but for R0's fallback.
 - **Existing reports:** nothing is added to a report that declares nothing.
 

@@ -1,0 +1,47 @@
+R1's 22 core facts on 5.32.0 (601c1dad): its src, with r1's stub of the new internal names (DiagramRoles,
+GetPlantUmlImageTagsPerTestIdCore forwarding to the public method, ignoring the roles), 2026-11-07.
+P4 was rerun after its Setup partition check was corrected; it then failed at that check (first line below).
+
+P4: Assert.Matches() Failure: Pattern not found in value (^partition\b.*\bSetup\s*$)
+
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T1_the_issues_scenario_with_app_under_test_draws_app_after_the_test(separateSetup: False)
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T1_the_issues_scenario_with_app_under_test_draws_app_after_the_test(separateSetup: True)
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T7_a_role_given_under_either_raw_name_of_one_participant_moves_it(underTest: "app") [< 1 ms]
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T7_a_role_given_under_either_raw_name_of_one_participant_moves_it(underTest: "App") [< 1 ms]
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T9_a_second_test_party_follows_the_pure_caller_and_precedes_the_subject [< 1 ms]
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T5_two_parties_under_test_follow_the_test_in_the_order_of_their_first_call [< 1 ms]
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T10_only_the_declaration_lines_move_each_as_today
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T13_an_undeclared_gateway_the_test_calls_on_its_way_to_the_subject_moves_right_of_it [< 1 ms]
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T6_every_fragment_of_a_split_diagram_keeps_the_whole_tests_order
+Failed Kronikol.Tests.PlantUml.ParticipantOrderTests.T11_with_no_pure_caller_the_test_parties_then_the_subject_then_the_rest_each_line_as_today
+Failed Kronikol.Tests.Parties.ParticipantOrderPipelineTests.P2b_a_service_id_alone_lays_out_the_inferred_subject_whatever_the_stores_are_called(storeCategory: "Disk")
+Failed Kronikol.Tests.Parties.ParticipantOrderPipelineTests.P2b_a_service_id_alone_lays_out_the_inferred_subject_whatever_the_stores_are_called(storeCategory: "Database")
+Failed Kronikol.Tests.Parties.ParticipantOrderPipelineTests.P6_the_ci_summarys_diagram_takes_the_same_order_as_the_reports
+Failed Kronikol.Tests.Parties.ParticipantOrderPipelineTests.P2_a_service_id_alone_lays_out_a_party_a_test_client_observed
+Failed Kronikol.Tests.Parties.ParticipantOrderPipelineTests.P5_ingest_with_a_parties_file_lays_out_the_party_under_test
+Failed Kronikol.Tests.Parties.ParticipantOrderPipelineTests.P1_a_party_declared_under_test_is_drawn_right_after_the_test
+Failed Kronikol.Tests.Parties.ParticipantOrderPipelineTests.P4_the_report_draws_its_own_diagrams_after_an_earlier_fetch_and_a_later_fetch_takes_them
+
+PlantUml.ParticipantOrderTests.T1_the_issues_scenario_with_app_under_test_draws_app_after_the_test(separateSetup:: Assert.Equal() Failure: Collections differ at index 1
+PlantUml.ParticipantOrderTests.T1_the_issues_scenario_with_app_under_test_draws_app_after_the_test(separateSetup:: Assert.Equal() Failure: Collections differ at index 1
+PlantUml.ParticipantOrderTests.T7_a_role_given_under_either_raw_name_of_one_participant_moves_it(underTest:: Assert.Equal() Failure: Collections differ at index 1
+PlantUml.ParticipantOrderTests.T7_a_role_given_under_either_raw_name_of_one_participant_moves_it(underTest:: Assert.Equal() Failure: Collections differ at index 1
+PlantUml.ParticipantOrderTests.T9_a_second_test_party_follows_the_pure_caller_and_precedes_the_subject: Assert.Equal() Failure: Collections differ at index 1
+PlantUml.ParticipantOrderTests.T5_two_parties_under_test_follow_the_test_in_the_order_of_their_first_call: Assert.Equal() Failure: Collections differ at index 1
+PlantUml.ParticipantOrderTests.T10_only_the_declaration_lines_move_each_as_today: Assert.NotEqual() Failure: Strings are equal
+PlantUml.ParticipantOrderTests.T13_an_undeclared_gateway_the_test_calls_on_its_way_to_the_subject_moves_right_of_it: Assert.Equal() Failure: Collections differ at index 1
+PlantUml.ParticipantOrderTests.T6_every_fragment_of_a_split_diagram_keeps_the_whole_tests_order: Assert.Equal() Failure: Collections differ at index 1
+PlantUml.ParticipantOrderTests.T11_with_no_pure_caller_the_test_parties_then_the_subject_then_the_rest_each_line_as_today: Assert.Equal() Failure: Collections differ at index 0
+Parties.ParticipantOrderPipelineTests.P2b_a_service_id_alone_lays_out_the_inferred_subject_whatever_the_stores_are_called(storeCategory:: Assert.Equal() Failure: Collections differ at index 1
+Parties.ParticipantOrderPipelineTests.P2b_a_service_id_alone_lays_out_the_inferred_subject_whatever_the_stores_are_called(storeCategory:: Assert.Equal() Failure: Collections differ at index 1
+Parties.ParticipantOrderPipelineTests.P6_the_ci_summarys_diagram_takes_the_same_order_as_the_reports: Assert.All() Failure: 1 out of 1 items in the collection did not pass.
+Parties.ParticipantOrderPipelineTests.P2_a_service_id_alone_lays_out_a_party_a_test_client_observed: Assert.Equal() Failure: Collections differ at index 1
+Parties.ParticipantOrderPipelineTests.P5_ingest_with_a_parties_file_lays_out_the_party_under_test: Assert.Equal() Failure: Collections differ at index 1
+Parties.ParticipantOrderPipelineTests.P1_a_party_declared_under_test_is_drawn_right_after_the_test: Assert.Equal() Failure: Collections differ at index 1
+Parties.ParticipantOrderPipelineTests.P4_the_report_draws_its_own_diagrams_after_an_earlier_fetch_and_a_later_fetch_takes_them: Assert.Equal() Failure: Collections differ at index 1
+
+Failed!  - Failed:    17, Passed:     5, Skipped:     0, Total:    22, Duration: 5 s
+
+Playwright, tests/Kronikol.Tests.EndToEnd/ParticipantOrderTests.cs, on 5.32.1's src (5c6b6f39) with the same stub:
+  Failed A_run_that_declares_the_app_under_test_draws_it_right_after_the_test: app 341.73, disk 123.04 (left edges, px)
+  Passed A_run_that_declares_nothing_draws_the_stores_the_test_set_up_first_as_before (the control)

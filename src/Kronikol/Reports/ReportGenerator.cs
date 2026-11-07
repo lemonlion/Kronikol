@@ -318,8 +318,21 @@ public static class ReportGenerator
             }
         }
 
+        // The data file's httpInteractions block must not depend on internal-flow tracking being on:
+        // externally captured traffic (proxy taps, ingested NDJSON) has no in-process spans but the
+        // interactions are the whole point of the data export. Internal-flow tracking reads the same array.
+        var dataLogs = runLogs
+            .Where(x => !(x?.TrackingIgnore ?? true))
+            .ToArray();
+
+        // Who each party is (#190): resolved once, here, before the diagrams are drawn, so the table, what its checks
+        // found and the diagrams' order (#228) all read one answer. Its findings are recorded below, where they always
+        // were. A run that declares nothing records nothing, no file gains the block, and its diagrams keep their order.
+        var parties = PartiesReport.Resolve(options, features, dataLogs, CurrentReportsDirectory, getEnv, historyBaseDirectory);
+
         var fetcherOptions = new DiagramsFetcherOptions
         {
+            Roles = parties.DiagramRoles,
             PlantUmlServerBaseUrl = options.PlantUmlServerBaseUrl,
             RequestPostFormattingProcessor = options.RequestResponsePostProcessor,
             ResponsePostFormattingProcessor = options.RequestResponsePostProcessor,
@@ -351,6 +364,9 @@ public static class ReportGenerator
             MaxArrowsPerDiagram = options.MaxArrowsPerDiagram,
             Logs = runLogs
         };
+        // The report draws its own diagrams (#228 F4): a set cached by an earlier fetch was drawn with that fetch's
+        // options, not the report's, roles included. A fetch after the report (BDDfy's, at process exit) takes this set.
+        DefaultDiagramsFetcher.Reset();
         var diagrams = DefaultDiagramsFetcher.GetDiagramsFetcher(fetcherOptions)();
 
         var internalFlowDataScript = "";
@@ -360,9 +376,7 @@ public static class ReportGenerator
         RequestResponseLog[]? trackedLogs = null;
         if (options.InternalFlowTracking)
         {
-            trackedLogs = runLogs
-                .Where(x => !(x?.TrackingIgnore ?? true))
-                .ToArray();
+            trackedLogs = dataLogs;
 
             // One span list for both builders, whatever recorded it: an ingest's spans are already FlowSpans, and this
             // process's activities become them here, with nothing internal flow reads changed.
@@ -383,13 +397,6 @@ public static class ReportGenerator
         }
 
         var ciMetadata = CiMetadataDetector.Detect(getEnv);
-
-        // The data file's httpInteractions block must not depend on internal-flow tracking being on:
-        // externally captured traffic (proxy taps, ingested NDJSON) has no in-process spans but the
-        // interactions are the whole point of the data export.
-        var dataLogs = trackedLogs ?? runLogs
-            .Where(x => !(x?.TrackingIgnore ?? true))
-            .ToArray();
 
         // Cross-run history: resolved, read and analysed once, before any output is written, so the
         // digest, the CTRF document, the pointer and the report all say the same thing about this run
@@ -525,9 +532,8 @@ public static class ReportGenerator
         // diagram render failures, attachment failures — goes into the report itself. One snapshot, taken
         // before the outputs run in parallel, so the HTML and the data files agree; an OutputFailure raised
         // by one of those outputs is therefore only in the collector, not in the files.
-        // Who each party is (#190): resolved once, here, so the table and what its checks found reach every output alike. A
-        // run that declares nothing records nothing, and no file gains the block.
-        var parties = PartiesReport.Resolve(options, features, dataLogs, CurrentReportsDirectory, getEnv, historyBaseDirectory);
+        // What the parties' checks found (#190), recorded here so the diagnostics keep their order; the table was resolved
+        // before the diagrams were drawn.
         foreach (var finding in parties.Diagnostics)
             ReportDiagnosticsScope.Record(finding.Kind, finding.Message);
 

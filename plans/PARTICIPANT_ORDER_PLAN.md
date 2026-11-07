@@ -1,7 +1,8 @@
 # Participant order plan (#228): the service under test next to the test
 
-**Status:** draft of 2026-11-07, **not green-lit**. Written on `896ddad3` (5.31.1), on the local branch
-`plan/228-participant-order`, not pushed. Checked again the same day on `55999241` (5.31.2), whose only change to
+**Status:** written 2026-11-07; **green-lit in full** by the owner the same day, each question at its recommendation
+(§12). R1 shipped as 5.33.0; R2 and the `BDDfy.html` patch (R4) to come. Written on `896ddad3` (5.31.1) and pushed
+with R1. Checked again the same day on `55999241` (5.31.2), whose only change to
 the code cited here moved one line of the tracking handler; that pass measured R1's rule in full, read BDDfy's own
 code for when its batch processor runs, and corrected what §2.3, §5.3, §8 and §9 said (§11 lists each change).
 Issue: [#228](https://github.com/lemonlion/Kronikol/issues/228), filed 2026-11-04. Harness:
@@ -563,6 +564,38 @@ The same day, on `55999241`, every citation was read again and each open point w
 - **Citations moved.** `TestTrackingMessageHandler.cs:249` (moved by 5.31.2); the wiki's Parties section at
   `7f72c19`; Kronikol4J's `appendParticipants` at `:210-303` and its ledger section at `:1878` (`bd47938`). Everything
   else cited was read again on `55999241` and holds.
+
+## 12. Execution
+
+**Go-ahead.** On 2026-11-07 the owner asked to "implement the plan in full". Each question of §9 is taken at its
+recommendation: Q1 (a), only a declaring run is laid out by roles; Q2, no explicit order option; Q3, R2 ships; Q4, the
+component diagram keeps its order; Q5, R1 is a minor; Q6, F6 gets its own issue and patch (R4); Q7, the report draws its
+own diagrams.
+
+### R1 (5.33.0)
+
+- **Code.** `DiagramRoles` (internal, `src/Kronikol/PlantUml/DiagramRoles.cs`) holds the names resolved `Test` and
+  `UnderTest`; `PartyTable.DiagramRoles` gives them for a declaring run and null otherwise. `ReportGenerator` resolves the
+  parties before its fetcher options are built, sets the internal `DiagramsFetcherOptions.Roles`, resets the cache and
+  fetches; the findings are still recorded where they were. The roles reach `CreateEntitiesPlantUml` through
+  `PlantUmlCreator.GetPlantUmlImageTagsPerTestIdCore` (internal; the public method forwards to it with none), `CreatePlantUml`,
+  `DiagramBuilder` and `CreatePlantUmlPrefix`. `CreateEntitiesPlantUml` writes every line as before and remembers where
+  each participant's line sits, then, given roles, sorts the lines stably: the pure caller, the test's parties, the
+  parties under test, the rest.
+- **Facts.** `tests/Kronikol.Tests/PlantUml/ParticipantOrderTests.cs` (T1 to T11, T13; T12 is R2's) and
+  `tests/Kronikol.Tests/Parties/ParticipantOrderPipelineTests.cs` (P1, P2, P2b twice, P3 to P6, and P7: a host's own
+  fetch keeps today's order, since the roles are the report's to give), and the Playwright
+  `tests/Kronikol.Tests.EndToEnd/ParticipantOrderTests.cs` (the app's drawn name left of the stores in a declaring run, a
+  control that declares nothing).
+- **Red before R1** (the previous release's code, with a stub for the new internal names that ignores the roles): on
+  5.32.0, 17 of the 22 core facts then written fail, each at its order assertion (T10 at its premise that the source
+  changes), and T2, T3, T4, T8 and P3, which pin what does not change, pass, as they should; P7, added later, is of the
+  second kind. On 5.32.1 the Playwright fact fails (the app drawn at x = 341.7, the disk at 123.0) and its control
+  passes. `r1/red.txt`.
+- **Corrected on the way.** P4's first check for the Setup partition read `Contains("partition")`, which every
+  sequence diagram's style block satisfies (`sequenceDiagram { partition { ... } }`), so on 5.32.0 it passed and P4 failed
+  only at the order. It now matches the partition's own line, and on 5.32.0 P4 fails there: F4 reproduced on its own.
+- **Mutations** (`r1/mutate.py`, `r1/mutations.txt`): M1 to M8 each caught; M3 by P4 alone, M4 by P3 alone.
 
 ## Appendix A. Harness
 

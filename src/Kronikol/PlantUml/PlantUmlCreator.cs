@@ -74,9 +74,13 @@ public static partial class PlantUmlCreator
 
     private static readonly ConcurrentDictionary<string, string> AliasCache = new();
 
+    // The defaults of GetPlantUmlImageTagsPerTestId that the diagram fetcher, which calls the internal overload, keeps.
+    internal const string DefaultServerRendererUrl = "https://www.plantuml.com/plantuml/png";
+    internal const int DefaultMaxUrlLength = 100;
+
     public static IEnumerable<PlantUmlForTest> GetPlantUmlImageTagsPerTestId(
         IEnumerable<RequestResponseLog>? requestResponses,
-        string plantUmlServerRendererUrl = "https://www.plantuml.com/plantuml/png",
+        string plantUmlServerRendererUrl = DefaultServerRendererUrl,
         Func<string, string>? requestPreFormattingProcessor = null,
         Func<string, string>? requestPostFormattingProcessor = null,
         Func<string, string>? responsePreFormattingProcessor = null,
@@ -84,7 +88,7 @@ public static partial class PlantUmlCreator
         Func<string, string>? requestMidFormattingProcessor = null,
         Func<string, string>? responseMidFormattingProcessor = null,
         string[]? excludedHeaders = null,
-        int maxUrlLength = 100,
+        int maxUrlLength = DefaultMaxUrlLength,
         bool separateSetup = false,
         bool highlightSetup = true,
         string? setupHighlightColor = null,
@@ -106,7 +110,52 @@ public static partial class PlantUmlCreator
         int collapseThreshold = 2,
         int? maxArrowsPerDiagram = null,
         int diagramNoteWrapWidth = DefaultNoteWrapWidth,
-        bool systemUiFont = false)
+        bool systemUiFont = false) =>
+        GetPlantUmlImageTagsPerTestIdCore(requestResponses, plantUmlServerRendererUrl, requestPreFormattingProcessor,
+            requestPostFormattingProcessor, responsePreFormattingProcessor, responsePostFormattingProcessor,
+            requestMidFormattingProcessor, responseMidFormattingProcessor, excludedHeaders, maxUrlLength, separateSetup,
+            highlightSetup, setupHighlightColor, lazyLoadImages, focusEmphasis, focusDeEmphasis, plantUmlTheme,
+            internalFlowTracking, maxEncodedDiagramLength, truncateNotesAfterLines, excludeAllHeaders,
+            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides,
+            graphQlBodyFormat, clientSideSplitting, collapseConsecutiveIdenticalCalls, collapseThreshold,
+            maxArrowsPerDiagram, diagramNoteWrapWidth, systemUiFont, roles: null);
+
+    // The public method above with the run's roles (#228): an optional parameter added to a public method is a binary
+    // break, and the roles are the report generator's to give, so they come in here.
+    internal static IEnumerable<PlantUmlForTest> GetPlantUmlImageTagsPerTestIdCore(
+        IEnumerable<RequestResponseLog>? requestResponses,
+        string plantUmlServerRendererUrl,
+        Func<string, string>? requestPreFormattingProcessor,
+        Func<string, string>? requestPostFormattingProcessor,
+        Func<string, string>? responsePreFormattingProcessor,
+        Func<string, string>? responsePostFormattingProcessor,
+        Func<string, string>? requestMidFormattingProcessor,
+        Func<string, string>? responseMidFormattingProcessor,
+        string[]? excludedHeaders,
+        int maxUrlLength,
+        bool separateSetup,
+        bool highlightSetup,
+        string? setupHighlightColor,
+        bool lazyLoadImages,
+        FocusEmphasis focusEmphasis,
+        FocusDeEmphasis focusDeEmphasis,
+        string? plantUmlTheme,
+        bool internalFlowTracking,
+        int maxEncodedDiagramLength,
+        int truncateNotesAfterLines,
+        bool excludeAllHeaders,
+        bool sequenceDiagramArrowColors,
+        bool sequenceDiagramParticipantColors,
+        Dictionary<string, string>? dependencyColors,
+        Dictionary<string, string>? serviceTypeOverrides,
+        GraphQlBodyFormat graphQlBodyFormat,
+        bool clientSideSplitting,
+        bool collapseConsecutiveIdenticalCalls,
+        int collapseThreshold,
+        int? maxArrowsPerDiagram,
+        int diagramNoteWrapWidth,
+        bool systemUiFont,
+        DiagramRoles? roles)
     {
         excludedHeaders ??= DefaultExcludedHeaders;
         DiagramWidth.ValidateNoteWrapWidth(diagramNoteWrapWidth);
@@ -152,7 +201,8 @@ public static partial class PlantUmlCreator
                 collapseThreshold,
                 maxArrowsPerDiagram,
                 diagramNoteWrapWidth,
-                systemUiFont);
+                systemUiFont,
+                roles);
             var imageTags = results.Select(x => x.GetPlantUmlImageTag(plantUmlServerRendererUrl, lazyLoadImages)).ToArray();
             return new PlantUmlForTest(testTraces.Key, testName, results.Select(result => (result.PlantUml, result.PlantUmlEncoded)), testTraces.ToList(), imageTags);
         });
@@ -198,7 +248,8 @@ public static partial class PlantUmlCreator
         int collapseThreshold = 2,
         int? maxArrowsPerDiagram = null,
         int diagramNoteWrapWidth = DefaultNoteWrapWidth,
-        bool systemUiFont = false)
+        bool systemUiFont = false,
+        DiagramRoles? roles = null)
     {
         // With no partition to draw, the boundary is not on the page, so it must not end a run of identical calls.
         // Nor with a call that takes its phase variant from its place: there it is on the page after all.
@@ -226,7 +277,7 @@ public static partial class PlantUmlCreator
 
         var builder = new DiagramBuilder(tracesForTest, plantUmlTheme, clientSideSplitting ? int.MaxValue : maxEncodedDiagramLength,
             sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides,
-            diagramNoteWrapWidth, systemUiFont);
+            diagramNoteWrapWidth, systemUiFont, roles);
 
         // The boundary draws nothing: a diagram split at the last call before it would leave one more, empty.
         var lastTrace = tracesForTest.Last(t => !t.IsActionStart);
@@ -1238,9 +1289,10 @@ public static partial class PlantUmlCreator
         Dictionary<string, string>? dependencyColors = null,
         Dictionary<string, string>? serviceTypeOverrides = null,
         int noteWrapWidth = DefaultNoteWrapWidth,
-        bool systemUiFont = false)
+        bool systemUiFont = false,
+        DiagramRoles? roles = null)
     {
-        var entitiesPlantUml = CreateEntitiesPlantUml(tracesForTest, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides);
+        var entitiesPlantUml = CreateEntitiesPlantUml(tracesForTest, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, roles);
         var themeDirective = !string.IsNullOrWhiteSpace(plantUmlTheme) ? $"!theme {plantUmlTheme}\n" : "";
         // Participant names come from the captured calls (an ingested run's names from its files).
         return ReplaceXmlInvalidCharacters($"""
@@ -1313,11 +1365,14 @@ public static partial class PlantUmlCreator
         List<RequestResponseLog> tracesForTest,
         bool sequenceDiagramParticipantColors = false,
         Dictionary<string, string>? dependencyColors = null,
-        Dictionary<string, string>? serviceTypeOverrides = null)
+        Dictionary<string, string>? serviceTypeOverrides = null,
+        DiagramRoles? roles = null)
     {
         var sb = new StringBuilder();
         var actorDefined = false;
         var currentPlayers = new HashSet<string>();
+        // Each participant's declaration line, where it sits in sb, so the roles can reorder the lines as written (#228).
+        var declared = new List<(string Alias, int Start, int End)>();
 
         var relevantTraces = tracesForTest
             .Where(x => x is { IsOverrideStart: false, IsOverrideEnd: false, IsActionStart: false })
@@ -1361,6 +1416,7 @@ public static partial class PlantUmlCreator
         {
             var pureCallerAlias = SanitizePlantUmlAlias(pureCaller);
             currentPlayers.Add(pureCallerAlias);
+            var pureCallerStart = sb.Length;
             var pureCallerCategory = callerCategories.TryGetValue(pureCaller, out var pcc) ? pcc : null;
             if (pureCallerCategory is not null)
             {
@@ -1384,6 +1440,7 @@ public static partial class PlantUmlCreator
                     .Append("\" as ")
                     .AppendLine(pureCallerAlias);
             }
+            declared.Add((pureCallerAlias, pureCallerStart, sb.Length));
             actorDefined = true;
         }
 
@@ -1410,6 +1467,7 @@ public static partial class PlantUmlCreator
 
             if (currentPlayers.Add(callerShortName))
             {
+                var callerStart = sb.Length;
                 var callerCategory = callerCategories.TryGetValue(trace.CallerName, out var cc) ? cc : null;
                 if (callerCategory is not null)
                 {
@@ -1436,10 +1494,12 @@ public static partial class PlantUmlCreator
                         .Append("\" as ")
                         .AppendLine(callerShortName);
                 }
+                declared.Add((callerShortName, callerStart, sb.Length));
             }
 
             if (currentPlayers.Add(serviceShortName))
             {
+                var serviceStart = sb.Length;
                 var category = serviceCategories.TryGetValue(trace.ServiceName, out var cat) ? cat : null;
                 var depType = DependencyPalette.Resolve(category);
                 var shape = DependencyPalette.GetSequenceShape(depType);
@@ -1453,10 +1513,24 @@ public static partial class PlantUmlCreator
                     .Append("\" as ")
                     .Append(serviceShortName)
                     .AppendLine(colorSuffix);
+                declared.Add((serviceShortName, serviceStart, sb.Length));
             }
         }
 
-        return sb.ToString();
+        if (roles is null)
+            return sb.ToString();
+
+        // The run's roles (#228, plans/PARTICIPANT_ORDER_PLAN.md 5.1): the pure caller, then the test's other parties,
+        // then the parties under test, then the rest, each group in the order above. Only the lines move, each as the
+        // loop wrote it. A participant is an alias, and any raw name with it gives it its role (5.4).
+        var firstAlias = pureCaller is null ? null : SanitizePlantUmlAlias(pureCaller);
+        var rawNames = relevantTraces.SelectMany(t => new[] { t.CallerName, t.ServiceName })
+            .Distinct(StringComparer.Ordinal)
+            .ToLookup(SanitizePlantUmlAlias, StringComparer.Ordinal);
+        var text = sb.ToString();
+        return string.Concat(declared
+            .OrderBy(d => d.Alias == firstAlias ? 0 : roles.GroupOf(rawNames[d.Alias]))
+            .Select(d => text[d.Start..d.End]));
     }
 
     /// <summary>
@@ -2033,7 +2107,8 @@ public static partial class PlantUmlCreator
         Dictionary<string, string>? dependencyColors = null,
         Dictionary<string, string>? serviceTypeOverrides = null,
         int noteWrapWidth = DefaultNoteWrapWidth,
-        bool systemUiFont = false)
+        bool systemUiFont = false,
+        DiagramRoles? roles = null)
     {
         private readonly List<PlantUmlResult> _results = [];
         // The prefix is kept alongside the buffer it opens so that FinishAndStartNewDiagram can tell
@@ -2041,9 +2116,9 @@ public static partial class PlantUmlCreator
         // instance field initialiser cannot read another field, so the (pure, deterministic) prefix
         // builder is simply called twice for the first diagram; every later one reuses the string.
         private string _currentPrefix = CreatePlantUmlPrefix(tracesForTest, 1, plantUmlTheme,
-            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth, systemUiFont);
+            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth, systemUiFont, roles);
         private StringBuilder _currentDiagram = new(CreatePlantUmlPrefix(tracesForTest, 1, plantUmlTheme,
-            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth, systemUiFont));
+            sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth, systemUiFont, roles));
         private int _stepNumber = 1;
         private string? _openPartitionLine;
         private string? _cachedEncoded;
@@ -2264,7 +2339,7 @@ public static partial class PlantUmlCreator
             _statementGuard.Reset();
             _results.Add(new PlantUmlResult(plainText, encodedPlantUml));
             _currentPrefix = CreatePlantUmlPrefix(tracesForTest, _stepNumber, plantUmlTheme,
-                sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth, systemUiFont);
+                sequenceDiagramArrowColors, sequenceDiagramParticipantColors, dependencyColors, serviceTypeOverrides, noteWrapWidth, systemUiFont, roles);
             _currentDiagram = new StringBuilder(_currentPrefix);
 
             if (partitionToReopen != null)

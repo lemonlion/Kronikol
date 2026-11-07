@@ -11,8 +11,10 @@ namespace Kronikol.Tests.Parties;
 
 /// <summary>
 /// A party the run declares a test double is drawn by its name alone (5.16.2, reversing #190 R1's Q11): no diagram the
-/// run draws, sequence or component, says what a party is, and each draws its participants as a run that declares
-/// nothing does. What the party is stays in the data file's <c>parties</c> block and in <c>kronikol query parties</c>.
+/// run draws, sequence or component, says what a party is, and declaring doubles moves no participant, so each draws
+/// them as a run that declares nothing does. (A party held as the test or under test is ordered by its role since #228;
+/// this run declares only doubles, so it holds none.) What the party is stays in the data file's <c>parties</c> block
+/// and in <c>kronikol query parties</c>.
 /// </summary>
 [Collection("DiagramsFetcher")]
 public class DeclaredDoubleDiagramTests : IDisposable

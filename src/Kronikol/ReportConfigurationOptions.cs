@@ -57,7 +57,8 @@ public record ReportConfigurationOptions
     /// <c>Run.json</c>, <c>Failures.jsonl</c>'s header and the CTRF document's <c>environment.appName</c>.
     ///
     /// <para>Default: <c>null</c>. Setting it, or <see cref="Parties"/>, or a parties file, writes <c>serviceId</c> and
-    /// <c>parties</c> into the data file; a run that declares nothing keeps its bytes.</para>
+    /// <c>parties</c> into the data file, and lays out the run's sequence diagrams by the table: each test's parties, then
+    /// the parties under test, then the rest (#228). A run that declares nothing keeps its bytes.</para>
     /// </summary>
     public string? ServiceId { get; set; }
 

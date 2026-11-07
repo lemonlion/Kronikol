@@ -15,10 +15,11 @@ public static class DefaultDiagramsFetcher
 
     /// <summary>
     /// Clears the process-wide diagram cache so the next fetcher call regenerates diagrams from the
-    /// logs currently held by <see cref="RequestResponseLogger"/>. Diagrams are memoised for the
-    /// lifetime of the process because the standard test-framework adapters generate exactly one
-    /// report per run; hosts that generate several reports in one process (live/incremental
-    /// reporting, <c>kronikol ingest</c>, multi-run dashboards) must call this between runs.
+    /// logs currently held by <see cref="RequestResponseLogger"/>. A fetch returns the set cached by
+    /// the first, drawn with that fetch's options, until this is called. The report generator calls it
+    /// before it draws (#228), so a report is drawn with its own options and a fetch after it (BDDfy's
+    /// batch processor) takes the report's set; a host that fetches diagrams itself, between runs or
+    /// with options of its own, calls it first.
     /// </summary>
     public static void Reset() => _diagrams = null;
 
@@ -256,8 +257,10 @@ public static class DefaultDiagramsFetcher
 
     private static PlantUmlCreator.PlantUmlForTest[] GetPlantUmlPerTestId(DiagramsFetcherOptions options, bool lazyLoadImages, int maxEncodedDiagramLength, int truncateNotesAfterLines = 0, bool excludeAllHeaders = false, bool clientSideSplitting = false, IEnumerable<RequestResponseLog>? logs = null)
     {
-        return PlantUmlCreator.GetPlantUmlImageTagsPerTestId(
+        return PlantUmlCreator.GetPlantUmlImageTagsPerTestIdCore(
             logs ?? TrackedLogs(options),
+            plantUmlServerRendererUrl: PlantUmlCreator.DefaultServerRendererUrl,
+            maxUrlLength: PlantUmlCreator.DefaultMaxUrlLength,
             requestPostFormattingProcessor: options.RequestPostFormattingProcessor,
             responsePostFormattingProcessor: options.ResponsePostFormattingProcessor,
             requestPreFormattingProcessor: options.RequestPreFormattingProcessor,
@@ -287,7 +290,8 @@ public static class DefaultDiagramsFetcher
             maxArrowsPerDiagram: options.MaxArrowsPerDiagram,
             diagramNoteWrapWidth: options.DiagramNoteWrapWidth,
             // the JS engine, in the page or under Node, draws in the system font; the JVM knows no system-ui (5.0.0)
-            systemUiFont: options.PlantUmlRendering is PlantUmlRendering.BrowserJs or PlantUmlRendering.NodeJs).ToArray();
+            systemUiFont: options.PlantUmlRendering is PlantUmlRendering.BrowserJs or PlantUmlRendering.NodeJs,
+            roles: options.Roles).ToArray();
     }
 
     public static (DiagramAsCode[] TruncatedDiagrams, DiagramAsCode[] FullDiagrams) GetCiSummaryDiagrams(DiagramsFetcherOptions options, int truncateNotesAfterLines = 10)

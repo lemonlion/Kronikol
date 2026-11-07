@@ -63,4 +63,11 @@ public record DiagramsFetcherOptions
 
     /// <summary>See <see cref="ReportConfigurationOptions.MaxArrowsPerDiagram"/>.</summary>
     public int? MaxArrowsPerDiagram { get; set; }
+
+    /// <summary>
+    /// Who each party is, as the report resolved it (#228): the sequence diagrams declare the test's parties, then the
+    /// parties under test, then the rest. Set by the report generator alone, and only for a run that declares
+    /// something; null keeps today's order.
+    /// </summary>
+    internal PlantUml.DiagramRoles? Roles { get; set; }
 }

@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.33.0] - 2026-11-07
+
+The minor part moves (5.32.2 to 5.33.0): a run that declares its parties now lays out its sequence diagrams by them, a new effect of an existing declaration on what every such run draws, asked for as an enhancement (#228, `plans/PARTICIPANT_ORDER_PLAN.md` R1, Q5). There is nothing new to call or set.
+
+### Changed
+
+- **A sequence diagram puts the service under test next to the test (#228).** The diagram decided who was the test and who was under test by a rule of its own, the first caller no service calls and then everyone in the order the log met them, and the log starts with whatever the test sets up. So a scenario that made a folder and committed files before it ran its app drew `Caller, disk, git, app`, and every call the app made to them pointed left, while the run's parties table said `app` was under test. In a run that declares something (`ServiceId`, `Parties` or a parties file), each test's diagram now declares the test's parties first (the caller no service calls, then any other party the run holds as the test), then the parties under test, then everyone else in the order of the first call, as before: `Caller, app, disk, git`. A kind counts whether it was declared, observed or inferred, so `ServiceId` alone is enough. Only the declaration lines move, each written as before: shapes, colours, aliases, arrows and notes are unchanged, and a diagram whose service was already second keeps every byte.
+- **The parties are resolved before the diagrams are drawn.** They were resolved after, so the diagrams could not use them and a report held two answers to who was under test. The table, `kronikol query parties`, the service card and the diagrams now read one.
+- **The report draws its own diagrams.** The process keeps the first diagram set drawn and hands it to every later fetch, so a report written after another fetch (a host's own `DefaultDiagramsFetcher.GetDiagramsFetcher` call) was drawn with that fetch's options, not the report's. The report now draws its set with its own options every time, and a fetch after it, such as BDDfy's batch processor at the end of the run, still takes the report's set.
+
+### Changed behaviour
+
+- A run that declares nothing draws as before: every diagram, the report and the data file keep their bytes (Q1).
+- In a declaring run, a diagram whose service under test was not right after the test's parties changes. On the reference consumer's latest run none of its 1,396 diagrams did, as the service was already second wherever its tests call it.
+- A party the test calls on its way to the service that the run holds as neither the test nor under test, such as an undeclared gateway, now stands right of the service, and its calls to it point left. Declaring it `UnderTest` too keeps it in front.
+- A host that fetched diagrams through `DefaultDiagramsFetcher.GetDiagramsFetcher` before the report gets a report drawn with the report's own options rather than its early fetch's.
+- A host that draws its own diagrams through `DefaultDiagramsFetcher.GetDiagramsFetcher` or `LightBddDiagramsFetcher.GetDiagramsFetcher` and passes them to `GenerateHtmlReport` keeps the old order: the roles reach what `CreateStandardReportsWithDiagrams` draws, and through it `kronikol ingest`, the CI summary and `BDDfy.html`.
+- `kronikol merge` keeps each shard's diagrams as they were drawn, so shards written by versions on both sides of this release for one test keep both diagrams. A run's shards come from one version.
+
+### Tests
+
+- `ParticipantOrderTests` (the plan's T1 to T11 and T13) and `ParticipantOrderPipelineTests` (P1 to P7, through the report, a fetch before and after it, a host's own fetch, `kronikol ingest --parties` and the CI summary): 17 of their 23 facts fail on 5.32.0, each at its order, and P4 first at the Setup partition the report's own options draw; the other six pin what does not change. A Playwright fact reads where the default renderer draws each name: in a declaring run the app is left of the stores (on 5.32.1 it was right of them), and in a run that declares nothing it is right of them, as before. Eight mutations of the release are each caught.
+
 ## [5.32.2] - 2026-11-07
 
 The patch part moves (5.32.1 to 5.32.2): HttpClient's spans keep their source in internal flow, a span made without a source is named from its operation, and the default granularity keeps the traces those spans anchor, fixes with nothing new to call (#138, `plans/INTERNAL_FLOW_SOURCES_PLAN.md` R1 and R2).
