@@ -4,7 +4,7 @@
 2026-11-07 and moved onto `896ddad3` (5.31.1): its claims hold there, its probes answer as before on the published
 5.31.1, and its handler citations are three lines higher, as 5.30.2 shortened the handler above the walk (section 11)
 · **Status:** green-lit by the owner on 2026-11-07 ("can you implement the plan in full"), each question
-taking its recommended answer: R1 released as 5.31.2, R2 next. · **Issue:** #219, open, filed by the owner on 2026-10-28 on 5.17.0. ·
+taking its recommended answer: **executed**, R1 released as 5.31.2 and R2 as 5.32.0; #219 closed. · **Issue:** #219, open, filed by the owner on 2026-10-28 on 5.17.0. ·
 **Harness:** [`WHAT_ANSWERS_PLAN.harness/`](WHAT_ANSWERS_PLAN.harness/README.md), every probe re-runnable.
 
 Code citations are to `896ddad3` (5.31.1), checked there; wiki citations are to the wiki's `origin/master` at
@@ -704,3 +704,8 @@ recommended answer.
   - Eleven mutations, the plan's ten and Q4's, are each caught (`WHAT_ANSWERS_PLAN.harness/r1/mutations.txt`). The core
     suite and the end-to-end suite passed on the release.
   - 5.8 b now rests on its two reasons that stand: #138's plan measured the other two false (kronikol-70).
+  - R2 released as 5.32.0, a minor: `TestTrackingMessageHandlerOptions.TestDouble`, read by the handler, where a declared
+    name beats the walk's and a blank marks nothing. Its eight facts failed to compile first, then failed on behaviour
+    with the member unread (all but the guard, fact 5). Six mutations are each caught
+    (`WHAT_ANSWERS_PLAN.harness/r2/mutations.txt`). The core suite and the end-to-end suite passed on the release.
+  - #219 closed with a comment naming both releases and what the issue's library can drop (Q7).

@@ -34,6 +34,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
     private readonly bool _trackDuringSetup;
     private readonly bool _trackDuringAction;
     private readonly IReadOnlyCollection<string> _excludedHosts;
+    private readonly string? _testDouble;
     private int _invocationCount;
     private bool _listenerStarted;
 
@@ -55,6 +56,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         _trackDuringSetup = options.TrackDuringSetup;
         _trackDuringAction = options.TrackDuringAction;
         _excludedHosts = options.ExcludedHosts;
+        _testDouble = options.TestDouble;
 
         TrackingComponentRegistry.Register(this);
     }
@@ -257,7 +259,8 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         var trackingIgnore = requestHeaders.Any(x => string.Equals(x.Key, TestTrackingHttpHeaders.Ignore, StringComparison.OrdinalIgnoreCase))
                              || !PhaseConfiguration.ShouldTrack(_trackDuringSetup, _trackDuringAction);
         var currentPhase = TestPhaseContext.Current;
-        var testDouble = chain.AnsweredBy;
+        // What the code that wired the handler says answers its calls wins over what the chain shows; a blank says nothing does.
+        var testDouble = _testDouble is null ? chain.AnsweredBy : string.IsNullOrWhiteSpace(_testDouble) ? null : _testDouble;
 
         RequestResponseLogger.Log(new RequestResponseLog(
             currentTestInfo.Name,

@@ -1,0 +1,25 @@
+- the option ignored: caught: 9 failed
+    A_declaration_survives_with_on_the_options
+    A_declared_double_marks_a_send_that_threw
+    A_declared_double_marks_every_call_whatever_the_chain_ends_in
+    A_declared_double_wins_over_a_stub_at_the_end_of_the_chain
+    A_service_only_a_declared_double_answered_is_a_double_observed
+    An_empty_or_blank_declaration_marks_nothing_even_over_a_stub
+- empty read as a name: caught: 1 failed
+    An_empty_or_blank_declaration_marks_nothing_even_over_a_stub
+- white space read as a name: caught: 1 failed
+    An_empty_or_blank_declaration_marks_nothing_even_over_a_stub
+- request half only: caught: 7 failed
+    A_declaration_survives_with_on_the_options
+    A_declared_double_marks_every_call_whatever_the_chain_ends_in
+    A_declared_double_wins_over_a_stub_at_the_end_of_the_chain
+    An_empty_or_blank_declaration_marks_nothing_even_over_a_stub
+    TrackDependenciesForDiagrams_hands_the_declaration_to_every_client_it_tracks
+- the walk's mark beating a declared one: caught: 5 failed
+    A_declaration_survives_with_on_the_options
+    A_declared_double_marks_a_send_that_threw
+    A_declared_double_wins_over_a_stub_at_the_end_of_the_chain
+    An_empty_or_blank_declaration_marks_nothing_even_over_a_stub
+- the thrown send unmarked: caught: 2 failed
+    A_call_that_threw_in_a_stub_is_marked_too
+    A_declared_double_marks_a_send_that_threw

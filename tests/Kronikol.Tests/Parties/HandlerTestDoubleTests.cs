@@ -34,19 +34,21 @@ public class HandlerTestDoubleTests
 
     private sealed class CertificateHandler : HttpClientHandler;
 
-    private TestTrackingMessageHandler Tracker() => new(new TestTrackingMessageHandlerOptions
+    private TestTrackingMessageHandler Tracker() => new(Options());
+
+    private TestTrackingMessageHandlerOptions Options(string? testDouble = null) => new()
     {
         CallerName = "Breakfast Provider",
         FixedNameForReceivingService = "Cow Service",
         CurrentTestInfoFetcher = () => ("Order pancakes", _testId),
-    });
+        TestDouble = testDouble,
+    };
 
     private RequestResponseLog[] Logs() => RequestResponseLogger.RequestAndResponseLogs.Where(l => l.TestId == _testId).ToArray();
 
-    private async Task<RequestResponseLog[]> Send(HttpMessageHandler inner, string url = "http://cows.example/milk")
+    private async Task<RequestResponseLog[]> Send(HttpMessageHandler inner, string url = "http://cows.example/milk", string? testDouble = null)
     {
-        var handler = Tracker();
-        handler.InnerHandler = inner;
+        var handler = new TestTrackingMessageHandler(Options(testDouble)) { InnerHandler = inner };
         using var invoker = new HttpMessageInvoker(handler);
         try
         {
@@ -340,5 +342,105 @@ public class HandlerTestDoubleTests
 
         // Unmarked, the one service the run reached is what the inference reads as the subject; marked, it was a double.
         Assert.NotEqual(PartyKind.Double, table.Parties.Single(p => p.Name == "Cow Service").Kind);
+    }
+
+    // R2 (#219): the code that wires a handler says what answers its calls, for what no walk can see.
+    [Theory]
+    [InlineData("sockets")]
+    [InlineData("Onward over sockets")]
+    public async Task A_declared_double_marks_every_call_whatever_the_chain_ends_in(string chain)
+    {
+        var (url, served) = OneAnswer();
+
+        var logs = await Send(chain == "sockets" ? new SocketsHttpHandler() : new Onward(new SocketsHttpHandler()), url, testDouble: "WireMock");
+        await served;
+
+        Assert.Equal([RequestResponseType.Request, RequestResponseType.Response], logs.Select(l => l.Type));
+        Assert.All(logs, l => Assert.Equal("WireMock", l.TestDouble));
+    }
+
+    [Fact]
+    public async Task A_declared_double_marks_a_send_that_threw()
+    {
+        var logs = await Send(new RefusingCowService(), testDouble: "WireMock");
+
+        Assert.Equal([RequestResponseType.Request, RequestResponseType.Response], logs.Select(l => l.Type));
+        Assert.All(logs, l => Assert.Equal("WireMock", l.TestDouble));
+    }
+
+    [Fact]
+    public async Task A_declared_double_wins_over_a_stub_at_the_end_of_the_chain()
+    {
+        var logs = await Send(new CannedCowService(), testDouble: "Orders API (WireMock)");
+
+        Assert.All(logs, l => Assert.Equal("Orders API (WireMock)", l.TestDouble));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    public async Task An_empty_or_blank_declaration_marks_nothing_even_over_a_stub(string declared)
+    {
+        var logs = await Send(new CannedCowService(), testDouble: declared);
+
+        Assert.Equal(2, logs.Length);
+        Assert.All(logs, l => Assert.Null(l.TestDouble));
+    }
+
+    [Fact]
+    public async Task No_declaration_reads_the_mark_from_the_chain()
+    {
+        var logs = await Send(new CannedCowService(), testDouble: null);
+
+        Assert.All(logs, l => Assert.Equal("CannedCowService", l.TestDouble));
+    }
+
+    [Fact]
+    public async Task A_service_only_a_declared_double_answered_is_a_double_observed()
+    {
+        var (url, served) = OneAnswer();
+        var logs = await Send(new SocketsHttpHandler(), url, testDouble: "WireMock");
+        await served;
+
+        var table = PartyResolver.Resolve(PartiesReport.CallsOf(logs), PartyDeclarations.None, PartyObservations.None);
+
+        var cow = table.Parties.Single(p => p.Name == "Cow Service");
+        Assert.Equal((PartyKind.Double, (PartyKindSource?)PartyKindSource.Observed), (cow.Kind, cow.KindSource));
+    }
+
+    [Fact]
+    public async Task TrackDependenciesForDiagrams_hands_the_declaration_to_every_client_it_tracks()
+    {
+        var (url, served) = OneAnswer();
+        var services = new ServiceCollection();
+        services.AddHttpClient("cows");
+        services.TrackDependenciesForDiagrams(Options(testDouble: "WireMock"));
+        await using var provider = services.BuildServiceProvider();
+
+        using var response = await provider.GetRequiredService<IHttpClientFactory>().CreateClient("cows").GetAsync(url);
+        await served;
+
+        var logs = Logs();
+        Assert.Equal([RequestResponseType.Request, RequestResponseType.Response], logs.Select(l => l.Type));
+        Assert.All(logs, l => Assert.Equal("WireMock", l.TestDouble));
+    }
+
+    // The issue's library copies the options once per receiving name: `options with { FixedNameForReceivingService = receiver }`.
+    [Fact]
+    public async Task A_declaration_survives_with_on_the_options()
+    {
+        var declared = new Kronikol.BDDfy.xUnit3.BDDfyTestTrackingMessageHandlerOptions { TestDouble = "WireMock" };
+        var copy = declared with
+        {
+            FixedNameForReceivingService = "Cow Service",
+            CallerName = "Breakfast Provider",
+            CurrentTestInfoFetcher = () => ("Order pancakes", _testId),
+        };
+        using var invoker = new HttpMessageInvoker(new TestTrackingMessageHandler(copy) { InnerHandler = new CannedCowService() });
+
+        using var response = await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://cows.example/milk"), CancellationToken.None);
+
+        Assert.Equal("WireMock", copy.TestDouble);
+        Assert.All(Logs(), l => Assert.Equal("WireMock", l.TestDouble));
     }
 }

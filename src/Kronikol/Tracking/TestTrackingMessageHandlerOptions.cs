@@ -29,6 +29,15 @@ public record TestTrackingMessageHandlerOptions
     /// </summary>
     public string? FixedNameForReceivingService { get; set; }
 
+    /// <summary>
+    /// What answers this handler's calls in their service's place, written on each call as <c>testDouble</c> (#219).
+    /// <c>null</c>, the default: the handler reads it from its chain, a handler at the end of it that answers the call
+    /// itself. A name: every call the handler tracks is marked as that double's answer, whatever its chain ends in, for a
+    /// double the chain cannot show, such as <c>"WireMock"</c> on a socket. Empty or white space: no call is marked, for a
+    /// chain whose end the handler reads as answering when it hands the call on.
+    /// </summary>
+    public string? TestDouble { get; set; }
+
     /// <summary>Display name of the calling service in diagrams. Default: <c>"Caller"</c>.</summary>
     public string CallerName { get; set; } = TrackingDefaults.CallerName;
 

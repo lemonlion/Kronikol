@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.32.0] - 2026-11-07
+
+The minor part moves (5.31.2 to 5.32.0): a new option, `TestTrackingMessageHandlerOptions.TestDouble`, which says what answers a tracking handler's calls. Its default keeps the behaviour of 5.31.2, and a new option is a minor bump all the same. It closes #219 (`plans/WHAT_ANSWERS_PLAN.md` R2).
+
+### Added
+
+- **`TestTrackingMessageHandlerOptions.TestDouble` (#219).** The code that wires a handler can say what answers its calls in their service's place, for what no walk of the chain can see. A name marks every call the handler tracks as that double's answer, on both halves and on a send that threw, whatever the chain ends in, so the client of a stub on a socket says `TestDouble = "WireMock"`. Empty or white space marks no call, for a handler that finds its way on only when the call comes. `null`, the default, reads the mark from the chain as 5.31.2 does. It reaches every handler made from the options: `new TestTrackingMessageHandler(options)`, `TrackDependenciesForDiagrams`, `CreateTestTrackingClient`, and a copy made with `with`. It says nothing about the `traceparent`, which the chain still decides. A party every call to which a declared mark covers reads `double`, `observed`, as with any mark.
+
+### Tests
+
+- `HandlerTestDoubleTests` gains the plan's R2 facts 1 to 8, each red before the option was read. Six mutations of the option are each caught.
+
 ## [5.31.2] - 2026-11-07
 
 The patch part moves (5.31.1 to 5.31.2): the tracking handler follows a call past a handler that hands it on, a fix with nothing new to call (#219, `plans/WHAT_ANSWERS_PLAN.md` R1).
