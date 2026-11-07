@@ -1,0 +1,7 @@
+puml-bddfy-in-memory: 212 diagrams; with arrows 212, no pure caller 0, holds a party under test 212
+puml-lightbdd-in-memory: 187 diagrams; with arrows 187, no pure caller 0, holds a party under test 187
+puml-nunit-in-memory: 212 diagrams; with arrows 212, no pure caller 0, holds a party under test 212
+puml-reqnroll-external-sut: 179 diagrams; with arrows 172, no pure caller 0, holds a party under test 172
+puml-reqnroll-in-memory: 214 diagrams; with arrows 214, no pure caller 0, holds a party under test 214
+puml-tunit-in-memory: 212 diagrams; with arrows 212, no pure caller 0, holds a party under test 212
+puml-xunit-external-sut: 180 diagrams; with arrows 173, no pure caller 0, holds a party under test 173
