@@ -1,0 +1,16 @@
+# order_rules.py --under-test breakfastProvider over BreakfastProvider CI run 42359580430 (2026-11-07, Kronikol 5.14.0),
+# diagrams dumped with Kronikol.Tool 5.31.1: query diagram <lane-report> --out puml-<lane>
+puml-bddfy-in-memory: 212 diagrams, 212 with arrows, parser agrees with the declared order on 212; leftward requests R0=114 in 40 diagrams, RA=75 in 40 (order changed in 39), RB=114 in 40 (changed in 44), RC=114 in 40 (changed in 0); inferred subject breakfastProvider, drawn as the actor in 1, RU=114 in 40 (changed in 0); breakfastProvider at position {0: 1, 1: 211}
+puml-lightbdd-in-memory: 187 diagrams, 187 with arrows, parser agrees with the declared order on 187; leftward requests R0=114 in 40 diagrams, RA=75 in 40 (order changed in 39), RB=114 in 40 (changed in 40), RC=114 in 40 (changed in 0); inferred subject breakfastProvider, drawn as the actor in 1, RU=114 in 40 (changed in 0); breakfastProvider at position {0: 1, 1: 186}
+puml-nunit-in-memory: 212 diagrams, 212 with arrows, parser agrees with the declared order on 212; leftward requests R0=114 in 40 diagrams, RA=75 in 40 (order changed in 39), RB=114 in 40 (changed in 1), RC=114 in 40 (changed in 0); inferred subject breakfastProvider, drawn as the actor in 1, RU=114 in 40 (changed in 0); breakfastProvider at position {0: 1, 1: 211}
+puml-reqnroll-external-sut: 179 diagrams, 172 with arrows, parser agrees with the declared order on 172; leftward requests R0=0 in 0 diagrams, RA=0 in 0 (order changed in 0), RB=0 in 0 (changed in 0), RC=0 in 0 (changed in 0); inferred subject breakfastProvider, drawn as the actor in 0, RU=0 in 0 (changed in 0); breakfastProvider at position {1: 172}
+puml-reqnroll-in-memory: 214 diagrams, 214 with arrows, parser agrees with the declared order on 214; leftward requests R0=108 in 38 diagrams, RA=71 in 38 (order changed in 37), RB=108 in 38 (changed in 41), RC=108 in 38 (changed in 0); inferred subject breakfastProvider, drawn as the actor in 1, RU=108 in 38 (changed in 0); breakfastProvider at position {0: 1, 1: 213}
+puml-tunit-in-memory: 212 diagrams, 212 with arrows, parser agrees with the declared order on 212; leftward requests R0=114 in 40 diagrams, RA=75 in 40 (order changed in 39), RB=114 in 40 (changed in 1), RC=114 in 40 (changed in 0); inferred subject breakfastProvider, drawn as the actor in 1, RU=114 in 40 (changed in 0); breakfastProvider at position {0: 1, 1: 211}
+puml-xunit-external-sut: 180 diagrams, 173 with arrows, parser agrees with the declared order on 173; leftward requests R0=0 in 0 diagrams, RA=0 in 0 (order changed in 0), RB=0 in 0 (changed in 0), RC=0 in 0 (changed in 0); inferred subject breakfastProvider, drawn as the actor in 0, RU=0 in 0 (changed in 0); breakfastProvider at position {1: 173}
+
+# first declaration of each diagram
+   1362 actor "Caller"
+     14 participant "(no interactions)"
+     10 queue "Kafka Broker"
+      5 queue "Google Cloud Pub/Sub"
+      5 actor "Breakfast Provider"

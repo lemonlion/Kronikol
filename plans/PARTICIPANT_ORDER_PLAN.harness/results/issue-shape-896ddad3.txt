@@ -1,0 +1,32 @@
+C:\Code\Kronikol-228\plans\PARTICIPANT_ORDER_PLAN.harness\repro\issue_shape.cs.csproj : warning NU1903: Package 'Microsoft.DotNet.ILCompiler' 10.0.8 has a known high severity vulnerability, https://github.com/advisories/GHSA-p3jp-9v83-76w9
+C:\Code\Kronikol-228\plans\PARTICIPANT_ORDER_PLAN.harness\repro\issue_shape.cs.csproj : warning NU1903: Package 'Microsoft.DotNet.ILCompiler' 10.0.8 has a known high severity vulnerability, https://github.com/advisories/GHSA-p3jp-9v83-76w9
+== phases unknown
+  actor "Caller" as caller
+  database "disk" as disk
+  database "git" as git
+  participant "app" as app
+  caller -[#0E7C86]> disk: Make a folder: /work
+  disk -[#0E7C86]-> caller: OK
+  caller -[#0E7C86]> git: Commit files: /repo
+  git -[#0E7C86]-> caller: OK
+  caller -[#438DD5]> app: Run: /run
+  app -[#438DD5]-> caller: OK
+  app -[#0E7C86]> git: Read files: /repo
+  git -[#0E7C86]-> app: OK
+  app -[#0E7C86]> disk: Keep: /work/out
+  disk -[#0E7C86]-> app: OK
+== phases recorded (Given = Setup, When = Action)
+  actor "Caller" as caller
+  database "disk" as disk
+  database "git" as git
+  participant "app" as app
+  caller -[#0E7C86]> disk: Make a folder: /work
+  disk -[#0E7C86]-> caller: OK
+  caller -[#0E7C86]> git: Commit files: /repo
+  git -[#0E7C86]-> caller: OK
+  caller -[#438DD5]> app: Run: /run
+  app -[#438DD5]-> caller: OK
+  app -[#0E7C86]> git: Read files: /repo
+  git -[#0E7C86]-> app: OK
+  app -[#0E7C86]> disk: Keep: /work/out
+  disk -[#0E7C86]-> app: OK

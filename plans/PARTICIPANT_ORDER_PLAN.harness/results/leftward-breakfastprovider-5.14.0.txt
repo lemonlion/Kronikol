@@ -1,0 +1,3 @@
+   198  kafkaBroker -> breakfastProvider
+   193  azureEventHub -> breakfastProvider
+   173  googleCloudPub_Sub -> breakfastProvider
