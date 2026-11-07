@@ -20,9 +20,10 @@ public class ScenarioTruncateAndCollapsibleNotesTests
         // Old approach: temporarily override window._truncateLines, restore in callback
         // New approach: set container._truncateLines on each container
 
-        // Since SEARCH_PLAN (4.6.5) the gear's line count goes through show, which sets a scenario's states.
+        // Since SEARCH_PLAN (4.6.5) the gear's line count goes through show, which sets a scenario's states; since #227
+        // through showFromControl, which takes the reader's place first and then calls show.
 
-        Assert.Contains("show(scenario, { lines: ", ExtractFunctionBody(_script, "_setScenarioTruncateLines"));
+        Assert.Contains("showFromControl(scenario, { lines: ", ExtractFunctionBody(_script, "_setScenarioTruncateLines"));
         var fnBody = ExtractFunctionBody(_script, "show");
 
         // Should store per-container

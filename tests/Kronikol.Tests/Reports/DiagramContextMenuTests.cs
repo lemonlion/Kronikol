@@ -748,9 +748,13 @@ public class DiagramContextMenuTests
         // Scenario-level should NOT sync all dropdowns — only report-level does. It may still reach
         // for its own scenario's dropdown (to mark it pending while the re-render runs), so what
         // matters is that it never queries the document for them. Since SEARCH_PLAN (4.6.5) the gear sets
-        // its scenario's states through show, which holds to the scenario as well.
+        // its scenario's states through show, which holds to the scenario as well; since #227 through
+        // showFromControl, which takes the reader's place first and then calls show.
         Assert.DoesNotContain("document.querySelectorAll('.truncate-lines-select", funcBody);
-        Assert.Contains("show(scenario, { lines: ", funcBody);
+        Assert.Contains("showFromControl(scenario, { lines: ", funcBody);
+        var fromControl = GetFunction("showFromControl");
+        Assert.Contains("window.kronikol_readingPlace.take()", fromControl);
+        Assert.Contains("return show(scenario, states)", fromControl);
         Assert.DoesNotContain("document.querySelectorAll(", GetFunction("show"));
     }
 
@@ -888,7 +892,8 @@ public class DiagramContextMenuTests
         Assert.Contains("dragContainer.classList.remove('diagram-panning')", _script);
         Assert.Contains("cursor: grabbing;", DiagramContextMenu.GetInlineSvgStyles());
         Assert.Contains("scrollLeft = scrollL - (e.pageX - startX)", _script);
-        Assert.Contains("window.scrollBy(0, startY - e.clientY)", _script);
+        // down the page at once, whatever scroll-behavior the page's CSS sets (#227's review)
+        Assert.Contains("window.scrollBy({ top: startY - e.clientY, behavior: 'instant' })", _script);
     }
 
     [Fact]

@@ -326,6 +326,51 @@ public static class ReportTestHelper
     }
 
     /// <summary>
+    /// A feature of <paramref name="scenarios"/> scenarios ("Wide diagram 01" on), each a diagram wider than the page
+    /// (fourteen participants) and taller than the window, drawn whole: <paramref name="calls"/> calls with their replies,
+    /// each request with a note whose first line is a header line, so the headers toggle draws every diagram again and
+    /// each grows. The report a reader reads down with diagrams above the one they read (<c>plans/TOGGLE_JUMP_PLAN.md</c>,
+    /// the harness's <c>wide-many</c>); sequence diagrams only, which a CI runner draws a few a second. With
+    /// <paramref name="firstInParts"/> the first scenario's diagram is long enough for the page to draw it in parts: 260
+    /// calls, every 40th with such a note. <paramref name="labelWords"/>, when given, ends every call's label.
+    /// </summary>
+    public static string GenerateReportWithTallWideDiagrams(string tempDir, string outputDir, string fileName, int scenarios = 8,
+        int calls = 40, bool firstInParts = false, string? labelWords = null)
+    {
+        var participants = string.Join("\n", Enumerable.Range(1, 14).Select(i => $"participant \"WideParticipantNumber{i}\" as a{i}"));
+        var words = labelWords is null ? "" : " " + labelWords;
+        string Call(int s, int i, bool note) => $"a{1 + (i + s) % 13} -> a{2 + (i + s) % 13} : call {i}{words}\n"
+            + (note ? $"note left\n<color:gray>[X-Request=s{s}c{i}]\n\n{{\n  \"field\": \"value {i}\"\n}}\nend note\n" : "")
+            + $"a{2 + (i + s) % 13} --> a{1 + (i + s) % 13} : reply {i}";
+        string Body(int s) => firstInParts && s == 1
+            ? string.Join("\n", Enumerable.Range(1, 260).Select(i => Call(s, i, i % 40 == 0)))
+            : string.Join("\n", Enumerable.Range(1, calls).Select(i => Call(s, i, true)));
+        var features = new[]
+        {
+            new Feature
+            {
+                DisplayName = "Wide Feature",
+                Scenarios = Enumerable.Range(1, scenarios).Select(s => new Scenario
+                {
+                    Id = "w" + s, DisplayName = $"Wide diagram {s:00}", Result = ExecutionResult.Passed, Duration = TimeSpan.FromSeconds(1)
+                }).ToArray()
+            }
+        };
+        var diagrams = Enumerable.Range(1, scenarios)
+            .Select(s => new DiagramAsCode("w" + s, "", $"@startuml\n{participants}\n{Body(s)}\n@enduml")).ToArray();
+
+        var path = ReportGenerator.GenerateHtmlReport(
+            diagrams, features,
+            DateTime.UtcNow, DateTime.UtcNow,
+            null, Path.Combine(tempDir, fileName), "Test Report", true,
+            diagramFormat: DiagramFormat.PlantUml,
+            plantUmlRendering: PlantUmlRendering.BrowserJs);
+
+        File.Copy(path, Path.Combine(outputDir, fileName), true);
+        return new Uri(path).AbsoluteUri;
+    }
+
+    /// <summary>
     /// The owner's case for zooming every diagram (<c>plans/ZOOM_EVERY_DIAGRAM_PLAN.md</c>): the first scenario's
     /// diagram is wider than the page ("Create order successfully", fourteen participants) and the second's fits it
     /// ("Delete order fails gracefully", three).

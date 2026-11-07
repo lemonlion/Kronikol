@@ -1264,7 +1264,13 @@
         var cw = contentWidthOf(box);
         if (box.classList.contains('diagram-zoomed-out')) cw = Math.max(cw, box._kContentWidth || 0);
         else box._kContentWidth = cw;
-        if (cw <= 0) return null;
+        return factsAt(pics, naturals, parts, cw);
+    }
+
+    // The same facts for a box whose content width is known already, read before anything changed: a picture just
+    // written reads nothing of the layout (_zoomState.give).
+    function factsAt(pics, naturals, parts, cw) {
+        if (!(cw > 0)) return null;
         var width = 0;
         for (var i = 0; i < pics.length; i++) width = Math.max(width, naturals[i] + shiftOf(pics[i]));
         var fitPct = Math.max(1, Math.min(100, Math.round(cw / width * 100)));
@@ -1279,8 +1285,10 @@
     // a part on a long diagram: a toggle of the consumer report's 15-part diagram ended 300 ms later than with no lining
     // up), and the first frame showed the parts unplaced (5.7.3). The slider, the marks and the level are the slider's,
     // made after the paint, which then finds every size in place. A width is read from the picture, which is not laid
-    // out while hidden.
-    window._sizeHiddenParts = function(container, parts) {
+    // out while hidden. A zoomed box's width is the one its zoom state read before the old parts were taken away
+    // (_zoomState.of): read after, a box far from the screen, which keeps no height while it is drawn again, was laid
+    // out empty for it (#227, plans/TOGGLE_JUMP_PLAN.md F6).
+    window._sizeHiddenParts = function(container, parts, zoom) {
         var pics = [], naturals = [];
         for (var i = 0; i < parts.length; i++) {
             var svg = getSvg(parts[i]), w = svg && svg.width && svg.width.baseVal;
@@ -1289,7 +1297,8 @@
             pics.push(svg);
             naturals.push(w.value);
         }
-        var f = pics.length ? factsOf(container, pics, naturals, true) : null;
+        var f = !pics.length ? null : zoom && zoom.width > 0 ? factsAt(pics, naturals, true, zoom.width)
+            : factsOf(container, pics, naturals, true);
         if (!f) return;
         var percent = Math.max(f.min, Math.min(100, Math.round(levelFor(container, f))));
         var zoomedIn = f.wide && percent > f.fitPct, zoomedOut = !f.wide && percent < 100;
@@ -1390,13 +1399,265 @@
         var scroller = scrollerOf(box);
         if (scroller) {
             var top = scroller.scrollTop;
-            scroller.scrollTop = top + dy;
+            // at once, whatever scroll-behavior the page's CSS gives (a report's CustomCss): animated, the window had
+            // not moved when the next part's carry was worked out from it
+            scroller.scrollTo({ top: top + dy, behavior: 'instant' });
             return dy - (scroller.scrollTop - top);
         }
         var was = window.scrollY;
-        window.scrollBy(0, dy);
+        window.scrollBy({ top: dy, behavior: 'instant' });
         return dy - (window.scrollY - was);
     }
+
+    // ── The reader's place across a redraw (#227, plans/TOGGLE_JUMP_PLAN.md P1 to P6) ──
+    // A control that draws diagrams again (the report's toggles and selects in its bar, a scenario's own in its settings,
+    // the Components tab's) keeps what the reader was reading where it stood. Until then the page left a redraw to the
+    // browser's scroll anchoring, which anchors on what is at the top of the window, often inside the picture of the
+    // diagram above: the redraw removes that picture and the browser makes up for nothing, so the diagram above grew and
+    // pushed the one being read to the window's foot, and Safari has no anchoring at all. The place is read once, when the
+    // control is used (take), at the reading line, the middle of the window below the bar and any settings stuck under
+    // it. In a diagram it is the drawn text nearest the line, found again by its words and which time they occur in the
+    // diagram, with how far down the diagram's pictures the line was for when that text is gone; anywhere else, the
+    // element at the line. It is put back on the line after every picture a redraw writes, in the task that writes it,
+    // before the paint (keep). Redraws that overlap keep the first one's place. The reader's own wheel, touch, scroll
+    // keys, a press on the scrollbar or a zoom of their own lets it go, and so does any scroll the keeper did not write,
+    // found before the next picture is written (check); it is dropped a frame after the last redraw that was running when
+    // it was taken, or started while it was held, has ended (start and end bracket each).
+    var readingPlace = null, readingCarry = 0, readingKeptY = null, redrawsRunning = 0;
+
+    // the middle of the window below the bar and any settings stuck under it; the element at the window's middle tells
+    // kronikol_freeTop which stuck settings are above (report-tabs-script.js)
+    function readingLine() {
+        var t = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+        var free = t && window.kronikol_freeTop ? window.kronikol_freeTop(t) : 0;
+        return (free + window.innerHeight) / 2;
+    }
+
+    // what floats over the page at the line (the bar, a scenario's stuck settings, a slider, a popup): never a place
+    function floatingAncestorOf(el) {
+        for (var e = el; e && e !== document.body && e !== document.documentElement; e = e.parentElement) {
+            var p = window.getComputedStyle(e).position;
+            if (p === 'fixed' || p === 'sticky') return e;
+        }
+        return null;
+    }
+
+    // from a box's first picture's top to its last one's bottom, or null when they are not laid out
+    function spanOf(pics) {
+        if (!pics.length) return null;
+        var a = pics[0].getBoundingClientRect(), b = pics[pics.length - 1].getBoundingClientRect();
+        return b.bottom - a.top > 0 ? { top: a.top, height: b.bottom - a.top } : null;
+    }
+
+    function textsOf(pics) {
+        var all = [];
+        pics.forEach(function(svg) { Array.prototype.push.apply(all, svg.querySelectorAll('text')); });
+        return all;
+    }
+
+    // The drawn text nearest the line, among the texts of the picture the line is in (or the nearest, between two parts):
+    // its words, which time they occur in the whole diagram, and its middle's offset from the line. Words drawn more than
+    // once (a JSON field's name or a brace in every note) are told apart by the texts whose words the diagram draws once,
+    // within half a window of the line, the three nearest the text read above it (a text on its own row with them) and the
+    // three nearest below (unique): a filter that takes rows away above the line changes which time the words occur, and
+    // the k-th time was another row, 207 px off on a report's database calls. Three, as the nearest may be in a row the
+    // filter takes away; on both sides, as rows a toggle adds or takes away between a text and the one read move them
+    // apart, and no rows come between the text read and the nearest on the other side.
+    function markAt(pics, y) {
+        var pic = null, distance = Infinity;
+        pics.forEach(function(svg) {
+            var r = svg.getBoundingClientRect(), d = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0;
+            if (r.height > 0 && d < distance) { distance = d; pic = svg; }
+        });
+        if (!pic) return null;
+        // keyed by what a text reads, so by no object's own names: a word such as "constructor" is drawn as a text of its own
+        var all = textsOf(pics), counts = Object.create(null);
+        for (var a = 0; a < all.length; a++) counts[all[a].textContent] = (counts[all[a].textContent] || 0) + 1;
+        var texts = pic.querySelectorAll('text'), best = null, bestY = 0, bd = Infinity, once = [];
+        for (var i = 0; i < texts.length; i++) {
+            var q = texts[i].getBoundingClientRect();
+            if (!q.height) continue;
+            var m = (q.top + q.bottom) / 2, d = Math.abs(m - y);
+            if (d < bd) { bd = d; best = texts[i]; bestY = m; }
+            if (d < window.innerHeight / 2 && counts[texts[i].textContent] === 1) once.push({ words: texts[i].textContent, off: m - y, m: m });
+        }
+        if (!best) return null;
+        var words = best.textContent, k = 0;
+        for (var j = 0; j < all.length && all[j] !== best; j++) if (all[j].textContent === words) k++;
+        var nearer = function(p, q2) { return Math.abs(p.m - bestY) - Math.abs(q2.m - bestY); };
+        once.forEach(function(o) { o.up = o.m <= bestY + 1; });
+        var above = once.filter(function(o) { return o.up; }).sort(nearer), below = once.filter(function(o) { return !o.up; }).sort(nearer);
+        return { el: best, words: words, k: k, off: bestY - y, unique: above.slice(0, 3).concat(below.slice(0, 3)).sort(nearer) };
+    }
+
+    function takeReadingPlace() {
+        // a place a redraw still running holds is kept (P6), unless the window was scrolled from it since or it can no
+        // longer be told
+        checkReadingPlace();
+        if (readingPlace && readingOffset(readingPlace) !== null) return;
+        var x = window.innerWidth / 2, y = readingLine(), stack = document.elementsFromPoint(x, y), place = null;
+        for (var i = 0; i < stack.length && !place; i++) {
+            var el = stack[i];
+            if (el === document.documentElement || el === document.body) continue;
+            var over = floatingAncestorOf(el);
+            if (over) {
+                while (i + 1 < stack.length && over.contains(stack[i + 1])) i++;
+                continue;
+            }
+            var box = zoomBoxOf(el), pics = box ? picturesOf(box) : [], s = spanOf(pics);
+            if (s && y >= s.top && y <= s.top + s.height) {
+                var mark = markAt(pics, y);
+                place = { box: box, y: y, fy: (y - s.top) / s.height, h0: s.height, mark: mark,
+                    seen: mark ? { pics: pics, found: { el: mark.el, off: mark.off } } : null };
+            } else place = { el: el, top: el.getBoundingClientRect().top };
+        }
+        readingPlace = place;
+        readingCarry = 0;
+        readingKeptY = window.scrollY;
+        // a control that started no redraw has nothing to keep
+        dropReadingPlaceSoon();
+    }
+
+    function middleOf(el) {
+        var q = el.getBoundingClientRect();
+        return q.height ? (q.top + q.bottom) / 2 : null;
+    }
+
+    // The text that stands for the place in the diagram's pictures as they are now, with the offset from the line its
+    // middle is kept at, or null for the fraction. The text read is found again as a drawing of its words standing where a
+    // text drawn once, still drawn once, says it is, to 3 px (2% of the way between them, for a picture drawn at another
+    // scale). The nearest such text on each side of the text read is asked, the nearer first: rows a toggle adds or takes
+    // away between one of them and the text read leave it to the other. The farther is asked only as far as twice the
+    // nearer's way and 20 px more: where rows repeat (the same customer's address in every note), a drawing of the words
+    // stands by chance where a far text says, and was taken for the text read 449 px off when the note read was taken
+    // away. Agreeing with neither, the nearer is kept itself, at its own offset. With none of them, the k-th drawing of
+    // its words, believed only as far from what the fraction says as the diagram's own change of height and 30 px more:
+    // the same words drawn elsewhere (a participant's name, drawn again in every part) are not the text read. A text drawn
+    // once is no other, and is followed wherever the diagram moved it (the Components tab's Direction draws it anew).
+    function landmarkIn(place, pics, s, dy) {
+        var mark = place.mark, texts = textsOf(pics), drawn = Object.create(null);
+        texts.forEach(function(t) { var w = t.textContent; (drawn[w] || (drawn[w] = [])).push(t); });
+        var same = drawn[mark.words] || [], sameY = same.map(middleOf), sides = {}, asked = [];
+        for (var i = 0; i < mark.unique.length; i++) {
+            var u = mark.unique[i], a = drawn[u.words], ay = a && a.length === 1 && !sides[u.up] ? middleOf(a[0]) : null;
+            if (ay === null) continue;
+            sides[u.up] = true;
+            asked.push({ el: a[0], y: ay, off: u.off, far: Math.abs(u.off - mark.off) });
+        }
+        for (var k = 0; k < asked.length && (k === 0 || asked[k].far <= 2 * asked[0].far + 20); k++) {
+            var want = asked[k].y + mark.off - asked[k].off, near = -1;
+            for (var j = 0; j < same.length; j++)
+                if (sameY[j] !== null && (near < 0 || Math.abs(sameY[j] - want) < Math.abs(sameY[near] - want))) near = j;
+            if (near >= 0 && Math.abs(sameY[near] - want) <= Math.max(3, 0.02 * asked[k].far)) return { el: same[near], off: mark.off };
+        }
+        if (asked.length) return { el: asked[0].el, off: asked[0].off };
+        var mk = same[mark.k] ? sameY[mark.k] : null;
+        if (mk !== null && Math.abs(mk - place.y - mark.off - dy) <= Math.abs(s.height - place.h0) + 30) return { el: same[mark.k], off: mark.off };
+        return null;
+    }
+
+    // How far the place is from its line now, or null when it cannot be told (its diagram has no picture laid out). The
+    // text standing for it is found once for each drawing of the diagram and read again while its pictures are the same:
+    // a redraw writes every diagram's picture in turn, and one written for another diagram leaves this one's texts as they
+    // were (the words of a long diagram were gathered again after each).
+    function readingOffset(place) {
+        // an element taken off the page or out of the layout (an example row's panel another row's choice hides) reads its
+        // top as 0, and was put back from there after every picture written, the page running away
+        if (!place.box) return place.el.isConnected && place.el.getClientRects().length ? place.el.getBoundingClientRect().top - place.top : null;
+        var pics = picturesOf(place.box), s = spanOf(pics);
+        if (!s) return null;
+        var dy = s.top + place.fy * s.height - place.y;
+        if (!place.mark) return dy;
+        // a picture's own texts change in it too: its notes folded to their line limit once it is drawn, after the swap
+        var seen = place.seen;
+        if (!seen || seen.pics.length !== pics.length || seen.pics.some(function(p, i) { return p !== pics[i]; })
+            || (seen.found && !seen.found.el.isConnected))
+            seen = place.seen = { pics: pics, found: landmarkIn(place, pics, s, dy) };
+        var m = seen.found ? middleOf(seen.found.el) : null;
+        return m !== null ? m - place.y - seen.found.off : dy;
+    }
+
+    function keepReadingPlace() {
+        var place = readingPlace;
+        if (!place) return;
+        if (!(place.box || place.el).isConnected) { readingPlace = null; return; }
+        var dy = readingOffset(place);
+        if (dy === null) return;
+        dy += readingCarry;
+        if (Math.abs(dy) > 0.5) {
+            var was = window.scrollY;
+            // at once, whatever scroll-behavior the page's CSS gives the window (a report's CustomCss)
+            window.scrollBy({ top: dy, behavior: 'instant' });
+            // what the window could not scroll, a fraction of a pixel, at most a pixel (at the page's end it could not
+            // scroll at all), as sizeParts carries it
+            readingCarry = Math.max(-1, Math.min(1, dy - (window.scrollY - was)));
+        } else readingCarry = dy;
+        readingKeptY = window.scrollY;
+    }
+
+    function dropReadingPlaceSoon() {
+        var held = readingPlace;
+        if (!held || redrawsRunning) return;
+        requestAnimationFrame(function() { if (readingPlace === held && !redrawsRunning) readingPlace = null; });
+    }
+
+    function letGoOfReadingPlace() { readingPlace = null; }
+    // whether a wheel scrolls the window down or up: not one across, nor one a box of its own scrolls (a long body's)
+    function wheelScrollsWindow(e) {
+        if (!e.deltaY || e.shiftKey) return false;
+        for (var el = e.target; el && el.nodeType === 1 && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+            var oy = window.getComputedStyle(el).overflowY;
+            if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 1
+                && (e.deltaY < 0 ? el.scrollTop > 0 : el.scrollTop + el.clientHeight < el.scrollHeight - 1)) return false;
+        }
+        return true;
+    }
+    // the reader's wheel that scrolls the window or zooms (Ctrl or the command key), and a finger that moves: a tap
+    // scrolls nothing
+    window.addEventListener('wheel', function(e) {
+        if (readingPlace && (e.ctrlKey || e.metaKey || wheelScrollsWindow(e))) letGoOfReadingPlace();
+    }, { capture: true, passive: true });
+    window.addEventListener('touchmove', letGoOfReadingPlace, { capture: true, passive: true });
+    window.addEventListener('keydown', function(e) {
+        if (!readingPlace) return;
+        var t = e.target;
+        if (t && t.closest && t.closest('textarea, select, [contenteditable]:not([contenteditable="false"]), input:not([type="range"])')) return;
+        // the space bar on a button presses it, and scrolls nothing
+        var presses = (e.key === ' ' || e.key === 'Spacebar') && t && t.closest && t.closest('button, summary, [role="button"]');
+        if (!presses && (/^(PageUp|PageDown|Home|End|ArrowUp|ArrowDown| |Spacebar)$/.test(e.key) || ((e.ctrlKey || e.metaKey) && /^[-+=_]$/.test(e.key))))
+            letGoOfReadingPlace();
+    }, true);
+    // a press on the window's scrollbar is a press on the root
+    window.addEventListener('mousedown', function(e) { if (e.target === document.documentElement) letGoOfReadingPlace(); }, true);
+    // the reader's own zoom keeps their place under the pointer (Z6)
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.classList && e.target.classList.contains('diagram-zoom-slider')) letGoOfReadingPlace();
+    }, true);
+    // Right before a picture is written: a window scrolled since the keeper last left it was scrolled by someone else (a
+    // link, Back, the search's way to a match, find in the page), and that is where the reader goes. Asked at the swap,
+    // not when the scroll's event comes a frame later, as a swap in between would put the place back first; and before the
+    // new picture is written, as the layout after it carries the browser's own correction for it.
+    // The browser's own anchoring scrolls the window with what it keeps in place (a card laid out late above), and the
+    // place stays on its line: only a scroll that took the place off its line is someone else's.
+    function checkReadingPlace() {
+        if (!readingPlace || Math.abs(window.scrollY - readingKeptY) <= 2) return;
+        var dy = readingOffset(readingPlace);
+        if (dy === null || Math.abs(dy) > 2) letGoOfReadingPlace();
+        else readingKeptY = window.scrollY;
+    }
+
+    window.kronikol_readingPlace = {
+        take: takeReadingPlace,
+        check: checkReadingPlace,
+        keep: keepReadingPlace,
+        start: function() { redrawsRunning++; },
+        end: function() {
+            if (redrawsRunning > 0) redrawsRunning--;
+            dropReadingPlaceSoon();
+        },
+        // whether a place is held, for the page's tests
+        held: function() { return !!readingPlace; }
+    };
 
     // The marks of a level: zoomed in past the fit level, the box scrolls across and pans (diagram-natural-size); zoomed
     // out below 100, a picture that fits stands in the middle of its box with no scroll and no pan (diagram-zoomed-out, a
@@ -1779,7 +2040,7 @@
             if (!dragging) return;
             if (Math.abs(e.clientX - downX) > 3 || Math.abs(e.clientY - downY) > 3) moved = true;
             dragContainer.scrollLeft = scrollL - (e.pageX - startX);
-            window.scrollBy(0, startY - e.clientY);
+            window.scrollBy({ top: startY - e.clientY, behavior: 'instant' });
             startY = e.clientY;
         });
         document.addEventListener('mouseup', function() {
@@ -1812,14 +2073,19 @@
     window._zoomState = {
         of: function(box) {
             // Zoomed neither way, a box has no level or place to keep, and nothing of its layout is read: every diagram a
-            // control draws again is asked, and a box read far from the screen lays its scenario out (5.2.5).
+            // control draws again is asked, and a box read far from the screen lays its scenario out (5.2.5). Zoomed, the
+            // width the box draws in is kept with the state, for the new picture's size: a box zoomed in is read as its
+            // scroll is, one zoomed out takes the width it was zoomed at, as factsOf does, and reads nothing, unless the
+            // window changed width since and forgot it (the resize below): its new picture was then written at full size.
             var out = box.classList.contains('diagram-zoomed-out');
             if (!box.classList.contains('diagram-natural-size'))
-                return out ? { zoomed: false, out: true, percent: box._zoomPercent, selected: selectedDiagram === box }
+                return out ? { zoomed: false, out: true, percent: box._zoomPercent, width: box._kContentWidth || contentWidthOf(box), selected: selectedDiagram === box }
                     : { zoomed: false, out: false, selected: selectedDiagram === box };
-            var place = box.clientWidth > 0 ? box.scrollLeft
+            var laidOut = box.clientWidth > 0;
+            var place = laidOut ? box.scrollLeft
                 : typeof box._zoomScrollLeft === 'number' ? box._zoomScrollLeft : box._lastScrollLeft || 0;
-            return { zoomed: true, out: false, percent: box._zoomPercent, scrollLeft: place, selected: selectedDiagram === box };
+            return { zoomed: true, out: false, percent: box._zoomPercent, scrollLeft: place, width: laidOut ? contentWidthOf(box) : 0,
+                selected: selectedDiagram === box };
         },
         // the mark is given as it was taken, and applied by the slider in its own direction only (Z7)
         give: function(box, state) {
@@ -1832,9 +2098,28 @@
                 box._zoomPercent = state.percent;
             }
             if (state.selected) selectDiagram(box);
+            sizeGivenPicture(box, state);
         },
         drop: dropZoom
     };
+
+    // A zoomed box's new picture, drawn whole, sized at its level as it is written (#227, plans/TOGGLE_JUMP_PLAN.md P5).
+    // Written without the old picture's zoomed width, it was laid out at its fit size first, and the zoom given back after
+    // the redraw took that change of width for a reader's zoom: it kept a place read on the picture at its fit size and
+    // scrolled the page, by all the height its zoom gives back for a zoomed diagram far above the window, whose growth the
+    // page never sees there (content-visibility), and on a short page the layout at fit size cut the page's scroll. Nothing
+    // of the layout is read here: the box's width was read with its state, before the swap, and the picture's natural width
+    // is the one the engine writes on it, as for the parts sized while hidden. The slider then finds the picture at its
+    // level and changes nothing. A picture without a width in pixels, or a box that was not laid out, is left to it.
+    function sizeGivenPicture(box, state) {
+        if (!(state.zoomed || state.out) || !(state.width > 0)) return;
+        var svg = box.querySelector(':scope > svg'), w = svg && svg.width && svg.width.baseVal;
+        if (!w || !(w.unitType === 1 || w.unitType === 5) || !(w.value > 0)) return;
+        var f = factsAt([svg], [w.value], false, state.width);
+        var percent = Math.max(f.min, Math.min(100, Math.round(levelFor(box, f))));
+        var zoomedIn = f.wide && percent > f.fitPct, zoomedOut = !f.wide && percent < 100;
+        sizeWhole(svg, w.value, percent, f.wide && !zoomedIn ? f.fit : percent / 100, zoomedIn, zoomedOut);
+    }
 
     // The diagram's NATURAL width in CSS pixels — what it would draw at with the container's
     // `max-width: 100%` lifted. The note full-width control needs exactly this number to work out

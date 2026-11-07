@@ -124,6 +124,10 @@
             target.style.display = 'none';
             el.appendChild(target);
             var done = false, watch = null, timer = null;
+            // the reader's place a control took is held until the new picture has its slider (context-menu-script.js,
+            // #227)
+            var place = window.kronikol_readingPlace;
+            if (place) place.start();
             function finish(swap) {
                 if (done) return;
                 done = true;
@@ -132,18 +136,26 @@
                 if (mine === generation) asked = null;
                 if (!swap || mine !== generation) {
                     if (target.parentNode) target.parentNode.removeChild(target);
+                    if (place) place.end();
                     return;
                 }
                 if (window._describeEngineFailure) window._describeEngineFailure(target, source);
                 // the diagram keeps its zoom, the level and its place across the picture, as the report's diagrams do
                 // (5.2.5: the swap took the scroll with the old picture)
+                if (place) place.check();
                 var zoom = window._zoomState ? window._zoomState.of(el) : null;
                 el.innerHTML = target.innerHTML;
                 if (zoom) window._zoomState.give(el, zoom);
                 el.setAttribute('data-plantuml', source);
                 drawn = source;
                 if (window._iflowBindLinks) window._iflowBindLinks(el, source);
-                requestAnimationFrame(function () { if (window._addZoomButton) window._addZoomButton(el); });
+                if (place) place.keep();
+                requestAnimationFrame(function () {
+                    // a scroll since the swap (Back's settle) is the reader's way, not to be undone
+                    if (place) place.check();
+                    if (window._addZoomButton) window._addZoomButton(el);
+                    if (place) { place.keep(); place.end(); }
+                });
             }
             // an <svg>, or the engine's failure written as text, completes it
             watch = new MutationObserver(function () {
@@ -194,6 +206,8 @@
             if (!key) return;
             var value = button.getAttribute('data-' + key);
             if (state[key] === value) return;
+            // what the reader was reading stays in place across the diagram drawn again (context-menu-script.js, #227)
+            if (window.kronikol_readingPlace) window.kronikol_readingPlace.take();
             state[key] = value;
             Array.prototype.forEach.call(button.parentNode.querySelectorAll('.tl-seg-btn'), function (b) {
                 b.setAttribute('aria-pressed', b === button ? 'true' : 'false');

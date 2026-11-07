@@ -411,7 +411,7 @@
                 var rb = r.getBoundingClientRect();
                 if (rb.height >= before.height - 1) return;
                 var want = Math.min(y + 8, window.innerHeight - 24);
-                if (Math.abs(rb.bottom - want) > 1) window.scrollBy(0, rb.bottom - want);
+                if (Math.abs(rb.bottom - want) > 1) window.scrollBy({ top: rb.bottom - want, behavior: 'instant' });
             })();
         }
         var formatBtn = null;
@@ -1140,11 +1140,20 @@
         if (refineWaits(owner)) {
             if (!owner._refineWaiting) {
                 owner._refineWaiting = 0;
+                // the pass draws the diagram again as part of what a control did: a place the control took is held for
+                // it (context-menu-script.js, #227)
+                var place = window.kronikol_readingPlace;
+                if (place) place.start();
                 (function wait() {
-                    if (!owner._refineNoteWidth || ++owner._refineWaiting > REFINE_WAIT_TRIES) { owner._refineWaiting = 0; return; }
+                    if (!owner._refineNoteWidth || ++owner._refineWaiting > REFINE_WAIT_TRIES) {
+                        owner._refineWaiting = 0;
+                        if (place) place.end();
+                        return;
+                    }
                     if (refineWaits(owner)) { setTimeout(wait, REFINE_WAIT_MS); return; }
                     owner._refineWaiting = 0;
                     refineNoteWidth(owner);
+                    if (place) place.end();
                 })();
             }
             return;
@@ -2694,6 +2703,7 @@
     // A diagram's picture written again in its box: the box keeps its zoom, the level and the place across the picture
     // read before the swap, which takes the picture's zoomed width and the box's scroll with it (5.2.3).
     function swapPicture(container, html) {
+        checkReadingPlace();
         var before = window._zoomState ? window._zoomState.of(container) : null;
         container.innerHTML = html;
         if (before) window._zoomState.give(container, before);
@@ -3485,9 +3495,21 @@
         return now - sliceStart > REDRAW_SLICE_MS;
     }
 
+    // The reader's place a control took (context-menu-script.js, #227): let go before a picture is written when someone
+    // else scrolled the window meanwhile, put back after every picture the queue writes, in the task that writes it, and
+    // held while any queue runs.
+    function checkReadingPlace() {
+        if (window.kronikol_readingPlace) window.kronikol_readingPlace.check();
+    }
+    function keepReadingPlace() {
+        if (window.kronikol_readingPlace) window.kronikol_readingPlace.keep();
+    }
+
     // Shared serialized render queue — TeaVM engine uses shared global state
     function processRenderQueue(queue, onAllDone) {
         var renderWaitCount = 0, drawingWaitCount = 0;
+        var place = window.kronikol_readingPlace;
+        if (place) place.start();
         // Nearest the screen first (5.1.1), so what the reader is looking at shows the new state first however many
         // diagrams come after it. Every box is read before anything is written.
         var boxes = new Map();
@@ -3542,7 +3564,12 @@
         function processNext() {
             // a diagram near the screen was just drawn again: its picture is painted and it is decorated first
             if (paintWaiting.length) { decorateAfterPaint(processNext); return; }
-            if (queue.length === 0) { window._renderCompleteCount = (window._renderCompleteCount || 0) + 1; if (onAllDone) onAllDone(); return; }
+            if (queue.length === 0) {
+                window._renderCompleteCount = (window._renderCompleteCount || 0) + 1;
+                if (onAllDone) onAllDone();
+                if (place) place.end();
+                return;
+            }
             // Wait for any in-flight initial render to complete before proceeding
             if (window._plantumlRendering) {
                 renderWaitCount++;
@@ -3653,6 +3680,7 @@
                             if (partsLineUp && window._lineUpPlace) window._lineUpPlace(newEls, partsLineUp);
                             container._lineUp = partsLineUp;
                             // All new fragments rendered — swap: remove old, show new
+                            checkReadingPlace();
                             var zoom = zoomBefore(container);
                             for (var oi = 0; oi < oldChildren.length; oi++) {
                                 if (oldChildren[oi].parentNode === container) container.removeChild(oldChildren[oi]);
@@ -3664,8 +3692,9 @@
                             container._kDecorate = false;
                             container._noteRendering = false;
                             // sized and placed at the diagram's level while still hidden, so that the first frame shows
-                            // them so and no part is laid out again after the paint (5.7.3, context-menu-script.js)
-                            if (window._sizeHiddenParts) window._sizeHiddenParts(container, newEls);
+                            // them so and no part is laid out again after the paint (5.7.3, context-menu-script.js), at
+                            // the width the zoom read before the old parts went (#227)
+                            if (window._sizeHiddenParts) window._sizeHiddenParts(container, newEls, zoom);
                             var newFrags = container.querySelectorAll('.puml-fragment-new');
                             for (var ni = 0; ni < newFrags.length; ni++) {
                                 newFrags[ni].style.display = '';
@@ -3679,6 +3708,7 @@
                             var fragsNear = isNear(item);
                             for (var pi = 0; pi < fragList.length; pi++) afterRedraw(fragList[pi].el, container, fragsNear);
                             container.style.minHeight = '';
+                            keepReadingPlace();
                             settled(item);
                             processNext();
                             return;
@@ -3754,6 +3784,7 @@
                 installNoteScroll(container, scroll, newSource);
                 recordDrawn(container, newSource, scroll);
                 afterRedraw(container, container, isNear(item));
+                keepReadingPlace();
                 settled(item);
                 processNext();
                 return;
@@ -3783,6 +3814,7 @@
                 window._plantumlRendering = false;
                 container.style.minHeight = '';
                 afterRedraw(container, container, isNear(item));
+                keepReadingPlace();
                 settled(item);
                 processNext();
             }
@@ -3898,6 +3930,8 @@
         }
     }
     function renderWithPending(queue, elements, onAllDone) {
+        // the reader's place, kept across what the control draws again (context-menu-script.js, #227)
+        if (window.kronikol_readingPlace) window.kronikol_readingPlace.take();
         var els = Array.prototype.slice.call(elements || []);
         setPending(els, true);
         processRenderQueue(queue, function() {
@@ -3931,7 +3965,7 @@
                 containers.forEach(function(c) { c._truncateLines = scenarioLines; });
             }
         }
-        show(scenario, { payloads: targetState });
+        showFromControl(scenario, { payloads: targetState });
     };
 
     // Report-level: expand/truncate/collapse details for all scenarios
@@ -3983,7 +4017,7 @@
     window._setScenarioTruncateLines = function(sel) {
         var scenario = sel.closest('details.scenario');
         if (!scenario) return;
-        show(scenario, { lines: parseInt(sel.value, 10) || window._truncateLinesDefault });
+        showFromControl(scenario, { lines: parseInt(sel.value, 10) || window._truncateLinesDefault });
     };
 
     // A toggle says its word alone (5.0.0): whether it is on is its state, aria-pressed, never its label, which stays
@@ -4015,7 +4049,7 @@
     window._toggleScenarioHeaders = function(btn) {
         var scenario = btn.closest('details.scenario');
         if (!scenario) return;
-        show(scenario, { headers: btn.getAttribute('data-shown') !== 'true' });
+        showFromControl(scenario, { headers: btn.getAttribute('data-shown') !== 'true' });
     };
 
     // One queue builder for every diagram filter (5.0.0): the five differ only in the flag they set.
@@ -4057,7 +4091,7 @@
         if (!scenario) return;
         var states = {};
         states[name] = btn.getAttribute('data-shown') !== 'true';
-        show(scenario, states);
+        showFromControl(scenario, states);
     }
 
     // The report's and each scenario's toggles for assertion notes, step bars, database calls, event calls and setup
@@ -4128,7 +4162,7 @@
     window._setScenarioNoteWidth = function(sel) {
         var scenario = sel.closest('details.scenario');
         if (!scenario) return;
-        show(scenario, { width: sel.value === 'full' ? 'full' : 'default' });
+        showFromControl(scenario, { width: sel.value === 'full' ? 'full' : 'default' });
     };
 
     // Report-level: set the note payload format for all scenarios
@@ -4153,7 +4187,7 @@
     window._setScenarioNoteFormat = function(sel) {
         var scenario = sel.closest('details.scenario');
         if (!scenario) return;
-        show(scenario, { format: sel.value === 'yaml' ? 'yaml' : 'json' });
+        showFromControl(scenario, { format: sel.value === 'yaml' ? 'yaml' : 'json' });
     };
 
     // ── The page's diagram API: window.kronikol_diagrams (plans/SEARCH_PLAN.md 4.6.5) ─────────────────────────────────────
@@ -4276,6 +4310,13 @@
                     : '.details-radio-btn[data-state="' + payloads + '"]'));
         }
         return redrawLater(queue, pending).then(function() { return changed; });
+    }
+    // A scenario's own control in its settings: the reader's place is kept across what it draws again, as a report
+    // control's is (renderWithPending, #227). Not by show itself, which the search's way to a match also calls, and which
+    // scrolls to the match once its redraw is done.
+    function showFromControl(scenario, states) {
+        if (window.kronikol_readingPlace) window.kronikol_readingPlace.take();
+        return show(scenario, states);
     }
 
     // ── whenDrawn(host, { timeout, signal }) ──

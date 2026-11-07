@@ -96,9 +96,13 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
     }
 
     // 17, the reader's place: a notch far down a diagram in parts resizes the parts far above the window one a frame
-    // after, and the point under the pointer stays where it was through every one of them
-    [Fact]
-    public async Task A_notch_far_down_a_diagram_in_parts_keeps_the_point_under_the_pointer_while_the_parts_above_grow()
+    // after, and the point under the pointer stays where it was through every one of them. On a page whose CSS scrolls
+    // smoothly (a report's CustomCss) too: each part's scroll was animated, the window had not moved when the next part's
+    // carry was worked out from it, and the page scrolled again by what it still had to go (#227's review).
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task A_notch_far_down_a_diagram_in_parts_keeps_the_point_under_the_pointer_while_the_parts_above_grow(bool smooth)
     {
         await Page.GotoReportAsync(ReportTestHelper.GenerateReportWithDiagramInParts(TempDir, OutputDir, "PartsFarAbove.html",
             ReportTestHelper.PartsSource(160, new Dictionary<int, int> { [2] = 180 })));
@@ -122,6 +126,8 @@ public class PartsZoomDrawingTests : PlaywrightTestBase
             """);
         Assert.True(farAbove >= 2, $"premise: {farAbove} parts are more than a window's height above the window");
         var (x, y) = await ZoomFacts.PointInAsync(Page, 0, part: parts - 2);
+        // once the point is placed, as placing it scrolls the page too
+        if (smooth) await Page.AddStyleTagAsync(new() { Content = "html { scroll-behavior: smooth; }" });
         await ZoomFacts.MarkPointAsync(Page, x, y);
 
         await ZoomFacts.CtrlWheelAsync(Page, x, y, 1);

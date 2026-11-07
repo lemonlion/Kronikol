@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.34.2] - 2026-11-07
+
+The patch part moves (5.34.1 to 5.34.2): bug fixes in how the report's page keeps the reader's place when a control draws its diagrams again, or a diagram is zoomed, with nothing new to call or set (#227, `plans/TOGGLE_JUMP_PLAN.md`).
+
+### Fixed
+
+- **A toggle on a report with zoomed diagrams no longer throws the diagram being read off the screen (#227).** Putting a zoomed diagram's zoom back after its redraw took the new picture's width at fit size for a reader's zoom, and kept a place read on that picture: it scrolled the page by all the height a zoomed diagram far above the window gives back (1,026 px each in the plan's report), though the page never saw that diagram grow. With three zoomed diagrams above, one click on Headers moved the text being read 1,886 px up in Chromium and Firefox and 2,795 px in WebKit. A zoomed diagram's new picture is now drawn at its level from the start, so putting its zoom back changes nothing and scrolls nothing, also after the window has changed width. On a short page the moment at fit size no longer cuts the page's scroll either (up to 255 px with nothing visibly changed), and a diagram that fits, zoomed out, no longer jumps.
+- **A control that draws diagrams again keeps what is at the middle of the window where it was.** The page left a redraw to the browser's scroll anchoring, which anchors on what is at the top of the window, often inside the picture of the diagram above: the redraw removes that picture, the browser makes up for nothing, and the diagram above grew and pushed the one being read 650 px down, to the window's foot, zoomed or not. Safari has no anchoring at all. The page now keeps the place itself: the drawn text nearest the middle of the window below the bar, found again after every picture the redraw writes and put back before the paint, in every browser. It holds for the report's toggles and selects in its bar, a scenario's own in its settings, and the Components tab's.
+- **A filter that takes rows away keeps the row being read among notes that draw the same words again and again** (each JSON field's name, each brace). The text being read is told apart from the other drawings of its words by the texts near it that the diagram draws once, above it and below it, so a row taken away or added between them does not move the place to another row (207 px off on a report's database calls).
+- **The reader still leads.** Scrolling the window while the diagrams are still being drawn (the wheel, the scroll keys, the scrollbar, a finger that moves, a link, Back, the search's way to a match) lets the place go, and the page goes where the reader took it. A wheel across a diagram or inside a box of its own, and a tap, scroll no window and let nothing go. The browser's own correction of the scroll, which leaves the text being read where it was, lets nothing go either.
+- **A note's own fold on a zoomed diagram no longer paints a frame with the diagram off its place** (239 px, before the note's own rule put it back).
+- **A report whose CSS scrolls the page smoothly (`scroll-behavior: smooth` in its CustomCss) keeps the reader's place at once.** The scrolls that keep a place were animated: a Ctrl+wheel notch on a diagram in parts scrolled the page again by what the animation still had to go, and the page was painted off its place. Keeping the place when a diagram is zoomed, dragged to pan, a note folded or a control draws diagrams again is never animated now. A scroll the reader asked for (a link, a search's match) still follows the CSS.
+
+**Behaviour change:** where the browser kept the top of the window, the page keeps the middle: a diagram that grows above the middle of the window now grows upward from it. The report's embedded scripts change (`context-menu-script.js`, `collapsible-notes-script.js`, `report-components-script.js`), so the Kronikol4J ledger has the entry.
+
+### Tests
+
+- `ReadersPlaceOnRedrawTests` (new, in CI's E2E (Diagram Interactions) lane), 36 cases: the plan's facts T1 to T18, and one for each fault an independent review of the first fix found (a word such as `constructor` drawn in the diagram, a place taken out of the layout, a second toggle after the page jumped, a diagram zoomed out after the window changed width, a wheel across and a tap, a page that scrolls smoothly, the browser's own correction of the scroll, a scroll between the Components tab's picture and its slider). Each measures the drawn text the reader read before the click, found again after, and no scroll written by the zoom code meanwhile. T1 and T4 run in Firefox and WebKit too where they are installed.
+- `PartsZoomDrawingTests`: the notch far down a diagram in parts also runs on a page whose CSS scrolls smoothly.
+
 ## [5.34.1] - 2026-11-07
 
 The patch part moves (5.34.0 to 5.34.1): two fixes to which participant a sequence diagram draws as the test's stick figure, with nothing new to call (#228, `plans/PARTICIPANT_ORDER_PLAN.md` R2, Q3).
