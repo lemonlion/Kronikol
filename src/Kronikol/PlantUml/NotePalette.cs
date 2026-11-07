@@ -23,4 +23,20 @@ internal static class NotePalette
 
     /// <summary>The creole tag that starts a header line.</summary>
     internal static readonly string HeaderTag = "<color:" + HeaderInk + ">";
+
+    /// <summary>
+    /// The ink of a failed answer's reason (plans/FAILED_CALLS_PLAN.md R3): a named colour, so the scripts' header test
+    /// (<c>NOTE_HEADER_TAG</c>, <c>gray</c> or a six-digit hex) never takes a reason line for a header line, which the page
+    /// hides by default. The engine draws it as <see cref="ReasonInkDrawn"/>, which clears
+    /// <see cref="HeaderContrastFloor"/> on both note fills, and the page paints that from its theme (<c>--dg-fail-ink</c>).
+    /// </summary>
+    internal const string ReasonInk = "firebrick";
+
+    /// <summary>The fill the engine writes for <see cref="ReasonInk"/>, which <c>inline-svg-styles.css</c> paints from the theme.</summary>
+    internal const string ReasonInkDrawn = "#B22222";
+
+    /// <summary>The creole tag that opens each line of a reason; <see cref="ReasonClose"/> ends it.</summary>
+    internal const string ReasonTag = "<color:" + ReasonInk + ">";
+
+    internal const string ReasonClose = "</color>";
 }

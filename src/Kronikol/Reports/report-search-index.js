@@ -36,6 +36,16 @@ function kronNormalizerPasses() {
         // — right for indented JSON, wrong for plain text and SQL. Runs before the fold and the creole-escape strip
         // because pass 3 removes the `~` that tells Kronikol's marker from a payload's own "<U+200B>". The character
         // before the marker is matched and written back, which a lookbehind would only look at.
+        // 1a. A run cut under Kronikol's emphasis (FocusFields with LF line ends, a failed answer's reason ink) wraps each
+        // piece whole: a piece's marker sits inside its closing tags and the next piece opens the same tags again. Those
+        // tags come off here, so 1b joins the pieces as unemphasised ones (the copies' liftEmphasisOverJoins).
+        { re: /(^|[^~])(<U\+200B>)((?:<\/(?:b|i|u|color|size)>)+)\n((?:<(?:b|i|u|color:[^>]+|size:\d+)>)+)/gm, has: '<U+200B>',
+            to: function(m, before, mark, closing, opening) {
+                var names = function(tags) {
+                    return (tags.match(/<\/?(?:b|i|u|color|size)\b/g) || []).map(function(t) { return t.replace(/[<\/]/g, ''); });
+                };
+                return names(closing).reverse().join() === names(opening).join() ? before + mark + '\n' : m;
+            } },
         { re: /(^|[^~])(<U\+200B>(?:<U\+200B>)?)\n/gm, has: '<U+200B>', to: function(m, before, marks) {
             return before + (marks.length > 8 ? ' ' : '');
         } },

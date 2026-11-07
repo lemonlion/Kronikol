@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.35.0] - 2026-11-07
+
+The minor part moves (5.34.4 to 5.35.0): a sequence diagram draws why a call failed, a new diagram feature, with a new theme token, `--dg-fail-ink`, which a custom theme or `CustomCss` can set (#232, `plans/FAILED_CALLS_PLAN.md` R3, Q10). It also fixes how `kronikol query` reads a note's text.
+
+### Added
+
+- **A failed answer's reason is drawn in the note on its return.** The note opens with the call's `error`, the message chain of what it threw, which 5.34.3 made every tracker write, in the theme's failure ink: under the answer's headers, which the page starts hidden, and above its body if it had one. A call that threw had no note on its return, as it has no body; now its note is its reason. It is not a body, so `LogResponseContent = false`, which keeps bodies out of notes, leaves it drawn. A body in the reason's own words, the message the SQL family answers a failure with and the status message of the OTLP tap's failed spans, is drawn once, as the reason. The reason is escaped as a payload is, a long unbroken run in it is broken as a body's is, and it folds and unfolds with its note: collapsed, the note's one-line preview is the reason's start.
+- **`--dg-fail-ink`**, the reason's ink: the report's own failure red, `#b3372e` in the light theme and `#f28b81` in the dark, each clearing 4.5:1 on both note fills. The engine draws the reason in `firebrick` (`#B22222`, 6.5:1 and 5.4:1 on its own note fills), which the page paints from the token, so a diagram drawn away from the page, such as a server-drawn report, shows firebrick, and a copied picture takes the light theme's ink, as every copy does. The ink is a named colour because the page's scripts take a line opening with a hex colour for a header line, which the page hides by default.
+
+### Fixed
+
+- **`kronikol query` reads a note's text as the page's copies do.** It kept Kronikol's own markup in the text: the emphasis `FocusFields` wraps a line in (`<b>`, `<color:lightgray>`, `<size:9>`), a message's key line's `<b>Key</b>` and a form body's `<font>` divider, all of which the page's copies have dropped since 5.4.0. It drops them now, on each piece of a long run the width bound cut and on a pair that spans the pieces once they are joined, and a key line reads `Key order-1`, as a copy gives it.
+- **The search finds a phrase across the cut in a long run under emphasis.** A run longer than a note line may hold is cut into pieces the readers join again, and under `FocusFields`' emphasis with LF line ends each piece is wrapped whole, so a piece's marker sat inside its closing tags and the next piece opened the same tags again. The page's copies joined such pieces (5.4.0); the search's normaliser and the query's did not, so a token cut there was two terms that matched neither. A failed answer's reason with a long URL in it is cut the same way. Both now lift the tags over the join first, as the copies do, pinned by four new shared vectors (`tests/shared-vectors/search-index-vectors.json`) that the C# and the page's script each read.
+
+### Changed behaviour
+
+- A failed answer's note grows by its reason, and a call that threw now has a note on its return.
+- A note holding both a reason and a JSON body is not offered the YAML view, since its payload is no longer JSON alone.
+- `kronikol query`'s note text, for a note with `FocusFields` emphasis, a key line or a form body, is the text without Kronikol's tags (see Fixed).
+- Kronikol4J draws no reason, so its diagrams of a failed call differ from .NET's; its ledger records it.
+
+### Tests
+
+- `FailedAnswerReasonTests` (25 facts: what the creator draws for a call that threw, a success, a blank reason, headers and a body, creole in the reason, its lines and a long run, a body in the reason's own words; the ink's contrast on the engine's note fills and on the theme's in each theme; the stylesheet rule; the scripts' header test; the rejoin under emphasis; and the query's reading of a reason, a focused line, a key line, a form divider and a spanning pair). 18 of them fail on 5.34.4, with `NotePalette`'s new constants added so they compile; the other 7 pin what must not change: no reason for a success or a blank one, a failed status's body drawn as it was, a reason line no header to the page, a pair that wraps only part of a line kept, and the engine's firebrick clearing AA.
+- `FailedAnswerReasonTests` in the end-to-end suite (4 facts, on the page as it starts with its headers hidden): the reason painted in each theme's ink, as the token resolves, a success with none, and the note folding and unfolding with the reason in view, the headers shown last. With the stylesheet's rule taken out, both theme facts fail.
+- Four normalisation vectors (`emphasis-over-a-marked-break-rejoins` and three beside it), generated from the reference (`tools/search-bench/normalize.js`): `SearchIndexVectorTests` and the page script's `SearchIndexJintTests` failed on them (one and three facts) until the rule was in. `VerdictFencesTests`' pin on `report-search-index.js`'s bytes moves with the rule; its fenced lines are unchanged.
+- Checks: the core suite (12,683 passed, 2 skipped), the search engine project (787 passed), the 12 other projects that read diagram source (4,145 passed, the IKVM PlantUML renders among them) and the end-to-end suite (2,197 passed, 28 skipped).
+
 ## [5.34.4] - 2026-11-07
 
 A patch (5.34.3 to 5.34.4): a bug fix with nothing new to call. Closes #241.

@@ -658,8 +658,39 @@ release, its order agreed with #227's session (whichever is ready first goes fir
   `results/failed-calls-5.31.1.txt`: all 45 cases read the same under rule 11 (`results/across-the-fix-232.txt`), and rule 12
   reads the answers §5.3 names. That, and the facts in 21 trackers' projects that read every rule before 12, stand for §6.4's
   per-package replays, which would have frozen the same 5.31.1 lines again.
-- **Left:** R3 (a minor, §5.5), the Kafka consume scope (Q4, #242) and a service's own failure codes (Q6, #243), and Kronikol4J
-  (Q7, filed there once this release is out).
+- **Left at 5.34.3:** R3 (a minor, §5.5), the Kafka consume scope (Q4, #242) and a service's own failure codes (Q6, #243), and
+  Kronikol4J (Q7, filed there once this release is out, as Kronikol4J#4).
+
+**2026-11-07, R3 executed as 5.35.0** (Q10, after #227 shipped as 5.34.2), on 5.34.4.
+
+- **What it draws:** the note on a failed answer's return opens its payload with the call's `Error`, each line wrapped whole in
+  `<color:firebrick>`: after the key line and headers, which the page's scripts read as a note's first lines, and before the
+  body. It is escaped as a payload is and its unbroken runs are broken as a body's are, before the ink goes on, so the ink
+  stays Kronikol's markup. A body in the reason's own words is not drawn again: the OTLP tap's status message, and the SQL
+  family's body, which is the exception's message, the first of the chain `Error` holds (`FailedSend.CausedBy`).
+- **Corrections to §5.5 and §8 found while building:**
+  - The scripts read any line opening with `<color:#` and six hex digits as a header line (`NOTE_HEADER_TAG`), which the page
+    hides by default since 4.0.0, so a hex ink would have hidden the reason with the headers. The ink is a named colour,
+    `firebrick`, which the engine writes as `#B22222` and `inline-svg-styles.css` paints from a new token, `--dg-fail-ink`
+    (the report's own `--kron-fail` red in each theme). That token is new public surface, so it is part of the minor.
+  - The reason is a payload line, not a meta line like the key line: a meta line is left out of the collapsed preview, which
+    would have drawn a call that threw, whose note is its reason alone, as an empty box. As a payload line, wrapped whole as
+    `FocusFields`' emphasis is, it takes the notes scripts' existing paths: the preview, truncation, the copies (which peel
+    the wrapping) and search's tag strip, so no notes script changed (§8's "browser counterpart" was not needed). The cost:
+    a note with both a reason and a JSON body is not offered the YAML view.
+  - `kronikol query` read a note's text with Kronikol's own tags in it (`NoteSourceText`): `FocusFields`' emphasis, a key
+    line's `<b>Key</b>` and a form body's `<font>` divider, which the page's copies have dropped since 5.4.0. R3 would have
+    added its ink to every failed note's query text, so the reader now drops them as the copies do; a fix found on the way.
+  - A second fix found on the way: a run cut under emphasis with each piece wrapped whole (`FocusFields` with LF line ends,
+    and every reason with a long unbroken run) was joined by the copies (`liftEmphasisOverJoins`, 5.4.0) but not by the
+    search's normaliser or the C# rejoin, so a token cut there matched nothing. The reference normaliser, the page's search
+    script (rule 1a) and `DiagramWidth.RejoinMarkedLines` now lift the tags over the join first, pinned by four new shared
+    vectors.
+- **Checks:** 18 of `FailedAnswerReasonTests`' 25 facts fail on 5.34.4, and the 7 others pin what must not change; with the
+  stylesheet's rule taken out, both end-to-end theme facts fail; the four new search vectors failed in C# (1 fact) and in the
+  page script's Jint facts (3) until rule 1a was in. On the tree released: the core suite (12,683 passed, 2 skipped), the search engine project (787 passed), the 12 other projects that read diagram source (4,145 passed, the IKVM PlantUML renders among them) and the end-to-end suite (2,197 passed, 28 skipped).
+- **Left:** see Appendix C's row: #242, #243, Kronikol4J#4, F11 documented, and the YAML view on a note with a reason and a
+  JSON body.
 
 ## Appendix A. The comment closing #232, to post only at the owner's word
 

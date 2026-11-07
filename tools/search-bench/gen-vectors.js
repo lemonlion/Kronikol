@@ -89,6 +89,12 @@ const normalizationInputs = [
   ['escaped-marker-is-payload-text-not-a-break', 'alpha~<U+200B>\nbeta'],
   ['marker-only-joins-the-line-it-ends', 'a<U+200B>b\nc'],
   ['trailing-marker-on-the-last-line-joins-nothing', 'alpha<U+200B>'],
+  // A run cut under Kronikol's emphasis (FocusFields with LF line ends, a failed answer's reason ink) wraps each piece
+  // whole, so a piece's marker sits inside its closing tags and the next piece opens the same tags again. The pieces join.
+  ['emphasis-over-a-marked-break-rejoins', 'note right\n<color:firebrick>aaaa<U+200B></color>\n<color:firebrick>bbbb</color>\nend note'],
+  ['emphasis-over-a-marked-space-break-rejoins-with-one-space', '  <b><color:blue>aaaa<U+200B><U+200B></color></b>\n<b><color:blue>bbbb</color></b>'],
+  ['emphasis-after-a-payloads-own-marker-stays-apart', '<b>aaaa~<U+200B></b>\n<b>bbbb</b>'],
+  ['different-emphasis-across-a-marker-stays-apart', '<b>aaaa<U+200B></b>\n<i>bbbb</i>'],
   // What rule 5b used to get wrong: an unmarked flush-left line inside a note is the payload's own
   // line break and must survive. The old heuristic welded these together.
   ['flush-left-note-lines-stay-split', 'note left\nSELECT a\nFROM t\nend note'],

@@ -96,6 +96,26 @@
       "expected": "alpha\n"
     },
     {
+      "name": "emphasis-over-a-marked-break-rejoins",
+      "input": "note right\n<color:firebrick>aaaa<U+200B></color>\n<color:firebrick>bbbb</color>\nend note",
+      "expected": "note right\naaaabbbb\nend note\n"
+    },
+    {
+      "name": "emphasis-over-a-marked-space-break-rejoins-with-one-space",
+      "input": "  <b><color:blue>aaaa<U+200B><U+200B></color></b>\n<b><color:blue>bbbb</color></b>",
+      "expected": " aaaa bbbb\n"
+    },
+    {
+      "name": "emphasis-after-a-payloads-own-marker-stays-apart",
+      "input": "<b>aaaa~<U+200B></b>\n<b>bbbb</b>",
+      "expected": "aaaa<u+200b>\nbbbb\n"
+    },
+    {
+      "name": "different-emphasis-across-a-marker-stays-apart",
+      "input": "<b>aaaa<U+200B></b>\n<i>bbbb</i>",
+      "expected": "aaaa\nbbbb\n"
+    },
+    {
       "name": "flush-left-note-lines-stay-split",
       "input": "note left\nSELECT a\nFROM t\nend note",
       "expected": "note left\nselect a\nfrom t\nend note\n"

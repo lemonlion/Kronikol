@@ -156,7 +156,7 @@ internal static class DiagramWidth
     {
         if (text.IndexOf(JoinMarker, StringComparison.Ordinal) < 0) return text;
 
-        var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        var lines = LiftEmphasisOverJoins(text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'));
         var sb = new StringBuilder(text.Length);
 
         for (var i = 0; i < lines.Length; i++)
@@ -174,6 +174,36 @@ internal static class DiagramWidth
 
         return sb.ToString();
     }
+
+    /// <summary>
+    /// A run cut under Kronikol's emphasis (FocusFields with LF line ends, a failed answer's reason ink) wraps each piece
+    /// whole, so a piece's marker sits inside its closing tags and the next piece opens the same tags again. Those tags come
+    /// off, which leaves one pair around the joined line, as <c>collapsible-notes-script.js</c>'s <c>liftEmphasisOverJoins</c>
+    /// does before the copies join a note's lines.
+    /// </summary>
+    private static string[] LiftEmphasisOverJoins(string[] lines)
+    {
+        for (var i = 0; i < lines.Length - 1; i++)
+        {
+            var closed = EmphasisClosedAfterMarker.Match(lines[i]);
+            if (!closed.Success || !EndsWithOwnMarker(closed.Groups[1].Value, JoinMarker)) continue;
+            var opened = EmphasisOpened.Match(lines[i + 1]);
+            if (!opened.Success || !EmphasisNames(opened.Value).SequenceEqual(EmphasisNames(closed.Groups[2].Value).Reverse())) continue;
+            lines[i] = closed.Groups[1].Value;
+            lines[i + 1] = lines[i + 1][opened.Length..];
+        }
+        return lines;
+    }
+
+    private static readonly System.Text.RegularExpressions.Regex EmphasisClosedAfterMarker =
+        new(@"^(.*?)((?:</(?:b|i|u|color|size)>)+)$", System.Text.RegularExpressions.RegexOptions.Singleline);
+
+    private static readonly System.Text.RegularExpressions.Regex EmphasisOpened = new(@"^(?:<(?:b|i|u|color:[^>]+|size:\d+)>)+");
+
+    private static readonly System.Text.RegularExpressions.Regex EmphasisName = new(@"</?(?:b|i|u|color|size)\b");
+
+    private static IEnumerable<string> EmphasisNames(string tags) =>
+        EmphasisName.Matches(tags).Select(m => m.Value.TrimStart('<', '/'));
 
     /// <summary>
     /// Whether <paramref name="line"/> ends with a marker Kronikol wrote, as opposed to one the

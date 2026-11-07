@@ -19,13 +19,16 @@ public static class FailedSend
         return "!" + exception.GetType().Name;
     }
 
+    /// <summary>What comes before each inner message in <see cref="Describe"/>'s chain.</summary>
+    internal const string CausedBy = " Caused by: ";
+
     /// <summary>The message chain, outermost first, each inner one after "Caused by:".</summary>
     public static string Describe(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
         var text = new StringBuilder(exception.Message);
         for (var inner = exception.InnerException; inner is not null; inner = inner.InnerException)
-            text.Append(" Caused by: ").Append(inner.Message);
+            text.Append(CausedBy).Append(inner.Message);
         return text.ToString();
     }
 }

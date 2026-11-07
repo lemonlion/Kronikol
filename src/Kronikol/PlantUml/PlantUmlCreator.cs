@@ -510,7 +510,13 @@ public static partial class PlantUmlCreator
                     if (responsePreFormattingProcessor is not null)
                         content = responsePreFormattingProcessor(content);
 
-                    var noteContent = FormatNoteContent(excludeAllHeaders ? KeyHeaderOnly(effectiveHeaders) : effectiveHeaders, content, excludedHeaders, RequestResponseType.Response, responseMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis, keepNulls: Constants.DependencyCategories.IsStatementShaped(trace.DependencyCategory));
+                    // A failed answer's reason opens its note. A body in the reason's own words, which the SQL family and
+                    // the OTLP tap answer a failure with, is not drawn again under it.
+                    var reason = string.IsNullOrWhiteSpace(trace.Error) ? null : trace.Error;
+                    if (reason is not null && SaysTheReason(content, reason))
+                        content = string.Empty;
+
+                    var noteContent = FormatNoteContent(excludeAllHeaders ? KeyHeaderOnly(effectiveHeaders) : effectiveHeaders, content, excludedHeaders, RequestResponseType.Response, responseMidFormattingProcessor, trace.FocusFields, focusEmphasis, focusDeEmphasis, keepNulls: Constants.DependencyCategories.IsStatementShaped(trace.DependencyCategory), reason: reason);
 
                     if (responsePostFormattingProcessor is not null)
                         noteContent = responsePostFormattingProcessor(noteContent);
@@ -1617,7 +1623,8 @@ public static partial class PlantUmlCreator
         FocusEmphasis focusEmphasis = FocusEmphasis.Bold,
         FocusDeEmphasis focusDeEmphasis = FocusDeEmphasis.LightGray,
         GraphQlBodyFormat graphQlBodyFormat = GraphQlBodyFormat.FormattedWithMetadata,
-        bool keepNulls = false)
+        bool keepNulls = false,
+        string? reason = null)
     {
         // Detect binary/compressed content and replace with placeholder. The placeholder is Kronikol's own
         // markup rather than captured bytes, so it is the one body that must not be creole-escaped.
@@ -1683,6 +1690,14 @@ public static partial class PlantUmlCreator
             formattedContent = JsonFocusFormatter.FormatWithFocus(formattedContent, focusFields, focusEmphasis, focusDeEmphasis);
         }
 
+        // A failed answer's reason opens the payload, under the headers: the page's scripts read a note's key line and
+        // headers as its first lines, so it goes after them.
+        if (ReasonLines(reason) is { } reasonLines)
+        {
+            var body = formattedContent.Trim();
+            formattedContent = body.Length == 0 ? reasonLines : reasonLines + Environment.NewLine + Environment.NewLine + body;
+        }
+
         var headersOnTop = suppressHeaders ? "" : string.Join(Environment.NewLine, headers
             .Where(y => y.Key != MessageKeyHeader && !excludedHeaders.Contains(y.Key))
             .OrderBy(y => y.Key)
@@ -1692,6 +1707,30 @@ public static partial class PlantUmlCreator
             headersOnTop = headersOnTop.Length == 0 ? keyLine : keyLine + Environment.NewLine + headersOnTop;
 
         return ((headersOnTop + Environment.NewLine + Environment.NewLine).TrimStart() + formattedContent.Trim()).TrimEnd();
+    }
+
+    // A failed answer's reason (plans/FAILED_CALLS_PLAN.md R3) is the call's Error. It is not a body, so LogResponseContent =
+    // false, which keeps bodies out of notes, leaves it drawn. A body says the reason when it is the reason (the OTLP tap's
+    // status message) or the message that starts its chain (the SQL family's body, FailedSend.Describe's first message).
+    private static bool SaysTheReason(string? body, string reason)
+    {
+        var words = body?.Trim().ReplaceLineEndings("\n");
+        if (string.IsNullOrEmpty(words)) return false;
+        var chain = reason.Trim().ReplaceLineEndings("\n");
+        return chain == words || chain.StartsWith(words + FailedSend.CausedBy, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A reason as note lines: escaped as a payload is and its unbroken runs broken as a body's are, then each line in the
+    /// reason ink (<see cref="NotePalette.ReasonTag"/>), added after the escaping so it stays Kronikol's markup. Each line is
+    /// wrapped whole, as FocusFields' emphasis is, so the page's copies and the query read the reason without the ink.
+    /// </summary>
+    internal static string? ReasonLines(string? reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason)) return null;
+        var lines = WrapUnbreakableRuns(EscapeCreoleMarkup(reason.Trim().ReplaceLineEndings("\n"))).Split('\n');
+        return string.Join(Environment.NewLine, lines.Select(line =>
+            line.Length == 0 ? line : NotePalette.ReasonTag + line + NotePalette.ReasonClose));
     }
 
     // The longest key a key line shows: the whole key stays in the entry's headers (kronikol query http --headers).

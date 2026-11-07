@@ -85,6 +85,7 @@
     --dg-pass-edge: #8cbf9f;
     --dg-fail: #fbe8e6;
     --dg-fail-edge: #dc9f97;
+    --dg-fail-ink: #b3372e;
     --dg-bar: #2f3b4f;
     --dg-step: #e9eef6;
     --dg-step-edge: #c4cfdf;
@@ -204,6 +205,7 @@
     --dg-pass-edge: #33724d;
     --dg-fail: #3b1d1b;
     --dg-fail-edge: #7c3b34;
+    --dg-fail-ink: #f28b81;
     --dg-bar: #3d4d69;
     --dg-step: #222c3a;
     --dg-step-edge: #3b4a60;
@@ -311,6 +313,7 @@
         --dg-pass-edge: #33724d;
         --dg-fail: #3b1d1b;
         --dg-fail-edge: #7c3b34;
+        --dg-fail-ink: #f28b81;
         --dg-bar: #3d4d69;
         --dg-step: #222c3a;
         --dg-step-edge: #3b4a60;

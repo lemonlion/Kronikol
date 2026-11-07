@@ -181,6 +181,8 @@ body.plantuml-ready .puml-fragment:not([data-rendered])::before {
 #component-diagram svg :is([style*="stroke:#09616a" i], [stroke="#09616a" i]) { stroke: var(--dg-db-edge, #09616a) !important; }
 #component-diagram svg text[fill="#666666" i] { fill: var(--dg-ink-soft, #666666); }
 .plantuml-browser:where(:not(.iflow-diagram)) svg text[fill="#686868" i] { fill: var(--dg-ink-soft, #686868); }
+/* A failed answer's reason (PlantUml/NotePalette.cs ReasonInk): the engine draws firebrick, the theme paints it. */
+.plantuml-browser:where(:not(.iflow-diagram)) svg text[fill="#B22222" i] { fill: var(--dg-fail-ink, #B22222); }
 
 /* A diagram narrower than its box stands in the middle of it, drawn whole or in fragments (5.0.0, plans/OPTION_C_PLAN.md
    S10); one as wide as its box still fills it, the auto margins coming to 0. The box held its drawing 1em in from the

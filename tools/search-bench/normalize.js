@@ -20,9 +20,29 @@ function endsWithOwnMarker(line, marker) {
   return !(line.length > marker.length && line[line.length - marker.length - 1] === '~');
 }
 
+// A run cut under Kronikol's emphasis (FocusFields with LF line ends, a failed answer's reason ink) wraps each piece whole,
+// so a piece's marker sits inside its closing tags and the next piece opens the same tags again. Those tags come off and
+// the pieces join as unemphasised ones do, as the page's copies do first (collapsible-notes-script.js liftEmphasisOverJoins).
+const EMPHASIS_CLOSED_AFTER_MARKER = /^([\s\S]*?)((?:<\/(?:b|i|u|color|size)>)+)$/;
+const EMPHASIS_OPENED = /^(?:<(?:b|i|u|color:[^>]+|size:\d+)>)+/;
+function emphasisNames(tags) {
+  return (tags.match(/<\/?(?:b|i|u|color|size)\b/g) || []).map(t => t.replace(/[<\/]/g, ''));
+}
+function liftEmphasisOverJoins(lines) {
+  for (let i = 0; i < lines.length - 1; i++) {
+    const closed = EMPHASIS_CLOSED_AFTER_MARKER.exec(lines[i]);
+    if (!closed || !endsWithOwnMarker(closed[1], JOIN_MARKER)) continue;
+    const opened = EMPHASIS_OPENED.exec(lines[i + 1]);
+    if (!opened || emphasisNames(opened[0]).join() !== emphasisNames(closed[2]).reverse().join()) continue;
+    lines[i] = closed[1];
+    lines[i + 1] = lines[i + 1].slice(opened[0].length);
+  }
+  return lines;
+}
+
 function rejoinMarkedBreaks(s) {
   if (s.indexOf(JOIN_MARKER) === -1) return s;
-  const lines = s.split('\n');
+  const lines = liftEmphasisOverJoins(s.split('\n'));
   let out = '';
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
