@@ -121,9 +121,13 @@ public class RunRotationTests : IDisposable
         var collector = new ReportDiagnosticsCollector();
         var original = Console.Out;
         var captured = new StringWriter();
+        // The console is process-wide, so a test in another class prints into the capture too, and a write landing while it
+        // was read tore its StringBuilder (CI on 5.32.0's commit). Writes go through one synchronized writer, and the text is
+        // read under its lock; ConsoleLines.About keeps the lines about this run's directory, whichever thread printed them.
+        var synchronized = TextWriter.Synchronized(captured);
         try
         {
-            Console.SetOut(captured);
+            Console.SetOut(synchronized);
             DefaultDiagramsFetcher.Reset();
             using (ReportDiagnosticsScope.Begin(collector))
                 ReportGenerator.CreateStandardReportsWithDiagramsInEnvironment(features, EndOf(ordinal).AddSeconds(-30), EndOf(ordinal), options, null, env ?? Env());
@@ -133,7 +137,10 @@ public class RunRotationTests : IDisposable
             Console.SetOut(original);
         }
 
-        return (ConsoleLines.About(captured.ToString(), Reports), collector.Entries);
+        string printed;
+        lock (synchronized)
+            printed = captured.ToString();
+        return (ConsoleLines.About(printed, Reports), collector.Entries);
     }
 
     private static string[] TopLevel(string directory) =>
