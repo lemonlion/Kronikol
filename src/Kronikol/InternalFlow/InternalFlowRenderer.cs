@@ -181,7 +181,41 @@ public static class InternalFlowRenderer
         foreach (var node in nodesById.Values)
             node.Children.Sort((a, b) => a.Span.StartTimeUtc.CompareTo(b.Span.StartTimeUtc));
 
+        Fold(roots);
         return roots;
+    }
+
+    /// <summary>
+    /// The pairs whose child repeats its parent (#138): the HTTP request that carries a gRPC call, under grpc-dotnet's span,
+    /// and grpc-dotnet's span, under the span Kronikol's interceptor starts for the call. A pair is added only when a case
+    /// is measured.
+    /// </summary>
+    private static readonly HashSet<(string Parent, string Child)> FoldedPairs =
+    [
+        ("Grpc.Net.Client", SpanSource.HttpClient),
+        ("Kronikol.Grpc", "Grpc.Net.Client"),
+    ];
+
+    /// <summary>
+    /// Folds a span into its parent, so it is not drawn, when the two are one of <see cref="FoldedPairs"/> and it is the
+    /// parent's only child from its source: one step per gRPC call, in every view, as each draws this tree. Children of
+    /// other sources do not stop it, as Kronikol's interceptor sends its own span as the call's parent, so a host in the
+    /// test's process hangs its request span beside grpc-dotnet's. The folded span's own children move up to the parent,
+    /// as the spans of such a host hang under the request that carried the call when nothing else sent a parent. A call
+    /// with several requests under it, one that retried or hedged, keeps them all.
+    /// </summary>
+    private static void Fold(List<SpanNode> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            Fold(node.Children);
+            while (node.Children.Where(c => FoldedPairs.Contains((node.Span.Source, c.Span.Source))).ToList() is [var only])
+            {
+                node.Children.Remove(only);
+                node.Children.AddRange(only.Children);
+                node.Children.Sort((a, b) => a.Span.StartTimeUtc.CompareTo(b.Span.StartTimeUtc));
+            }
+        }
     }
 
     private static string EscapePlantUml(string text)

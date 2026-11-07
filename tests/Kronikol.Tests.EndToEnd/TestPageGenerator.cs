@@ -23,7 +23,8 @@ public static class TestPageGenerator
         bool includeContextMenu = false,
         bool includeTwin = false,
         string childSpanName = "SELECT * FROM Orders",
-        InternalFlowTab startTab = InternalFlowTab.Activity)
+        InternalFlowTab startTab = InternalFlowTab.Activity,
+        bool grpcCall = false)
     {
         using var activitySource = new ActivitySource("Kronikol.Tests.EndToEnd");
         using var listener = new ActivityListener
@@ -43,12 +44,17 @@ public static class TestPageGenerator
         childSpan.SetStartTime(DateTime.UtcNow.AddMilliseconds(20));
         childSpan.SetEndTime(DateTime.UtcNow.AddMilliseconds(80));
 
+        // #138: a gRPC call as the test's process records it: Kronikol's span for the call, grpc-dotnet's under it, and the
+        // HTTP request under that, made with new Activity(...) as HttpClient made it while nothing heard its source.
+        var grpcSpans = grpcCall ? GrpcCallSpans() : [];
+        Activity[] segmentSpans = grpcCall ? grpcSpans : [parentSpan, childSpan];
+
         var segments = new Dictionary<string, InternalFlowSegment>
         {
             ["iflow-seg-1"] = new(
                 Guid.NewGuid(), RequestResponseType.Request, "test-1",
-                parentSpan.StartTimeUtc, parentSpan.StartTimeUtc + parentSpan.Duration,
-                [parentSpan, childSpan])
+                segmentSpans[0].StartTimeUtc, segmentSpans[0].StartTimeUtc + segmentSpans[0].Duration,
+                segmentSpans)
         };
 
         // A second segment over the same spans draws the same activity diagram source: its popup is a render-cache hit.
@@ -91,6 +97,8 @@ public static class TestPageGenerator
 
         parentSpan.Dispose();
         childSpan.Dispose();
+        foreach (var span in grpcSpans)
+            span.Dispose();
 
         return $$"""
             <!DOCTYPE html>
@@ -137,6 +145,34 @@ public static class TestPageGenerator
             </body>
             </html>
             """;
+    }
+
+    private static Activity[] GrpcCallSpans()
+    {
+        using var interceptor = new ActivitySource("Kronikol.Grpc");
+        using var grpc = new ActivitySource("Grpc.Net.Client");
+        var start = DateTime.UtcNow;
+
+        Activity.Current = null;
+        var method = interceptor.StartActivity("/orders.Orders/Place", ActivityKind.Internal)!;
+        method.SetStartTime(start);
+        method.SetEndTime(start.AddMilliseconds(40));
+
+        var call = grpc.StartActivity("Grpc.Net.Client.GrpcOut", ActivityKind.Client,
+            new ActivityContext(method.TraceId, method.SpanId, ActivityTraceFlags.Recorded))!;
+        call.SetTag("grpc.method", "/orders.Orders/Place");
+        call.SetStartTime(start.AddMilliseconds(2));
+        call.SetEndTime(start.AddMilliseconds(38));
+
+        var request = new Activity("System.Net.Http.HttpRequestOut");
+        request.SetParentId(call.TraceId, call.SpanId, ActivityTraceFlags.Recorded);
+        request.Start();
+        request.DisplayName = "POST";
+        request.SetStartTime(start.AddMilliseconds(4));
+        request.SetEndTime(start.AddMilliseconds(36));
+        Activity.Current = null;
+
+        return [method, call, request];
     }
 
     /// <summary>

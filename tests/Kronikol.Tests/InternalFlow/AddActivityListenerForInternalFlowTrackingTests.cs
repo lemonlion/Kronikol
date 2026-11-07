@@ -48,10 +48,10 @@ public class AddActivityListenerForInternalFlowTrackingTests : IDisposable
     }
 
     [Fact]
-    public void Captures_spans_from_additional_custom_source()
+    public void Captures_a_custom_source_with_no_setup()
     {
         var sourceName = $"Custom.{Guid.NewGuid():N}";
-        BuildProvider(s => s.AddActivityListenerForInternalFlowTracking(sourceName));
+        BuildProvider(s => s.AddActivityListenerForInternalFlowTracking());
 
         using var source = new ActivitySource(sourceName);
         using var activity = source.StartActivity("custom-operation");
@@ -59,6 +59,22 @@ public class AddActivityListenerForInternalFlowTrackingTests : IDisposable
 
         Assert.Contains(InternalFlowSpanStore.GetSpans(),
             s => s.DisplayName == "custom-operation" && s.Source.Name == sourceName);
+    }
+
+    [Fact]
+    public void The_obsolete_overload_still_registers_a_listener_that_hears_every_source()
+    {
+        // #138: the names were never read. A caller that still passes some is warned, and gets what it always got.
+        var unnamed = $"Unnamed.{Guid.NewGuid():N}";
+#pragma warning disable CS0618
+        BuildProvider(s => s.AddActivityListenerForInternalFlowTracking($"Named.{Guid.NewGuid():N}"));
+#pragma warning restore CS0618
+        Assert.NotNull(_provider!.GetService<InternalFlowActivityListener>());
+
+        using var source = new ActivitySource(unnamed);
+        source.StartActivity("unnamed-operation")?.Stop();
+
+        Assert.Contains(InternalFlowSpanStore.GetSpans(), s => s.DisplayName == "unnamed-operation" && s.Source.Name == unnamed);
     }
 
     [Fact]
@@ -86,7 +102,7 @@ public class AddActivityListenerForInternalFlowTrackingTests : IDisposable
     public void Listener_captures_until_explicitly_disposed()
     {
         var sourceName = $"Lifecycle.{Guid.NewGuid():N}";
-        BuildProvider(s => s.AddActivityListenerForInternalFlowTracking(sourceName));
+        BuildProvider(s => s.AddActivityListenerForInternalFlowTracking());
 
         using var source = new ActivitySource(sourceName);
 
@@ -108,7 +124,7 @@ public class AddActivityListenerForInternalFlowTrackingTests : IDisposable
     public void Non_invasive_listener_uses_AllData_sampling()
     {
         var sourceName = $"Sampling.{Guid.NewGuid():N}";
-        BuildProvider(s => s.AddActivityListenerForInternalFlowTracking(sourceName));
+        BuildProvider(s => s.AddActivityListenerForInternalFlowTracking());
 
         using var source = new ActivitySource(sourceName);
         using var activity = source.StartActivity("non-invasive-op");
@@ -135,11 +151,11 @@ public class AddActivityListenerForInternalFlowTrackingTests : IDisposable
     }
 
     [Fact]
-    public void Multiple_additional_sources()
+    public void Captures_several_custom_sources_with_no_setup()
     {
         var name1 = $"Multi.A.{Guid.NewGuid():N}";
         var name2 = $"Multi.B.{Guid.NewGuid():N}";
-        BuildProvider(s => s.AddActivityListenerForInternalFlowTracking(name1, name2));
+        BuildProvider(s => s.AddActivityListenerForInternalFlowTracking());
 
         using var source1 = new ActivitySource(name1);
         using var source2 = new ActivitySource(name2);

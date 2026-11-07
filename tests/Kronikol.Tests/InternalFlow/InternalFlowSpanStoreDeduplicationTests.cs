@@ -12,7 +12,7 @@ public class InternalFlowSpanStoreDeduplicationTests
     public void Add_same_activity_twice_stores_only_one_copy()
     {
         var sourceName = $"Dedup.{Guid.NewGuid():N}";
-        using var listener = new InternalFlowActivityListener(sourceName);
+        using var listener = new InternalFlowActivityListener();
         using var activitySource = new ActivitySource(sourceName);
 
         using var activity = activitySource.StartActivity("dedup-op")!;
@@ -28,7 +28,7 @@ public class InternalFlowSpanStoreDeduplicationTests
     public void Add_different_activities_stores_both()
     {
         var sourceName = $"NoDup.{Guid.NewGuid():N}";
-        using var listener = new InternalFlowActivityListener(sourceName);
+        using var listener = new InternalFlowActivityListener();
         using var activitySource = new ActivitySource(sourceName);
 
         using var a1 = activitySource.StartActivity("op-1")!;

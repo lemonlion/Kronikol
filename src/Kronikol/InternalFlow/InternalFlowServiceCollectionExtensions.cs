@@ -17,28 +17,33 @@ public static class InternalFlowServiceCollectionExtensions
     /// sampling, exporters, or telemetry assertions.
     /// </para>
     /// <para>
-    /// <b>Note:</b> The <see cref="Tracking.TestTrackingMessageHandler"/> auto-starts a listener
-    /// for well-known sources automatically. This method is only needed if you want to register
-    /// additional custom <see cref="System.Diagnostics.ActivitySource"/>s via DI, or if you
-    /// need the listener started before any handler is constructed.
+    /// <b>Note:</b> The <see cref="Tracking.TestTrackingMessageHandler"/> auto-starts a listener on its first request,
+    /// and it hears every source but the runtime's connection-level ones. This method is only needed if you need the
+    /// listener started before any request is sent, or owned by the container.
     /// </para>
     /// </summary>
     /// <param name="services">The service collection (typically from <c>ConfigureTestServices</c>).</param>
-    /// <param name="additionalActivitySources">
-    /// Optional custom activity source names to capture in addition to the
-    /// well-known auto-instrumentation sources.
-    /// </param>
-    public static IServiceCollection AddActivityListenerForInternalFlowTracking(
-        this IServiceCollection services,
-        params string[] additionalActivitySources)
+    public static IServiceCollection AddActivityListenerForInternalFlowTracking(this IServiceCollection services)
     {
-        // Eagerly create so the listener starts capturing immediately — 
+        // Eagerly create so the listener starts capturing immediately —
         // it must be active before the host processes any requests.
-        var listener = new InternalFlowActivityListener(additionalActivitySources);
+        var listener = new InternalFlowActivityListener();
 
         // Register as a factory returning the already-created instance.
         // Factory-registered singletons ARE disposed by the container.
         services.AddSingleton(_ => listener);
         return services;
     }
+
+    /// <summary>
+    /// Takes the names of sources to capture as well, and never read them: the listener hears every source but the
+    /// runtime's connection-level ones whatever it is given. Obsolete from 5.34.0 (#138), and removed in v6.
+    /// </summary>
+    /// <param name="services">The service collection (typically from <c>ConfigureTestServices</c>).</param>
+    /// <param name="additionalActivitySources">Never read.</param>
+    [Obsolete("The names were never read: the listener hears every source but the runtime's connection-level ones. Call AddActivityListenerForInternalFlowTracking() with no names, and narrow what a report draws with ReportConfigurationOptions.InternalFlowActivitySources and InternalFlowSpanGranularity.Manual.")]
+    public static IServiceCollection AddActivityListenerForInternalFlowTracking(
+        this IServiceCollection services,
+        params string[] additionalActivitySources) =>
+        services.AddActivityListenerForInternalFlowTracking();
 }

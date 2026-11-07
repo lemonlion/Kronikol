@@ -142,14 +142,18 @@ public class AutoStartActivityListenerTests
     }
 
     [Fact]
-    public void InternalFlowActivitySources_option_is_available_on_handler_options()
+    public async Task The_obsolete_InternalFlowActivitySources_option_changes_nothing_the_listener_hears()
     {
-        var customSources = new[] { "MyApp.Services", "MyApp.Database" };
-        var options = new TestTrackingMessageHandlerOptions
-        {
-            InternalFlowActivitySources = customSources
-        };
+        // #138: the option was never read. A handler given some names still hears a source it does not name.
+        var unnamed = $"Unnamed.{Guid.NewGuid():N}";
+#pragma warning disable CS0618
+        using var invoker = CreateInvoker(DefaultOptions() with { InternalFlowActivitySources = [$"Named.{Guid.NewGuid():N}"] });
+#pragma warning restore CS0618
+        await invoker.SendAsync(new HttpRequestMessage(HttpMethod.Get, "http://target:80/api"), CancellationToken.None);
 
-        Assert.Equal(customSources, options.InternalFlowActivitySources);
+        using var source = new ActivitySource(unnamed);
+        source.StartActivity("unnamed-op")?.Stop();
+
+        Assert.Contains(InternalFlowSpanStore.GetSpans(), s => s.DisplayName == "unnamed-op" && s.Source.Name == unnamed);
     }
 }

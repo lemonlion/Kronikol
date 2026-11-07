@@ -40,6 +40,9 @@
          must leave as they are. Kronikol left System.Net.Http unheard from 2.21.1 on that ground without measuring it;
          HttpClientSpanCaptureTests measures it with the real SDK (plans/INTERNAL_FLOW_SOURCES_PLAN.md Q7). -->
     <PackageReference Include="Microsoft.ApplicationInsights.DependencyCollector" Version="2.23.0" />
+    <!-- Test-only: InternalFlowInputsTests compiles calls against Kronikol to show which raise CS0618, as the step
+         weaver's tests compile theirs (plans/INTERNAL_FLOW_SOURCES_PLAN.md R4). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
   </ItemGroup>
 
   <ItemGroup>

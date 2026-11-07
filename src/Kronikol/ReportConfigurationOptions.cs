@@ -232,7 +232,11 @@ public record ReportConfigurationOptions
     /// <summary>Granularity of spans included in internal flow diagrams. Default: <see cref="InternalFlowSpanGranularity.AutoInstrumentation"/>.</summary>
     public InternalFlowSpanGranularity InternalFlowSpanGranularity { get; set; } = InternalFlowSpanGranularity.AutoInstrumentation;
 
-    /// <summary>Explicit list of OpenTelemetry activity source names to include. <c>null</c> includes all sources.</summary>
+    /// <summary>
+    /// The activity source names whose spans internal flow draws, read only when <see cref="InternalFlowSpanGranularity"/>
+    /// is <see cref="Kronikol.InternalFlowSpanGranularity.Manual"/>. <c>null</c> or empty includes all sources. It
+    /// filters what a report draws, not what is captured: the listener hears every source.
+    /// </summary>
     public string[]? InternalFlowActivitySources { get; set; }
 
     /// <summary>Behaviour when no internal flow data is available for a step. Default: <see cref="InternalFlowNoDataBehavior.HideLink"/>.</summary>

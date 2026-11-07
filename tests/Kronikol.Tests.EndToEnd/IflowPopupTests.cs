@@ -53,6 +53,23 @@ public class IflowPopupTests : PlaywrightTestBase
     }
 
     [Fact]
+    public async Task A_gRPC_call_is_drawn_as_one_step_named_for_its_method_with_no_Unknown_lane()
+    {
+        // #138: the call's HTTP request, made with no source, was drawn in an "Unknown" lane, beside grpc-dotnet's step and
+        // Kronikol's own. Its lane is now named from its operation, and the two transport spans fold into the call.
+        await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage(grpcCall: true)));
+        await Page.Locator("#trigger-seg-1").ClickAsync();
+
+        await WaitForActivityDiagramSvg();
+        var svgText = await Page.Locator(".iflow-diagram svg").First.TextContentAsync();
+        Assert.Single(svgText!.Split("/orders.Orders/Place").Skip(1));
+        Assert.DoesNotContain("Unknown", svgText);
+        Assert.DoesNotContain("GrpcOut", svgText);
+        Assert.DoesNotContain("POST", svgText);
+        Assert.DoesNotContain("System.Net.Http", svgText);
+    }
+
+    [Fact]
     public async Task Close_button_removes_overlay()
     {
         await Page.GotoReportAsync(ServePage(TestPageGenerator.GenerateIflowPopupTestPage()));

@@ -52,7 +52,17 @@ public sealed class InternalFlowActivityListener : IDisposable
 
     private readonly ActivityListener _listener;
 
-    public InternalFlowActivityListener(params string[] additionalActivitySources)
+    /// <summary>
+    /// Takes the names of sources to hear as well, and never read them: the listener hears every source but
+    /// <see cref="ExcludedSourcePrefixes"/> whatever it is given. Obsolete from 5.34.0 (#138), and removed in v6.
+    /// </summary>
+    [Obsolete("The names were never read: the listener hears every source but the runtime's connection-level ones. Use the constructor with no arguments, and narrow what a report draws with ReportConfigurationOptions.InternalFlowActivitySources and InternalFlowSpanGranularity.Manual.")]
+    public InternalFlowActivityListener(params string[] additionalActivitySources) : this()
+    {
+    }
+
+    /// <summary>Creates and registers a listener that hears every source but <see cref="ExcludedSourcePrefixes"/>.</summary>
+    public InternalFlowActivityListener()
     {
         _listener = new ActivityListener
         {
@@ -93,15 +103,15 @@ public sealed class InternalFlowActivityListener : IDisposable
     }
 
     /// <summary>
-    /// Ensures a single process-wide listener is started with the given additional sources.
+    /// Ensures a single process-wide listener is started.
     /// Called automatically by <see cref="Tracking.TestTrackingMessageHandler"/>.
-    /// Subsequent calls are no-ops (first caller's sources win).
+    /// Subsequent calls are no-ops.
     /// Uses lock-free initialization to avoid thread-pool starvation on constrained
     /// runners where multiple handlers race on first use (issue #70). A caller that arrives while another is
     /// registering the listener waits for it, for at most <see cref="RegistrationWait"/>: one that returned at once
     /// started its next span before the listener was registered, so the span was not sampled and no store held it.
     /// </summary>
-    internal static void EnsureStarted(string[]? additionalActivitySources = null)
+    internal static void EnsureStarted()
     {
         if (_autoStarted != null) return;
         if (Interlocked.CompareExchange(ref _starting, 1, 0) != 0)
@@ -109,7 +119,7 @@ public sealed class InternalFlowActivityListener : IDisposable
             SpinWait.SpinUntil(() => _autoStarted != null, RegistrationWait);
             return;
         }
-        _autoStarted = new InternalFlowActivityListener(additionalActivitySources ?? []);
+        _autoStarted = new InternalFlowActivityListener();
     }
 
     /// <summary>

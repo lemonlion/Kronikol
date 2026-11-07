@@ -30,7 +30,6 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
     private readonly Func<string?>? _currentStepTypeFetcher;
     private readonly IHttpContextAccessor? _httpContextAccessor;
     private readonly IEnumerable<string> _headersToForward;
-    private readonly string[]? _internalFlowActivitySources;
     private readonly bool _trackDuringSetup;
     private readonly bool _trackDuringAction;
     private readonly IReadOnlyCollection<string> _excludedHosts;
@@ -52,7 +51,6 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         _callerName = options.CallerName;
         _httpContextAccessor = httpContextAccessor ?? options.HttpContextAccessor;
         _headersToForward = options.HeadersToForward;
-        _internalFlowActivitySources = options.InternalFlowActivitySources;
         _trackDuringSetup = options.TrackDuringSetup;
         _trackDuringAction = options.TrackDuringAction;
         _excludedHosts = options.ExcludedHosts;
@@ -148,7 +146,7 @@ public class TestTrackingMessageHandler : DelegatingHandler, ITrackingComponent
         // use guarantees all other services are ready.
         if (!Volatile.Read(ref _listenerStarted))
         {
-            InternalFlow.InternalFlowActivityListener.EnsureStarted(_internalFlowActivitySources);
+            InternalFlow.InternalFlowActivityListener.EnsureStarted();
             Volatile.Write(ref _listenerStarted, true);
         }
 

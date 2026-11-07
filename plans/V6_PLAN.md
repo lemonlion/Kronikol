@@ -257,3 +257,10 @@ flip, a CLI flag and an end-to-end proof. The text as it stood is `git show a8ab
     compressed whole, so they reach only the `TestRunReport.json` a run writes with `CompressTestRunReport` off. Remove
     them here (breaking), and with them the writer's `$z` path (`ReportPayloads` in its compressing mode). The readers
     keep reading `$z`, which a JSON file written by 3.35.0 or later with the option on holds.
+11. **The internal flow source names nothing reads** (from `INTERNAL_FLOW_SOURCES_PLAN.md` R4, #138). Obsolete from
+    5.34.0: `TestTrackingMessageHandlerOptions.InternalFlowActivitySources`, the `InternalFlowActivityListener` constructor
+    that takes `params string[]`, and the `AddActivityListenerForInternalFlowTracking` overload that takes
+    `params string[]`. The listener hears every source but the runtime's connection-level ones whatever they hold, so
+    none of them ever changed what was captured. Each has an overload with no names, which stays.
+    `ReportConfigurationOptions.InternalFlowActivitySources` is not one of them: under `Manual` it filters what a
+    report draws. Remove the three here (breaking).

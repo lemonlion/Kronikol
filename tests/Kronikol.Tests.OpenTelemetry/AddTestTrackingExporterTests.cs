@@ -69,7 +69,7 @@ public class AddTestTrackingExporterTests : IDisposable
         var services = new ServiceCollection();
         services.AddOpenTelemetry()
             .WithTracing(b => b.AddSource(otelSourceName).AddTestTrackingExporter());
-        services.AddActivityListenerForInternalFlowTracking(listenerSourceName);
+        services.AddActivityListenerForInternalFlowTracking();
         _provider = services.BuildServiceProvider();
         _provider.GetService<TracerProvider>();
 

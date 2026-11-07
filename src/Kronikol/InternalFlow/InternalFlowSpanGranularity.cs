@@ -5,10 +5,16 @@ namespace Kronikol;
 /// </summary>
 public enum InternalFlowSpanGranularity
 {
-    /// <summary>Include only spans from well-known auto-instrumentation sources (ASP.NET Core, EF Core, etc.).</summary>
+    /// <summary>
+    /// Include the spans of every trace that holds a span from a well-known auto-instrumentation source (ASP.NET Core,
+    /// HttpClient, EF Core, etc., and the sources in their namespaces), your own spans in those traces among them.
+    /// </summary>
     AutoInstrumentation,
 
-    /// <summary>Include only spans from manually created <see cref="System.Diagnostics.ActivitySource"/>s.</summary>
+    /// <summary>
+    /// Include only the spans whose source is one of <see cref="ReportConfigurationOptions.InternalFlowActivitySources"/>,
+    /// or every span when it names none.
+    /// </summary>
     Manual,
 
     /// <summary>Include all captured spans regardless of source.</summary>

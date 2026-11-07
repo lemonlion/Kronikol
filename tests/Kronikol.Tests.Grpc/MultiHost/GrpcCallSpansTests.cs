@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Kronikol.Extensions.Grpc;
 using Kronikol.InternalFlow;
 using Kronikol.Tests.Grpc.Hop;
@@ -43,5 +44,39 @@ public class GrpcCallSpansTests
         Assert.Contains("Grpc.Net.Client", sources);
         Assert.Contains("System.Net.Http", sources);
         Assert.DoesNotContain("", sources);
+    }
+
+    [Fact]
+    public async Task A_gRPC_call_through_the_interceptor_is_drawn_as_one_step_named_for_its_method()
+    {
+        // R3: Kronikol's span, grpc-dotnet's GrpcOut and HttpClient's request are one call. It is drawn as one step named
+        // for its method, where it was Kronikol's step, a GrpcOut step and a POST step in lanes of their own. The host's
+        // request span hangs under Kronikol's span, beside GrpcOut, as the interceptor sends its own span as the parent;
+        // it carries grpc.method too, so the host's step reads as the method it served.
+        await using var b = await HopHost.StartAsync("Service B " + _suffix, o => o.Kestrel = true);
+        var client = b.CreateTestClient(new GrpcTrackingOptions
+        {
+            ServiceName = b.Name,
+            CallerName = "Test",
+            CurrentTestInfoFetcher = () => ("Place an order", _testId),
+        });
+
+        await client.CallAsync(new HopRequest { Text = "hello" }, cancellationToken: TestContext.Current.CancellationToken);
+
+        var call = Assert.Single(RequestResponseLogger.RequestAndResponseLogs,
+            l => l.TestId == _testId && l.ServiceName == b.Name && l.Type == RequestResponseType.Request);
+        var spans = InternalFlowSpanStore.GetSpans().Where(s => s.TraceId.ToString() == call.ActivityTraceId).ToArray();
+        var segment = new InternalFlowSegment(Guid.NewGuid(), RequestResponseType.Request, _testId,
+            spans.Min(s => new DateTimeOffset(s.StartTimeUtc, TimeSpan.Zero)),
+            spans.Max(s => new DateTimeOffset(s.StartTimeUtc + s.Duration, TimeSpan.Zero)), spans);
+
+        var diagram = InternalFlowRenderer.RenderActivityDiagram(segment);
+
+        Assert.Equal(["|Kronikol.Grpc|", "|Microsoft.AspNetCore|"],
+            Regex.Matches(diagram, @"^\|[^|\r\n]+\|(?=\r?$)", RegexOptions.Multiline).Select(m => m.Value));
+        Assert.Equal(2, Regex.Matches(diagram, @"^:/kronikol\.tests\.hop\.HopService/Call \(", RegexOptions.Multiline).Count);
+        Assert.DoesNotContain("GrpcOut", diagram);
+        Assert.DoesNotContain("POST", diagram);
+        Assert.DoesNotContain("Unknown", diagram);
     }
 }

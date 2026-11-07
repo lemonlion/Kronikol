@@ -62,7 +62,12 @@ public record TestTrackingMessageHandlerOptions
     /// </summary>
     public Func<string?>? CurrentStepTypeFetcher { get; set; } = null;
 
-    /// <summary>OpenTelemetry activity source names to capture for internal flow diagrams.</summary>
+    /// <summary>
+    /// Never read: the internal flow listener hears every source but the runtime's connection-level ones whatever this
+    /// holds. To narrow what a report draws to some sources, set <see cref="ReportConfigurationOptions.InternalFlowActivitySources"/>
+    /// with <see cref="InternalFlowSpanGranularity.Manual"/>. Obsolete from 5.34.0 (#138), and removed in v6.
+    /// </summary>
+    [Obsolete("Never read: the internal flow listener hears every source but the runtime's connection-level ones. Narrow what a report draws with ReportConfigurationOptions.InternalFlowActivitySources and InternalFlowSpanGranularity.Manual.")]
     public string[]? InternalFlowActivitySources { get; set; }
 
     /// <summary>When <c>false</c>, HTTP requests made during the Setup phase are not tracked. Default: <c>true</c>.</summary>

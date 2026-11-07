@@ -107,10 +107,10 @@ public class InternalFlowActivityListenerTests : IDisposable
     }
 
     [Fact]
-    public void Captures_spans_from_additional_custom_source()
+    public void Captures_a_custom_source_with_no_setup()
     {
         var sourceName = $"Custom.{Guid.NewGuid():N}";
-        _listener = new InternalFlowActivityListener(sourceName);
+        _listener = new InternalFlowActivityListener();
 
         using var source = new ActivitySource(sourceName);
         using var activity = source.StartActivity("custom-operation");
@@ -118,6 +118,21 @@ public class InternalFlowActivityListenerTests : IDisposable
 
         Assert.Contains(InternalFlowSpanStore.GetSpans(),
             s => s.DisplayName == "custom-operation" && s.Source.Name == sourceName);
+    }
+
+    [Fact]
+    public void The_obsolete_constructor_still_hears_every_source_whatever_it_is_given()
+    {
+        // #138: the names were never read. A caller that still passes some is warned, and gets what it always got.
+        var unnamed = $"Unnamed.{Guid.NewGuid():N}";
+#pragma warning disable CS0618
+        _listener = new InternalFlowActivityListener($"Named.{Guid.NewGuid():N}");
+#pragma warning restore CS0618
+
+        using var source = new ActivitySource(unnamed);
+        source.StartActivity("unnamed-operation")?.Stop();
+
+        Assert.Contains(InternalFlowSpanStore.GetSpans(), s => s.DisplayName == "unnamed-operation" && s.Source.Name == unnamed);
     }
 
     [Fact]
@@ -138,7 +153,7 @@ public class InternalFlowActivityListenerTests : IDisposable
     public void Uses_AllData_sampling_not_AllDataAndRecorded()
     {
         var sourceName = $"SamplingCheck.{Guid.NewGuid():N}";
-        _listener = new InternalFlowActivityListener(sourceName);
+        _listener = new InternalFlowActivityListener();
 
         using var source = new ActivitySource(sourceName);
         using var activity = source.StartActivity("sampled-op");
@@ -154,7 +169,7 @@ public class InternalFlowActivityListenerTests : IDisposable
     public void Captures_full_activity_properties_for_rendering()
     {
         var sourceName = $"FullData.{Guid.NewGuid():N}";
-        _listener = new InternalFlowActivityListener(sourceName);
+        _listener = new InternalFlowActivityListener();
 
         using var source = new ActivitySource(sourceName);
         using var activity = source.StartActivity("data-op");
@@ -168,11 +183,11 @@ public class InternalFlowActivityListenerTests : IDisposable
     }
 
     [Fact]
-    public void Works_with_multiple_additional_sources()
+    public void Captures_several_custom_sources_with_no_setup()
     {
         var name1 = $"Multi.A.{Guid.NewGuid():N}";
         var name2 = $"Multi.B.{Guid.NewGuid():N}";
-        _listener = new InternalFlowActivityListener(name1, name2);
+        _listener = new InternalFlowActivityListener();
 
         using var source1 = new ActivitySource(name1);
         using var source2 = new ActivitySource(name2);
@@ -204,7 +219,7 @@ public class InternalFlowActivityListenerTests : IDisposable
     public void Dispose_does_not_throw()
     {
         var sourceName = $"Dispose.{Guid.NewGuid():N}";
-        _listener = new InternalFlowActivityListener(sourceName);
+        _listener = new InternalFlowActivityListener();
 
         using var source = new ActivitySource(sourceName);
 
@@ -222,7 +237,7 @@ public class InternalFlowActivityListenerTests : IDisposable
     public void All_spans_captured_none_dropped_by_sampling()
     {
         var sourceName = $"Sampler.{Guid.NewGuid():N}";
-        _listener = new InternalFlowActivityListener(sourceName);
+        _listener = new InternalFlowActivityListener();
 
         using var source = new ActivitySource(sourceName);
 
@@ -240,7 +255,7 @@ public class InternalFlowActivityListenerTests : IDisposable
     public void Preserves_parent_child_span_hierarchy()
     {
         var sourceName = $"Hierarchy.{Guid.NewGuid():N}";
-        _listener = new InternalFlowActivityListener(sourceName);
+        _listener = new InternalFlowActivityListener();
 
         using var source = new ActivitySource(sourceName);
 

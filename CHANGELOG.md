@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.34.0] - 2026-11-07
+
+The minor part moves (5.33.0 to 5.34.0): a parameterless `InternalFlowActivityListener` constructor and an `AddActivityListenerForInternalFlowTracking` overload with no names are new public surface, and three inputs become obsolete. It closes #138 (`plans/INTERNAL_FLOW_SOURCES_PLAN.md` R3 and R4).
+
+### Changed behaviour
+
+- **A gRPC call is one step in internal flow, named for its method (#138).** A call made through Kronikol's gRPC interceptor was three steps in three lanes: Kronikol's span, grpc-dotnet's `Grpc.Net.Client.GrpcOut` under it, and HttpClient's `POST` under that, in an "Unknown" lane before 5.32.2. A step is now named from its span's display name when something set one, else from its `grpc.method` tag, else from OpenTelemetry's `rpc.service` and `rpc.method`, else from its operation. A transport span that is the only one of its source under the span it carries (grpc-dotnet's under Kronikol's, HttpClient's under grpc-dotnet's) folds into it in the activity diagram, the call tree and the flame chart, and its own children move up. A call with two requests under it, a retry or a hedge, keeps both. A host in the test's process names its step for the method it served, as its request span carries `grpc.method`. The popup's title still counts the spans captured.
+
+### Deprecated
+
+- **`TestTrackingMessageHandlerOptions.InternalFlowActivitySources`, the `InternalFlowActivityListener(params string[])` constructor and the `AddActivityListenerForInternalFlowTracking(IServiceCollection, params string[])` overload are obsolete.** None was ever read: the listener hears every source but the runtime's connection-level ones whatever they hold. The overloads with no names are new, so a call that passed none compiles without a warning. `ReportConfigurationOptions.InternalFlowActivitySources` is not one of them: under `InternalFlowSpanGranularity.Manual` it filters what a report draws. The three are removed in v6 (`plans/V6_PLAN.md` item 11).
+
+### Fixed
+
+- The docs of `InternalFlowSpanGranularity.AutoInstrumentation` and `Manual`, and of `ReportConfigurationOptions.InternalFlowActivitySources`, say what they do: the default keeps every trace that holds a span from a well-known source, and the option filters what a report draws, not what is captured.
+
+### Tests
+
+- `GrpcStepTests` covers the label, the fold, a retry kept, a request under another source's span left alone, and a client span folded beside a host's request span. `GrpcCallSpansTests` draws a real call through the interceptor over h2c as one step, beside the host's, on the newest Grpc.Net.Client and on its floor, 2.45.0, whose own span has no source. A Playwright fact opens a gRPC call's popup and finds one step, with no "Unknown", `GrpcOut` or `POST`. `InternalFlowInputsTests` checks the three inputs are obsolete and the overloads with no names are not, and compiles a call each way with Roslyn. Each was red on 5.32.2.
+
 ## [5.33.0] - 2026-11-07
 
 The minor part moves (5.32.2 to 5.33.0): a run that declares its parties now lays out its sequence diagrams by them, a new effect of an existing declaration on what every such run draws, asked for as an enhancement (#228, `plans/PARTICIPANT_ORDER_PLAN.md` R1, Q5). There is nothing new to call or set.

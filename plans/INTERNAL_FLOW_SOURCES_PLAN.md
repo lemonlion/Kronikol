@@ -2,8 +2,8 @@
 
 **Date:** 2026-10-26 · **Repo version:** written against 5.10.1 (`origin/main` at `c37042e2`). Line numbers are for 5.31.2 (`55999241`). 5.12.0 to 5.31.2 moved lines in the two handler files, `ReportConfigurationOptions.cs`, `InternalFlowRenderer.cs` and `GrpcTrackingInterceptor.cs` and changed nothing this plan relies on;
 5.31.2 (#219 R1) moved the handler's chain walk into `HandlerChain.cs`, with the same answers for every chain this plan
-discusses. Every other file cited is unchanged from `1d03279b` through 5.31.2 or changed without moving the lines cited, and `CosmosTrackingMessageHandler.cs`, cited by name only, still records no trace id · **Status:** 🚧 green-lit on 2026-11-07, when the owner asked to "implement the plan in
-full" (each question takes its recommended answer); release A (R1 and R2) built, release B (R3 and R4) next, see the log.
+discusses. Every other file cited is unchanged from `1d03279b` through 5.31.2 or changed without moving the lines cited, and `CosmosTrackingMessageHandler.cs`, cited by name only, still records no trace id · **Status:** ✅ executed on 2026-11-07, when the owner asked to "implement the plan in
+full" (each question takes its recommended answer): release A (R1 and R2) is 5.32.2, release B (R3 and R4) is 5.34.0, and #138 is closed; see the log.
 Written at the owner's request of 2026-10-26: analyse #138 critically, then plan a fix for the underlying problem, which
 may not be the fix the issue proposes.
 
@@ -662,6 +662,28 @@ moved from `:153` to `:155`; no other line cited here moved.
     it (2,151 passed, 28 skipped); the gRPC, OpenTelemetry, Otlp, ProxyTap, Kafka and TcpTap test projects on 5.31.2
     with it (262; 4; 447; 203, 4 skipped; 400, 3 skipped; 506, 7 skipped). release.slnf was not built in Release here,
     for disk space; CI builds it.
+- **2026-11-07, release B (5.34.0):** R3 and R4 as planned, but for two corrections to the fold, each measured:
+  - **The fold moves the folded span's children up.** The plan folded a transport span only when it had no children of
+    its own. A host in the test's process hangs its spans under the request that carried the call, so a call to such a
+    host would never have folded. The folded span's children now move up to the span it folds into.
+  - **The fold takes the only transport span of its source, not the only child.** Measured on a real call through the
+    interceptor over h2c (`GrpcCallSpansTests`): the interceptor sends its own span as the call's parent, so the host's
+    request span hangs under Kronikol's span, beside grpc-dotnet's `GrpcOut`, and the plan's only-child rule never
+    fired; the call was still three steps. Two transport spans of one source under a call, a retry or a hedge, still
+    keep both. The host's request span carries `grpc.method` too, so its step reads as the method it served.
+  - The popup's title still counts the spans captured (`InternalFlowHtmlGenerator.Title`), which the plan left as it was.
+  - **On Grpc.Net.Client 2.45.0**, the floor CI's FloorRun pass builds the gRPC tests on, grpc-dotnet makes its span
+    with `new Activity(...)`, with no source. R2's naming gives it `Grpc.Net.Client`, so the fold reads it as on the newest
+    2.x; measured on both. 5.32.2's own fact asked for the raw source and failed there on main's CI; `4cf31b4b` (tests,
+    no bump) reads the source as the report does. It was not a race: 400 calls, 16 at once, never returned before the
+    span was stored.
+  - S0: the component diagram's relationship popups gather `FlowSpans` and draw through the same renderer, so the fold
+    reaches them.
+  - R4: three public inputs are obsolete, each with an overload that takes no names; the fourth, `EnsureStarted`'s
+    parameter, was internal and is gone. `plans/V6_PLAN.md` item 11 removes the three.
+  - Checks: the core suite on 5.33.0 with this release (12,592 passed, 2 skipped); the end-to-end suite (2,154 passed,
+    28 skipped); the gRPC tests on the newest Grpc.Net.Client and on 2.45.0 in Release (263 each); the OpenTelemetry
+    tests (4). release.slnf was not built in Release here, for disk space; CI builds it.
 
 ## Appendix A. Edit sites at 5.31.2 (`55999241`)
 
