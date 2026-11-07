@@ -1,0 +1,6 @@
+ENTER P2|Debug|AssertionPasses
+RESULT P2|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+VALUES P2|Debug|AssertionPasses :: [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = Harness(handlers) [the `handlers` argument]
+DONE P2|Debug|AssertionPasses
+TYPES P2|Debug|AssertionPasses :: [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED System.Threading.CancellationTokenSource: System.Threading.CancellationTokenSource, handlers = Harness(handlers) [the `handlers` argument]
+ALLDONE P2

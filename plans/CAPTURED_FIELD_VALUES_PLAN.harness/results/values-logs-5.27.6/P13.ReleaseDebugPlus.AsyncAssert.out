@@ -1,0 +1,6 @@
+ENTER P13|ReleaseDebugPlus|AsyncAssert
+RESULT P13|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+VALUES P13|ReleaseDebugPlus|AsyncAssert :: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made)
+DONE P13|ReleaseDebugPlus|AsyncAssert
+TYPES P13|ReleaseDebugPlus|AsyncAssert :: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED P13: P13
+ALLDONE P13

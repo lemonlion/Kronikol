@@ -1,0 +1,6 @@
+ENTER P23|Debug|InAClosure
+RESULT P23|Debug|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P23|Debug|InAClosure :: [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+DONE P23|Debug|InAClosure
+TYPES P23|Debug|InAClosure :: [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED Harness: Harness(local)
+ALLDONE P23

@@ -1,0 +1,6 @@
+ENTER P12_6p_fields|Debug|AssertionPasses
+RESULT P12_6p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P12_6p_fields|Debug|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = the test instance (P12_6p_fields)
+DONE P12_6p_fields|Debug|AssertionPasses
+TYPES P12_6p_fields|Debug|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = the test instance (P12_6p_fields)
+ALLDONE P12_6p_fields

@@ -1,0 +1,260 @@
+# 120 cases; rounds=3; label 5.27.6; repo /c/Code/Kronikol-213; one case per process via the test executable
+R1 P1|Debug|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P1+<AssertionPasses>d__5.MoveNext() (rc=139, 5s)
+R1 P1|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+R1 P1|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+R1 P10|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P10|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P10|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P11|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException Body]
+R1 P11|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException Body]
+R1 P11|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException Body]
+R1 P12_1p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P12_1p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R1 P12_1p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p+<AssertionPasses>d__2.MoveNext() (rc=139, 2s)
+R1 P12_1p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P12_1p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R1 P12_1p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R1 P12_2p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P12_2p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p+<AssertionPasses>d__2.MoveNext() (rc=139, 4s)
+R1 P12_2p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R1 P12_2p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P12_2p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 2s)
+R1 P12_2p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 2s)
+R1 P12_4p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P12_4p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R1 P12_4p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R1 P12_4p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P12_4p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R1 P12_4p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R1 P12_6p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P12_6p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p+<AssertionPasses>d__2.MoveNext() (rc=139, 2s)
+R1 P12_6p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p+<AssertionPasses>d__2.MoveNext() (rc=139, 2s)
+R1 P12_6p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P12_6p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R1 P12_6p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 2s)
+R1 P13|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R1 P13|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R1 P13|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R1 P13|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R1 P13|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R1 P13|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R1 P14|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P14|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P14|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P14|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P14|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P14|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P15|Debug|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P15|Debug|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P15|Release|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P15|Release|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P15|ReleaseDebugPlus|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P15|ReleaseDebugPlus|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P16|Debug|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P16|Debug|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P16|Release|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P16|Release|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P16|ReleaseDebugPlus|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P16|ReleaseDebugPlus|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P17|Debug|SyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+R1 P17|Debug|SyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+R1 P17|Debug|AsyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+R1 P17|Debug|AsyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+R1 P17|Release|SyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+R1 P17|Release|SyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+R1 P17|Release|AsyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+R1 P17|Release|AsyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+R1 P17|ReleaseDebugPlus|SyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+R1 P17|ReleaseDebugPlus|SyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+R1 P17|ReleaseDebugPlus|AsyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+R1 P17|ReleaseDebugPlus|AsyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+R1 P18|Debug|Parameter :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetParameter()) should be expected]
+R1 P18|Debug|Field :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetField()) should be 'Harness(field)']
+R1 P18|Release|Parameter :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetParameter()) should be expected]
+R1 P18|Release|Field :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetField()) should be 'Harness(field)']
+R1 P18|ReleaseDebugPlus|Parameter :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetParameter()) should be expected]
+R1 P18|ReleaseDebugPlus|Field :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetField()) should be 'Harness(field)']
+R1 P19|Debug|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('369301480') ]]
+R1 P19|Debug|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('4294967295') ]]
+R1 P19|Release|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+R1 P19|Release|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('1788904366016') ]]
+R1 P19|ReleaseDebugPlus|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+R1 P19|ReleaseDebugPlus|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('2272499228672') ]]
+R1 P2|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+R1 P2|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+R1 P2|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+R1 P20|Debug|LocalFunction :: unwoven=nothing :: woven=nothing :: note=PASS [Actual should be 'Harness(expected)'] || PASS [New[] { actual } should contain 'Harness(expected)']
+R1 P20|Release|LocalFunction :: unwoven=nothing :: woven=nothing :: note=PASS [Actual should be 'Harness(expected)'] || PASS [New[] { actual } should contain 'Harness(expected)']
+R1 P20|ReleaseDebugPlus|LocalFunction :: unwoven=nothing :: woven=nothing :: note=PASS [Actual should be 'Harness(expected)'] || PASS [New[] { actual } should contain 'Harness(expected)']
+R1 P21|Debug|Sync :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2'] || PASS [New[] { 2 } should contain '2']
+R1 P21|Debug|Async :: unwoven=nothing :: woven=nothing :: note=PASS [(await Task.FromResult(2)) should be '2']
+R1 P21|Release|Sync :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2'] || PASS [New[] { 2 } should contain '2']
+R1 P21|Release|Async :: unwoven=nothing :: woven=nothing :: note=PASS [(await Task.FromResult(2)) should be '2']
+R1 P21|ReleaseDebugPlus|Sync :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2'] || PASS [New[] { 2 } should contain '2']
+R1 P21|ReleaseDebugPlus|Async :: unwoven=nothing :: woven=nothing :: note=PASS [(await Task.FromResult(2)) should be '2']
+R1 P22|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+R1 P22|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+R1 P22|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+R1 P3|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+R1 P3|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+R1 P3|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+R1 P4|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(_first, _second) should not be (null, null)]
+R1 P4|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(_first, _second) should not be (null, null)]
+R1 P4|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(_first, _second) should not be (null, null)]
+R1 P5|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Third should not be null] || PASS [Third should be 'Harness(third)'] || PASS [(first, second) should not be (null, null)]
+R1 P5|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Third should not be null] || PASS [Third should be 'Harness(third)'] || PASS [(first, second) should not be (null, null)]
+R1 P5|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Third should not be null] || PASS [Third should be 'Harness(third)'] || PASS [(first, second) should not be (null, null)]
+R1 P6|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P6|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P6+<AssertionPasses>d__2.MoveNext() (rc=139, 2s)
+R1 P6|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P6+<AssertionPasses>d__2.MoveNext() (rc=139, 4s)
+R1 P7|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P7|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P7|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P8|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+R1 P8|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+R1 P8|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+R1 P8|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+R1 P8|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+R1 P8|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+R1 P9|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P9|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P9|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P1|Debug|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P1+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R2 P1|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+R2 P1|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+R2 P10|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P10|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P10|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P12_1p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P12_1p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R2 P12_1p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R2 P12_1p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P12_1p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R2 P12_1p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R2 P12_2p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P12_2p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R2 P12_2p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p+<AssertionPasses>d__2.MoveNext() (rc=139, 2s)
+R2 P12_2p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P12_2p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 4s)
+R2 P12_2p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 2s)
+R2 P12_4p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P12_4p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R2 P12_4p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R2 P12_4p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P12_4p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 2s)
+R2 P12_4p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 2s)
+R2 P12_6p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P12_6p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p+<AssertionPasses>d__2.MoveNext() (rc=139, 4s)
+R2 P12_6p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p+<AssertionPasses>d__2.MoveNext() (rc=139, 5s)
+R2 P12_6p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P12_6p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 5s)
+R2 P12_6p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 4s)
+R2 P13|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R2 P13|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R2 P13|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R2 P13|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R2 P13|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R2 P13|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R2 P14|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P14|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P14|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P14|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P14|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P14|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P15|Debug|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P15|Debug|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P15|Release|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P15|Release|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P15|ReleaseDebugPlus|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P15|ReleaseDebugPlus|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P16|Debug|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P16|Debug|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P16|Release|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P16|Release|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P16|ReleaseDebugPlus|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P16|ReleaseDebugPlus|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P19|Debug|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('2130909160') ]]
+R2 P19|Debug|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('4294967295') ]]
+R2 P19|Release|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+R2 P19|Release|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('2388261993472') ]]
+R2 P19|ReleaseDebugPlus|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+R2 P19|ReleaseDebugPlus|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('1498830495744') ]]
+R2 P2|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+R2 P2|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+R2 P2|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+R2 P22|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+R2 P22|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+R2 P22|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+R2 P6|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P6|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P6+<AssertionPasses>d__2.MoveNext() (rc=139, 4s)
+R2 P6|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P6+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R3 P1|Debug|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P1+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R3 P1|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+R3 P1|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+R3 P10|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P10|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P10|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P12_1p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P12_1p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R3 P12_1p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R3 P12_1p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P12_1p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 4s)
+R3 P12_1p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_1p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R3 P12_2p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P12_2p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R3 P12_2p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R3 P12_2p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P12_2p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R3 P12_2p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_2p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R3 P12_4p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P12_4p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R3 P12_4p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R3 P12_4p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P12_4p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R3 P12_4p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_4p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R3 P12_6p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P12_6p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R3 P12_6p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+R3 P12_6p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P12_6p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R3 P12_6p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P12_6p_fields+<AssertionPasses>d__5.MoveNext() (rc=139, 3s)
+R3 P13|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R3 P13|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R3 P13|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R3 P13|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R3 P13|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R3 P13|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+R3 P14|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P14|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P14|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P14|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P14|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P14|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P15|Debug|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P15|Debug|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P15|Release|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P15|Release|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P15|ReleaseDebugPlus|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P15|ReleaseDebugPlus|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P16|Debug|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P16|Debug|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P16|Release|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P16|Release|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P16|ReleaseDebugPlus|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P16|ReleaseDebugPlus|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P19|Debug|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('205793864') ]]
+R3 P19|Debug|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('4294967295') ]]
+R3 P19|Release|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+R3 P19|Release|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('2461557481408') ]]
+R3 P19|ReleaseDebugPlus|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+R3 P19|ReleaseDebugPlus|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('1524877170208') ]]
+R3 P2|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+R3 P2|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+R3 P2|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+R3 P22|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+R3 P22|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+R3 P22|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+R3 P6|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P6|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P6+<AssertionPasses>d__2.MoveNext() (rc=139, 2s)
+R3 P6|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P6+<AssertionPasses>d__2.MoveNext() (rc=139, 3s)
+ORCHESTRATION COMPLETE

@@ -1,0 +1,25 @@
+# VALUES pass: 129 cases, one per process, recorder on; label 5.27.6-p23; repo /c/Code/Kronikol-213
+P22b|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tas...') ]]
+    VALUES [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = the entry's own Task (its async state-machine box)
+    TYPES  [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = the entry's own Task (its async state-machine box)
+P22b|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+    VALUES [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+    TYPES  [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+P22b|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+    VALUES [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+    TYPES  [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+P23|Debug|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+    TYPES  [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED Harness: Harness(local)
+P23|Debug|InAnAsyncClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = UNCREATED (not an object this run made)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = UNCREATED P23+<>c__DisplayClass3_0: P23+<>c__DisplayClass3_0
+P23|Release|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+    TYPES  [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED Harness: Harness(local)
+P23|Release|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139): no values reached Track
+P23|ReleaseDebugPlus|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+    TYPES  [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED Harness: Harness(local)
+P23|ReleaseDebugPlus|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139): no values reached Track
+VALUES PASS COMPLETE

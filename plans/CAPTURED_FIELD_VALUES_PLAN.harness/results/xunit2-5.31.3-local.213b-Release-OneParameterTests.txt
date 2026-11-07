@@ -1,0 +1,102 @@
+=================== run 1 of 3: xunit2-5.31.3-local.213b Release OneParameterTests (2026-11-07T14:14:30Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OneParameterTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Release\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.08]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.11]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.13]   Starting:    XunitV2Repro
+Report diagnostics: 4 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Release\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.64]   Finished:    XunitV2Repro
+  Passed WeaveRepro.OneParameterTests.One_parameter [41 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.1192 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.04s     0 calls  One parameter
+1 scenarios
+--- s0
+s0  One Parameter Tests › One parameter  [Passed]  0.04s
+s0/d0  2 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+=================== run 2 of 3: xunit2-5.31.3-local.213b Release OneParameterTests (2026-11-07T14:14:35Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OneParameterTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Release\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.08]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.11]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.13]   Starting:    XunitV2Repro
+Report diagnostics: 4 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Release\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.62]   Finished:    XunitV2Repro
+  Passed WeaveRepro.OneParameterTests.One_parameter [37 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.1267 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.04s     0 calls  One parameter
+1 scenarios
+--- s0
+s0  One Parameter Tests › One parameter  [Passed]  0.04s
+s0/d0  2 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+=================== run 3 of 3: xunit2-5.31.3-local.213b Release OneParameterTests (2026-11-07T14:14:40Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OneParameterTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Release\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.07]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.10]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.12]   Starting:    XunitV2Repro
+Report diagnostics: 4 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Release\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.56]   Finished:    XunitV2Repro
+  Passed WeaveRepro.OneParameterTests.One_parameter [34 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 0.9950 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.03s     0 calls  One parameter
+1 scenarios
+--- s0
+s0  One Parameter Tests › One parameter  [Passed]  0.03s
+s0/d0  2 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null

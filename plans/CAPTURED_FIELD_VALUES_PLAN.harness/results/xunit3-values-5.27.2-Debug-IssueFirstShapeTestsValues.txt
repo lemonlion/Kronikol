@@ -1,0 +1,102 @@
+=================== run 1 of 3: xunit3-values-5.27.2 Debug IssueFirstShapeTestsValues (2026-10-29T09:23:31Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.IssueFirstShapeTestsValues.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3-Values\bin\Debug\net10.0\XunitV3ValuesProbe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.82]   Discovering: XunitV3ValuesProbe
+[xUnit.net 00:00:01.36]   Discovered:  XunitV3ValuesProbe
+[xUnit.net 00:00:01.82]   Starting:    XunitV3ValuesProbe
+[xUnit.net 00:00:03.20]   Finished:    XunitV3ValuesProbe (ID = 'e7665b302e0e3bc76e3b9238d05ccb3bf1e765e3618850fdda96d89ab8a5f9ed')
+  Passed WeaveRepro.IssueFirstShapeTestsValues.Issue_first_shape [157 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 4.3278 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.15s     0 calls  Issue first shape
+1 scenarios
+--- s0
+s0  Issue First Shape Tests Values › Issue first shape  [Passed]  0.15s
+s0/d0  3 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+n2        74 B  ✓ Handlers should satisfy all conditions [ h => GC.KeepAlive(handlers) ]
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+--- s0/d0/n2 in full
+✓ Handlers should satisfy all conditions [ h => GC.KeepAlive(handlers) ]
+=================== run 2 of 3: xunit3-values-5.27.2 Debug IssueFirstShapeTestsValues (2026-10-29T09:23:47Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.IssueFirstShapeTestsValues.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3-Values\bin\Debug\net10.0\XunitV3ValuesProbe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.49]   Discovering: XunitV3ValuesProbe
+[xUnit.net 00:00:01.00]   Discovered:  XunitV3ValuesProbe
+[xUnit.net 00:00:01.49]   Starting:    XunitV3ValuesProbe
+[xUnit.net 00:00:02.76]   Finished:    XunitV3ValuesProbe (ID = 'e7665b302e0e3bc76e3b9238d05ccb3bf1e765e3618850fdda96d89ab8a5f9ed')
+  Passed WeaveRepro.IssueFirstShapeTestsValues.Issue_first_shape [129 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 3.8511 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.12s     0 calls  Issue first shape
+1 scenarios
+--- s0
+s0  Issue First Shape Tests Values › Issue first shape  [Passed]  0.12s
+s0/d0  3 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+n2        74 B  ✓ Handlers should satisfy all conditions [ h => GC.KeepAlive(handlers) ]
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+--- s0/d0/n2 in full
+✓ Handlers should satisfy all conditions [ h => GC.KeepAlive(handlers) ]
+=================== run 3 of 3: xunit3-values-5.27.2 Debug IssueFirstShapeTestsValues (2026-10-29T09:24:02Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.IssueFirstShapeTestsValues.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3-Values\bin\Debug\net10.0\XunitV3ValuesProbe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.02] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.52]   Discovering: XunitV3ValuesProbe
+[xUnit.net 00:00:01.05]   Discovered:  XunitV3ValuesProbe
+[xUnit.net 00:00:01.44]   Starting:    XunitV3ValuesProbe
+[xUnit.net 00:00:02.67]   Finished:    XunitV3ValuesProbe (ID = 'e7665b302e0e3bc76e3b9238d05ccb3bf1e765e3618850fdda96d89ab8a5f9ed')
+  Passed WeaveRepro.IssueFirstShapeTestsValues.Issue_first_shape [122 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 4.3471 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.11s     0 calls  Issue first shape
+1 scenarios
+--- s0
+s0  Issue First Shape Tests Values › Issue first shape  [Passed]  0.11s
+s0/d0  3 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+n2        74 B  ✓ Handlers should satisfy all conditions [ h => GC.KeepAlive(handlers) ]
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+--- s0/d0/n2 in full
+✓ Handlers should satisfy all conditions [ h => GC.KeepAlive(handlers) ]

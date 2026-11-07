@@ -1,0 +1,6 @@
+ENTER P22b|Debug|AssertionPasses
+RESULT P22b|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tas...') ]]
+VALUES P22b|Debug|AssertionPasses :: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = the entry's own Task (its async state-machine box)
+DONE P22b|Debug|AssertionPasses
+TYPES P22b|Debug|AssertionPasses :: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = the entry's own Task (its async state-machine box)
+ALLDONE P22b

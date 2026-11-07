@@ -1,0 +1,6 @@
+ENTER P21|Release|Async
+RESULT P21|Release|Async :: unwoven=nothing :: woven=nothing :: note=PASS [(await Task.FromResult(2)) should be '2']
+VALUES P21|Release|Async :: [(await Task.FromResult(2)).ShouldBe(c._id)] c = C [the `c` argument, _id=2]
+DONE P21|Release|Async
+TYPES P21|Release|Async :: [(await Task.FromResult(2)).ShouldBe(c._id)] c = C [the `c` argument, _id=2]
+ALLDONE P21

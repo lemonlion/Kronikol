@@ -1836,6 +1836,7 @@ public class AssertionWeaver
     {
         var captured = new List<CapturedVariable>();
         var seenNames = new HashSet<string>(StringComparer.Ordinal);
+        var targets = BranchTargets(method.Body);
 
         // Find the assertion entry point call index (Should or Assert.That)
         var shouldIdx = -1;
@@ -1924,11 +1925,17 @@ public class AssertionWeaver
                     Type = varType
                 });
             }
-            // ldarg.0 + ldfld — async state machine field access
-            else if (instr.OpCode == OpCodes.Ldarg_0 &&
+            // ldarg.0 + ldfld — a field of 'this', the state machine in an async method. In a static method ldarg.0 is
+            // the first parameter (below), and the field is a member of that object (#213).
+            // An async method of a struct reads its copy of 'this' by address (ldflda <>4__this). A read at a branch
+            // target may have its object from another path, as in (_parent ?? this)._depth, and is left out.
+            else if (method.HasThis &&
+                     instr.OpCode == OpCodes.Ldarg_0 &&
                      i + 1 < statementInstructions.Count &&
-                     statementInstructions[i + 1].OpCode == OpCodes.Ldfld &&
-                     statementInstructions[i + 1].Operand is FieldReference fieldRef)
+                     statementInstructions[i + 1].Operand is FieldReference fieldRef &&
+                     (statementInstructions[i + 1].OpCode == OpCodes.Ldfld ||
+                      statementInstructions[i + 1].OpCode == OpCodes.Ldflda && IsThisProxy(fieldRef)) &&
+                     !targets.Contains(statementInstructions[i + 1]))
             {
                 // Check if the field type is a display class (closure inside async method)
                 if (IsDisplayClassType(fieldRef.FieldType))
@@ -1960,74 +1967,41 @@ public class AssertionWeaver
                     continue;
                 }
 
-                var name = GetStateFieldOriginalName(fieldRef);
+                var name = VariableNameOf(fieldRef);
                 if (name == null)
                 {
-                    // Not a state machine field (<name>5__N pattern).
-                    // Try raw field name for instance field access (e.g., _orderId).
-                    // Skip compiler-generated fields (angle brackets in name),
-                    // but check for chained field access through <>4__this first.
-                    if (fieldRef.Name.Contains('<') || fieldRef.Name.Contains('>'))
+                    // A compiler-generated field that holds no variable of its own (<>4__this, a backing field).
+                    // Check for chained field access: ldarg.0 -> ldfld <>4__this -> ldfld _instanceField
+                    // This occurs in async state machines when accessing instance fields of the outer class, a
+                    // primary constructor's parameter (<name>P) among them.
+                    if (IsThisProxy(fieldRef) &&
+                        i + 2 < statementInstructions.Count &&
+                        statementInstructions[i + 2].OpCode == OpCodes.Ldfld &&
+                        !targets.Contains(statementInstructions[i + 2]) &&
+                        statementInstructions[i + 2].Operand is FieldReference chainedFieldRef &&
+                        VariableNameOf(chainedFieldRef) is { } chainedName)
                     {
-                        // Check for chained field access: ldarg.0 -> ldfld <>4__this -> ldfld _instanceField
-                        // This occurs in async state machines when accessing instance fields of the outer class.
-                        if (i + 2 < statementInstructions.Count &&
-                            statementInstructions[i + 2].OpCode == OpCodes.Ldfld &&
-                            statementInstructions[i + 2].Operand is FieldReference chainedFieldRef &&
-                            !chainedFieldRef.Name.Contains('<') && !chainedFieldRef.Name.Contains('>'))
-                        {
-                            var chainedName = chainedFieldRef.Name;
-                            if (NameAppearsInExpression(chainedName, sourceText) && seenNames.Add(chainedName))
-                            {
-                                // Resolve generic parameter types through the outer class type.
-                                // When the field is inherited from a generic base (e.g., TRequest Request on
-                                // BasePostEndpoint<TRequest,TResponse>), FieldType is !0. We resolve it to
-                                // the concrete type to avoid emitting `box !0` in non-generic state machines.
-                                var outerClassType = fieldRef.FieldType;
-                                var resolvedFieldType = ResolveGenericFieldType(chainedFieldRef, outerClassType);
-                                var resolvedFieldRef = ResolveFieldReference(chainedFieldRef, outerClassType);
-
-                                // Import the field reference to ensure proper metadata token
-                                // generation when the field is on a generic base class.
-                                var importedFieldRef = method.Module.ImportReference(resolvedFieldRef);
-
-                                // Use StateField + ClosureField pattern: ldarg.0 -> ldfld stateField -> ldfld closureField
-                                captured.Add(new CapturedVariable
-                                {
-                                    Name = chainedName,
-                                    StateField = fieldRef, // the <>4__this field on state machine
-                                    ClosureField = importedFieldRef, // the actual instance field (imported)
-                                    NeedsBoxing = resolvedFieldType.IsValueType || resolvedFieldType is GenericParameter,
-                                    Type = resolvedFieldType
-                                });
-                            }
-                            i += 2; // skip both ldfld instructions
-                            continue;
-                        }
-
-                        i++; // skip the ldfld instruction
+                        // Read through the <>4__this field as the compiler's own code names it.
+                        if (NameAppearsInExpression(chainedName, sourceText) &&
+                            FieldOfInstance(method, chainedFieldRef, chainedName, fieldRef) is { } chained &&
+                            seenNames.Add(chainedName))
+                            captured.Add(chained);
+                        i += 2; // skip both ldfld instructions
                         continue;
                     }
-                    name = fieldRef.Name;
-                }
-                if (!NameAppearsInExpression(name, sourceText))
-                {
+
                     i++; // skip the ldfld instruction
                     continue;
                 }
-                if (!seenNames.Add(name))
+                if (!NameAppearsInExpression(name, sourceText) ||
+                    FieldOfInstance(method, fieldRef, name, null) is not { } variable ||
+                    !seenNames.Add(name))
                 {
                     i++; // skip the ldfld instruction
                     continue;
                 }
 
-                captured.Add(new CapturedVariable
-                {
-                    Name = name,
-                    StateField = fieldRef,
-                    NeedsBoxing = fieldRef.FieldType.IsValueType || fieldRef.FieldType is GenericParameter,
-                    Type = fieldRef.FieldType
-                });
+                captured.Add(variable);
                 i++; // skip the ldfld instruction
             }
             // ldarg.N (N >= 1 for instance, N >= 0 for static) — method parameter
@@ -2068,96 +2042,44 @@ public class AssertionWeaver
                      instr.Operand is MethodReference lambdaMethodRef)
             {
                 var lambdaMethod = ResolveLambdaMethod(lambdaMethodRef, method);
-                if (lambdaMethod?.HasBody == true)
+                // A lambda or a local function the compiler made, never a method group: a method group's target is
+                // whatever object the code names, not the woven method's own (#213).
+                if (lambdaMethod?.HasBody == true && IsCompilerLambda(lambdaMethod))
                 {
-                    // Detect if the calling method is inside a state machine (async).
+                    // A lambda reads a field off an object the woven method holds when it reads it off its own 'this'
+                    // and is a method of the woven method's own type (a method of the class, or of the closure the
+                    // woven method is a method of) or of the type the woven method's <>4__this holds; off its
+                    // closure's <>4__this; or off its closure's link to a parent closure of one of those types. A
+                    // field read off anything else is not read here: a captured local's (read through the closure
+                    // above), a static lambda's <>c, a parameter's or another object's member (#213).
                     // State machines store the outer 'this' in a field like <>4__this.
-                    FieldDefinition? outerThisField = null;
-                    foreach (var f in method.DeclaringType.Fields)
-                    {
-                        if (f.Name.Contains("<>") && f.Name.EndsWith("__this"))
-                        {
-                            outerThisField = f;
-                            break;
-                        }
-                    }
+                    var outerThisField = OuterThisField(method);
+                    bool HeldByTheMethod(TypeReference type) =>
+                        method.HasThis && IsSameType(type, method.DeclaringType) ||
+                        outerThisField != null && IsSameType(type, outerThisField.FieldType);
+                    var ownThis = lambdaMethod.HasThis && HeldByTheMethod(lambdaMethod.DeclaringType);
+                    var lambdaTargets = BranchTargets(lambdaMethod.Body);
 
                     foreach (var lambdaInstr in lambdaMethod.Body.Instructions)
                     {
-                        if (lambdaInstr.OpCode == OpCodes.Ldfld &&
-                            lambdaInstr.Operand is FieldReference lambdaFieldRef)
-                        {
-                            var lambdaVarName = GetStateFieldOriginalName(lambdaFieldRef);
+                        if (lambdaInstr.OpCode != OpCodes.Ldfld ||
+                            lambdaInstr.Operand is not FieldReference lambdaFieldRef ||
+                            ReceiverOf(lambdaInstr, lambdaTargets) is not { } receiver ||
+                            !(ownThis && receiver.OpCode == OpCodes.Ldarg_0 ||
+                              receiver.OpCode == OpCodes.Ldfld && receiver.Operand is FieldReference receiverField &&
+                              (IsThisProxy(receiverField) || IsClosureLink(receiverField) && HeldByTheMethod(receiverField.FieldType))))
+                            continue;
 
-                            if (lambdaVarName != null)
-                            {
-                                // State machine field (e.g., <localVar>5__1) — existing behavior
-                                if (!NameAppearsInExpression(lambdaVarName, sourceText))
-                                    continue;
-                                if (!seenNames.Add(lambdaVarName))
-                                    continue;
+                        // Read where the woven method holds the instance, or left out: in an async state machine,
+                        // ldarg.0 → ldfld <>4__this → ldfld field (e.g., skip _steps.Request where Request is on a
+                        // different type, and resolve generic parameter types through the outer class type, Issue #55).
+                        var lambdaVarName = VariableNameOf(lambdaFieldRef);
+                        if (lambdaVarName == null || !NameAppearsInExpression(lambdaVarName, sourceText) ||
+                            FieldOfInstance(method, lambdaFieldRef, lambdaVarName, outerThisField) is not { } variable ||
+                            !seenNames.Add(lambdaVarName))
+                            continue;
 
-                                captured.Add(new CapturedVariable
-                                {
-                                    Name = lambdaVarName,
-                                    StateField = lambdaFieldRef,
-                                    NeedsBoxing = lambdaFieldRef.FieldType.IsValueType || lambdaFieldRef.FieldType is GenericParameter,
-                                    Type = lambdaFieldRef.FieldType
-                                });
-                                continue;
-                            }
-
-                            // Not a state machine field — try raw field name for instance fields
-                            // (e.g., _orderId on the test class accessed via lambda closure).
-                            // Skip compiler-generated fields (angle brackets in name).
-                            var rawName = lambdaFieldRef.Name;
-                            if (rawName.Contains('<') || rawName.Contains('>'))
-                                continue;
-
-                            if (!NameAppearsInExpression(rawName, sourceText))
-                                continue;
-                            if (!seenNames.Add(rawName))
-                                continue;
-
-                            if (outerThisField != null)
-                            {
-                                // In async state machine: ldarg.0 → ldfld <>4__this → ldfld field
-                                // Only capture if the field is actually accessible on the outer class
-                                // (e.g., skip _steps.Request where Request is on a different type)
-                                if (!IsFieldAccessibleOnType(lambdaFieldRef, outerThisField.FieldType))
-                                    continue;
-
-                                // Resolve generic parameter types through the outer class type (Issue #55).
-                                var outerType = outerThisField.FieldType;
-                                var resolvedLambdaFieldType = ResolveGenericFieldType(lambdaFieldRef, outerType);
-                                var resolvedLambdaFieldRef = ResolveFieldReference(lambdaFieldRef, outerType);
-                                captured.Add(new CapturedVariable
-                                {
-                                    Name = rawName,
-                                    StateField = OwnField(outerThisField),
-                                    ClosureField = resolvedLambdaFieldRef,
-                                    NeedsBoxing = resolvedLambdaFieldType.IsValueType || resolvedLambdaFieldType is GenericParameter,
-                                    Type = resolvedLambdaFieldType
-                                });
-                            }
-                            else
-                            {
-                                // ldarg.0 → ldfld field (this.field), only for a field of this method's own type: the
-                                // field may be a closure's, and a closure the compiler kept on the stack is in no local
-                                // or field to read it from. Read off this, it took whatever lay at the field's offset of
-                                // another object (#211, D-A). A static method has no this: its ldarg.0 is its first
-                                // parameter.
-                                if (method.IsStatic || !IsFieldAccessibleOnType(lambdaFieldRef, method.DeclaringType))
-                                    continue;
-                                captured.Add(new CapturedVariable
-                                {
-                                    Name = rawName,
-                                    StateField = lambdaFieldRef,
-                                    NeedsBoxing = lambdaFieldRef.FieldType.IsValueType || lambdaFieldRef.FieldType is GenericParameter,
-                                    Type = lambdaFieldRef.FieldType
-                                });
-                            }
-                        }
+                        captured.Add(variable);
                     }
                 }
             }
@@ -2165,126 +2087,53 @@ public class AssertionWeaver
             // When assertions use Expression<Func<T, bool>> predicates (e.g. .Contain(l => ...)),
             // the compiler generates expression tree construction that references captured fields
             // via ldtoken + FieldInfo.GetFieldFromHandle + Expression.Field.
+            // A field of the instance is Expression.Field(Expression.Constant(this, …), field): the call to
+            // Expression.Constant comes right before the field's token. A static field's is Expression.Field(null,
+            // field), read as before (ldfld ignores its object for a static field). A closure's constant holds a
+            // captured local, read through the closure above, and a member's object is the Expression.Field before
+            // it (#213).
             else if (instr.OpCode == OpCodes.Ldtoken &&
                      instr.Operand is FieldReference tokenFieldRef)
             {
-                var fieldName = tokenFieldRef.Name;
-                // Skip compiler-generated fields
-                if (fieldName.Contains('<') || fieldName.Contains('>'))
-                    continue;
-                if (!NameAppearsInExpression(fieldName, sourceText))
-                    continue;
-                if (!seenNames.Add(fieldName))
+                if (instr.Previous is not { } receiver ||
+                    !(IsCall(receiver, "Constant") &&
+                      ((MethodReference)receiver.Operand).DeclaringType.FullName == "System.Linq.Expressions.Expression" ||
+                      receiver.OpCode == OpCodes.Ldnull && IsStaticField(tokenFieldRef)))
                     continue;
 
-                // Check if we're in a state machine (async method)
-                FieldDefinition? outerThisForToken = null;
-                foreach (var f in method.DeclaringType.Fields)
-                {
-                    if (f.Name.Contains("<>") && f.Name.EndsWith("__this"))
-                    {
-                        outerThisForToken = f;
-                        break;
-                    }
-                }
+                // this.field, or in an async state machine ldarg.0 → ldfld <>4__this → ldfld field (Issue #55)
+                var fieldName = VariableNameOf(tokenFieldRef);
+                if (fieldName == null || !NameAppearsInExpression(fieldName, sourceText) ||
+                    FieldOfInstance(method, tokenFieldRef, fieldName, OuterThisField(method)) is not { } variable ||
+                    !seenNames.Add(fieldName))
+                    continue;
 
-                if (outerThisForToken != null)
-                {
-                    // Async: ldarg.0 → ldfld <>4__this → ldfld field
-                    // Only capture if the field is actually accessible on the outer class
-                    if (!IsFieldAccessibleOnType(tokenFieldRef, outerThisForToken.FieldType))
-                        continue;
-
-                    // Resolve generic parameter types through the outer class type (Issue #55).
-                    var outerTypeForToken = outerThisForToken.FieldType;
-                    var resolvedTokenFieldType = ResolveGenericFieldType(tokenFieldRef, outerTypeForToken);
-                    var resolvedTokenFieldRef = ResolveFieldReference(tokenFieldRef, outerTypeForToken);
-                    captured.Add(new CapturedVariable
-                    {
-                        Name = fieldName,
-                        StateField = OwnField(outerThisForToken),
-                        ClosureField = resolvedTokenFieldRef,
-                        NeedsBoxing = resolvedTokenFieldType.IsValueType || resolvedTokenFieldType is GenericParameter,
-                        Type = resolvedTokenFieldType
-                    });
-                }
-                else
-                {
-                    // ldarg.0 → ldfld field (this.field), for a field of this method's own type only, and never in a
-                    // static method, which has no this (#211, D-A).
-                    if (method.IsStatic || !IsFieldAccessibleOnType(tokenFieldRef, method.DeclaringType))
-                        continue;
-                    captured.Add(new CapturedVariable
-                    {
-                        Name = fieldName,
-                        StateField = tokenFieldRef,
-                        NeedsBoxing = tokenFieldRef.FieldType.IsValueType || tokenFieldRef.FieldType is GenericParameter,
-                        Type = tokenFieldRef.FieldType
-                    });
-                }
+                captured.Add(variable);
             }
-            // Standalone ldfld — instance field access preceded by ldloc (Release optimization)
-            // or other patterns. In Release builds, the compiler may cache <>4__this in a local:
+            // Standalone ldfld — instance field access preceded by ldloc (Release optimization).
+            // In Release builds, the compiler may cache <>4__this in a local:
             //   ldloc.N → ldfld _field  (instead of ldarg.0 → ldfld <>4__this → ldfld _field)
-            // The value loading code always uses ldarg.0 → ldfld <>4__this → ldfld _field,
-            // which works regardless of how the original code accesses the field.
+            // The value is loaded ldarg.0 → ldfld <>4__this → ldfld _field, only when the local is that copy.
             //
-            // IMPORTANT (Issue #55): Skip ldfld instructions that are continuations of a member
-            // access chain. If the preceding instruction is ldfld, callvirt, or call, this ldfld
-            // is reading a field from the result of the previous instruction (e.g., _obj.Field.SubField).
-            // Capturing it standalone would emit ldarg.0→ldfld <>4__this→ldfld SubField which is
-            // invalid IL — SubField is not a field on the outer class type.
+            // IMPORTANT (Issue #55, #213): a field read off anything but that local is not the instance's: off
+            // another local (a tuple's item, another object's field) or a parameter, or a continuation of a member
+            // access chain (e.g., _obj.Field.SubField, preceded by ldfld, callvirt or call). Read off the class, it
+            // takes whatever lies at that offset, and a passing test throws or its process dies.
             else if (instr.OpCode == OpCodes.Ldfld &&
-                     instr.Operand is FieldReference standaloneFldRef &&
-                     !standaloneFldRef.Name.Contains('<') && !standaloneFldRef.Name.Contains('>'))
+                     instr.Operand is FieldReference standaloneFldRef)
             {
-                // Check if this ldfld is a continuation of a member access chain.
-                // If preceded by ldfld, callvirt, or call, the stack top is the result of
-                // the previous member access — this ldfld reads from that, not from <>4__this.
-                if (i > 0)
-                {
-                    var prevInstr = statementInstructions[i - 1];
-                    if (prevInstr.OpCode == OpCodes.Ldfld ||
-                        prevInstr.OpCode == OpCodes.Callvirt ||
-                        prevInstr.OpCode == OpCodes.Call)
-                    {
-                        continue; // Skip chain continuation — not an independent variable
-                    }
-                }
-
-                var fieldName = standaloneFldRef.Name;
-                if (!NameAppearsInExpression(fieldName, sourceText))
+                if (ReceiverOf(instr, targets) is not { } receiver || !IsLdloc(receiver, out var receiverLocal) ||
+                    !HoldsTheInstance(method, receiverLocal))
                     continue;
 
-                // Find the <>4__this field on the state machine
-                FieldDefinition? outerThisForStandalone = null;
-                foreach (var f in method.DeclaringType.Fields)
-                {
-                    if (f.Name.Contains("<>") && f.Name.EndsWith("__this"))
-                    {
-                        outerThisForStandalone = f;
-                        break;
-                    }
-                }
+                // Read through <>4__this, generic parameter types resolved through the outer class type (Issue #55).
+                var fieldName = VariableNameOf(standaloneFldRef);
+                if (fieldName == null || !NameAppearsInExpression(fieldName, sourceText) ||
+                    FieldOfInstance(method, standaloneFldRef, fieldName, OuterThisField(method)) is not { } variable ||
+                    !seenNames.Add(fieldName))
+                    continue;
 
-                // A tuple's item or another object's field is on no object this read holds. Read off the class, it takes whatever lies at that
-                // offset, and a passing test throws or its process dies.
-                if (outerThisForStandalone != null && IsFieldOf(standaloneFldRef, outerThisForStandalone.FieldType) && seenNames.Add(fieldName))
-                {
-                    // Resolve generic parameter types through the outer class type (Issue #55).
-                    var outerClassType = outerThisForStandalone.FieldType;
-                    var resolvedFieldType = ResolveGenericFieldType(standaloneFldRef, outerClassType);
-                    var resolvedFieldRef = ResolveFieldReference(standaloneFldRef, outerClassType);
-
-                    captured.Add(new CapturedVariable
-                    {
-                        Name = fieldName,
-                        StateField = OwnField(outerThisForStandalone),
-                        ClosureField = resolvedFieldRef,
-                        NeedsBoxing = resolvedFieldType.IsValueType || resolvedFieldType is GenericParameter,
-                        Type = resolvedFieldType
-                    });
-                }
+                captured.Add(variable);
             }
         }
 
@@ -2303,7 +2152,7 @@ public class AssertionWeaver
             variable.Type = WithoutModifiers(variable.Type);
             variable.NeedsBoxing = variable.Type.IsValueType || variable.Type is GenericParameter;
         }
-        captured.RemoveAll(variable => !CanBeRead(variable.Type, method));
+        captured.RemoveAll(variable => !CanBeRead(variable.Type, method) || !CanLoad(method, variable));
         return captured;
     }
 
@@ -2325,18 +2174,6 @@ public class AssertionWeaver
 
     private static bool IsByRefLike(TypeDefinition definition) =>
         definition.HasCustomAttributes && definition.CustomAttributes.Any(a => a.AttributeType.Name == "IsByRefLikeAttribute");
-
-    /// <summary>Whether a field is declared on this type or a base of it.</summary>
-    private static bool IsFieldOf(FieldReference field, TypeReference type)
-    {
-        var owner = field.DeclaringType.GetElementType().FullName;
-        for (var t = TryResolve(type); t != null; t = t.BaseType != null ? TryResolve(t.BaseType) : null)
-        {
-            if (t.FullName == owner)
-                return true;
-        }
-        return false;
-    }
 
     /// <summary>
     /// Where a Shouldly call's values start in its statement, and the instructions that are not values: the
@@ -2522,6 +2359,21 @@ public class AssertionWeaver
         return false;
     }
 
+    private static bool IsStloc(Instruction instr, out int index)
+    {
+        if (instr.OpCode == OpCodes.Stloc_0) { index = 0; return true; }
+        if (instr.OpCode == OpCodes.Stloc_1) { index = 1; return true; }
+        if (instr.OpCode == OpCodes.Stloc_2) { index = 2; return true; }
+        if (instr.OpCode == OpCodes.Stloc_3) { index = 3; return true; }
+        if ((instr.OpCode == OpCodes.Stloc || instr.OpCode == OpCodes.Stloc_S) && instr.Operand is VariableDefinition varDef)
+        {
+            index = varDef.Index;
+            return true;
+        }
+        index = -1;
+        return false;
+    }
+
     private static bool IsLdarg(Instruction instr, out int index)
     {
         if (instr.OpCode == OpCodes.Ldarg_0) { index = 0; return true; }
@@ -2578,19 +2430,20 @@ public class AssertionWeaver
     }
 
     /// <summary>
-    /// Extracts the original variable name from a state machine field.
-    /// Pattern: &lt;name&gt;5__N → name
+    /// The name of the variable a field holds, by the kind of name the compiler gave it (the character after the '&gt;'
+    /// of a generated name). A plain name is the variable's own; &lt;name&gt;5__N (a hoisted local) and &lt;name&gt;P (a
+    /// primary constructor's parameter) are <c>name</c>. Every other generated name (&lt;&gt;4__this, &lt;&gt;8__1,
+    /// &lt;Name&gt;k__BackingField, &lt;&gt;u__1, CS$&lt;&gt;8__locals1) belongs to no variable, and is null.
     /// </summary>
-    private static string? GetStateFieldOriginalName(FieldReference field)
+    private static string? VariableNameOf(FieldReference field)
     {
         var fieldName = field.Name;
-        if (fieldName.StartsWith("<") && fieldName.Contains(">"))
-        {
-            var end = fieldName.IndexOf('>');
-            var name = fieldName.Substring(1, end - 1);
-            return name.Length > 0 ? name : null;
-        }
-        return null;
+        if (fieldName.IndexOf('<') < 0 && fieldName.IndexOf('>') < 0)
+            return fieldName;
+        var end = fieldName.IndexOf('>');
+        if (!fieldName.StartsWith("<", StringComparison.Ordinal) || end < 2 || end + 1 >= fieldName.Length)
+            return null;
+        return fieldName[end + 1] is '5' or 'P' ? fieldName.Substring(1, end - 1) : null;
     }
 
     /// <summary>
@@ -2701,7 +2554,8 @@ public class AssertionWeaver
     /// <summary>
     /// Checks whether a field is directly accessible on the given type (or its base types).
     /// This prevents the weaver from emitting <c>ldfld SomeField</c> on a type that doesn't
-    /// actually have that field in its inheritance chain — which would produce BadImageFormatException.
+    /// actually have that field in its inheritance chain. The runtime does not check the object of an <c>ldfld</c>: such a
+    /// read takes whatever lies at the field's offset of the other object, a wrong value or an access violation (#213).
     /// </summary>
     private static bool IsFieldAccessibleOnType(FieldReference fieldRef, TypeReference type)
     {
@@ -2735,6 +2589,166 @@ public class AssertionWeaver
         }
 
         return false;
+    }
+
+    /// <summary>Whether a field is the one a state machine or a closure keeps the instance in, &lt;&gt;4__this.</summary>
+    private static bool IsThisProxy(FieldReference field) =>
+        field.Name.Contains("<>") && field.Name.EndsWith("__this", StringComparison.Ordinal);
+
+    /// <summary>Whether a field is a closure's link to its parent closure (CS$&lt;&gt;8__locals1, &lt;&gt;8__1).</summary>
+    private static bool IsClosureLink(FieldReference field) => field.Name.Contains("<>8__");
+
+    /// <summary>Whether a method is a lambda or a local function the compiler made (C#'s &lt;…&gt; names, Visual
+    /// Basic's _Lambda$__), not a method the code names as a method group.</summary>
+    private static bool IsCompilerLambda(MethodDefinition method) =>
+        method.Name.StartsWith("<", StringComparison.Ordinal) || method.Name.StartsWith("_Lambda$__", StringComparison.Ordinal);
+
+    /// <summary>Whether two type references name the same type, generic instantiations alike.</summary>
+    private static bool IsSameType(TypeReference a, TypeReference b) =>
+        a.GetElementType().FullName == b.GetElementType().FullName;
+
+    /// <summary>Every instruction a branch, a switch or an exception handler can reach other than by falling
+    /// through: the object on the stack there may come from more than one place.</summary>
+    private static HashSet<Instruction> BranchTargets(MethodBody body)
+    {
+        var targets = new HashSet<Instruction>();
+        foreach (var instruction in body.Instructions)
+        {
+            if (instruction.Operand is Instruction target)
+                targets.Add(target);
+            else if (instruction.Operand is Instruction[] cases)
+                targets.UnionWith(cases);
+        }
+        foreach (var handler in body.ExceptionHandlers)
+        {
+            if (handler.HandlerStart != null) targets.Add(handler.HandlerStart);
+            if (handler.FilterStart != null) targets.Add(handler.FilterStart);
+        }
+        return targets;
+    }
+
+    /// <summary>
+    /// The instruction that pushed the object a field is read off: the one before the read, past a volatile. or
+    /// unaligned. prefix. Null when the read, or its prefix, is a branch target, where the object may come from more
+    /// than one place, as in <c>(_parent ?? this)._depth</c> (#213).
+    /// </summary>
+    private static Instruction? ReceiverOf(Instruction read, HashSet<Instruction> targets)
+    {
+        var first = read;
+        while (first.Previous is { } prefix && (prefix.OpCode == OpCodes.Volatile || prefix.OpCode == OpCodes.Unaligned))
+            first = prefix;
+        for (var i = read; ; i = i.Previous)
+        {
+            if (targets.Contains(i))
+                return null;
+            if (i == first)
+                break;
+        }
+        return first.Previous;
+    }
+
+    /// <summary>Whether a field is static; false when its definition cannot be read.</summary>
+    private static bool IsStaticField(FieldReference field)
+    {
+        try { return field.Resolve()?.IsStatic == true; }
+        catch { return false; }
+    }
+
+    /// <summary>The field the woven method's state machine or closure keeps the instance in, or null in a method of
+    /// any other type.</summary>
+    private static FieldDefinition? OuterThisField(MethodDefinition method) =>
+        method.DeclaringType.Fields.FirstOrDefault(IsThisProxy);
+
+    /// <summary>
+    /// A field of the instance, read where the woven method holds it (#213): off <c>this</c> in an instance method of
+    /// the field's class or of a class derived from it (a state machine's own field, a hoisted local or a parameter of
+    /// the async method, the same way); else off the instance a state machine or a closure keeps in
+    /// <paramref name="outerThis"/>, when that is of the field's class or derived from it. Null anywhere else, and the
+    /// value is left out: in a static method <c>ldarg.0</c> is the first parameter, and a <c>MoveNext</c> without
+    /// &lt;&gt;4__this holds no instance.
+    /// </summary>
+    private static CapturedVariable? FieldOfInstance(MethodDefinition method, FieldReference field, string name,
+        FieldReference? outerThis)
+    {
+        // ldarg.0 → ldfld field (this.field), boxed as the type a generic base class gives it (Issue #55)
+        if (method.HasThis && IsFieldAccessibleOnType(field, method.DeclaringType))
+        {
+            var fieldType = ResolveGenericFieldType(field, method.DeclaringType);
+            return new CapturedVariable
+            {
+                Name = name,
+                StateField = field,
+                NeedsBoxing = fieldType.IsValueType || fieldType is GenericParameter,
+                Type = fieldType
+            };
+        }
+        if (outerThis == null || !IsFieldAccessibleOnType(field, outerThis.FieldType))
+            return null;
+
+        // ldarg.0 → ldfld <>4__this → ldfld field. Resolve generic parameter types through the outer class type, and
+        // import the field reference, for a field on a generic base class (Issue #55).
+        var outerClassType = outerThis.FieldType;
+        var resolvedFieldType = ResolveGenericFieldType(field, outerClassType);
+        return new CapturedVariable
+        {
+            Name = name,
+            // A definition from the type's own fields is named through the state machine's own instantiation
+            // (#211, D-B); a reference the compiler's code reads is already the instantiated one.
+            StateField = outerThis is FieldDefinition definition ? OwnField(definition) : outerThis,
+            ClosureField = method.Module.ImportReference(ResolveFieldReference(field, outerClassType)),
+            NeedsBoxing = resolvedFieldType.IsValueType || resolvedFieldType is GenericParameter,
+            Type = resolvedFieldType
+        };
+    }
+
+    /// <summary>
+    /// Whether local <paramref name="index"/> holds the instance: Release copies a state machine's &lt;&gt;4__this into
+    /// a local of MoveNext's own (<c>ldarg.0; ldfld &lt;&gt;4__this; stloc.N</c>) and reads the instance's fields off it.
+    /// True only when every store to the local is that copy.
+    /// </summary>
+    private static bool HoldsTheInstance(MethodDefinition method, int index)
+    {
+        var stored = false;
+        foreach (var instruction in method.Body.Instructions)
+        {
+            if (!IsStloc(instruction, out var local) || local != index)
+                continue;
+            if (instruction.Previous is not { OpCode.Code: Code.Ldfld, Operand: FieldReference field } load ||
+                !IsThisProxy(field) || load.Previous?.OpCode != OpCodes.Ldarg_0)
+                return false;
+            stored = true;
+        }
+        return stored;
+    }
+
+    /// <summary>
+    /// Leaves out of an assertion's values, and out of what is carried across its await, every variable whose loads would
+    /// read one type's field off another (#213), whichever arm captured it.
+    /// </summary>
+    internal static void DropWhatCannotBeLoaded(MethodDefinition method, AssertionStatement assertion)
+    {
+        foreach (var unloadable in assertion.CapturedVariables.Where(cv => !CanLoad(method, cv)).ToList())
+        {
+            assertion.CapturedVariables.Remove(unloadable);
+            assertion.CarriedAfter.Remove(unloadable);
+        }
+    }
+
+    /// <summary>
+    /// Whether the values block can load <paramref name="variable"/> with each field read off an object of the field's
+    /// class or of a class derived from it (#213): <c>StateField</c> off <c>ldarg.0</c>, which is the woven method's
+    /// own instance only in an instance method, and <c>ClosureField</c> off <c>StateField</c>'s value or the closure's
+    /// local. The runtime does not check the object of an <c>ldfld</c>, so a read of one type's field off another
+    /// takes whatever lies at its offset; the arms decide what to read, and this holds that none of them emits one.
+    /// </summary>
+    private static bool CanLoad(MethodDefinition method, CapturedVariable variable)
+    {
+        if (variable.ClosureField != null && variable.ClosureLocalIndex >= 0)
+            return IsFieldAccessibleOnType(variable.ClosureField, method.Body.Variables[variable.ClosureLocalIndex].VariableType);
+        if (variable.StateField == null)
+            return true;
+        return method.HasThis && IsFieldAccessibleOnType(variable.StateField, method.DeclaringType) &&
+               (variable.ClosureField == null || IsFieldAccessibleOnType(variable.ClosureField, variable.StateField.FieldType));
     }
 
     /// <summary>
@@ -3303,6 +3317,7 @@ public class AssertionWeaver
         var body = method.Body;
         var module = method.Module;
         var capture = assertion.ArgumentCapture;
+        DropWhatCannotBeLoaded(method, assertion);
         var hasValues = assertion.CapturedVariables.Count > 0 || capture != null;
 
         // Expression string and file/line for tracking. The file is the PDB's name for the document, as the compiler

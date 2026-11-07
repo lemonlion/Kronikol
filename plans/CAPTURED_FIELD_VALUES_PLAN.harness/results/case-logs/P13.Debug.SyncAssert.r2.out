@@ -1,0 +1,4 @@
+ENTER P13|Debug|SyncAssert
+RESULT P13|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+DONE P13|Debug|SyncAssert
+ALLDONE P13

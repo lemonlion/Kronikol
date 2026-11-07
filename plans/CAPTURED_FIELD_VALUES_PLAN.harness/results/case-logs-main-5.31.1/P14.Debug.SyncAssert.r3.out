@@ -1,0 +1,4 @@
+ENTER P14|Debug|SyncAssert
+RESULT P14|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+DONE P14|Debug|SyncAssert
+ALLDONE P14

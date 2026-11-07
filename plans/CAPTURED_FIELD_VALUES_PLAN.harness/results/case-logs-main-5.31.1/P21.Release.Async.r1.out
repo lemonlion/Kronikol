@@ -1,0 +1,4 @@
+ENTER P21|Release|Async
+RESULT P21|Release|Async :: unwoven=nothing :: woven=nothing :: note=PASS [(await Task.FromResult(2)) should be '2']
+DONE P21|Release|Async
+ALLDONE P21

@@ -1,0 +1,372 @@
+=================== run 1 of 3: xunit3-5.31.3-local.213b Debug all (2026-11-07T14:15:22Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:01.44]   Discovering: XunitV3Repro
+[xUnit.net 00:00:01.65]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:01.84]   Starting:    XunitV3Repro
+[xUnit.net 00:00:02.73]   Finished:    XunitV3Repro (ID = '02278748fd875f6589f6d503b5c393141c1c19f7cb6a3de77014d65fb2381e4b')
+  Passed WeaveRepro.OrdinaryFieldControlTests.Ordinary_field_control [204 ms]
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [3 ms]
+  Passed WeaveRepro.PrimaryConstructorParameterTests.Issue_second_test_verbatim [1 ms]
+  Passed WeaveRepro.SixParametersTests.Six_parameters_lambda_reads_the_sixth [1 ms]
+  Passed WeaveRepro.SyncMethodControlTests.Sync_method_control [< 1 ms]
+  Passed WeaveRepro.ParametersAndValueFieldsTests.Parameters_and_value_fields [1 ms]
+  Passed WeaveRepro.OneParameterTests.One_parameter [1 ms]
+
+Test Run Successful.
+Total tests: 7
+     Passed: 7
+ Total time: 3.5660 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass      0s     0 calls  Issue first shape
+s1    pass      0s     0 calls  One parameter
+s2    pass    0.2s     0 calls  Ordinary field control
+s3    pass      0s     0 calls  Parameters and value fields
+s4    pass      0s     0 calls  Issue second test verbatim
+s5    pass      0s     0 calls  Six parameters lambda reads the sixth
+s6    pass      0s     0 calls  Sync method control
+7 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0s
+s0/d0  2 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+--- s1
+s1  One Parameter Tests › One parameter  [Passed]  0s
+s1/d0  2 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+note s1/d0/nN for one in full
+--- s1/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s1/d0/n1 in full
+✓ Exception should not be null
+--- s2
+s2  Ordinary Field Control Tests › Ordinary field control  [Passed]  0.2s
+s2/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s2/d0/nN for one in full
+--- s2/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s2/d0/n1 in full
+✓ Exception should not be null
+--- s2/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s3
+s3  Parameters And Value Fields Tests › Parameters and value fields  [Passed]  0s
+s3/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s3/d0/nN for one in full
+--- s3/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s3/d0/n1 in full
+✓ Exception should not be null
+--- s3/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s4
+s4  Primary Constructor Parameter Tests › Issue second test verbatim  [Passed]  0s
+s4/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s4/d0/nN for one in full
+--- s4/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s4/d0/n1 in full
+✓ Exception should not be null
+--- s4/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s5
+s5  Six Parameters Tests › Six parameters lambda reads the sixth  [Passed]  0s
+s5/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s5/d0/nN for one in full
+--- s5/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s5/d0/n1 in full
+✓ Exception should not be null
+--- s5/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s6
+s6  Sync Method Control Tests › Sync method control  [Passed]  0s
+s6/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s6/d0/nN for one in full
+--- s6/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s6/d0/n1 in full
+✓ Exception should not be null
+--- s6/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 2 of 3: xunit3-5.31.3-local.213b Debug all (2026-11-07T14:15:46Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.19]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.42]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.64]   Starting:    XunitV3Repro
+[xUnit.net 00:00:01.32]   Finished:    XunitV3Repro (ID = '02278748fd875f6589f6d503b5c393141c1c19f7cb6a3de77014d65fb2381e4b')
+  Passed WeaveRepro.OrdinaryFieldControlTests.Ordinary_field_control [74 ms]
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [5 ms]
+  Passed WeaveRepro.PrimaryConstructorParameterTests.Issue_second_test_verbatim [1 ms]
+  Passed WeaveRepro.SixParametersTests.Six_parameters_lambda_reads_the_sixth [1 ms]
+  Passed WeaveRepro.SyncMethodControlTests.Sync_method_control [1 ms]
+  Passed WeaveRepro.ParametersAndValueFieldsTests.Parameters_and_value_fields [1 ms]
+  Passed WeaveRepro.OneParameterTests.One_parameter [1 ms]
+
+Test Run Successful.
+Total tests: 7
+     Passed: 7
+ Total time: 1.8770 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.01s     0 calls  Issue first shape
+s1    pass      0s     0 calls  One parameter
+s2    pass   0.07s     0 calls  Ordinary field control
+s3    pass      0s     0 calls  Parameters and value fields
+s4    pass      0s     0 calls  Issue second test verbatim
+s5    pass      0s     0 calls  Six parameters lambda reads the sixth
+s6    pass      0s     0 calls  Sync method control
+7 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.01s
+s0/d0  2 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+--- s1
+s1  One Parameter Tests › One parameter  [Passed]  0s
+s1/d0  2 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+note s1/d0/nN for one in full
+--- s1/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s1/d0/n1 in full
+✓ Exception should not be null
+--- s2
+s2  Ordinary Field Control Tests › Ordinary field control  [Passed]  0.07s
+s2/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s2/d0/nN for one in full
+--- s2/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s2/d0/n1 in full
+✓ Exception should not be null
+--- s2/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s3
+s3  Parameters And Value Fields Tests › Parameters and value fields  [Passed]  0s
+s3/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s3/d0/nN for one in full
+--- s3/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s3/d0/n1 in full
+✓ Exception should not be null
+--- s3/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s4
+s4  Primary Constructor Parameter Tests › Issue second test verbatim  [Passed]  0s
+s4/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s4/d0/nN for one in full
+--- s4/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s4/d0/n1 in full
+✓ Exception should not be null
+--- s4/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s5
+s5  Six Parameters Tests › Six parameters lambda reads the sixth  [Passed]  0s
+s5/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s5/d0/nN for one in full
+--- s5/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s5/d0/n1 in full
+✓ Exception should not be null
+--- s5/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s6
+s6  Sync Method Control Tests › Sync method control  [Passed]  0s
+s6/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s6/d0/nN for one in full
+--- s6/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s6/d0/n1 in full
+✓ Exception should not be null
+--- s6/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 3 of 3: xunit3-5.31.3-local.213b Debug all (2026-11-07T14:16:07Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.17]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.37]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.56]   Starting:    XunitV3Repro
+[xUnit.net 00:00:01.22]   Finished:    XunitV3Repro (ID = '02278748fd875f6589f6d503b5c393141c1c19f7cb6a3de77014d65fb2381e4b')
+  Passed WeaveRepro.OrdinaryFieldControlTests.Ordinary_field_control [81 ms]
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [5 ms]
+  Passed WeaveRepro.PrimaryConstructorParameterTests.Issue_second_test_verbatim [2 ms]
+  Passed WeaveRepro.SixParametersTests.Six_parameters_lambda_reads_the_sixth [2 ms]
+  Passed WeaveRepro.SyncMethodControlTests.Sync_method_control [1 ms]
+  Passed WeaveRepro.ParametersAndValueFieldsTests.Parameters_and_value_fields [1 ms]
+  Passed WeaveRepro.OneParameterTests.One_parameter [1 ms]
+
+Test Run Successful.
+Total tests: 7
+     Passed: 7
+ Total time: 1.7112 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.01s     0 calls  Issue first shape
+s1    pass      0s     0 calls  One parameter
+s2    pass   0.08s     0 calls  Ordinary field control
+s3    pass      0s     0 calls  Parameters and value fields
+s4    pass      0s     0 calls  Issue second test verbatim
+s5    pass      0s     0 calls  Six parameters lambda reads the sixth
+s6    pass      0s     0 calls  Sync method control
+7 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.01s
+s0/d0  2 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+--- s1
+s1  One Parameter Tests › One parameter  [Passed]  0s
+s1/d0  2 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+note s1/d0/nN for one in full
+--- s1/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s1/d0/n1 in full
+✓ Exception should not be null
+--- s2
+s2  Ordinary Field Control Tests › Ordinary field control  [Passed]  0.08s
+s2/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s2/d0/nN for one in full
+--- s2/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s2/d0/n1 in full
+✓ Exception should not be null
+--- s2/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s3
+s3  Parameters And Value Fields Tests › Parameters and value fields  [Passed]  0s
+s3/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s3/d0/nN for one in full
+--- s3/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s3/d0/n1 in full
+✓ Exception should not be null
+--- s3/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s4
+s4  Primary Constructor Parameter Tests › Issue second test verbatim  [Passed]  0s
+s4/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s4/d0/nN for one in full
+--- s4/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s4/d0/n1 in full
+✓ Exception should not be null
+--- s4/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s5
+s5  Six Parameters Tests › Six parameters lambda reads the sixth  [Passed]  0s
+s5/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s5/d0/nN for one in full
+--- s5/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s5/d0/n1 in full
+✓ Exception should not be null
+--- s5/d0/n2 in full
+✓ (first, second) should not be (null, null)
+--- s6
+s6  Sync Method Control Tests › Sync method control  [Passed]  0s
+s6/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s6/d0/nN for one in full
+--- s6/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s6/d0/n1 in full
+✓ Exception should not be null
+--- s6/d0/n2 in full
+✓ (first, second) should not be (null, null)

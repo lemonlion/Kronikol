@@ -1,0 +1,6 @@
+ENTER P23|ReleaseDebugPlus|InAnAsyncClosure
+RESULT P23|ReleaseDebugPlus|InAnAsyncClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P23|ReleaseDebugPlus|InAnAsyncClosure :: (no values call recorded)
+DONE P23|ReleaseDebugPlus|InAnAsyncClosure
+TYPES P23|ReleaseDebugPlus|InAnAsyncClosure :: (no values call recorded)
+ALLDONE P23

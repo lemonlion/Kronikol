@@ -1,0 +1,6 @@
+ENTER P22b|Release|AssertionPasses
+RESULT P22b|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+VALUES P22b|Release|AssertionPasses :: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+DONE P22b|Release|AssertionPasses
+TYPES P22b|Release|AssertionPasses :: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+ALLDONE P22b

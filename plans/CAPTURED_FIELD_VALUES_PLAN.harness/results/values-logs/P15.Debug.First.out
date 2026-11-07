@@ -1,0 +1,6 @@
+ENTER P15|Debug|First
+RESULT P15|Debug|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P15|Debug|First :: [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2], _harness = Harness(c-harness) [c._harness]
+DONE P15|Debug|First
+TYPES P15|Debug|First :: [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2], _harness = Harness(c-harness) [c._harness]
+ALLDONE P15

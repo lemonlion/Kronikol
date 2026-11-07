@@ -1,0 +1,4 @@
+== Debug: woven 26, ILVerify errors added 2
+   IL: Pc/<Async_lambda_this_only>d__7.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Proto213_Debug]Pc+<Async_lambda_this_only>d__7', Expected ref '[Proto213_Debug]Pc')
+   IL: Pc/<Async_lambda_with_local>d__8.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 338, Found ref '[Proto213_Debug]Pc+<Async_lambda_with_local>d__8', Expected ref '[Proto213_Debug]Pc')
+-- Pc.Async_lambda_this_only: starting

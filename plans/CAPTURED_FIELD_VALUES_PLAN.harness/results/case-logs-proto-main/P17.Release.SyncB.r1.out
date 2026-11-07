@@ -1,0 +1,4 @@
+ENTER P17|Release|SyncB
+RESULT P17|Release|SyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+DONE P17|Release|SyncB
+ALLDONE P17

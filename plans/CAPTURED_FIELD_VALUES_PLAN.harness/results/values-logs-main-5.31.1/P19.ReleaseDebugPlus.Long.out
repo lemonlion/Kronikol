@@ -1,0 +1,6 @@
+ENTER P19|ReleaseDebugPlus|Long
+RESULT P19|ReleaseDebugPlus|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('2354189201424') ]]
+VALUES P19|ReleaseDebugPlus|Long :: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 2354189201424
+DONE P19|ReleaseDebugPlus|Long
+TYPES P19|ReleaseDebugPlus|Long :: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 2354189201424
+ALLDONE P19

@@ -1,0 +1,6 @@
+ENTER P14|Release|SyncAssert
+RESULT P14|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P14|Release|SyncAssert :: (no values call recorded)
+DONE P14|Release|SyncAssert
+TYPES P14|Release|SyncAssert :: (no values call recorded)
+ALLDONE P14

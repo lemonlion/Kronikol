@@ -1,0 +1,22 @@
+Weaver suite on the #213 prototype (CAPTURED_FIELD_VALUES_PLAN 4.1 a to e)
+==========================================================================
+
+Worktree: C:/Code/Kronikol-213p, branch proto/213-receiver-rule on e4a1c82a (5.27.2), checked out with LF endings.
+The prototype is ../prototype.patch (src/ only). Windows 11 x64, SDK 10.0.300, 2026-10-29.
+
+Command:  dotnet test tests/Kronikol.Tests.AssertionTracking -f net10.0   (with a TRX logger)
+          No probe or scratch file was in the test project for this run.
+
+Result:   Passed 1039, Failed 0, Skipped 28, Total 1067 (3 m 28 s).
+
+Baseline: 5.27.2 itself, the same command in the same worktree before any change (its build copied aside and run
+          from the copy): Passed 1039, Failed 0, Skipped 28, Total 1067 (3 m 50 s). This matches
+          baseline-5.27.2.txt (1039 / 0 / 28 / 1067, run in C:/Code/Kronikol-213).
+
+Per test: the two TRX files hold the same 1067 tests, with the same outcome for each (no test is in one run only, and
+          no outcome differs).
+
+Failures: none, so none to investigate.
+
+Skips:    all 28 are CrossSdkWeaverTests.Net11_* ("Assert.Skip: .NET 11 preview SDK not installed"): an environment
+          skip, the same 28 as at 5.27.2.

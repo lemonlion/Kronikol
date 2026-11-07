@@ -1,0 +1,111 @@
+=================== run 1 of 3: xunit3-values-5.27.2 Release ParametersAndValueFieldsTestsValues (2026-10-29T09:22:40Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.ParametersAndValueFieldsTestsValues.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3-Values\bin\Release\net10.0\XunitV3ValuesProbe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.53]   Discovering: XunitV3ValuesProbe
+[xUnit.net 00:00:01.05]   Discovered:  XunitV3ValuesProbe
+[xUnit.net 00:00:01.59]   Starting:    XunitV3ValuesProbe
+[xUnit.net 00:00:02.99]   Finished:    XunitV3ValuesProbe (ID = '1efd1035ab331baa7973911b4df91252ff1b14a81ed527a4ccd3460972d3103a')
+  Passed WeaveRepro.ParametersAndValueFieldsTestsValues.Parameters_and_value_fields [199 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 4.4855 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.19s     0 calls  Parameters and value fields
+1 scenarios
+--- s0
+s0  Parameters And Value Fields Tests Values › Parameters and value fields  [Passed]  0.19s
+s0/d0  4 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        69 B  ✓ Third should satisfy all conditions [ h => GC.KeepAlive('null') ]
+n2        32 B  ✓ Exception should not be null
+n3        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Third should satisfy all conditions [ h => GC.KeepAlive('null') ]
+--- s0/d0/n2 in full
+✓ Exception should not be null
+--- s0/d0/n3 in full
+✓ (first, second) should not be (null, null)
+=================== run 2 of 3: xunit3-values-5.27.2 Release ParametersAndValueFieldsTestsValues (2026-10-29T09:22:55Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.ParametersAndValueFieldsTestsValues.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3-Values\bin\Release\net10.0\XunitV3ValuesProbe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.63]   Discovering: XunitV3ValuesProbe
+[xUnit.net 00:00:01.23]   Discovered:  XunitV3ValuesProbe
+[xUnit.net 00:00:01.81]   Starting:    XunitV3ValuesProbe
+[xUnit.net 00:00:03.47]   Finished:    XunitV3ValuesProbe (ID = '1efd1035ab331baa7973911b4df91252ff1b14a81ed527a4ccd3460972d3103a')
+  Passed WeaveRepro.ParametersAndValueFieldsTestsValues.Parameters_and_value_fields [218 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 4.7684 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.21s     0 calls  Parameters and value fields
+1 scenarios
+--- s0
+s0  Parameters And Value Fields Tests Values › Parameters and value fields  [Passed]  0.21s
+s0/d0  4 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        69 B  ✓ Third should satisfy all conditions [ h => GC.KeepAlive('null') ]
+n2        32 B  ✓ Exception should not be null
+n3        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Third should satisfy all conditions [ h => GC.KeepAlive('null') ]
+--- s0/d0/n2 in full
+✓ Exception should not be null
+--- s0/d0/n3 in full
+✓ (first, second) should not be (null, null)
+=================== run 3 of 3: xunit3-values-5.27.2 Release ParametersAndValueFieldsTestsValues (2026-10-29T09:23:13Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.ParametersAndValueFieldsTestsValues.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3-Values\bin\Release\net10.0\XunitV3ValuesProbe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.51]   Discovering: XunitV3ValuesProbe
+[xUnit.net 00:00:01.01]   Discovered:  XunitV3ValuesProbe
+[xUnit.net 00:00:01.48]   Starting:    XunitV3ValuesProbe
+[xUnit.net 00:00:02.86]   Finished:    XunitV3ValuesProbe (ID = '1efd1035ab331baa7973911b4df91252ff1b14a81ed527a4ccd3460972d3103a')
+  Passed WeaveRepro.ParametersAndValueFieldsTestsValues.Parameters_and_value_fields [182 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 4.0580 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.17s     0 calls  Parameters and value fields
+1 scenarios
+--- s0
+s0  Parameters And Value Fields Tests Values › Parameters and value fields  [Passed]  0.17s
+s0/d0  4 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        69 B  ✓ Third should satisfy all conditions [ h => GC.KeepAlive('null') ]
+n2        32 B  ✓ Exception should not be null
+n3        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Third should satisfy all conditions [ h => GC.KeepAlive('null') ]
+--- s0/d0/n2 in full
+✓ Exception should not be null
+--- s0/d0/n3 in full
+✓ (first, second) should not be (null, null)

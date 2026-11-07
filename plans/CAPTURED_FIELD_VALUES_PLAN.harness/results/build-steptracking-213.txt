@@ -1,0 +1,19 @@
+  Determining projects to restore...
+  Restored C:\Code\Kronikol-213r\src\Kronikol.AssertionTracking\Kronikol.AssertionTracking.csproj (in 313 ms).
+  Restored C:\Code\Kronikol-213r\src\Kronikol.StepTracking\Kronikol.StepTracking.csproj (in 313 ms).
+  Restored C:\Code\Kronikol-213r\tests\Kronikol.Tests.StepTracking\Kronikol.Tests.StepTracking.csproj (in 519 ms).
+  1 of 4 projects are up-to-date for restore.
+  Kronikol.AssertionTracking -> C:\Code\Kronikol-213r\src\Kronikol.AssertionTracking\bin\Debug\netstandard2.0\Kronikol.AssertionTracking.dll
+  Kronikol.StepTracking -> C:\Code\Kronikol-213r\src\Kronikol.StepTracking\bin\Debug\netstandard2.0\Kronikol.StepTracking.dll
+  Successfully created package 'C:\Code\Kronikol-213r\src\Kronikol.StepTracking\bin\Debug\Kronikol.StepTracking.5.31.1.nupkg'.
+  Kronikol -> C:\Code\Kronikol-213r\src\Kronikol\bin\Debug\net10.0\Kronikol.dll
+C:\Code\Kronikol-213r\tests\Kronikol.Tests.StepTracking\StepBuildTests.cs(53,15): warning CS8619: Nullability of reference types in value of type '(string, string)[]' doesn't match target type '(string?, string)[]'. [C:\Code\Kronikol-213r\tests\Kronikol.Tests.StepTracking\Kronikol.Tests.StepTracking.csproj]
+  Kronikol.Tests.StepTracking -> C:\Code\Kronikol-213r\tests\Kronikol.Tests.StepTracking\bin\Debug\net10.0\Kronikol.Tests.StepTracking.dll
+
+Build succeeded.
+
+C:\Code\Kronikol-213r\tests\Kronikol.Tests.StepTracking\StepBuildTests.cs(53,15): warning CS8619: Nullability of reference types in value of type '(string, string)[]' doesn't match target type '(string?, string)[]'. [C:\Code\Kronikol-213r\tests\Kronikol.Tests.StepTracking\Kronikol.Tests.StepTracking.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:17.18

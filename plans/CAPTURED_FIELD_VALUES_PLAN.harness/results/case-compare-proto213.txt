@@ -1,0 +1,366 @@
+Probe213 Case rounds: the #213 prototype against 5.27.2, case by case
+=====================================================================
+
+5.27.2:    results/case-5.27.2.txt as it stood at 09:24:36 (md5 51e8a55d): 96 R1 + 60 R2 + 60 R3 case lines, "ORCHESTRATION COMPLETE" present.
+prototype: results/case-proto213.txt (md5 7a0da33d): 96 R1 + 60 R2 + 60 R3 case lines, "ORCHESTRATION COMPLETE" present.
+           Run by a copy of probe/run-cases.sh (as at 09:12) that differs only in its paths: the worktree
+           C:/Code/Kronikol-213p (5.27.2 + prototype.patch), OUT case-proto213.txt, logs case-logs-proto213/. Probe:
+           Agent B's working copy of Probe213Tests.cs at 09:16:47 (md5 39a1d8db), whose Case fact runs as the
+           5.27.2 run's did when KRONIKOL_213_VALUES is unset (the runner never sets it).
+Both:      one case per process, through the test project's xUnit v3 executable; round 1 every case, rounds 2 and 3
+           the 16 shapes the static dive marks wrong (P1 P2 P6 P10 P13 P14 P15 P16 P12_*).
+
+Per case: each run's outcomes over its rounds, folded ("3x woven=ran note=PASS" = three rounds, woven run ended
+normally, one passing note), and whether the woven run ended as the unwoven one did in every round. "notes differ"
+lists the drawn note text where the two weavers drew different notes for the same case.
+
+5.27.2 file: 216 case lines, rounds present [1, 2, 3]
+prototype file: 216 case lines, rounds present [1, 2, 3]
+
+P10|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P10|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P10|Release|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P11|Debug|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P11|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P11|Release|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P12_1p_fields|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_1p_fields|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_1p_fields|Release|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_1p|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_1p|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_1p|Release|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_2p_fields|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_2p_fields|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_2p_fields|Release|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_2p|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_2p|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_2p|Release|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_4p_fields|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_4p_fields|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_4p_fields|Release|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_4p|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_4p|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_4p|Release|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_6p_fields|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_6p_fields|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_6p_fields|Release|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_6p|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_6p|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P12_6p|Release|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P13|Debug|AsyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P13|Debug|SyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P13|ReleaseDebugPlus|AsyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P13|ReleaseDebugPlus|SyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P13|Release|AsyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P13|Release|SyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P14|Debug|AsyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P14|Debug|SyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P14|ReleaseDebugPlus|AsyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P14|ReleaseDebugPlus|SyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P14|Release|AsyncAssert
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P14|Release|SyncAssert
+    5.27.2:    3x woven=NullReferenceException note=FAIL   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['FAIL [Should throw InvalidOperationException] msg=Object reference not set to an instance of an object.'] | prototype ['PASS [Should throw InvalidOperationException]']
+P15|Debug|First
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P15|Debug|Second
+    5.27.2:    3x woven=NullReferenceException note=FAIL   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['FAIL [Should throw InvalidOperationException] msg=Object reference not set to an instance of an object.'] | prototype ['PASS [Should throw InvalidOperationException]']
+P15|ReleaseDebugPlus|First
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P15|ReleaseDebugPlus|Second
+    5.27.2:    3x woven=NullReferenceException note=FAIL   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['FAIL [Should throw InvalidOperationException] msg=Object reference not set to an instance of an object.'] | prototype ['PASS [Should throw InvalidOperationException]']
+P15|Release|First
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P15|Release|Second
+    5.27.2:    3x woven=NullReferenceException note=FAIL   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['FAIL [Should throw InvalidOperationException] msg=Object reference not set to an instance of an object.'] | prototype ['PASS [Should throw InvalidOperationException]']
+P16|Debug|First
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P16|Debug|Second
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P16|ReleaseDebugPlus|First
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P16|ReleaseDebugPlus|Second
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P16|Release|First
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P16|Release|Second
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P17|Debug|AsyncA
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|Debug|AsyncB
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|Debug|SyncA
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|Debug|SyncB
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|ReleaseDebugPlus|AsyncA
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|ReleaseDebugPlus|AsyncB
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|ReleaseDebugPlus|SyncA
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|ReleaseDebugPlus|SyncB
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|Release|AsyncA
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|Release|AsyncB
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|Release|SyncA
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P17|Release|SyncB
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P1|Debug|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P1|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P1|Release|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P2|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P2|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P2|Release|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P3|Debug|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P3|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P3|Release|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P4|Debug|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P4|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P4|Release|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P5|Debug|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P5|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P5|Release|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS/PASS/PASS   woven==unwoven: True
+P6|Debug|AssertionPasses
+    5.27.2:    3x woven=ran note=PASS   woven==unwoven: True
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P6|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P6|Release|AssertionPasses
+    5.27.2:    3x HOST-CRASH AccessViolationException   woven==unwoven: False
+    prototype: 3x woven=ran note=PASS   woven==unwoven: True
+P7|Debug|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P7|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P7|Release|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P8|Debug|AsyncAssert
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]'] | prototype ["PASS [New List~<Harness> { expected } should contain [ x => x == 'Harness(expected)' ]]"]
+P8|Debug|SyncAssert
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]'] | prototype ["PASS [New List~<Harness> { expected } should contain [ x => x == 'Harness(expected)' ]]"]
+P8|ReleaseDebugPlus|AsyncAssert
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]'] | prototype ["PASS [New List~<Harness> { expected } should contain [ x => x == 'Harness(expected)' ]]"]
+P8|ReleaseDebugPlus|SyncAssert
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]'] | prototype ["PASS [New List~<Harness> { expected } should contain [ x => x == 'Harness(expected)' ]]"]
+P8|Release|AsyncAssert
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]'] | prototype ["PASS [New List~<Harness> { expected } should contain [ x => x == 'Harness(expected)' ]]"]
+P8|Release|SyncAssert
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+    notes differ: 5.27.2 ['PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]'] | prototype ["PASS [New List~<Harness> { expected } should contain [ x => x == 'Harness(expected)' ]]"]
+P9|Debug|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P9|ReleaseDebugPlus|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+P9|Release|AssertionPasses
+    5.27.2:    1x woven=ran note=PASS   woven==unwoven: True
+    prototype: 1x woven=ran note=PASS   woven==unwoven: True
+
+prototype cases where woven != unwoven in some round: none
+cases whose note text differs between 5.27.2 and the prototype (where both ran): P14|Release|SyncAssert, P15|Debug|Second, P15|ReleaseDebugPlus|Second, P15|Release|Second, P8|Debug|AsyncAssert, P8|Debug|SyncAssert, P8|ReleaseDebugPlus|AsyncAssert, P8|ReleaseDebugPlus|SyncAssert, P8|Release|AsyncAssert, P8|Release|SyncAssert
+
+Appendix: the values arrays of the cases that failed on 5.27.2 (ilspycmd 10.0.1 -il of each case's woven DLL)
+============================================================================================================
+5.27.2 builds are Agent B's case runs; prototype builds are this run's (told apart by time: Agent B's run ended
+09:24:36). [System.Private.CoreLib] dropped from type names.
+
+P1 Debug (5.27.2: HOST-CRASH, AccessViolationException in CastHelpers.StelemRef, 3 of 3 rounds)
+  5.27.2     IL_0101: ldarg.0
+             IL_0102: ldfld class Harness P1::'<third>P'                 <- a field of P1 read off the state machine
+             IL_0107: stelem.ref
+  prototype  IL_0101: ldarg.0
+             IL_0102: ldfld class P1 P1/'<AssertionPasses>d__5'::'<>4__this'
+             IL_0107: ldfld class Harness P1::'<third>P'
+             IL_010c: stelem.ref
+
+P12_6p_fields Release (5.27.2: HOST-CRASH in both Release builds of every P12 shape, 3 of 3 rounds)
+  5.27.2     IL_00f1: ldarg.0                                            <- the address of the state machine struct
+             IL_00f2: ldfld class Harness P12_6p_fields::'<p5>P'
+             IL_00f7: stelem.ref
+  prototype  IL_00f1: ldarg.0
+             IL_00f2: ldfld class P12_6p_fields P12_6p_fields/'<AssertionPasses>d__5'::'<>4__this'
+             IL_00f7: ldfld class Harness P12_6p_fields::'<p5>P'
+             IL_00fc: stelem.ref
+
+P14 Release SyncAssert (5.27.2: woven NullReferenceException, note FAIL, 3 of 3 rounds; unwoven ran)
+  5.27.2     names ["other"]; values:
+             IL_0036: ldarg.0                                            <- this, a P14
+             IL_0037: ldfld class P14 P14/'<>c__DisplayClass2_0'::other  <- the closure's field read off this
+             IL_003c: stelem.ref
+             A reading, not measured: the closure's one field and P14's first field (int _id = 1) share the first
+             slot, so the pointer-sized read gives 0x1; stelem.ref's type check reads through it and faults in the
+             null page, which the runtime raises as NullReferenceException inside the statement's try, so the note
+             records the weave's failure and the exception is rethrown.
+  prototype  no values array: Track::AssertionPassed(string, string, int32). The lambda reads other off its own
+             closure, which is not the instance (4.1 b), and plain Release keeps no closure local for the statement
+             to read it through. The label is the same (a delegate's values never appear in it).
+
+P15 Debug Second, static Second(int n, C c) (5.27.2: woven NullReferenceException in all three builds, 3 of 3)
+  5.27.2     names ["c", "_harness"]; values:
+             IL_002e: ldloc.0 ; IL_002f: ldfld class C P15/'<>c__DisplayClass1_0'::c ; stelem.ref
+             IL_0037: ldarg.0                                            <- in a static method: n, an int
+             IL_0038: ldfld class Harness C::_harness
+             IL_003d: stelem.ref
+  prototype  names ["c"]; values:
+             IL_0026: ldloc.0 ; IL_0027: ldfld class C P15/'<>c__DisplayClass1_0'::c ; IL_002c: stelem.ref
+             _harness is read off c in the lambda, not off this, and a static method holds no instance (4.1 b, c).

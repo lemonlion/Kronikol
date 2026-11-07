@@ -1,0 +1,4 @@
+ENTER P14|Release|AsyncAssert
+RESULT P14|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+DONE P14|Release|AsyncAssert
+ALLDONE P14

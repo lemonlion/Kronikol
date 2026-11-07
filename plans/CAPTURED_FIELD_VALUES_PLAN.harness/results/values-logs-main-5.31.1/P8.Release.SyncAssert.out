@@ -1,0 +1,6 @@
+ENTER P8|Release|SyncAssert
+RESULT P8|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+VALUES P8|Release|SyncAssert :: (no values call recorded)
+DONE P8|Release|SyncAssert
+TYPES P8|Release|SyncAssert :: (no values call recorded)
+ALLDONE P8

@@ -1,0 +1,6 @@
+ENTER P18|Debug|Parameter
+RESULT P18|Debug|Parameter :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetParameter()) should be expected]
+VALUES P18|Debug|Parameter :: (no values call recorded)
+DONE P18|Debug|Parameter
+TYPES P18|Debug|Parameter :: (no values call recorded)
+ALLDONE P18

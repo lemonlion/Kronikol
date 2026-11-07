@@ -1,0 +1,4 @@
+ENTER P23|ReleaseDebugPlus|InAnAsyncClosure
+RESULT P23|ReleaseDebugPlus|InAnAsyncClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+DONE P23|ReleaseDebugPlus|InAnAsyncClosure
+ALLDONE P23

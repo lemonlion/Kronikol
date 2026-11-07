@@ -1,0 +1,595 @@
+Test run for C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:01:22.79]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P1", build: Debug, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:23.22]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P1", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:23.58]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p_fields", build: Release, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P1", build: Debug, entry: "AssertionPasses") [418 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P1", build: ReleaseDebugPlus, entry: "AssertionPasses") [439 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p_fields", build: Release, entry: "AssertionPasses") [357 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p3 = Harness(p3) [the `p3` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:24.07]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P22b", build: Release, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P22b", build: Release, entry: "AssertionPasses") [486 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:26.06]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P10", build: Debug, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:26.48]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: Release, entry: "Long") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P10", build: Debug, entry: "AssertionPasses") [348 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       ["local = UNCREATED (not an object this run made)"]
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: Release, entry: "Long") [413 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "total = long 7"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:27.23]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P2", build: Release, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:27.55]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p", build: Release, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:27.96]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: Debug, entry: "Int") [FAIL]
+[xUnit.net 00:01:28.35]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P6", build: Release, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P2", build: Release, entry: "AssertionPasses") [363 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       ["cts = UNCREATED (not an object this run made)"]
+Not found: "handlers = Harness(handlers) [the `handlers` argum"···
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p", build: Release, entry: "AssertionPasses") [323 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p3 = Harness(p3) [the `p3` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: Debug, entry: "Int") [409 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "count = int 7"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P6", build: Release, entry: "AssertionPasses") [383 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "only = Harness(only) [the `only` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:28.69]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p", build: Debug, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p", build: Debug, entry: "AssertionPasses") [344 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p1 = Harness(p1) [the `p1` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:30.32]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p_fields", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:30.74]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: Debug, entry: "Long") [FAIL]
+[xUnit.net 00:01:31.12]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P23", build: ReleaseDebugPlus, entry: "InAClosure") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p_fields", build: ReleaseDebugPlus, entry: "AssertionPasses") [425 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p5 = Harness(p5) [the `p5` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: Debug, entry: "Long") [416 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "total = long 7"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P23", build: ReleaseDebugPlus, entry: "InAClosure") [379 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:31.51]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P1", build: Release, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:31.86]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p_fields", build: Debug, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:32.24]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: Release, entry: "Int") [FAIL]
+[xUnit.net 00:01:32.63]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P10", build: Release, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P1", build: Release, entry: "AssertionPasses") [395 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p_fields", build: Debug, entry: "AssertionPasses") [340 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p5 = Harness(p5) [the `p5` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: Release, entry: "Int") [385 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "count = int 7"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P10", build: Release, entry: "AssertionPasses") [380 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       ["local = UNCREATED (not an object this run made)"]
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:33.08]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p_fields", build: Release, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:33.50]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P23", build: Release, entry: "InAClosure") [FAIL]
+[xUnit.net 00:01:33.93]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P22b", build: Debug, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:34.35]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p", build: Release, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p_fields", build: Release, entry: "AssertionPasses") [452 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p0 = Harness(p0) [the `p0` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P23", build: Release, entry: "InAClosure") [416 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P22b", build: Debug, entry: "AssertionPasses") [429 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p", build: Release, entry: "AssertionPasses") [425 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p0 = Harness(p0) [the `p0` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:34.76]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p", build: Debug, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:35.24]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: ReleaseDebugPlus, entry: "Long") [FAIL]
+[xUnit.net 00:01:35.60]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p", build: Debug, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p", build: Debug, entry: "AssertionPasses") [406 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p3 = Harness(p3) [the `p3` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: ReleaseDebugPlus, entry: "Long") [475 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "total = long 7"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p", build: Debug, entry: "AssertionPasses") [355 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p0 = Harness(p0) [the `p0` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:36.00]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P22b", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:36.82]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p_fields", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:37.18]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P22b", build: ReleaseDebugPlus, entry: "AssertionPasses") [398 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p_fields", build: ReleaseDebugPlus, entry: "AssertionPasses") [332 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p3 = Harness(p3) [the `p3` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p", build: ReleaseDebugPlus, entry: "AssertionPasses") [359 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p0 = Harness(p0) [the `p0` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:37.61]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:37.95]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P6", build: Debug, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:38.46]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p_fields", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:38.91]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p_fields", build: Debug, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p", build: ReleaseDebugPlus, entry: "AssertionPasses") [423 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p5 = Harness(p5) [the `p5` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P6", build: Debug, entry: "AssertionPasses") [341 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "only = Harness(only) [the `only` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p_fields", build: ReleaseDebugPlus, entry: "AssertionPasses") [504 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p0 = Harness(p0) [the `p0` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p_fields", build: Debug, entry: "AssertionPasses") [449 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p3 = Harness(p3) [the `p3` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:39.30]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:39.67]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P10", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p", build: ReleaseDebugPlus, entry: "AssertionPasses") [389 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p1 = Harness(p1) [the `p1` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P10", build: ReleaseDebugPlus, entry: "AssertionPasses") [370 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       ["local = UNCREATED (not an object this run made)"]
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:41.34]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P2", build: Debug, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:41.78]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p_fields", build: Debug, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P2", build: Debug, entry: "AssertionPasses") [367 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       ["cts = UNCREATED (not an object this run made)"]
+Not found: "handlers = Harness(handlers) [the `handlers` argum"···
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_1p_fields", build: Debug, entry: "AssertionPasses") [440 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p0 = Harness(p0) [the `p0` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:42.14]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p_fields", build: Debug, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:42.53]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P2", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:42.91]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p_fields", build: Release, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:43.28]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p", build: Release, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p_fields", build: Debug, entry: "AssertionPasses") [356 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p1 = Harness(p1) [the `p1` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P2", build: ReleaseDebugPlus, entry: "AssertionPasses") [394 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       ["cts = UNCREATED (not an object this run made)"]
+Not found: "handlers = Harness(handlers) [the `handlers` argum"···
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p_fields", build: Release, entry: "AssertionPasses") [373 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p1 = Harness(p1) [the `p1` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p", build: Release, entry: "AssertionPasses") [376 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p1 = Harness(p1) [the `p1` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:43.83]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P6", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:44.40]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p", build: Release, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P6", build: ReleaseDebugPlus, entry: "AssertionPasses") [543 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "only = Harness(only) [the `only` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p", build: Release, entry: "AssertionPasses") [570 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p5 = Harness(p5) [the `p5` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:45.50]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: ReleaseDebugPlus, entry: "Int") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P19", build: ReleaseDebugPlus, entry: "Int") [489 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "count = int 7"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:46.86]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p", build: Debug, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:47.42]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p", build: Debug, entry: "AssertionPasses") [599 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p5 = Harness(p5) [the `p5` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_4p", build: ReleaseDebugPlus, entry: "AssertionPasses") [567 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p3 = Harness(p3) [the `p3` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:48.15]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p_fields", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+[xUnit.net 00:01:48.57]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P23", build: Debug, entry: "InAClosure") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_2p_fields", build: ReleaseDebugPlus, entry: "AssertionPasses") [716 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p1 = Harness(p1) [the `p1` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P23", build: Debug, entry: "InAClosure") [419 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "third = Harness(third) [the `third` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:01:49.72]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p_fields", build: Release, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(id: "P12_6p_fields", build: Release, entry: "AssertionPasses") [527 ms]
+  Error Message:
+   Assert.Contains() Failure: Item not found in set
+Set:       []
+Not found: "p5 = Harness(p5) [the `p5` argument]"
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1259
+   at InvokeStub_CapturedFieldValueTests.A_primary_constructors_parameter_is_recorded_as_its_own_argument(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:03:40.57]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P22b", build: ReleaseDebugPlus, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P22b", build: ReleaseDebugPlus, entry: "AssertionPasses") [355 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 57)
+Expected: ···"l satisfy [ x => GC.KeepAlive('Harness(third)') ]]"
+Actual:   ···"l satisfy [ x => GC.KeepAlive(third) ]]"
+                                            ↑ (pos 57)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1043
+   at InvokeStub_CapturedFieldValueTests.A_note_draws_the_value_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:03:41.94]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: Debug, entry: "Int") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: Debug, entry: "Int") [389 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                                       ↓ (pos 62)
+Expected: ···"tisfy all conditions [ h => GC.KeepAlive('7') ]]"
+Actual:   ···"tisfy all conditions [ h => GC.KeepAlive(count) ]]"
+                                                       ↑ (pos 62)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1043
+   at InvokeStub_CapturedFieldValueTests.A_note_draws_the_value_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:03:44.84]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P22b", build: Release, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P22b", build: Release, entry: "AssertionPasses") [301 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 57)
+Expected: ···"l satisfy [ x => GC.KeepAlive('Harness(third)') ]]"
+Actual:   ···"l satisfy [ x => GC.KeepAlive(third) ]]"
+                                            ↑ (pos 57)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1043
+   at InvokeStub_CapturedFieldValueTests.A_note_draws_the_value_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:03:46.10]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: ReleaseDebugPlus, entry: "Long") [FAIL]
+[xUnit.net 00:03:46.44]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P22b", build: Debug, entry: "AssertionPasses") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: ReleaseDebugPlus, entry: "Long") [302 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                                       ↓ (pos 62)
+Expected: ···"tisfy all conditions [ h => GC.KeepAlive('7') ]]"
+Actual:   ···"tisfy all conditions [ h => GC.KeepAlive(total) ]]"
+                                                       ↑ (pos 62)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1043
+   at InvokeStub_CapturedFieldValueTests.A_note_draws_the_value_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P22b", build: Debug, entry: "AssertionPasses") [341 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                            ↓ (pos 57)
+Expected: ···"l satisfy [ x => GC.KeepAlive('Harness(third)') ]]"
+Actual:   ···"l satisfy [ x => GC.KeepAlive(third) ]]"
+                                            ↑ (pos 57)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1043
+   at InvokeStub_CapturedFieldValueTests.A_note_draws_the_value_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:03:47.36]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: Release, entry: "Long") [FAIL]
+[xUnit.net 00:03:47.96]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: Release, entry: "Int") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: Release, entry: "Long") [310 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                                       ↓ (pos 62)
+Expected: ···"tisfy all conditions [ h => GC.KeepAlive('7') ]]"
+Actual:   ···"tisfy all conditions [ h => GC.KeepAlive(total) ]]"
+                                                       ↑ (pos 62)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1043
+   at InvokeStub_CapturedFieldValueTests.A_note_draws_the_value_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: Release, entry: "Int") [297 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                                       ↓ (pos 62)
+Expected: ···"tisfy all conditions [ h => GC.KeepAlive('7') ]]"
+Actual:   ···"tisfy all conditions [ h => GC.KeepAlive(count) ]]"
+                                                       ↑ (pos 62)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1043
+   at InvokeStub_CapturedFieldValueTests.A_note_draws_the_value_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:03:50.41]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: ReleaseDebugPlus, entry: "Int") [FAIL]
+[xUnit.net 00:03:50.72]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: Debug, entry: "Long") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: ReleaseDebugPlus, entry: "Int") [646 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                                       ↓ (pos 62)
+Expected: ···"tisfy all conditions [ h => GC.KeepAlive('7') ]]"
+Actual:   ···"tisfy all conditions [ h => GC.KeepAlive(count) ]]"
+                                                       ↑ (pos 62)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1043
+   at InvokeStub_CapturedFieldValueTests.A_note_draws_the_value_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(id: "P19", build: Debug, entry: "Long") [306 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                                       ↓ (pos 62)
+Expected: ···"tisfy all conditions [ h => GC.KeepAlive('7') ]]"
+Actual:   ···"tisfy all conditions [ h => GC.KeepAlive(total) ]]"
+                                                       ↑ (pos 62)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.A_note_draws_the_value_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1043
+   at InvokeStub_CapturedFieldValueTests.A_note_draws_the_value_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+WARNING: Overwriting results file: C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\results\mutations\mutant-M1\run.trx
+Results File: C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\results\mutations\mutant-M1\run.trx
+
+Failed!  - Failed:    57, Passed:   442, Skipped:     0, Total:   499, Duration: 3 m 51 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

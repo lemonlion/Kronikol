@@ -1,0 +1,4 @@
+ENTER P17|Debug|AsyncB
+RESULT P17|Debug|AsyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+DONE P17|Debug|AsyncB
+ALLDONE P17

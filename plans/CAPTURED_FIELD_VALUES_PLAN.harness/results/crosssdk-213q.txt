@@ -1,0 +1,82 @@
+Test run for C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:04.41]     Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "9.0", tfm: "net9.0", configuration: "Debug") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "9.0", tfm: "net9.0", configuration: "Debug") [3 s]
+  Error Message:
+   The weave wrote IL that does not verify (Net9PrimaryConstructorDebug.dll):
+  FirstSteps/<AssertionPasses>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 338, Found ref '[WeaverFixture]FirstSteps+<AssertionPasses>d__4', Expected ref '[WeaverFixture]FirstSteps')
+  SecondSteps/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[WeaverFixture]SecondSteps+<AssertionPasses>d__5', Expected ref '[WeaverFixture]SecondSteps')
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.WovenIl.AssertNoNewErrors(Byte[] unwoven, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 42
+   at Kronikol.Tests.AssertionTracking.WovenIl.Weave(AssertionWeaver weaver, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 33
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.AssertWeaveAndExecute(String name, String source, String sdkVersion, String tfm, String configuration, String[] methodNames, Boolean expectAllPass, String dotnetPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 869
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(String sdk, String tfm, String configuration) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 283
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:06.33]     Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "10.0", tfm: "net10.0", configuration: "Debug") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "10.0", tfm: "net10.0", configuration: "Debug") [1 s]
+  Error Message:
+   The weave wrote IL that does not verify (Net10PrimaryConstructorDebug.dll):
+  FirstSteps/<AssertionPasses>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 338, Found ref '[WeaverFixture]FirstSteps+<AssertionPasses>d__4', Expected ref '[WeaverFixture]FirstSteps')
+  SecondSteps/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[WeaverFixture]SecondSteps+<AssertionPasses>d__5', Expected ref '[WeaverFixture]SecondSteps')
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.WovenIl.AssertNoNewErrors(Byte[] unwoven, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 42
+   at Kronikol.Tests.AssertionTracking.WovenIl.Weave(AssertionWeaver weaver, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 33
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.AssertWeaveAndExecute(String name, String source, String sdkVersion, String tfm, String configuration, String[] methodNames, Boolean expectAllPass, String dotnetPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 869
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(String sdk, String tfm, String configuration) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 283
+   at InvokeStub_CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:09.07]     Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "8.0", tfm: "net8.0", configuration: "Debug") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "8.0", tfm: "net8.0", configuration: "Debug") [2 s]
+  Error Message:
+   The weave wrote IL that does not verify (Net8PrimaryConstructorDebug.dll):
+  FirstSteps/<AssertionPasses>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 338, Found ref '[WeaverFixture]FirstSteps+<AssertionPasses>d__4', Expected ref '[WeaverFixture]FirstSteps')
+  SecondSteps/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[WeaverFixture]SecondSteps+<AssertionPasses>d__5', Expected ref '[WeaverFixture]SecondSteps')
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.WovenIl.AssertNoNewErrors(Byte[] unwoven, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 42
+   at Kronikol.Tests.AssertionTracking.WovenIl.Weave(AssertionWeaver weaver, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 33
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.AssertWeaveAndExecute(String name, String source, String sdkVersion, String tfm, String configuration, String[] methodNames, Boolean expectAllPass, String dotnetPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 869
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(String sdk, String tfm, String configuration) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 283
+   at InvokeStub_CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:10.89]     Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "10.0", tfm: "net10.0", configuration: "Release") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "10.0", tfm: "net10.0", configuration: "Release") [1 s]
+  Error Message:
+   The weave wrote IL that does not verify (Net10PrimaryConstructorRelease.dll):
+  FirstSteps/<AssertionPasses>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 326, Found address of '[WeaverFixture]FirstSteps+<AssertionPasses>d__4', Expected ref '[WeaverFixture]FirstSteps')
+  SecondSteps/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[WeaverFixture]SecondSteps+<AssertionPasses>d__5', Expected ref '[WeaverFixture]SecondSteps')
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.WovenIl.AssertNoNewErrors(Byte[] unwoven, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 42
+   at Kronikol.Tests.AssertionTracking.WovenIl.Weave(AssertionWeaver weaver, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 33
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.AssertWeaveAndExecute(String name, String source, String sdkVersion, String tfm, String configuration, String[] methodNames, Boolean expectAllPass, String dotnetPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 869
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(String sdk, String tfm, String configuration) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 283
+   at InvokeStub_CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:12.98]     Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "8.0", tfm: "net8.0", configuration: "Release") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "8.0", tfm: "net8.0", configuration: "Release") [2 s]
+  Error Message:
+   The weave wrote IL that does not verify (Net8PrimaryConstructorRelease.dll):
+  FirstSteps/<AssertionPasses>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 326, Found address of '[WeaverFixture]FirstSteps+<AssertionPasses>d__4', Expected ref '[WeaverFixture]FirstSteps')
+  SecondSteps/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[WeaverFixture]SecondSteps+<AssertionPasses>d__5', Expected ref '[WeaverFixture]SecondSteps')
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.WovenIl.AssertNoNewErrors(Byte[] unwoven, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 42
+   at Kronikol.Tests.AssertionTracking.WovenIl.Weave(AssertionWeaver weaver, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 33
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.AssertWeaveAndExecute(String name, String source, String sdkVersion, String tfm, String configuration, String[] methodNames, Boolean expectAllPass, String dotnetPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 869
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(String sdk, String tfm, String configuration) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 283
+   at InvokeStub_CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:15.58]     Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "9.0", tfm: "net9.0", configuration: "Release") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(sdk: "9.0", tfm: "net9.0", configuration: "Release") [2 s]
+  Error Message:
+   The weave wrote IL that does not verify (Net9PrimaryConstructorRelease.dll):
+  FirstSteps/<AssertionPasses>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 326, Found address of '[WeaverFixture]FirstSteps+<AssertionPasses>d__4', Expected ref '[WeaverFixture]FirstSteps')
+  SecondSteps/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[WeaverFixture]SecondSteps+<AssertionPasses>d__5', Expected ref '[WeaverFixture]SecondSteps')
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.WovenIl.AssertNoNewErrors(Byte[] unwoven, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 42
+   at Kronikol.Tests.AssertionTracking.WovenIl.Weave(AssertionWeaver weaver, String assemblyPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\WovenIl.cs:line 33
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.AssertWeaveAndExecute(String name, String source, String sdkVersion, String tfm, String configuration, String[] methodNames, Boolean expectAllPass, String dotnetPath) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 869
+   at Kronikol.Tests.AssertionTracking.CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(String sdk, String tfm, String configuration) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CrossSdkWeaverTests.cs:line 283
+   at InvokeStub_CrossSdkWeaverTests.A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+
+Failed!  - Failed:     6, Passed:     0, Skipped:     0, Total:     6, Duration: 14 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

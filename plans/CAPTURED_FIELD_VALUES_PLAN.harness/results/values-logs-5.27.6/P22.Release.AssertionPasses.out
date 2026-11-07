@@ -1,0 +1,6 @@
+ENTER P22|Release|AssertionPasses
+RESULT P22|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+VALUES P22|Release|AssertionPasses :: (no values call recorded)
+DONE P22|Release|AssertionPasses
+TYPES P22|Release|AssertionPasses :: (no values call recorded)
+ALLDONE P22

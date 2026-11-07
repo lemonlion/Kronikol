@@ -1,0 +1,141 @@
+=================== run 1 of 3: xunit2-5.27.2 Release SixParametersTests (2026-10-29T08:38:30Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.SixParametersTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Release\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.07]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.10]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.12]   Starting:    XunitV2Repro
+Fatal error.
+System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+   at System.Object.GetType()
+   at Kronikol.Tracking.ChainValues.Keep(Kronikol.Tracking.AccessChain, Kronikol.Tracking.ChainRead, System.Func`3<System.Object,System.String,System.String>)
+   at Kronikol.Tracking.Track.ResolveVariableValues(System.String, System.String[], System.Object[])
+   at Kronikol.Tracking.Track.AssertionPassedWithValues(System.String, System.String[], System.Object[], System.String, Int32)
+   at WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext()
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecutionContextCallback(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext(System.Threading.Thread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext()
+   at System.Runtime.CompilerServices.YieldAwaitable+YieldAwaiter+<>c.<System.Runtime.CompilerServices.IStateMachineBoxAwareAwaiter.AwaitUnsafeOnCompleted>b__5_0(System.Object)
+   at Xunit.Sdk.AsyncTestSyncContext+<>c__DisplayClass7_0.<Post>b__0()
+   at Xunit.Sdk.XunitWorkerThread+<>c.<QueueUserWorkItem>b__5_0(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(System.Threading.Tasks.Task ByRef, System.Threading.Thread)
+   at System.Threading.Thread.StartCallback()
+The active test run was aborted. Reason: Test host process crashed : Fatal error.
+System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+   at System.Object.GetType()
+   at Kronikol.Tracking.ChainValues.Keep(Kronikol.Tracking.AccessChain, Kronikol.Tracking.ChainRead, System.Func`3<System.Object,System.String,System.String>)
+   at Kronikol.Tracking.Track.ResolveVariableValues(System.String, System.String[], System.Object[])
+   at Kronikol.Tracking.Track.AssertionPassedWithValues(System.String, System.String[], System.Object[], System.String, Int32)
+   at WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext()
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecutionContextCallback(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext(System.Threading.Thread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext()
+   at System.Runtime.CompilerServices.YieldAwaitable+YieldAwaiter+<>c.<System.Runtime.CompilerServices.IStateMachineBoxAwareAwaiter.AwaitUnsafeOnCompleted>b__5_0(System.Object)
+   at Xunit.Sdk.AsyncTestSyncContext+<>c__DisplayClass7_0.<Post>b__0()
+   at Xunit.Sdk.XunitWorkerThread+<>c.<QueueUserWorkItem>b__5_0(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(System.Threading.Tasks.Task ByRef, System.Threading.Thread)
+   at System.Threading.Thread.StartCallback()
+
+
+Test Run Aborted.
+exit code: 1
+report: none written
+=================== run 2 of 3: xunit2-5.27.2 Release SixParametersTests (2026-10-29T08:38:32Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.SixParametersTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Release\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.08]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.12]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.15]   Starting:    XunitV2Repro
+Fatal error.
+System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+   at System.Object.GetType()
+   at Kronikol.Tracking.ChainValues.Keep(Kronikol.Tracking.AccessChain, Kronikol.Tracking.ChainRead, System.Func`3<System.Object,System.String,System.String>)
+   at Kronikol.Tracking.Track.ResolveVariableValues(System.String, System.String[], System.Object[])
+   at Kronikol.Tracking.Track.AssertionPassedWithValues(System.String, System.String[], System.Object[], System.String, Int32)
+   at WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext()
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecutionContextCallback(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext(System.Threading.Thread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext()
+   at System.Runtime.CompilerServices.YieldAwaitable+YieldAwaiter+<>c.<System.Runtime.CompilerServices.IStateMachineBoxAwareAwaiter.AwaitUnsafeOnCompleted>b__5_0(System.Object)
+   at Xunit.Sdk.AsyncTestSyncContext+<>c__DisplayClass7_0.<Post>b__0()
+   at Xunit.Sdk.XunitWorkerThread+<>c.<QueueUserWorkItem>b__5_0(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(System.Threading.Tasks.Task ByRef, System.Threading.Thread)
+   at System.Threading.Thread.StartCallback()
+The active test run was aborted. Reason: Test host process crashed : Fatal error.
+System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+   at System.Object.GetType()
+   at Kronikol.Tracking.ChainValues.Keep(Kronikol.Tracking.AccessChain, Kronikol.Tracking.ChainRead, System.Func`3<System.Object,System.String,System.String>)
+   at Kronikol.Tracking.Track.ResolveVariableValues(System.String, System.String[], System.Object[])
+   at Kronikol.Tracking.Track.AssertionPassedWithValues(System.String, System.String[], System.Object[], System.String, Int32)
+   at WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext()
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecutionContextCallback(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext(System.Threading.Thread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext()
+   at System.Runtime.CompilerServices.YieldAwaitable+YieldAwaiter+<>c.<System.Runtime.CompilerServices.IStateMachineBoxAwareAwaiter.AwaitUnsafeOnCompleted>b__5_0(System.Object)
+   at Xunit.Sdk.AsyncTestSyncContext+<>c__DisplayClass7_0.<Post>b__0()
+   at Xunit.Sdk.XunitWorkerThread+<>c.<QueueUserWorkItem>b__5_0(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(System.Threading.Tasks.Task ByRef, System.Threading.Thread)
+   at System.Threading.Thread.StartCallback()
+
+
+Test Run Aborted.
+exit code: 1
+report: none written
+=================== run 3 of 3: xunit2-5.27.2 Release SixParametersTests (2026-10-29T08:38:34Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.SixParametersTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Release\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.11]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.14]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.17]   Starting:    XunitV2Repro
+Fatal error.
+System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+   at System.Object.GetType()
+   at Kronikol.Tracking.ChainValues.Keep(Kronikol.Tracking.AccessChain, Kronikol.Tracking.ChainRead, System.Func`3<System.Object,System.String,System.String>)
+   at Kronikol.Tracking.Track.ResolveVariableValues(System.String, System.String[], System.Object[])
+   at Kronikol.Tracking.Track.AssertionPassedWithValues(System.String, System.String[], System.Object[], System.String, Int32)
+   at WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext()
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecutionContextCallback(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext(System.Threading.Thread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext()
+   at System.Runtime.CompilerServices.YieldAwaitable+YieldAwaiter+<>c.<System.Runtime.CompilerServices.IStateMachineBoxAwareAwaiter.AwaitUnsafeOnCompleted>b__5_0(System.Object)
+   at Xunit.Sdk.AsyncTestSyncContext+<>c__DisplayClass7_0.<Post>b__0()
+   at Xunit.Sdk.XunitWorkerThread+<>c.<QueueUserWorkItem>b__5_0(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(System.Threading.Tasks.Task ByRef, System.Threading.Thread)
+   at System.Threading.Thread.StartCallback()
+The active test run was aborted. Reason: Test host process crashed : Fatal error.
+System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+   at System.Object.GetType()
+   at Kronikol.Tracking.ChainValues.Keep(Kronikol.Tracking.AccessChain, Kronikol.Tracking.ChainRead, System.Func`3<System.Object,System.String,System.String>)
+   at Kronikol.Tracking.Track.ResolveVariableValues(System.String, System.String[], System.Object[])
+   at Kronikol.Tracking.Track.AssertionPassedWithValues(System.String, System.String[], System.Object[], System.String, Int32)
+   at WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext()
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecutionContextCallback(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext(System.Threading.Thread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV2Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext()
+   at System.Runtime.CompilerServices.YieldAwaitable+YieldAwaiter+<>c.<System.Runtime.CompilerServices.IStateMachineBoxAwareAwaiter.AwaitUnsafeOnCompleted>b__5_0(System.Object)
+   at Xunit.Sdk.AsyncTestSyncContext+<>c__DisplayClass7_0.<Post>b__0()
+   at Xunit.Sdk.XunitWorkerThread+<>c.<QueueUserWorkItem>b__5_0(System.Object)
+   at System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(System.Threading.Tasks.Task ByRef, System.Threading.Thread)
+   at System.Threading.Thread.StartCallback()
+
+
+Test Run Aborted.
+exit code: 1
+report: none written

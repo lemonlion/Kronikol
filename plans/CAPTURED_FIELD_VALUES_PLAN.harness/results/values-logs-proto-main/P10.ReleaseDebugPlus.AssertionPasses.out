@@ -1,0 +1,6 @@
+ENTER P10|ReleaseDebugPlus|AssertionPasses
+RESULT P10|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P10|ReleaseDebugPlus|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = Harness(third) [the `third` argument]
+DONE P10|ReleaseDebugPlus|AssertionPasses
+TYPES P10|ReleaseDebugPlus|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED Harness: Harness(local), third = Harness(third) [the `third` argument]
+ALLDONE P10

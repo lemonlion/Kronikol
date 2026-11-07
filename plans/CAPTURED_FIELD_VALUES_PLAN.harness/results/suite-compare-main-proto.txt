@@ -1,0 +1,2 @@
+A: {'Passed': 1603, 'NotExecuted': 28} B: {'Passed': 1603, 'NotExecuted': 28}
+only in A: 0, only in B: 0, outcome differs: 0

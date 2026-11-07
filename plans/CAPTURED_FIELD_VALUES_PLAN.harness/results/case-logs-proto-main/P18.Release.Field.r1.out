@@ -1,0 +1,4 @@
+ENTER P18|Release|Field
+RESULT P18|Release|Field :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetField()) should be 'Harness(field)']
+DONE P18|Release|Field
+ALLDONE P18

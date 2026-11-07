@@ -1,0 +1,6 @@
+ENTER P17|ReleaseDebugPlus|AsyncB
+RESULT P17|ReleaseDebugPlus|AsyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+VALUES P17|ReleaseDebugPlus|AsyncB :: [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), other._id = int 2
+DONE P17|ReleaseDebugPlus|AsyncB
+TYPES P17|ReleaseDebugPlus|AsyncB :: [2.ShouldBe(other._id)] other = UNCREATED P17: P17, other._id = int 2
+ALLDONE P17

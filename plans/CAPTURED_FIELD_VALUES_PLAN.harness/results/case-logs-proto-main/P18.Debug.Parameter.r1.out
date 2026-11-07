@@ -1,0 +1,4 @@
+ENTER P18|Debug|Parameter
+RESULT P18|Debug|Parameter :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetParameter()) should be 'Harness(expected)']
+DONE P18|Debug|Parameter
+ALLDONE P18

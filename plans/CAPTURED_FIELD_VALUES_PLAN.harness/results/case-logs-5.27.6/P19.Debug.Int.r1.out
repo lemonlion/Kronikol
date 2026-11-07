@@ -1,0 +1,4 @@
+ENTER P19|Debug|Int
+RESULT P19|Debug|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('369301480') ]]
+DONE P19|Debug|Int
+ALLDONE P19

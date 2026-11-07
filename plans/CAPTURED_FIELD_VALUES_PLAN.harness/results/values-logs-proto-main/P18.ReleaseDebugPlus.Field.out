@@ -1,0 +1,6 @@
+ENTER P18|ReleaseDebugPlus|Field
+RESULT P18|ReleaseDebugPlus|Field :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetField()) should be 'Harness(field)']
+VALUES P18|ReleaseDebugPlus|Field :: [(await GetField()).ShouldBe(_field)] _field = UNCREATED (not an object this run made)
+DONE P18|ReleaseDebugPlus|Field
+TYPES P18|ReleaseDebugPlus|Field :: [(await GetField()).ShouldBe(_field)] _field = UNCREATED Harness: Harness(field)
+ALLDONE P18

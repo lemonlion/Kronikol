@@ -1,0 +1,41 @@
+Test run for C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:02:47.44]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(build: Debug) [FAIL]
+[xUnit.net 00:02:47.92]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(build: ReleaseDebugPlus) [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(build: Debug) [523 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                       ↓ (pos 1981)
+Expected: ···"itions [ v => v.ShouldBe('1' + '0') ]\nClosures.Asy"···
+Actual:   ···"itions [ v => v.ShouldBe(expected + '0') ]\nClosure"···
+                                       ↑ (pos 1981)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(BuildConfiguration build) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1126
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(build: ReleaseDebugPlus) [484 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                       ↓ (pos 1981)
+Expected: ···"itions [ v => v.ShouldBe('1' + '0') ]\nClosures.Asy"···
+Actual:   ···"itions [ v => v.ShouldBe(expected + '0') ]\nClosure"···
+                                       ↑ (pos 1981)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(BuildConfiguration build) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1126
+   at InvokeStub_CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:02:48.35]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(build: Release) [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(build: Release) [426 ms]
+  Error Message:
+   Assert.Equal() Failure: Strings differ
+                                       ↓ (pos 1981)
+Expected: ···"itions [ v => v.ShouldBe('1' + '0') ]\nClosures.Asy"···
+Actual:   ···"itions [ v => v.ShouldBe(expected + '0') ]\nClosure"···
+                                       ↑ (pos 1981)
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(BuildConfiguration build) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1126
+   at InvokeStub_CapturedFieldValueTests.The_scratch_cases_run_and_draw_what_their_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithOneArg(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+Results File: C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\results\mutations\mutant-M14\run.trx
+
+Failed!  - Failed:     3, Passed:   496, Skipped:     0, Total:   499, Duration: 2 m 47 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

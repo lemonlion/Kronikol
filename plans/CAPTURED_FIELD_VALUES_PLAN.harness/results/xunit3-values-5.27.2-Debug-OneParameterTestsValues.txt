@@ -1,0 +1,102 @@
+=================== run 1 of 3: xunit3-values-5.27.2 Debug OneParameterTestsValues (2026-10-29T09:24:18Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OneParameterTestsValues.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3-Values\bin\Debug\net10.0\XunitV3ValuesProbe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.59]   Discovering: XunitV3ValuesProbe
+[xUnit.net 00:00:01.17]   Discovered:  XunitV3ValuesProbe
+[xUnit.net 00:00:01.71]   Starting:    XunitV3ValuesProbe
+[xUnit.net 00:00:03.21]   Finished:    XunitV3ValuesProbe (ID = 'e7665b302e0e3bc76e3b9238d05ccb3bf1e765e3618850fdda96d89ab8a5f9ed')
+  Passed WeaveRepro.OneParameterTestsValues.One_parameter [173 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 4.3998 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.17s     0 calls  One parameter
+1 scenarios
+--- s0
+s0  One Parameter Tests Values › One parameter  [Passed]  0.17s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1       101 B  ✓ Third should satisfy all conditions [ h => GC.KeepAlive('the OneParameterTestsValues ins…
+n2        32 B  ✓ Exception should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Third should satisfy all conditions [ h => GC.KeepAlive('the OneParameterTestsValues instance') ]
+--- s0/d0/n2 in full
+✓ Exception should not be null
+=================== run 2 of 3: xunit3-values-5.27.2 Debug OneParameterTestsValues (2026-10-29T09:24:35Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OneParameterTestsValues.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3-Values\bin\Debug\net10.0\XunitV3ValuesProbe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.36]   Discovering: XunitV3ValuesProbe
+[xUnit.net 00:00:00.83]   Discovered:  XunitV3ValuesProbe
+[xUnit.net 00:00:01.30]   Starting:    XunitV3ValuesProbe
+[xUnit.net 00:00:02.46]   Finished:    XunitV3ValuesProbe (ID = 'e7665b302e0e3bc76e3b9238d05ccb3bf1e765e3618850fdda96d89ab8a5f9ed')
+  Passed WeaveRepro.OneParameterTestsValues.One_parameter [137 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 3.3595 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.13s     0 calls  One parameter
+1 scenarios
+--- s0
+s0  One Parameter Tests Values › One parameter  [Passed]  0.13s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1       101 B  ✓ Third should satisfy all conditions [ h => GC.KeepAlive('the OneParameterTestsValues ins…
+n2        32 B  ✓ Exception should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Third should satisfy all conditions [ h => GC.KeepAlive('the OneParameterTestsValues instance') ]
+--- s0/d0/n2 in full
+✓ Exception should not be null
+=================== run 3 of 3: xunit3-values-5.27.2 Debug OneParameterTestsValues (2026-10-29T09:24:47Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OneParameterTestsValues.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3-Values\bin\Debug\net10.0\XunitV3ValuesProbe.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.26]   Discovering: XunitV3ValuesProbe
+[xUnit.net 00:00:00.68]   Discovered:  XunitV3ValuesProbe
+[xUnit.net 00:00:00.99]   Starting:    XunitV3ValuesProbe
+  Passed WeaveRepro.OneParameterTestsValues.One_parameter [116 ms]
+[xUnit.net 00:00:01.94]   Finished:    XunitV3ValuesProbe (ID = 'e7665b302e0e3bc76e3b9238d05ccb3bf1e765e3618850fdda96d89ab8a5f9ed')
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 2.6244 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.11s     0 calls  One parameter
+1 scenarios
+--- s0
+s0  One Parameter Tests Values › One parameter  [Passed]  0.11s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1       101 B  ✓ Third should satisfy all conditions [ h => GC.KeepAlive('the OneParameterTestsValues ins…
+n2        32 B  ✓ Exception should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Third should satisfy all conditions [ h => GC.KeepAlive('the OneParameterTestsValues instance') ]
+--- s0/d0/n2 in full
+✓ Exception should not be null

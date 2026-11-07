@@ -1,0 +1,217 @@
+cases: 130 vs 130
+== P10|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = 
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = 
+== P10|ReleaseDebugPlus|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = 
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = 
+== P10|Release|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = 
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = 
+== P12_1p_fields|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = the test instance (P12_1p_fields)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = Harness(p0) [the `p0` argument]
+== P12_1p_fields|ReleaseDebugPlus|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = Harness(p0) [the `p0` argument]
+== P12_1p_fields|Release|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = Harness(p0) [the `p0` argument]
+== P12_1p|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = the test instance (P12_1p)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = Harness(p0) [the `p0` argument]
+== P12_1p|ReleaseDebugPlus|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = Harness(p0) [the `p0` argument]
+== P12_1p|Release|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = Harness(p0) [the `p0` argument]
+== P12_2p_fields|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = the test instance (P12_2p_fields)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = Harness(p1) [the `p1` argument]
+== P12_2p_fields|ReleaseDebugPlus|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = Harness(p1) [the `p1` argument]
+== P12_2p_fields|Release|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = Harness(p1) [the `p1` argument]
+== P12_2p|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = the test instance (P12_2p)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = Harness(p1) [the `p1` argument]
+== P12_2p|ReleaseDebugPlus|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = Harness(p1) [the `p1` argument]
+== P12_2p|Release|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = Harness(p1) [the `p1` argument]
+== P12_4p_fields|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = the test instance (P12_4p_fields)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = Harness(p3) [the `p3` argument]
+== P12_4p_fields|ReleaseDebugPlus|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = Harness(p3) [the `p3` argument]
+== P12_4p_fields|Release|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = Harness(p3) [the `p3` argument]
+== P12_4p|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = the test instance (P12_4p)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = Harness(p3) [the `p3` argument]
+== P12_4p|ReleaseDebugPlus|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = Harness(p3) [the `p3` argument]
+== P12_4p|Release|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = Harness(p3) [the `p3` argument]
+== P12_6p_fields|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = the test instance (P12_6p_fields)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = Harness(p5) [the `p5` argument]
+== P12_6p_fields|ReleaseDebugPlus|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = Harness(p5) [the `p5` argument]
+== P12_6p_fields|Release|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = Harness(p5) [the `p5` argument]
+== P12_6p|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = the test instance (P12_6p)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = Harness(p5) [the `p5` argument]
+== P12_6p|ReleaseDebugPlus|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = Harness(p5) [the `p5` argument]
+== P12_6p|Release|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = Harness(p5) [the `p5` argument]
+== P13|Debug|AsyncAssert
+   A: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made), _id = int 1
+   B: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made)
+== P13|Debug|SyncAssert
+   A: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made), _id = int 1
+   B: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made)
+== P13|ReleaseDebugPlus|SyncAssert
+   A: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made), _id = int 1
+   B: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made)
+== P13|Release|SyncAssert
+   A: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made), _id = int 1
+   B: [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made)
+== P17|ReleaseDebugPlus|AsyncB
+   A: [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), _id = int 1, other._id = int 2
+   B: [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), other._id = int 2
+== P17|Release|AsyncB
+   A: [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), _id = int 1, other._id = int 2
+   B: [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), other._id = int 2
+== P18|Debug|Parameter
+   A: (no values call recorded)
+   B: [(await GetParameter()).ShouldBe(expected)] expected = Harness(expected) [the `expected` argument]
+== P18|ReleaseDebugPlus|Parameter
+   A: (no values call recorded)
+   B: [(await GetParameter()).ShouldBe(expected)] expected = Harness(expected) [the `expected` argument]
+== P18|Release|Parameter
+   A: (no values call recorded)
+   B: [(await GetParameter()).ShouldBe(expected)] expected = Harness(expected) [the `expected` argument]
+== P19|Debug|Int
+   A: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int -1684314640
+   B: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 7
+== P19|Debug|Long
+   A: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 4294967295
+   B: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 7
+== P19|ReleaseDebugPlus|Int
+   A: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 0
+   B: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 7
+== P19|ReleaseDebugPlus|Long
+   A: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 2354189201424
+   B: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 7
+== P19|Release|Int
+   A: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 0
+   B: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 7
+== P19|Release|Long
+   A: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 1825127992360
+   B: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 7
+== P1|Debug|AssertionPasses
+   A: (none)
+   B: [_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = Harness(third) [the `third` argument]
+== P1|ReleaseDebugPlus|AssertionPasses
+   A: [_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = null
+   B: [_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = Harness(third) [the `third` argument]
+== P1|Release|AssertionPasses
+   A: [_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = null
+   B: [_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = Harness(third) [the `third` argument]
+== P20|Debug|LocalFunction
+   A: [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] actual = UNCREATED (not an object this run made), expected = UNCREATED (not an object this run 
+   B: [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] expected = UNCREATED (not an object this run made)
+== P20|ReleaseDebugPlus|LocalFunction
+   A: [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] actual = UNCREATED (not an object this run made), expected = UNCREATED (not an object this run 
+   B: [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] expected = UNCREATED (not an object this run made)
+== P20|Release|LocalFunction
+   A: [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] actual = UNCREATED (not an object this run made), expected = UNCREATED (not an object this run 
+   B: [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] expected = UNCREATED (not an object this run made)
+== P21|Debug|Sync
+   A: [2.ShouldBe(c._id)] _id = int 2, c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] _id = int 2, c._id = int 2
+   B: [2.ShouldBe(c._id)] c = C [the `c` argument, _id=2], c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] c = C [the `c` argument, _id=2], c._id = int 2
+== P21|ReleaseDebugPlus|Sync
+   A: [2.ShouldBe(c._id)] _id = int 2, c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] _id = int 2, c._id = int 2
+   B: [2.ShouldBe(c._id)] c = C [the `c` argument, _id=2], c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] c = C [the `c` argument, _id=2], c._id = int 2
+== P21|Release|Sync
+   A: [2.ShouldBe(c._id)] _id = int 2, c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] _id = int 2, c._id = int 2
+   B: [2.ShouldBe(c._id)] c = C [the `c` argument, _id=2], c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] c = C [the `c` argument, _id=2], c._id = int 2
+== P22b|Debug|AssertionPasses
+   A: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = the entry's own Task (its async state-machine box)
+   B: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = Harness(third) [the `third` argument]
+== P22b|ReleaseDebugPlus|AssertionPasses
+   A: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+   B: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = Harness(third) [the `third` argument]
+== P22b|Release|AssertionPasses
+   A: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+   B: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = Harness(third) [the `third` argument]
+== P23|Debug|InAClosure
+   A: [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+   B: [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = Harness(third) [the `third` argument]
+== P23|Debug|InAnAsyncClosure
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = UNCREATED (not an object this run made)
+   B: (no values call recorded)
+== P23|ReleaseDebugPlus|InAClosure
+   A: [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+   B: [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = Harness(third) [the `third` argument]
+== P23|ReleaseDebugPlus|InAnAsyncClosure
+   A: (none)
+   B: (no values call recorded)
+== P23|Release|InAClosure
+   A: [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+   B: [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = Harness(third) [the `third` argument]
+== P23|Release|InAnAsyncClosure
+   A: (none)
+   B: (no values call recorded)
+== P2|Debug|AssertionPasses
+   A: [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = the test instance (P2)
+   B: [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = Harness(handlers) [the `
+== P2|ReleaseDebugPlus|AssertionPasses
+   A: [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = UNCREATED (not an object
+   B: [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = Harness(handlers) [the `
+== P2|Release|AssertionPasses
+   A: [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = UNCREATED (not an object
+   B: [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = Harness(handlers) [the `
+== P6|Debug|AssertionPasses
+   A: [await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))] only = the test instance (P6)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))] only = Harness(only) [the `only` argument]
+== P6|ReleaseDebugPlus|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))] only = Harness(only) [the `only` argument]
+== P6|Release|AssertionPasses
+   A: (none)
+   B: [await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))] only = Harness(only) [the `only` argument]
+== P8|Debug|AsyncAssert
+   A: (no values call recorded)
+   B: [new List<Harness> { expected }.Should().Contain(x => x == expected)] expected = Harness(expected) [the `expected` argument]
+== P8|Debug|SyncAssert
+   A: (no values call recorded)
+   B: [new List<Harness> { expected }.Should().Contain(x => x == expected)] expected = Harness(expected) [the `expected` argument]
+== P8|ReleaseDebugPlus|AsyncAssert
+   A: (no values call recorded)
+   B: [new List<Harness> { expected }.Should().Contain(x => x == expected)] expected = Harness(expected) [the `expected` argument]
+== P8|ReleaseDebugPlus|SyncAssert
+   A: (no values call recorded)
+   B: [new List<Harness> { expected }.Should().Contain(x => x == expected)] expected = Harness(expected) [the `expected` argument]
+== P8|Release|AsyncAssert
+   A: (no values call recorded)
+   B: [new List<Harness> { expected }.Should().Contain(x => x == expected)] expected = Harness(expected) [the `expected` argument]
+== P8|Release|SyncAssert
+   A: (no values call recorded)
+   B: [new List<Harness> { expected }.Should().Contain(x => x == expected)] expected = Harness(expected) [the `expected` argument]

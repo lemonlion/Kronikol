@@ -1,0 +1,4 @@
+ENTER P11|Release|AssertionPasses
+RESULT P11|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException Body]
+DONE P11|Release|AssertionPasses
+ALLDONE P11

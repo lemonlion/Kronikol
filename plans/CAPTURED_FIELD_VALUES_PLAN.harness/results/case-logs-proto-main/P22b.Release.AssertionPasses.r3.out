@@ -1,0 +1,4 @@
+ENTER P22b|Release|AssertionPasses
+RESULT P22b|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('Harness(third)') ]]
+DONE P22b|Release|AssertionPasses
+ALLDONE P22b

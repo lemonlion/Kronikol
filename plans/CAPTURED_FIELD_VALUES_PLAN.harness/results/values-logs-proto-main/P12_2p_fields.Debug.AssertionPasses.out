@@ -1,0 +1,6 @@
+ENTER P12_2p_fields|Debug|AssertionPasses
+RESULT P12_2p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P12_2p_fields|Debug|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = Harness(p1) [the `p1` argument]
+DONE P12_2p_fields|Debug|AssertionPasses
+TYPES P12_2p_fields|Debug|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = Harness(p1) [the `p1` argument]
+ALLDONE P12_2p_fields

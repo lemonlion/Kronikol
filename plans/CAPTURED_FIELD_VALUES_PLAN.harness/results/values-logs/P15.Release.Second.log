@@ -1,0 +1,20 @@
+xUnit.net v3 In-Process Runner v3.2.2+728c1dce01 (64-bit .NET 10.0.11)
+  Discovering: Kronikol.Tests.AssertionTracking
+  Discovered:  Kronikol.Tests.AssertionTracking
+  Starting:    Kronikol.Tests.AssertionTracking
+    Kronikol.Tests.AssertionTracking.Probe213Tests.Case [FAIL]
+      System.NullReferenceException : Object reference not set to an instance of an object.
+      Stack Trace:
+        C:\Code\Kronikol-213\tests\Kronikol.Tests.AssertionTracking\Probe213Tests.cs(710,0): at Kronikol.Tests.AssertionTracking.Probe213Tests.<>c__DisplayClass14_1.<DescribeRecorded>b__1(String n, Int32 i)
+           at System.Linq.Enumerable.SelectIterator[TSource,TResult](IEnumerable`1 source, Func`3 selector)+MoveNext()
+           at System.String.Join(String separator, IEnumerable`1 values)
+        C:\Code\Kronikol-213\tests\Kronikol.Tests.AssertionTracking\Probe213Tests.cs(709,0): at Kronikol.Tests.AssertionTracking.Probe213Tests.<>c__DisplayClass14_0.<DescribeRecorded>b__0(ValueTuple`3 c)
+           at System.Linq.Enumerable.ListSelectIterator`2.MoveNext()
+           at System.String.Join(String separator, IEnumerable`1 values)
+        C:\Code\Kronikol-213\tests\Kronikol.Tests.AssertionTracking\Probe213Tests.cs(708,0): at Kronikol.Tests.AssertionTracking.Probe213Tests.DescribeRecorded(List`1 registry, Object entryTask, Boolean typesToo)
+        C:\Code\Kronikol-213\tests\Kronikol.Tests.AssertionTracking\Probe213Tests.cs(646,0): at Kronikol.Tests.AssertionTracking.Probe213Tests.Case()
+           at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+           at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Finished:    Kronikol.Tests.AssertionTracking (ID = '8a94f068f108e77cc6832346fa9ba9733e7e75fcbbba52f83a697f625b3c4008')
+=== TEST EXECUTION SUMMARY ===
+   Kronikol.Tests.AssertionTracking  Total: 1, Errors: 0, Failed: 1, Skipped: 0, Not Run: 0, Time: 2.215s

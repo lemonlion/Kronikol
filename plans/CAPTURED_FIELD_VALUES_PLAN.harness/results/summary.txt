@@ -1,0 +1,106 @@
+Issue #213: a primary constructor parameter's value read off the async state machine
+Measured 2026-10-29: Windows 11 x64, SDK 10.0.300, runtime 10.0.11, published packages from nuget.org (packages.txt).
+5.27.2 is the newest version nuget.org lists for Kronikol, Kronikol.xUnit2, Kronikol.xUnit3 and Kronikol.AssertionTracking.
+
+Builds (csc switches from build-*.txt):
+  xUnit v2 Release  /debug+ /debug:portable /optimize+   DebugSymbols=true (xunit.core 2.9.3's props): Roslyn debug-plus
+  xUnit v3 Release  /debug- /debug:portable /optimize+   DebugSymbols=false: plain Release
+  Debug, both       /debug+ /debug:portable /optimize-
+  The weave: "Instrumented 19 assertion(s) in 7 method(s)" in all four 5.27.2 builds; 5.12.0 (T1, T2): 5 in Release, 3 in Debug.
+
+Columns:
+  Outcome   the test alone (dotnet test -c <cfg> --no-build --filter FullyQualifiedName~WeaveRepro.<Class>.), 3 separate runs
+            after one build. crash = the host died with "Fatal error. System.AccessViolationException" in the frame named;
+            the runner says "The active test run was aborted. Reason: Test host process crashed : Fatal error." (xUnit v2) or
+            "Test process crashed with exit code -1073741819" (xUnit v3). Host exit code -1073741819 (0xC0000005) every
+            time (xUnit v2's read from --diag: crash-exit-codes.txt); dotnet test exits 1; no report is written.
+            StelemRef  = at System.Runtime.CompilerServices.CastHelpers.StelemRef < the test's MoveNext
+            GetType    = at System.Object.GetType < Kronikol.Tracking.ChainValues.Keep < Track.ResolveVariableValues
+                         < Track.AssertionPassedWithValues < the test's MoveNext
+  Value     what the notes show for the parameter. No T note can show it: the ThrowAsync note's label is "Should throw
+            <T>", which leaves the lambda out, and Kronikol substitutes a value only into an argument it prints. "probe" is
+            the value the same load read, printed by the probe statement V<n> adds after the ThrowAsync statement
+            (X.ShouldSatisfyAllConditions(h => GC.KeepAlive(X)), README.md); 'null' is the note's text for null. "shown as
+            written" = a value that does not print: not null, and neither the fixture nor the test class instance, both
+            of which print in the probes (ToString overrides).
+  IL load   how the values array loads the parameter (il-values-arrays.txt). "ldarg.0; ldfld <x>P" in MoveNext reads the
+            state machine (ldarg.0), not the instance; the compiler's own code reads the instance from <>4__this, hoisted
+            into ldloc.1 at the top of MoveNext. SM = state machine.
+
+Test  Fw  Build    Kronikol  Outcome (3 solo runs)  Value of the parameter in the note                IL load of the parameter
+----  --  -------  --------  ---------------------  ------------------------------------------------  -----------------------------------------------
+T1    v2  Release  5.27.2    passed 3/3             not shown; probe V1: 'null'                       ldarg.0; ldfld <third>P   (SM a struct, boxed)
+T1    v2  Debug    5.27.2    crash 3/3, StelemRef   none (no report)                                  ldarg.0; ldfld <third>P   (SM a class)
+T1    v3  Release  5.27.2    passed 3/3             not shown; probe V1: 'null'                       ldarg.0; ldfld <third>P
+T1    v3  Debug    5.27.2    crash 3/3, StelemRef   none (no report)                                  ldarg.0; ldfld <third>P
+T1    v2  Release  5.12.0    passed 3/3             not shown (label: the statement as written,       ldarg.0; ldfld <third>P   (as 5.27.2, as in the issue)
+                                                    third.Run(...) unsubstituted)
+T1    v2  Debug    5.12.0    passed 3/3             statement not woven: no note for it               (no values array: Debug weaves it without values, #212)
+T2    v2  Release  5.27.2    crash 3/3, StelemRef   none (no report)                                  cts: ldarg.0; ldfld <>8__1; ldfld cts (right);
+                             (SM never boxed: MoveNext under AsyncTaskMethodBuilder.Start)              handlers: ldarg.0; ldfld <handlers>P
+T2    v2  Debug    5.27.2    passed 3/3             not shown; probe V2: shown as written             as Release
+T2    v3  Release  5.27.2    crash 3/3, StelemRef   none (no report)                                  as Release v2
+T2    v3  Debug    5.27.2    passed 3/3             not shown; probe V2: shown as written             as Release v2
+T2    v2  Release  5.12.0    crash 3/3, StelemRef   none (no report)                                  as 5.27.2 (the issue's IL exactly)
+T2    v2  Debug    5.12.0    passed 3/3             statement not woven: no note for it               (no values array)
+T3    v2  Release  5.27.2    passed 3/3             not shown                                         ldarg.0; ldfld <third>P   (sync method: ldarg.0 is this, right)
+T3    v2  Debug    5.27.2    passed 3/3             not shown                                         as Release
+T3    v3  Release  5.27.2    passed 3/3             not shown                                         as Release v2
+T3    v3  Debug    5.27.2    passed 3/3             not shown                                         as Release v2
+T4    v2  Release  5.27.2    passed 3/3             not shown                                         ldarg.0; ldfld <>4__this; ldfld _third   (right)
+T4    v2  Debug    5.27.2    passed 3/3             not shown                                         as Release
+T4    v3  Release  5.27.2    passed 3/3             not shown                                         as Release v2
+T4    v3  Debug    5.27.2    passed 3/3             not shown                                         as Release v2
+T5    v2  Release  5.27.2    crash 3/3, StelemRef   none (no report)                                  ldarg.0; ldfld <third>P
+T5    v2  Debug    5.27.2    passed 3/3             not shown; probe V5: 'the OneParameterTestsValues  ldarg.0; ldfld <third>P
+                                                    instance' (the test class, not the Harness)
+T5    v3  Release  5.27.2    crash 3/3, StelemRef   none (no report)                                  ldarg.0; ldfld <third>P
+T5    v3  Debug    5.27.2    passed 3/3             not shown; probe V5: as v2 Debug                  ldarg.0; ldfld <third>P
+T6    v2  Release  5.27.2    crash 3/3, GetType     none (no report)                                  ldarg.0; ldfld <sixth>P
+T6    v2  Debug    5.27.2    passed 3/3             not shown; probe V6: 'null'                       ldarg.0; ldfld <sixth>P
+T6    v3  Release  5.27.2    crash 3/3, GetType     none (no report)                                  ldarg.0; ldfld <sixth>P
+T6    v3  Debug    5.27.2    passed 3/3             not shown; probe V6: 'null'                       ldarg.0; ldfld <sixth>P
+T7    v2  Release  5.27.2    passed 3/3             not shown; probe V7: 'null'                       ldarg.0; ldfld <third>P
+T7    v2  Debug    5.27.2    crash 3/3, StelemRef   none (no report)                                  ldarg.0; ldfld <third>P
+T7    v3  Release  5.27.2    passed 3/3             not shown; probe V7: 'null'                       ldarg.0; ldfld <third>P
+T7    v3  Debug    5.27.2    crash 3/3, StelemRef   none (no report)                                  ldarg.0; ldfld <third>P
+
+Every probe passed 3 of 3 with the value above in each run (xunit*-values-5.27.2-*.txt). Probes were run only where their T
+test survives: a probe's statement comes after the ThrowAsync statement its T test dies in.
+
+Whole-assembly runs (dotnet test -c <cfg> --no-build, 3 runs; *-all.txt). The first crash ends the run and its report:
+  v2  Release  5.27.2   crash 3/3: T6 GetType (runs 1, 2), T5 StelemRef (run 3); no test reported before it
+  v2  Debug    5.27.2   crash 3/3: T7 StelemRef; no test reported before it
+  v3  Release  5.27.2   crash 3/3: T6 GetType; no test reported before it
+  v3  Debug    5.27.2   crash 3/3: T7 StelemRef, after T4, T6, T2 and T3 passed; the runner then printed "Total tests: 4,
+                        Passed: 4" (and dotnet test exited 1)
+  v2  Release  5.12.0   crash 3/3: T2 StelemRef (T1 and T2 only)
+  v2  Debug    5.12.0   passed 3/3 (2 tests)
+
+Notes recorded (query.cs note <reports> s0/d0/nN; the same in every surviving run of a test):
+  T1, T3, T4, T6, T7    ✓ Should throw InvalidOperationException / ✓ Exception should not be null / ✓ (first, second) should not be (null, null)
+  T5                    ✓ Should throw InvalidOperationException / ✓ Exception should not be null
+  T2                    ✓ Service should not be null / ✓ Should throw OperationCanceledException
+  T1 5.12.0 Release     ✓ _exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException())) / then as above
+  T1 5.12.0 Debug       ✓ Exception should not be null / ✓ (first, second) should not be (null, null)
+  T2 5.12.0 Debug       ✓ Service should not be null
+  Probes                the T test's notes plus, after the ThrowAsync note, "✓ <X> should satisfy all conditions [ h => GC.KeepAlive(<value>) ]":
+                        'null' (V1 and V7 Release, V6 Debug), 'the OneParameterTestsValues instance' (V5 Debug), handlers as written (V2 Debug)
+
+Reading of the results (an inference from the IL, the outcomes and the probes; no field offset was measured):
+  ldfld of an instance field takes the field's offset in the test class (its place among the class's reference
+  fields, which the runtime lays out first, plus the instance's method table word) and applies it to whatever
+  ldarg.0 holds. Which test survives therefore depends only on the parameter's place among the class's fields and on
+  the state machine's own fields, the same under xUnit v2 and v3: all 14 T1-T7 pairs agree between the frameworks, and
+  T7's long and int, which come after the reference fields, leave <third>P where T1 has it (T7 behaves as T1 in every
+  build).
+  In Debug ldarg.0 is the state machine object, so the read is a field of that object (or what follows its last one):
+    T5 (<third>P, the 1st field)    the test class instance, which is the state machine's <>4__this (probe V5: proven)
+    T2 (<handlers>P, the 2nd)       an object that prints nothing; consistent with <>8__1, the display class (probe V2)
+    T1, T7 (<third>P, the 3rd)      not a pointer (consistent with <>1__state, an int): StelemRef faults
+    T6 (<sixth>P, the 6th)          null (probe V6)
+  In Release ldarg.0 points into the state machine struct, boxed after the Task.Yield (T1, T5, T6, T7: the crash stacks
+  run through AsyncStateMachineBox), still on the stack in T2 (its crash stack runs through AsyncTaskMethodBuilder.Start):
+    T1, T7 (the 3rd)                null (probes V1, V7)
+    T5 (the 1st), T2 (the 2nd)      not a pointer: StelemRef faults
+    T6 (the 6th)                    readable memory that is not an object: the store passes, GetType faults

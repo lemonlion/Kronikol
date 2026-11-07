@@ -1,0 +1,4 @@
+ENTER P22|ReleaseDebugPlus|AssertionPasses
+RESULT P22|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+DONE P22|ReleaseDebugPlus|AssertionPasses
+ALLDONE P22

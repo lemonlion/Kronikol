@@ -1,0 +1,1056 @@
+=== il/xunit2-5.27.5-Debug.il
+====================================================================================================
+WeaveRepro.PrimaryConstructorParameterTests/<Issue_second_test_verbatim>d__5::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.Harness WeaveRepro.PrimaryConstructorParameterTests::'<third>P'
+  IL_0107: stelem.ref
+  IL_0108: stloc.s 9
+  IL_010a: leave.s IL_0112
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_010c: pop
+  IL_010d: ldnull
+  IL_010e: stloc.s 9
+  IL_0110: leave.s IL_0112
+  } // end handler
+  
+  IL_0112: nop
+  IL_0113: ldarg.0
+  IL_0114: ldloca.s 4
+  IL_0116: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_011b: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.PrimaryConstructorParameterTests/'<Issue_second_test_verbatim>d__5'::'<>s__1'
+  IL_0120: ldarg.0
+  IL_0121: ldfld class WeaveRepro.PrimaryConstructorParameterTests WeaveRepro.PrimaryConstructorParameterTests/'<Issue_second_test_verbatim>d__5'::'<>4__this'
+  IL_0126: ldarg.0
+  IL_0127: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.PrimaryConstructorParameterTests/'<Issue_second_test_verbatim>d__5'::'<>s__1'
+  IL_012c: stfld class [System.Runtime]System.Exception WeaveRepro.PrimaryConstructorParameterTests::_exception
+  IL_0131: ldarg.0
+  IL_0132: ldnull
+  IL_0133: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.PrimaryConstructorParameterTests/'<Issue_second_test_verbatim>d__5'::'<>s__1'
+  IL_0138: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_013d: ldloc.s 8
+  IL_013f: ldloc.s 9
+  IL_0141: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T1_IssueSecondTestVerbatim.cs"
+  IL_0146: ldc.i4.s 16
+  IL_0148: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.PrimaryConstructorParameterTests::'<third>P'
+====================================================================================================
+WeaveRepro.IssueFirstShapeTests/<Issue_first_shape>d__6::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_017f: newarr [System.Runtime]System.Object
+  IL_0184: dup
+  IL_0185: ldc.i4.0
+  IL_0186: ldarg.0
+  IL_0187: ldfld class WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0' WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>8__1'
+  IL_018c: ldfld class [System.Runtime]System.Threading.CancellationTokenSource WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0'::cts
+  IL_0191: stelem.ref
+  IL_0192: dup
+  IL_0193: ldc.i4.1
+  IL_0194: ldarg.0
+  IL_0195: ldfld class WeaveRepro.Handlers WeaveRepro.IssueFirstShapeTests::'<handlers>P'
+  IL_019a: stelem.ref
+  IL_019b: stloc.s 6
+  IL_019d: leave.s IL_01a5
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_019f: pop
+  IL_01a0: ldnull
+  IL_01a1: stloc.s 6
+  IL_01a3: leave.s IL_01a5
+  } // end handler
+  
+  IL_01a5: nop
+  IL_01a6: ldarg.0
+  IL_01a7: ldloca.s 3
+  IL_01a9: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.OperationCanceledException>::GetResult()
+  IL_01ae: stfld class [System.Runtime]System.OperationCanceledException WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>s__2'
+  IL_01b3: ldarg.0
+  IL_01b4: ldfld class WeaveRepro.IssueFirstShapeTests WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>4__this'
+  IL_01b9: ldarg.0
+  IL_01ba: ldfld class [System.Runtime]System.OperationCanceledException WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>s__2'
+  IL_01bf: stfld class [System.Runtime]System.Exception WeaveRepro.IssueFirstShapeTests::_exception
+  IL_01c4: ldarg.0
+  IL_01c5: ldnull
+  IL_01c6: stfld class [System.Runtime]System.OperationCanceledException WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>s__2'
+  IL_01cb: ldstr "_exception = await Should.ThrowAsync<OperationCanceledException>( () => handlers.Run(nameof(Service), () => _service.Start(0, cts.Token)))"
+  IL_01d0: ldloc.s 5
+  IL_01d2: ldloc.s 6
+  IL_01d4: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T2_IssueFirstShape.cs"
+  IL_01d9: ldc.i4.s 21
+  IL_01db: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0' WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>8__1' ; ldfld class [System.Runtime]System.Threading.CancellationTokenSource WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0'::cts
+  element 1 (ldc.i4.1): ldarg.0 ; ldfld class WeaveRepro.Handlers WeaveRepro.IssueFirstShapeTests::'<handlers>P'
+====================================================================================================
+WeaveRepro.SyncMethodControlTests::Sync_method_control
+----------------------------------------------------------------------------------------------------
+  IL_0012: newarr [System.Runtime]System.Object
+  IL_0017: dup
+  IL_0018: ldc.i4.0
+  IL_0019: ldarg.0
+  IL_001a: ldfld class WeaveRepro.Harness WeaveRepro.SyncMethodControlTests::'<third>P'
+  IL_001f: stelem.ref
+  IL_0020: stloc.3
+  IL_0021: ldarg.0
+  IL_0022: ldarg.0
+  IL_0023: ldftn instance void WeaveRepro.SyncMethodControlTests::'<Sync_method_control>b__5_0'()
+  IL_0029: newobj instance void [System.Runtime]System.Action::.ctor(object, native int)
+  IL_002e: ldnull
+  IL_002f: call !!0 [Shouldly]Shouldly.Should::Throw<class [System.Runtime]System.InvalidOperationException>(class [System.Runtime]System.Action, string)
+  IL_0034: stfld class [System.Runtime]System.Exception WeaveRepro.SyncMethodControlTests::_exception
+  IL_0039: ldstr "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+  IL_003e: ldloc.2
+  IL_003f: ldloc.3
+  IL_0040: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T3_SyncMethodControl.cs"
+  IL_0045: ldc.i4.s 14
+  IL_0047: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.SyncMethodControlTests::'<third>P'
+====================================================================================================
+WeaveRepro.OrdinaryFieldControlTests/<Ordinary_field_control>d__5::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this'
+  IL_0107: ldfld class WeaveRepro.Harness WeaveRepro.OrdinaryFieldControlTests::_third
+  IL_010c: stelem.ref
+  IL_010d: stloc.s 9
+  IL_010f: leave.s IL_0117
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_0111: pop
+  IL_0112: ldnull
+  IL_0113: stloc.s 9
+  IL_0115: leave.s IL_0117
+  } // end handler
+  
+  IL_0117: nop
+  IL_0118: ldarg.0
+  IL_0119: ldloca.s 4
+  IL_011b: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_0120: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>s__1'
+  IL_0125: ldarg.0
+  IL_0126: ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this'
+  IL_012b: ldarg.0
+  IL_012c: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>s__1'
+  IL_0131: stfld class [System.Runtime]System.Exception WeaveRepro.OrdinaryFieldControlTests::_exception
+  IL_0136: ldarg.0
+  IL_0137: ldnull
+  IL_0138: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>s__1'
+  IL_013d: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+  IL_0142: ldloc.s 8
+  IL_0144: ldloc.s 9
+  IL_0146: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T4_OrdinaryFieldControl.cs"
+  IL_014b: ldc.i4.s 17
+  IL_014d: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this' ; ldfld class WeaveRepro.Harness WeaveRepro.OrdinaryFieldControlTests::_third
+====================================================================================================
+WeaveRepro.OneParameterTests/<One_parameter>d__3::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.Harness WeaveRepro.OneParameterTests::'<third>P'
+  IL_0107: stelem.ref
+  IL_0108: stloc.s 8
+  IL_010a: leave.s IL_0112
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_010c: pop
+  IL_010d: ldnull
+  IL_010e: stloc.s 8
+  IL_0110: leave.s IL_0112
+  } // end handler
+  
+  IL_0112: nop
+  IL_0113: ldarg.0
+  IL_0114: ldloca.s 4
+  IL_0116: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_011b: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OneParameterTests/'<One_parameter>d__3'::'<>s__1'
+  IL_0120: ldarg.0
+  IL_0121: ldfld class WeaveRepro.OneParameterTests WeaveRepro.OneParameterTests/'<One_parameter>d__3'::'<>4__this'
+  IL_0126: ldarg.0
+  IL_0127: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OneParameterTests/'<One_parameter>d__3'::'<>s__1'
+  IL_012c: stfld class [System.Runtime]System.Exception WeaveRepro.OneParameterTests::_exception
+  IL_0131: ldarg.0
+  IL_0132: ldnull
+  IL_0133: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OneParameterTests/'<One_parameter>d__3'::'<>s__1'
+  IL_0138: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_013d: ldloc.s 7
+  IL_013f: ldloc.s 8
+  IL_0141: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T5_OneParameter.cs"
+  IL_0146: ldc.i4.s 16
+  IL_0148: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.OneParameterTests::'<third>P'
+====================================================================================================
+WeaveRepro.SixParametersTests/<Six_parameters_lambda_reads_the_sixth>d__8::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.Harness WeaveRepro.SixParametersTests::'<sixth>P'
+  IL_0107: stelem.ref
+  IL_0108: stloc.s 9
+  IL_010a: leave.s IL_0112
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_010c: pop
+  IL_010d: ldnull
+  IL_010e: stloc.s 9
+  IL_0110: leave.s IL_0112
+  } // end handler
+  
+  IL_0112: nop
+  IL_0113: ldarg.0
+  IL_0114: ldloca.s 4
+  IL_0116: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_011b: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.SixParametersTests/'<Six_parameters_lambda_reads_the_sixth>d__8'::'<>s__1'
+  IL_0120: ldarg.0
+  IL_0121: ldfld class WeaveRepro.SixParametersTests WeaveRepro.SixParametersTests/'<Six_parameters_lambda_reads_the_sixth>d__8'::'<>4__this'
+  IL_0126: ldarg.0
+  IL_0127: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.SixParametersTests/'<Six_parameters_lambda_reads_the_sixth>d__8'::'<>s__1'
+  IL_012c: stfld class [System.Runtime]System.Exception WeaveRepro.SixParametersTests::_exception
+  IL_0131: ldarg.0
+  IL_0132: ldnull
+  IL_0133: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.SixParametersTests/'<Six_parameters_lambda_reads_the_sixth>d__8'::'<>s__1'
+  IL_0138: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => sixth.Run(() => throw new InvalidOperationException()))"
+  IL_013d: ldloc.s 8
+  IL_013f: ldloc.s 9
+  IL_0141: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T6_SixParameters.cs"
+  IL_0146: ldc.i4.s 17
+  IL_0148: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.SixParametersTests::'<sixth>P'
+====================================================================================================
+WeaveRepro.ParametersAndValueFieldsTests/<Parameters_and_value_fields>d__7::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.Harness WeaveRepro.ParametersAndValueFieldsTests::'<third>P'
+  IL_0107: stelem.ref
+  IL_0108: stloc.s 9
+  IL_010a: leave.s IL_0112
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_010c: pop
+  IL_010d: ldnull
+  IL_010e: stloc.s 9
+  IL_0110: leave.s IL_0112
+  } // end handler
+  
+  IL_0112: nop
+  IL_0113: ldarg.0
+  IL_0114: ldloca.s 4
+  IL_0116: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_011b: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.ParametersAndValueFieldsTests/'<Parameters_and_value_fields>d__7'::'<>s__1'
+  IL_0120: ldarg.0
+  IL_0121: ldfld class WeaveRepro.ParametersAndValueFieldsTests WeaveRepro.ParametersAndValueFieldsTests/'<Parameters_and_value_fields>d__7'::'<>4__this'
+  IL_0126: ldarg.0
+  IL_0127: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.ParametersAndValueFieldsTests/'<Parameters_and_value_fields>d__7'::'<>s__1'
+  IL_012c: stfld class [System.Runtime]System.Exception WeaveRepro.ParametersAndValueFieldsTests::_exception
+  IL_0131: ldarg.0
+  IL_0132: ldnull
+  IL_0133: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.ParametersAndValueFieldsTests/'<Parameters_and_value_fields>d__7'::'<>s__1'
+  IL_0138: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_013d: ldloc.s 8
+  IL_013f: ldloc.s 9
+  IL_0141: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T7_ParametersAndValueFields.cs"
+  IL_0146: ldc.i4.s 18
+  IL_0148: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.ParametersAndValueFieldsTests::'<third>P'
+====================================================================================================
+7 values array(s)
+=== il/xunit2-5.27.5-Release.il
+====================================================================================================
+WeaveRepro.PrimaryConstructorParameterTests/<Issue_second_test_verbatim>d__5::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.Harness WeaveRepro.PrimaryConstructorParameterTests::'<third>P'
+  IL_00f7: stelem.ref
+  IL_00f8: stloc.s 10
+  IL_00fa: leave.s IL_0102
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_00fc: pop
+  IL_00fd: ldnull
+  IL_00fe: stloc.s 10
+  IL_0100: leave.s IL_0102
+  } // end handler
+  
+  IL_0102: nop
+  IL_0103: ldloca.s 5
+  IL_0105: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010a: stloc.s 4
+  IL_010c: ldloc.1
+  IL_010d: ldloc.s 4
+  IL_010f: stfld class [System.Runtime]System.Exception WeaveRepro.PrimaryConstructorParameterTests::_exception
+  IL_0114: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_0119: ldloc.s 9
+  IL_011b: ldloc.s 10
+  IL_011d: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T1_IssueSecondTestVerbatim.cs"
+  IL_0122: ldc.i4.s 16
+  IL_0124: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.PrimaryConstructorParameterTests::'<third>P'
+====================================================================================================
+WeaveRepro.IssueFirstShapeTests/<Issue_first_shape>d__6::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_016e: newarr [System.Runtime]System.Object
+  IL_0173: dup
+  IL_0174: ldc.i4.0
+  IL_0175: ldarg.0
+  IL_0176: ldfld class WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0' WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>8__1'
+  IL_017b: ldfld class [System.Runtime]System.Threading.CancellationTokenSource WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0'::cts
+  IL_0180: stelem.ref
+  IL_0181: dup
+  IL_0182: ldc.i4.1
+  IL_0183: ldarg.0
+  IL_0184: ldfld class WeaveRepro.Handlers WeaveRepro.IssueFirstShapeTests::'<handlers>P'
+  IL_0189: stelem.ref
+  IL_018a: stloc.s 7
+  IL_018c: leave.s IL_0194
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_018e: pop
+  IL_018f: ldnull
+  IL_0190: stloc.s 7
+  IL_0192: leave.s IL_0194
+  } // end handler
+  
+  IL_0194: nop
+  IL_0195: ldloca.s 4
+  IL_0197: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.OperationCanceledException>::GetResult()
+  IL_019c: stloc.3
+  IL_019d: ldloc.1
+  IL_019e: ldloc.3
+  IL_019f: stfld class [System.Runtime]System.Exception WeaveRepro.IssueFirstShapeTests::_exception
+  IL_01a4: ldstr "_exception = await Should.ThrowAsync<OperationCanceledException>( () => handlers.Run(nameof(Service), () => _service.Start(0, cts.Token)))"
+  IL_01a9: ldloc.s 6
+  IL_01ab: ldloc.s 7
+  IL_01ad: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T2_IssueFirstShape.cs"
+  IL_01b2: ldc.i4.s 21
+  IL_01b4: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0' WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>8__1' ; ldfld class [System.Runtime]System.Threading.CancellationTokenSource WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0'::cts
+  element 1 (ldc.i4.1): ldarg.0 ; ldfld class WeaveRepro.Handlers WeaveRepro.IssueFirstShapeTests::'<handlers>P'
+====================================================================================================
+WeaveRepro.SyncMethodControlTests::Sync_method_control
+----------------------------------------------------------------------------------------------------
+  IL_0011: newarr [System.Runtime]System.Object
+  IL_0016: dup
+  IL_0017: ldc.i4.0
+  IL_0018: ldarg.0
+  IL_0019: ldfld class WeaveRepro.Harness WeaveRepro.SyncMethodControlTests::'<third>P'
+  IL_001e: stelem.ref
+  IL_001f: stloc.3
+  IL_0020: ldarg.0
+  IL_0021: ldarg.0
+  IL_0022: ldftn instance void WeaveRepro.SyncMethodControlTests::'<Sync_method_control>b__5_0'()
+  IL_0028: newobj instance void [System.Runtime]System.Action::.ctor(object, native int)
+  IL_002d: ldnull
+  IL_002e: call !!0 [Shouldly]Shouldly.Should::Throw<class [System.Runtime]System.InvalidOperationException>(class [System.Runtime]System.Action, string)
+  IL_0033: stfld class [System.Runtime]System.Exception WeaveRepro.SyncMethodControlTests::_exception
+  IL_0038: ldstr "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+  IL_003d: ldloc.2
+  IL_003e: ldloc.3
+  IL_003f: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T3_SyncMethodControl.cs"
+  IL_0044: ldc.i4.s 14
+  IL_0046: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.SyncMethodControlTests::'<third>P'
+====================================================================================================
+WeaveRepro.OrdinaryFieldControlTests/<Ordinary_field_control>d__5::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this'
+  IL_00f7: ldfld class WeaveRepro.Harness WeaveRepro.OrdinaryFieldControlTests::_third
+  IL_00fc: stelem.ref
+  IL_00fd: stloc.s 10
+  IL_00ff: leave.s IL_0107
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_0101: pop
+  IL_0102: ldnull
+  IL_0103: stloc.s 10
+  IL_0105: leave.s IL_0107
+  } // end handler
+  
+  IL_0107: nop
+  IL_0108: ldloca.s 5
+  IL_010a: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010f: stloc.s 4
+  IL_0111: ldloc.1
+  IL_0112: ldloc.s 4
+  IL_0114: stfld class [System.Runtime]System.Exception WeaveRepro.OrdinaryFieldControlTests::_exception
+  IL_0119: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+  IL_011e: ldloc.s 9
+  IL_0120: ldloc.s 10
+  IL_0122: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T4_OrdinaryFieldControl.cs"
+  IL_0127: ldc.i4.s 17
+  IL_0129: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this' ; ldfld class WeaveRepro.Harness WeaveRepro.OrdinaryFieldControlTests::_third
+====================================================================================================
+WeaveRepro.OneParameterTests/<One_parameter>d__3::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.Harness WeaveRepro.OneParameterTests::'<third>P'
+  IL_00f7: stelem.ref
+  IL_00f8: stloc.s 9
+  IL_00fa: leave.s IL_0102
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_00fc: pop
+  IL_00fd: ldnull
+  IL_00fe: stloc.s 9
+  IL_0100: leave.s IL_0102
+  } // end handler
+  
+  IL_0102: nop
+  IL_0103: ldloca.s 5
+  IL_0105: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010a: stloc.s 4
+  IL_010c: ldloc.1
+  IL_010d: ldloc.s 4
+  IL_010f: stfld class [System.Runtime]System.Exception WeaveRepro.OneParameterTests::_exception
+  IL_0114: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_0119: ldloc.s 8
+  IL_011b: ldloc.s 9
+  IL_011d: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T5_OneParameter.cs"
+  IL_0122: ldc.i4.s 16
+  IL_0124: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.OneParameterTests::'<third>P'
+====================================================================================================
+WeaveRepro.SixParametersTests/<Six_parameters_lambda_reads_the_sixth>d__8::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.Harness WeaveRepro.SixParametersTests::'<sixth>P'
+  IL_00f7: stelem.ref
+  IL_00f8: stloc.s 10
+  IL_00fa: leave.s IL_0102
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_00fc: pop
+  IL_00fd: ldnull
+  IL_00fe: stloc.s 10
+  IL_0100: leave.s IL_0102
+  } // end handler
+  
+  IL_0102: nop
+  IL_0103: ldloca.s 5
+  IL_0105: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010a: stloc.s 4
+  IL_010c: ldloc.1
+  IL_010d: ldloc.s 4
+  IL_010f: stfld class [System.Runtime]System.Exception WeaveRepro.SixParametersTests::_exception
+  IL_0114: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => sixth.Run(() => throw new InvalidOperationException()))"
+  IL_0119: ldloc.s 9
+  IL_011b: ldloc.s 10
+  IL_011d: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T6_SixParameters.cs"
+  IL_0122: ldc.i4.s 17
+  IL_0124: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.SixParametersTests::'<sixth>P'
+====================================================================================================
+WeaveRepro.ParametersAndValueFieldsTests/<Parameters_and_value_fields>d__7::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.Harness WeaveRepro.ParametersAndValueFieldsTests::'<third>P'
+  IL_00f7: stelem.ref
+  IL_00f8: stloc.s 10
+  IL_00fa: leave.s IL_0102
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_00fc: pop
+  IL_00fd: ldnull
+  IL_00fe: stloc.s 10
+  IL_0100: leave.s IL_0102
+  } // end handler
+  
+  IL_0102: nop
+  IL_0103: ldloca.s 5
+  IL_0105: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010a: stloc.s 4
+  IL_010c: ldloc.1
+  IL_010d: ldloc.s 4
+  IL_010f: stfld class [System.Runtime]System.Exception WeaveRepro.ParametersAndValueFieldsTests::_exception
+  IL_0114: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_0119: ldloc.s 9
+  IL_011b: ldloc.s 10
+  IL_011d: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV2\\T7_ParametersAndValueFields.cs"
+  IL_0122: ldc.i4.s 18
+  IL_0124: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.ParametersAndValueFieldsTests::'<third>P'
+====================================================================================================
+7 values array(s)
+=== il/xunit3-5.27.5-Debug.il
+====================================================================================================
+WeaveRepro.PrimaryConstructorParameterTests/<Issue_second_test_verbatim>d__5::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.Harness WeaveRepro.PrimaryConstructorParameterTests::'<third>P'
+  IL_0107: stelem.ref
+  IL_0108: stloc.s 9
+  IL_010a: leave.s IL_0112
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_010c: pop
+  IL_010d: ldnull
+  IL_010e: stloc.s 9
+  IL_0110: leave.s IL_0112
+  } // end handler
+  
+  IL_0112: nop
+  IL_0113: ldarg.0
+  IL_0114: ldloca.s 4
+  IL_0116: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_011b: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.PrimaryConstructorParameterTests/'<Issue_second_test_verbatim>d__5'::'<>s__1'
+  IL_0120: ldarg.0
+  IL_0121: ldfld class WeaveRepro.PrimaryConstructorParameterTests WeaveRepro.PrimaryConstructorParameterTests/'<Issue_second_test_verbatim>d__5'::'<>4__this'
+  IL_0126: ldarg.0
+  IL_0127: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.PrimaryConstructorParameterTests/'<Issue_second_test_verbatim>d__5'::'<>s__1'
+  IL_012c: stfld class [System.Runtime]System.Exception WeaveRepro.PrimaryConstructorParameterTests::_exception
+  IL_0131: ldarg.0
+  IL_0132: ldnull
+  IL_0133: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.PrimaryConstructorParameterTests/'<Issue_second_test_verbatim>d__5'::'<>s__1'
+  IL_0138: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_013d: ldloc.s 8
+  IL_013f: ldloc.s 9
+  IL_0141: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T1_IssueSecondTestVerbatim.cs"
+  IL_0146: ldc.i4.s 17
+  IL_0148: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.PrimaryConstructorParameterTests::'<third>P'
+====================================================================================================
+WeaveRepro.IssueFirstShapeTests/<Issue_first_shape>d__6::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_017f: newarr [System.Runtime]System.Object
+  IL_0184: dup
+  IL_0185: ldc.i4.0
+  IL_0186: ldarg.0
+  IL_0187: ldfld class WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0' WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>8__1'
+  IL_018c: ldfld class [System.Runtime]System.Threading.CancellationTokenSource WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0'::cts
+  IL_0191: stelem.ref
+  IL_0192: dup
+  IL_0193: ldc.i4.1
+  IL_0194: ldarg.0
+  IL_0195: ldfld class WeaveRepro.Handlers WeaveRepro.IssueFirstShapeTests::'<handlers>P'
+  IL_019a: stelem.ref
+  IL_019b: stloc.s 6
+  IL_019d: leave.s IL_01a5
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_019f: pop
+  IL_01a0: ldnull
+  IL_01a1: stloc.s 6
+  IL_01a3: leave.s IL_01a5
+  } // end handler
+  
+  IL_01a5: nop
+  IL_01a6: ldarg.0
+  IL_01a7: ldloca.s 3
+  IL_01a9: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.OperationCanceledException>::GetResult()
+  IL_01ae: stfld class [System.Runtime]System.OperationCanceledException WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>s__2'
+  IL_01b3: ldarg.0
+  IL_01b4: ldfld class WeaveRepro.IssueFirstShapeTests WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>4__this'
+  IL_01b9: ldarg.0
+  IL_01ba: ldfld class [System.Runtime]System.OperationCanceledException WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>s__2'
+  IL_01bf: stfld class [System.Runtime]System.Exception WeaveRepro.IssueFirstShapeTests::_exception
+  IL_01c4: ldarg.0
+  IL_01c5: ldnull
+  IL_01c6: stfld class [System.Runtime]System.OperationCanceledException WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>s__2'
+  IL_01cb: ldstr "_exception = await Should.ThrowAsync<OperationCanceledException>( () => handlers.Run(nameof(Service), () => _service.Start(0, cts.Token)))"
+  IL_01d0: ldloc.s 5
+  IL_01d2: ldloc.s 6
+  IL_01d4: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T2_IssueFirstShape.cs"
+  IL_01d9: ldc.i4.s 22
+  IL_01db: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0' WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>8__1' ; ldfld class [System.Runtime]System.Threading.CancellationTokenSource WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0'::cts
+  element 1 (ldc.i4.1): ldarg.0 ; ldfld class WeaveRepro.Handlers WeaveRepro.IssueFirstShapeTests::'<handlers>P'
+====================================================================================================
+WeaveRepro.SyncMethodControlTests::Sync_method_control
+----------------------------------------------------------------------------------------------------
+  IL_0012: newarr [System.Runtime]System.Object
+  IL_0017: dup
+  IL_0018: ldc.i4.0
+  IL_0019: ldarg.0
+  IL_001a: ldfld class WeaveRepro.Harness WeaveRepro.SyncMethodControlTests::'<third>P'
+  IL_001f: stelem.ref
+  IL_0020: stloc.3
+  IL_0021: ldarg.0
+  IL_0022: ldarg.0
+  IL_0023: ldftn instance void WeaveRepro.SyncMethodControlTests::'<Sync_method_control>b__5_0'()
+  IL_0029: newobj instance void [System.Runtime]System.Action::.ctor(object, native int)
+  IL_002e: ldnull
+  IL_002f: call !!0 [Shouldly]Shouldly.Should::Throw<class [System.Runtime]System.InvalidOperationException>(class [System.Runtime]System.Action, string)
+  IL_0034: stfld class [System.Runtime]System.Exception WeaveRepro.SyncMethodControlTests::_exception
+  IL_0039: ldstr "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+  IL_003e: ldloc.2
+  IL_003f: ldloc.3
+  IL_0040: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T3_SyncMethodControl.cs"
+  IL_0045: ldc.i4.s 15
+  IL_0047: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.SyncMethodControlTests::'<third>P'
+====================================================================================================
+WeaveRepro.OrdinaryFieldControlTests/<Ordinary_field_control>d__5::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this'
+  IL_0107: ldfld class WeaveRepro.Harness WeaveRepro.OrdinaryFieldControlTests::_third
+  IL_010c: stelem.ref
+  IL_010d: stloc.s 9
+  IL_010f: leave.s IL_0117
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_0111: pop
+  IL_0112: ldnull
+  IL_0113: stloc.s 9
+  IL_0115: leave.s IL_0117
+  } // end handler
+  
+  IL_0117: nop
+  IL_0118: ldarg.0
+  IL_0119: ldloca.s 4
+  IL_011b: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_0120: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>s__1'
+  IL_0125: ldarg.0
+  IL_0126: ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this'
+  IL_012b: ldarg.0
+  IL_012c: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>s__1'
+  IL_0131: stfld class [System.Runtime]System.Exception WeaveRepro.OrdinaryFieldControlTests::_exception
+  IL_0136: ldarg.0
+  IL_0137: ldnull
+  IL_0138: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>s__1'
+  IL_013d: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+  IL_0142: ldloc.s 8
+  IL_0144: ldloc.s 9
+  IL_0146: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T4_OrdinaryFieldControl.cs"
+  IL_014b: ldc.i4.s 18
+  IL_014d: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this' ; ldfld class WeaveRepro.Harness WeaveRepro.OrdinaryFieldControlTests::_third
+====================================================================================================
+WeaveRepro.OneParameterTests/<One_parameter>d__3::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.Harness WeaveRepro.OneParameterTests::'<third>P'
+  IL_0107: stelem.ref
+  IL_0108: stloc.s 8
+  IL_010a: leave.s IL_0112
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_010c: pop
+  IL_010d: ldnull
+  IL_010e: stloc.s 8
+  IL_0110: leave.s IL_0112
+  } // end handler
+  
+  IL_0112: nop
+  IL_0113: ldarg.0
+  IL_0114: ldloca.s 4
+  IL_0116: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_011b: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OneParameterTests/'<One_parameter>d__3'::'<>s__1'
+  IL_0120: ldarg.0
+  IL_0121: ldfld class WeaveRepro.OneParameterTests WeaveRepro.OneParameterTests/'<One_parameter>d__3'::'<>4__this'
+  IL_0126: ldarg.0
+  IL_0127: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OneParameterTests/'<One_parameter>d__3'::'<>s__1'
+  IL_012c: stfld class [System.Runtime]System.Exception WeaveRepro.OneParameterTests::_exception
+  IL_0131: ldarg.0
+  IL_0132: ldnull
+  IL_0133: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.OneParameterTests/'<One_parameter>d__3'::'<>s__1'
+  IL_0138: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_013d: ldloc.s 7
+  IL_013f: ldloc.s 8
+  IL_0141: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T5_OneParameter.cs"
+  IL_0146: ldc.i4.s 17
+  IL_0148: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.OneParameterTests::'<third>P'
+====================================================================================================
+WeaveRepro.SixParametersTests/<Six_parameters_lambda_reads_the_sixth>d__8::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.Harness WeaveRepro.SixParametersTests::'<sixth>P'
+  IL_0107: stelem.ref
+  IL_0108: stloc.s 9
+  IL_010a: leave.s IL_0112
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_010c: pop
+  IL_010d: ldnull
+  IL_010e: stloc.s 9
+  IL_0110: leave.s IL_0112
+  } // end handler
+  
+  IL_0112: nop
+  IL_0113: ldarg.0
+  IL_0114: ldloca.s 4
+  IL_0116: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_011b: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.SixParametersTests/'<Six_parameters_lambda_reads_the_sixth>d__8'::'<>s__1'
+  IL_0120: ldarg.0
+  IL_0121: ldfld class WeaveRepro.SixParametersTests WeaveRepro.SixParametersTests/'<Six_parameters_lambda_reads_the_sixth>d__8'::'<>4__this'
+  IL_0126: ldarg.0
+  IL_0127: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.SixParametersTests/'<Six_parameters_lambda_reads_the_sixth>d__8'::'<>s__1'
+  IL_012c: stfld class [System.Runtime]System.Exception WeaveRepro.SixParametersTests::_exception
+  IL_0131: ldarg.0
+  IL_0132: ldnull
+  IL_0133: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.SixParametersTests/'<Six_parameters_lambda_reads_the_sixth>d__8'::'<>s__1'
+  IL_0138: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => sixth.Run(() => throw new InvalidOperationException()))"
+  IL_013d: ldloc.s 8
+  IL_013f: ldloc.s 9
+  IL_0141: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T6_SixParameters.cs"
+  IL_0146: ldc.i4.s 18
+  IL_0148: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.SixParametersTests::'<sixth>P'
+====================================================================================================
+WeaveRepro.ParametersAndValueFieldsTests/<Parameters_and_value_fields>d__7::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00fa: newarr [System.Runtime]System.Object
+  IL_00ff: dup
+  IL_0100: ldc.i4.0
+  IL_0101: ldarg.0
+  IL_0102: ldfld class WeaveRepro.Harness WeaveRepro.ParametersAndValueFieldsTests::'<third>P'
+  IL_0107: stelem.ref
+  IL_0108: stloc.s 9
+  IL_010a: leave.s IL_0112
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_010c: pop
+  IL_010d: ldnull
+  IL_010e: stloc.s 9
+  IL_0110: leave.s IL_0112
+  } // end handler
+  
+  IL_0112: nop
+  IL_0113: ldarg.0
+  IL_0114: ldloca.s 4
+  IL_0116: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_011b: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.ParametersAndValueFieldsTests/'<Parameters_and_value_fields>d__7'::'<>s__1'
+  IL_0120: ldarg.0
+  IL_0121: ldfld class WeaveRepro.ParametersAndValueFieldsTests WeaveRepro.ParametersAndValueFieldsTests/'<Parameters_and_value_fields>d__7'::'<>4__this'
+  IL_0126: ldarg.0
+  IL_0127: ldfld class [System.Runtime]System.InvalidOperationException WeaveRepro.ParametersAndValueFieldsTests/'<Parameters_and_value_fields>d__7'::'<>s__1'
+  IL_012c: stfld class [System.Runtime]System.Exception WeaveRepro.ParametersAndValueFieldsTests::_exception
+  IL_0131: ldarg.0
+  IL_0132: ldnull
+  IL_0133: stfld class [System.Runtime]System.InvalidOperationException WeaveRepro.ParametersAndValueFieldsTests/'<Parameters_and_value_fields>d__7'::'<>s__1'
+  IL_0138: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_013d: ldloc.s 8
+  IL_013f: ldloc.s 9
+  IL_0141: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T7_ParametersAndValueFields.cs"
+  IL_0146: ldc.i4.s 19
+  IL_0148: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.ParametersAndValueFieldsTests::'<third>P'
+====================================================================================================
+7 values array(s)
+=== il/xunit3-5.27.5-Release.il
+====================================================================================================
+WeaveRepro.PrimaryConstructorParameterTests/<Issue_second_test_verbatim>d__5::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.Harness WeaveRepro.PrimaryConstructorParameterTests::'<third>P'
+  IL_00f7: stelem.ref
+  IL_00f8: stloc.s 10
+  IL_00fa: leave.s IL_0102
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_00fc: pop
+  IL_00fd: ldnull
+  IL_00fe: stloc.s 10
+  IL_0100: leave.s IL_0102
+  } // end handler
+  
+  IL_0102: nop
+  IL_0103: ldloca.s 5
+  IL_0105: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010a: stloc.s 4
+  IL_010c: ldloc.1
+  IL_010d: ldloc.s 4
+  IL_010f: stfld class [System.Runtime]System.Exception WeaveRepro.PrimaryConstructorParameterTests::_exception
+  IL_0114: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_0119: ldloc.s 9
+  IL_011b: ldloc.s 10
+  IL_011d: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T1_IssueSecondTestVerbatim.cs"
+  IL_0122: ldc.i4.s 17
+  IL_0124: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.PrimaryConstructorParameterTests::'<third>P'
+====================================================================================================
+WeaveRepro.IssueFirstShapeTests/<Issue_first_shape>d__6::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_016e: newarr [System.Runtime]System.Object
+  IL_0173: dup
+  IL_0174: ldc.i4.0
+  IL_0175: ldarg.0
+  IL_0176: ldfld class WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0' WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>8__1'
+  IL_017b: ldfld class [System.Runtime]System.Threading.CancellationTokenSource WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0'::cts
+  IL_0180: stelem.ref
+  IL_0181: dup
+  IL_0182: ldc.i4.1
+  IL_0183: ldarg.0
+  IL_0184: ldfld class WeaveRepro.Handlers WeaveRepro.IssueFirstShapeTests::'<handlers>P'
+  IL_0189: stelem.ref
+  IL_018a: stloc.s 7
+  IL_018c: leave.s IL_0194
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_018e: pop
+  IL_018f: ldnull
+  IL_0190: stloc.s 7
+  IL_0192: leave.s IL_0194
+  } // end handler
+  
+  IL_0194: nop
+  IL_0195: ldloca.s 4
+  IL_0197: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.OperationCanceledException>::GetResult()
+  IL_019c: stloc.3
+  IL_019d: ldloc.1
+  IL_019e: ldloc.3
+  IL_019f: stfld class [System.Runtime]System.Exception WeaveRepro.IssueFirstShapeTests::_exception
+  IL_01a4: ldstr "_exception = await Should.ThrowAsync<OperationCanceledException>( () => handlers.Run(nameof(Service), () => _service.Start(0, cts.Token)))"
+  IL_01a9: ldloc.s 6
+  IL_01ab: ldloc.s 7
+  IL_01ad: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T2_IssueFirstShape.cs"
+  IL_01b2: ldc.i4.s 22
+  IL_01b4: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0' WeaveRepro.IssueFirstShapeTests/'<Issue_first_shape>d__6'::'<>8__1' ; ldfld class [System.Runtime]System.Threading.CancellationTokenSource WeaveRepro.IssueFirstShapeTests/'<>c__DisplayClass6_0'::cts
+  element 1 (ldc.i4.1): ldarg.0 ; ldfld class WeaveRepro.Handlers WeaveRepro.IssueFirstShapeTests::'<handlers>P'
+====================================================================================================
+WeaveRepro.SyncMethodControlTests::Sync_method_control
+----------------------------------------------------------------------------------------------------
+  IL_0011: newarr [System.Runtime]System.Object
+  IL_0016: dup
+  IL_0017: ldc.i4.0
+  IL_0018: ldarg.0
+  IL_0019: ldfld class WeaveRepro.Harness WeaveRepro.SyncMethodControlTests::'<third>P'
+  IL_001e: stelem.ref
+  IL_001f: stloc.3
+  IL_0020: ldarg.0
+  IL_0021: ldarg.0
+  IL_0022: ldftn instance void WeaveRepro.SyncMethodControlTests::'<Sync_method_control>b__5_0'()
+  IL_0028: newobj instance void [System.Runtime]System.Action::.ctor(object, native int)
+  IL_002d: ldnull
+  IL_002e: call !!0 [Shouldly]Shouldly.Should::Throw<class [System.Runtime]System.InvalidOperationException>(class [System.Runtime]System.Action, string)
+  IL_0033: stfld class [System.Runtime]System.Exception WeaveRepro.SyncMethodControlTests::_exception
+  IL_0038: ldstr "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+  IL_003d: ldloc.2
+  IL_003e: ldloc.3
+  IL_003f: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T3_SyncMethodControl.cs"
+  IL_0044: ldc.i4.s 15
+  IL_0046: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.SyncMethodControlTests::'<third>P'
+====================================================================================================
+WeaveRepro.OrdinaryFieldControlTests/<Ordinary_field_control>d__5::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this'
+  IL_00f7: ldfld class WeaveRepro.Harness WeaveRepro.OrdinaryFieldControlTests::_third
+  IL_00fc: stelem.ref
+  IL_00fd: stloc.s 10
+  IL_00ff: leave.s IL_0107
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_0101: pop
+  IL_0102: ldnull
+  IL_0103: stloc.s 10
+  IL_0105: leave.s IL_0107
+  } // end handler
+  
+  IL_0107: nop
+  IL_0108: ldloca.s 5
+  IL_010a: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010f: stloc.s 4
+  IL_0111: ldloc.1
+  IL_0112: ldloc.s 4
+  IL_0114: stfld class [System.Runtime]System.Exception WeaveRepro.OrdinaryFieldControlTests::_exception
+  IL_0119: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+  IL_011e: ldloc.s 9
+  IL_0120: ldloc.s 10
+  IL_0122: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T4_OrdinaryFieldControl.cs"
+  IL_0127: ldc.i4.s 18
+  IL_0129: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.OrdinaryFieldControlTests WeaveRepro.OrdinaryFieldControlTests/'<Ordinary_field_control>d__5'::'<>4__this' ; ldfld class WeaveRepro.Harness WeaveRepro.OrdinaryFieldControlTests::_third
+====================================================================================================
+WeaveRepro.OneParameterTests/<One_parameter>d__3::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.Harness WeaveRepro.OneParameterTests::'<third>P'
+  IL_00f7: stelem.ref
+  IL_00f8: stloc.s 9
+  IL_00fa: leave.s IL_0102
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_00fc: pop
+  IL_00fd: ldnull
+  IL_00fe: stloc.s 9
+  IL_0100: leave.s IL_0102
+  } // end handler
+  
+  IL_0102: nop
+  IL_0103: ldloca.s 5
+  IL_0105: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010a: stloc.s 4
+  IL_010c: ldloc.1
+  IL_010d: ldloc.s 4
+  IL_010f: stfld class [System.Runtime]System.Exception WeaveRepro.OneParameterTests::_exception
+  IL_0114: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_0119: ldloc.s 8
+  IL_011b: ldloc.s 9
+  IL_011d: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T5_OneParameter.cs"
+  IL_0122: ldc.i4.s 17
+  IL_0124: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.OneParameterTests::'<third>P'
+====================================================================================================
+WeaveRepro.SixParametersTests/<Six_parameters_lambda_reads_the_sixth>d__8::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.Harness WeaveRepro.SixParametersTests::'<sixth>P'
+  IL_00f7: stelem.ref
+  IL_00f8: stloc.s 10
+  IL_00fa: leave.s IL_0102
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_00fc: pop
+  IL_00fd: ldnull
+  IL_00fe: stloc.s 10
+  IL_0100: leave.s IL_0102
+  } // end handler
+  
+  IL_0102: nop
+  IL_0103: ldloca.s 5
+  IL_0105: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010a: stloc.s 4
+  IL_010c: ldloc.1
+  IL_010d: ldloc.s 4
+  IL_010f: stfld class [System.Runtime]System.Exception WeaveRepro.SixParametersTests::_exception
+  IL_0114: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => sixth.Run(() => throw new InvalidOperationException()))"
+  IL_0119: ldloc.s 9
+  IL_011b: ldloc.s 10
+  IL_011d: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T6_SixParameters.cs"
+  IL_0122: ldc.i4.s 18
+  IL_0124: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.SixParametersTests::'<sixth>P'
+====================================================================================================
+WeaveRepro.ParametersAndValueFieldsTests/<Parameters_and_value_fields>d__7::MoveNext
+----------------------------------------------------------------------------------------------------
+  IL_00ea: newarr [System.Runtime]System.Object
+  IL_00ef: dup
+  IL_00f0: ldc.i4.0
+  IL_00f1: ldarg.0
+  IL_00f2: ldfld class WeaveRepro.Harness WeaveRepro.ParametersAndValueFieldsTests::'<third>P'
+  IL_00f7: stelem.ref
+  IL_00f8: stloc.s 10
+  IL_00fa: leave.s IL_0102
+  } // end .try
+  catch [System.Private.CoreLib]System.Exception
+  {
+  IL_00fc: pop
+  IL_00fd: ldnull
+  IL_00fe: stloc.s 10
+  IL_0100: leave.s IL_0102
+  } // end handler
+  
+  IL_0102: nop
+  IL_0103: ldloca.s 5
+  IL_0105: call instance !0 valuetype [System.Runtime]System.Runtime.CompilerServices.TaskAwaiter`1<class [System.Runtime]System.InvalidOperationException>::GetResult()
+  IL_010a: stloc.s 4
+  IL_010c: ldloc.1
+  IL_010d: ldloc.s 4
+  IL_010f: stfld class [System.Runtime]System.Exception WeaveRepro.ParametersAndValueFieldsTests::_exception
+  IL_0114: ldstr "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+  IL_0119: ldloc.s 9
+  IL_011b: ldloc.s 10
+  IL_011d: ldstr "C:\\Code\\Kronikol-213\\plans\\CAPTURED_FIELD_VALUES_PLAN.harness\\repro\\XunitV3\\T7_ParametersAndValueFields.cs"
+  IL_0122: ldc.i4.s 19
+  IL_0124: call void [Kronikol]Kronikol.Tracking.Track::AssertionPassedWithValues(string, string[], object[], string, int32)
+----------------------------------------------------------------------------------------------------
+  element 0 (ldc.i4.0): ldarg.0 ; ldfld class WeaveRepro.Harness WeaveRepro.ParametersAndValueFieldsTests::'<third>P'
+====================================================================================================
+7 values array(s)

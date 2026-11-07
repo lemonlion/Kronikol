@@ -1,0 +1,6 @@
+ENTER P14|Debug|SyncAssert
+RESULT P14|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P14|Debug|SyncAssert :: [Should.Throw<InvalidOperationException>(() => other.Fail())] other = UNCREATED (not an object this run made)
+DONE P14|Debug|SyncAssert
+TYPES P14|Debug|SyncAssert :: [Should.Throw<InvalidOperationException>(() => other.Fail())] other = UNCREATED P14: P14
+ALLDONE P14

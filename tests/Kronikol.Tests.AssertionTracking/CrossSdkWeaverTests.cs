@@ -212,6 +212,79 @@ public class CrossSdkWeaverTests
         }
         """;
 
+    // #213: the issue's two tests. A primary constructor's parameter that an assertion's lambda uses was read off the
+    // async state machine, and the test process died with an access violation: the second test in Debug, the first in
+    // Release, which layout of the state machine decides.
+    private const string PrimaryConstructorSource = """
+        #nullable enable
+        using System;
+        using System.Threading;
+        using System.Threading.Tasks;
+        using Kronikol.Tracking;
+        using Shouldly;
+
+        [assembly: TrackAssertions]
+
+        public sealed class Harness
+        {
+            public Task Run(Func<Task> run) => run();
+            public Task Run(string name, Func<Task> run) => run();
+            public Task Start(CancellationToken token)
+            {
+                token.ThrowIfCancellationRequested();
+                return Task.CompletedTask;
+            }
+        }
+
+        public class FirstSteps(Harness db, Harness handlers, Harness state)
+        {
+            private Harness? _service = new Harness();
+            private Exception? _exception;
+
+            public async Task AssertionPasses()
+            {
+                using var cts = new CancellationTokenSource();
+                await cts.CancelAsync();
+                _exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)));
+            }
+        }
+
+        public class SecondSteps(Harness first, Harness second, Harness third)
+        {
+            private Exception? _exception;
+
+            public async Task AssertionPasses()
+            {
+                await Task.Yield();
+                _exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()));
+                _exception.ShouldNotBeNull();
+                (first, second).ShouldNotBe((null, null));
+            }
+        }
+
+        public class Tests
+        {
+            public Task The_issues_first_test() => new FirstSteps(new Harness(), new Harness(), new Harness()).AssertionPasses();
+
+            public Task The_issues_second_test() => new SecondSteps(new Harness(), new Harness(), new Harness()).AssertionPasses();
+        }
+        """;
+
+    [Theory]
+    [InlineData("8.0", "net8.0", "Debug")]
+    [InlineData("8.0", "net8.0", "Release")]
+    [InlineData("9.0", "net9.0", "Debug")]
+    [InlineData("9.0", "net9.0", "Release")]
+    [InlineData("10.0", "net10.0", "Debug")]
+    [InlineData("10.0", "net10.0", "Release")]
+    public void A_primary_constructors_parameter_in_an_assertions_lambda_WeaveAndExecute(string sdk, string tfm, string configuration)
+    {
+        SkipIfSdkMissing(sdk);
+        AssertWeaveAndExecute($"Net{sdk.Split('.')[0]}PrimaryConstructor{configuration}", PrimaryConstructorSource,
+            sdk + ".0", tfm, configuration,
+            ["The_issues_first_test", "The_issues_second_test"]);
+    }
+
     // ========== .NET 8 SDK tests ==========
 
     [Fact]

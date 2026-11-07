@@ -1,0 +1,6 @@
+ENTER P21|ReleaseDebugPlus|Sync
+RESULT P21|ReleaseDebugPlus|Sync :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2'] || PASS [New[] { 2 } should contain '2']
+VALUES P21|ReleaseDebugPlus|Sync :: [2.ShouldBe(c._id)] c = C [the `c` argument, _id=2], c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] c = C [the `c` argument, _id=2], c._id = int 2
+DONE P21|ReleaseDebugPlus|Sync
+TYPES P21|ReleaseDebugPlus|Sync :: [2.ShouldBe(c._id)] c = C [the `c` argument, _id=2], c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] c = C [the `c` argument, _id=2], c._id = int 2
+ALLDONE P21

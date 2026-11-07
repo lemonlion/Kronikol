@@ -1,0 +1,312 @@
+# xunit2-5.31.3-local.213b-Debug-IssueFirstShapeTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+# xunit2-5.31.3-local.213b-Debug-OneParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+# xunit2-5.31.3-local.213b-Debug-OrdinaryFieldControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Debug-ParametersAndValueFieldsTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Debug-PrimaryConstructorParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Debug-SixParametersTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Debug-SyncMethodControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Debug-all.txt
+  run 1: passed (7 tests); dotnet test exit 0
+  run 2: passed (7 tests); dotnet test exit 0
+  run 3: passed (7 tests); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+    s1/d0/n0  ✓ Should throw InvalidOperationException
+    s1/d0/n1  ✓ Exception should not be null
+    s2/d0/n0  ✓ Should throw InvalidOperationException
+    s2/d0/n1  ✓ Exception should not be null
+    s2/d0/n2  ✓ (first, second) should not be (null, null)
+    s3/d0/n0  ✓ Should throw InvalidOperationException
+    s3/d0/n1  ✓ Exception should not be null
+    s3/d0/n2  ✓ (first, second) should not be (null, null)
+    s4/d0/n0  ✓ Should throw InvalidOperationException
+    s4/d0/n1  ✓ Exception should not be null
+    s4/d0/n2  ✓ (first, second) should not be (null, null)
+    s5/d0/n0  ✓ Should throw InvalidOperationException
+    s5/d0/n1  ✓ Exception should not be null
+    s5/d0/n2  ✓ (first, second) should not be (null, null)
+    s6/d0/n0  ✓ Should throw InvalidOperationException
+    s6/d0/n1  ✓ Exception should not be null
+    s6/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Release-IssueFirstShapeTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+# xunit2-5.31.3-local.213b-Release-OneParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+# xunit2-5.31.3-local.213b-Release-OrdinaryFieldControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Release-ParametersAndValueFieldsTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Release-PrimaryConstructorParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Release-SixParametersTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Release-SyncMethodControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.31.3-local.213b-Release-all.txt
+  run 1: passed (7 tests); dotnet test exit 0
+  run 2: passed (7 tests); dotnet test exit 0
+  run 3: passed (7 tests); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+    s1/d0/n0  ✓ Should throw InvalidOperationException
+    s1/d0/n1  ✓ Exception should not be null
+    s2/d0/n0  ✓ Should throw InvalidOperationException
+    s2/d0/n1  ✓ Exception should not be null
+    s2/d0/n2  ✓ (first, second) should not be (null, null)
+    s3/d0/n0  ✓ Should throw InvalidOperationException
+    s3/d0/n1  ✓ Exception should not be null
+    s3/d0/n2  ✓ (first, second) should not be (null, null)
+    s4/d0/n0  ✓ Should throw InvalidOperationException
+    s4/d0/n1  ✓ Exception should not be null
+    s4/d0/n2  ✓ (first, second) should not be (null, null)
+    s5/d0/n0  ✓ Should throw InvalidOperationException
+    s5/d0/n1  ✓ Exception should not be null
+    s5/d0/n2  ✓ (first, second) should not be (null, null)
+    s6/d0/n0  ✓ Should throw InvalidOperationException
+    s6/d0/n1  ✓ Exception should not be null
+    s6/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Debug-IssueFirstShapeTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+# xunit3-5.31.3-local.213b-Debug-OneParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+# xunit3-5.31.3-local.213b-Debug-OrdinaryFieldControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Debug-ParametersAndValueFieldsTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Debug-PrimaryConstructorParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Debug-SixParametersTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Debug-SyncMethodControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Debug-all.txt
+  run 1: passed (7 tests); dotnet test exit 0
+  run 2: passed (7 tests); dotnet test exit 0
+  run 3: passed (7 tests); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+    s1/d0/n0  ✓ Should throw InvalidOperationException
+    s1/d0/n1  ✓ Exception should not be null
+    s2/d0/n0  ✓ Should throw InvalidOperationException
+    s2/d0/n1  ✓ Exception should not be null
+    s2/d0/n2  ✓ (first, second) should not be (null, null)
+    s3/d0/n0  ✓ Should throw InvalidOperationException
+    s3/d0/n1  ✓ Exception should not be null
+    s3/d0/n2  ✓ (first, second) should not be (null, null)
+    s4/d0/n0  ✓ Should throw InvalidOperationException
+    s4/d0/n1  ✓ Exception should not be null
+    s4/d0/n2  ✓ (first, second) should not be (null, null)
+    s5/d0/n0  ✓ Should throw InvalidOperationException
+    s5/d0/n1  ✓ Exception should not be null
+    s5/d0/n2  ✓ (first, second) should not be (null, null)
+    s6/d0/n0  ✓ Should throw InvalidOperationException
+    s6/d0/n1  ✓ Exception should not be null
+    s6/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Release-IssueFirstShapeTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+# xunit3-5.31.3-local.213b-Release-OneParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+# xunit3-5.31.3-local.213b-Release-OrdinaryFieldControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Release-ParametersAndValueFieldsTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Release-PrimaryConstructorParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Release-SixParametersTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Release-SyncMethodControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.31.3-local.213b-Release-all.txt
+  run 1: passed (7 tests); dotnet test exit 0
+  run 2: passed (7 tests); dotnet test exit 0
+  run 3: passed (7 tests); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+    s1/d0/n0  ✓ Should throw InvalidOperationException
+    s1/d0/n1  ✓ Exception should not be null
+    s2/d0/n0  ✓ Should throw InvalidOperationException
+    s2/d0/n1  ✓ Exception should not be null
+    s2/d0/n2  ✓ (first, second) should not be (null, null)
+    s3/d0/n0  ✓ Should throw InvalidOperationException
+    s3/d0/n1  ✓ Exception should not be null
+    s3/d0/n2  ✓ (first, second) should not be (null, null)
+    s4/d0/n0  ✓ Should throw InvalidOperationException
+    s4/d0/n1  ✓ Exception should not be null
+    s4/d0/n2  ✓ (first, second) should not be (null, null)
+    s5/d0/n0  ✓ Should throw InvalidOperationException
+    s5/d0/n1  ✓ Exception should not be null
+    s5/d0/n2  ✓ (first, second) should not be (null, null)
+    s6/d0/n0  ✓ Should throw InvalidOperationException
+    s6/d0/n1  ✓ Exception should not be null
+    s6/d0/n2  ✓ (first, second) should not be (null, null)

@@ -1,0 +1,4 @@
+ENTER P3|ReleaseDebugPlus|AssertionPasses
+RESULT P3|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+DONE P3|ReleaseDebugPlus|AssertionPasses
+ALLDONE P3

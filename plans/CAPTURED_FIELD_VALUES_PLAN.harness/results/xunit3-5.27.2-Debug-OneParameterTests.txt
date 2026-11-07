@@ -1,0 +1,93 @@
+=================== run 1 of 3: xunit3-5.27.2 Debug OneParameterTests (2026-10-29T09:05:06Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OneParameterTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.14]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.33]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.49]   Starting:    XunitV3Repro
+[xUnit.net 00:00:00.97]   Finished:    XunitV3Repro (ID = 'aa46f697c438926010bf732309c43f8abf3f0bf4056e205fef34c54b2fc893ef')
+  Passed WeaveRepro.OneParameterTests.One_parameter [53 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.3881 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.05s     0 calls  One parameter
+1 scenarios
+--- s0
+s0  One Parameter Tests › One parameter  [Passed]  0.05s
+s0/d0  2 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+=================== run 2 of 3: xunit3-5.27.2 Debug OneParameterTests (2026-10-29T09:05:11Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OneParameterTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.16]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.37]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.56]   Starting:    XunitV3Repro
+[xUnit.net 00:00:01.06]   Finished:    XunitV3Repro (ID = 'aa46f697c438926010bf732309c43f8abf3f0bf4056e205fef34c54b2fc893ef')
+  Passed WeaveRepro.OneParameterTests.One_parameter [55 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.5143 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.05s     0 calls  One parameter
+1 scenarios
+--- s0
+s0  One Parameter Tests › One parameter  [Passed]  0.05s
+s0/d0  2 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+=================== run 3 of 3: xunit3-5.27.2 Debug OneParameterTests (2026-10-29T09:05:16Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OneParameterTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.15]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.33]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.51]   Starting:    XunitV3Repro
+[xUnit.net 00:00:01.03]   Finished:    XunitV3Repro (ID = 'aa46f697c438926010bf732309c43f8abf3f0bf4056e205fef34c54b2fc893ef')
+  Passed WeaveRepro.OneParameterTests.One_parameter [58 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.4691 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.05s     0 calls  One parameter
+1 scenarios
+--- s0
+s0  One Parameter Tests › One parameter  [Passed]  0.05s
+s0/d0  2 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null

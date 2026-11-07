@@ -1,0 +1,111 @@
+=================== run 1 of 3: xunit2-5.31.3-local.213b Debug ParametersAndValueFieldsTests (2026-11-07T14:11:52Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.ParametersAndValueFieldsTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.10]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.14]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.18]   Starting:    XunitV2Repro
+Report diagnostics: 6 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.90]   Finished:    XunitV2Repro
+  Passed WeaveRepro.ParametersAndValueFieldsTests.Parameters_and_value_fields [54 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.5844 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.05s     0 calls  Parameters and value fields
+1 scenarios
+--- s0
+s0  Parameters And Value Fields Tests › Parameters and value fields  [Passed]  0.05s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 2 of 3: xunit2-5.31.3-local.213b Debug ParametersAndValueFieldsTests (2026-11-07T14:12:00Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.ParametersAndValueFieldsTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.09]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.12]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.15]   Starting:    XunitV2Repro
+Report diagnostics: 6 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.86]   Finished:    XunitV2Repro
+  Passed WeaveRepro.ParametersAndValueFieldsTests.Parameters_and_value_fields [52 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.5000 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.05s     0 calls  Parameters and value fields
+1 scenarios
+--- s0
+s0  Parameters And Value Fields Tests › Parameters and value fields  [Passed]  0.05s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 3 of 3: xunit2-5.31.3-local.213b Debug ParametersAndValueFieldsTests (2026-11-07T14:12:07Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.ParametersAndValueFieldsTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.11]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.15]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.17]   Starting:    XunitV2Repro
+Report diagnostics: 6 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.85]   Finished:    XunitV2Repro
+  Passed WeaveRepro.ParametersAndValueFieldsTests.Parameters_and_value_fields [50 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.4836 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.05s     0 calls  Parameters and value fields
+1 scenarios
+--- s0
+s0  Parameters And Value Fields Tests › Parameters and value fields  [Passed]  0.05s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)

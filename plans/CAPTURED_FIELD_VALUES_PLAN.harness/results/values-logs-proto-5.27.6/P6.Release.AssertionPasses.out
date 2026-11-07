@@ -1,0 +1,6 @@
+ENTER P6|Release|AssertionPasses
+RESULT P6|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P6|Release|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))] only = Harness(only) [the `only` argument]
+DONE P6|Release|AssertionPasses
+TYPES P6|Release|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))] only = Harness(only) [the `only` argument]
+ALLDONE P6

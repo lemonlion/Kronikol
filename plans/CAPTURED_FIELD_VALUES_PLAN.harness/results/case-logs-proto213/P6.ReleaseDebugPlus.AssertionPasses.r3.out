@@ -1,0 +1,4 @@
+ENTER P6|ReleaseDebugPlus|AssertionPasses
+RESULT P6|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+DONE P6|ReleaseDebugPlus|AssertionPasses
+ALLDONE P6

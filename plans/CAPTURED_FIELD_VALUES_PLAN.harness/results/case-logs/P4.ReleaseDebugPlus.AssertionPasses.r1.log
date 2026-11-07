@@ -1,0 +1,7 @@
+xUnit.net v3 In-Process Runner v3.2.2+728c1dce01 (64-bit .NET 10.0.11)
+  Discovering: Kronikol.Tests.AssertionTracking
+  Discovered:  Kronikol.Tests.AssertionTracking
+  Starting:    Kronikol.Tests.AssertionTracking
+  Finished:    Kronikol.Tests.AssertionTracking (ID = '7b78f1ef1c91669601916c12669253e3de30f8e427e83ee912be62be2deb42d1')
+=== TEST EXECUTION SUMMARY ===
+   Kronikol.Tests.AssertionTracking  Total: 1, Errors: 0, Failed: 0, Skipped: 0, Not Run: 0, Time: 2.108s

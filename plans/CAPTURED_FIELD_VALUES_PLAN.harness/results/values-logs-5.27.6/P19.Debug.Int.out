@@ -1,0 +1,6 @@
+ENTER P19|Debug|Int
+RESULT P19|Debug|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('1623839240') ]]
+VALUES P19|Debug|Int :: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 1623839240
+DONE P19|Debug|Int
+TYPES P19|Debug|Int :: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 1623839240
+ALLDONE P19

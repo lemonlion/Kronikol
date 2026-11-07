@@ -1,0 +1,4 @@
+ENTER P22b|ReleaseDebugPlus|AssertionPasses
+RESULT P22b|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+DONE P22b|ReleaseDebugPlus|AssertionPasses
+ALLDONE P22b

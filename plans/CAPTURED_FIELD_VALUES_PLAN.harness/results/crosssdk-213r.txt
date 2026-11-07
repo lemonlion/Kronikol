@@ -1,0 +1,4 @@
+Test run for C:\Code\Kronikol-213r\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 23 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

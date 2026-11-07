@@ -1,0 +1,4 @@
+ENTER P20|Debug|LocalFunction
+RESULT P20|Debug|LocalFunction :: unwoven=nothing :: woven=nothing :: note=PASS [Actual should be 'Harness(expected)'] || PASS [New[] { actual } should contain 'Harness(expected)']
+DONE P20|Debug|LocalFunction
+ALLDONE P20

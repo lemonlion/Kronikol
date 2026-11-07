@@ -1,0 +1,4 @@
+ENTER P14|Release|SyncAssert
+RESULT P14|Release|SyncAssert :: unwoven=nothing :: woven=NullReferenceException: Object reference not set to an instance of an object. :: note=FAIL [Should throw InvalidOperationException] msg=Object reference not set to an instance of an object.
+DONE P14|Release|SyncAssert
+ALLDONE P14

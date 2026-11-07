@@ -1,0 +1,29 @@
+# 129 cases; rounds=3; label 5.27.6-p23; repo /c/Code/Kronikol-213; one case per process via the test executable
+R1 P22b|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tas...') ]]
+R1 P22b|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+R1 P22b|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+R1 P23|Debug|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P23|Debug|InAnAsyncClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P23|Release|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P23|Release|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139, 3s)
+R1 P23|ReleaseDebugPlus|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R1 P23|ReleaseDebugPlus|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139, 3s)
+R2 P22b|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tas...') ]]
+R2 P22b|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+R2 P22b|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+R2 P23|Debug|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P23|Debug|InAnAsyncClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P23|Release|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P23|Release|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139, 4s)
+R2 P23|ReleaseDebugPlus|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R2 P23|ReleaseDebugPlus|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139, 3s)
+R3 P22b|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tas...') ]]
+R3 P22b|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+R3 P22b|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+R3 P23|Debug|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P23|Debug|InAnAsyncClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P23|Release|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P23|Release|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139, 3s)
+R3 P23|ReleaseDebugPlus|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+R3 P23|ReleaseDebugPlus|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object) in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139, 3s)
+ORCHESTRATION COMPLETE

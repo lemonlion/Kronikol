@@ -1,0 +1,203 @@
+Issue #213 measurement dive: Kronikol 5.27.2 (origin/main e4a1c82a), worktree C:/Code/Kronikol-213
+Weaver assembly 5.27.2.0, runtime .NET 10.0.11, Windows x64. Measured, not fixed: nothing under src/ was changed.
+
+FILES (this directory)
+  dive-5.27.2.txt          this summary
+  dive-raw-5.27.2.txt      static dump per shape x build: compile, weave, the ILVerify errors the weave added (exact
+                           text), and every captured variable with its value-load
+  case-5.27.2.txt          runtime outcomes: 96 cases once, and the 60 cases of shapes with a wrong load twice more
+                           (216 runs, one case per fresh process)
+  case-logs/               one log per run; a crash's log holds the runtime's own "Fatal error." stack
+  values-5.27.2.txt        the VALUES pass: what the weave put in the values array, named by identity
+  values-logs/             its per-case logs
+  baseline-5.27.2.txt      the weaver suite without the probe (first run), and baseline-5.27.2-final-probe.log (re-run
+                           with the final probe file on disk)
+  ../probe/                Probe213Tests.cs (the probe, a copy of tests/Kronikol.Tests.AssertionTracking/Probe213Tests.cs),
+                           run-cases.sh (outcomes), run-values.sh (values)
+
+RE-RUN AGAINST A CHANGED WEAVER (build the test project once first)
+  static : KRONIKOL_213_DIVE=<file> dotnet test tests/Kronikol.Tests.AssertionTracking -f net10.0 --no-build --filter "FullyQualifiedName~Probe213Tests.Dive"
+  runtime: PROBE213_LABEL=<name> bash plans/CAPTURED_FIELD_VALUES_PLAN.harness/probe/run-cases.sh
+  values : PROBE213_LABEL=<name> bash plans/CAPTURED_FIELD_VALUES_PLAN.harness/probe/run-values.sh
+  The label names the outputs (case-<name>.txt, case-logs-<name>/, values-<name>.txt, values-logs-<name>/), so a re-run
+  never overwrites these 5.27.2 results; leave it unset only to regenerate them. Each script measures the repository it
+  sits in, so a copy in another worktree measures that worktree. Either script also takes PROBE213_ONLY_SHAPES="P1 P6",
+  and run-cases.sh takes PROBE213_ROUNDS=1.
+  Every probe fact is gated on an environment variable and does nothing in a normal suite run. The probe calls the weaver
+  by reflection, so the "no weave outside WovenIl" scan never sees a direct call and a weave that adds verifier errors is
+  measured rather than failed. Runtime cases run through the test project's own xUnit v3 executable, one case per
+  process: a case that kills its host takes nothing else with it, and the crash's stack reaches the log. (Under
+  `dotnet test` the VSTest bridge reports only "Catastrophic failure: Test process crashed with exit code -1073741819",
+  about 61 s after the crash.) The values pass redirects the woven Track.*WithValues calls to Probe213Recorder, which has
+  the same signatures, keeps the array and forwards: the value-loads and the note are unchanged.
+
+================================================================================================================
+BASELINE: the weaver suite at 5.27.2, net10.0, without the probe (--filter "FullyQualifiedName!~Probe213")
+================================================================================================================
+Passed 1039, Failed 0, Skipped 28, Total 1067, the same in both runs: the first (5m56s, the probe's first version on
+disk) and a re-run with the final probe file on disk (4m19s, baseline-5.27.2-final-probe.log).
+All 28 skips need the .NET 11 SDK, which is not installed here: 14 CrossSdkWeaverTests.Net11_* facts and the 14
+sdk: "11.0" rows of CrossSdkWeaverTests.Shouldly_source_weaves_and_executes.
+WovenIlVerifiesTests.Every_woven_fixture_verifies passed in both runs with the probe file on disk: it did NOT flag the
+probe, which never writes a direct call to the weaver.
+
+================================================================================================================
+THE DEFECT, CONFIRMED, AND NOT RELEASE-ONLY AT 5.27.2
+================================================================================================================
+GetStateFieldOriginalName (AssertionWeaver.cs ~2414) reads ANY field named <name>... as "name". A primary-constructor
+parameter is the class field <name>P, so the lambda arm (~1976-1993) captures it with StateField = Class::<name>P and the
+emit (~3192) writes `ldarg.0; ldfld Class::<name>P`. Inside MoveNext, ldarg.0 is the state machine, so the field is read
+at the wrong offset of the wrong object. The raw-name arms (lambda ~2029-2039, ldtoken ~2091-2101, standalone ~2114-2160)
+likewise never check that the field was read off `this`: another instance's field becomes this.field, and in a static
+method ldarg.0 is the first parameter.
+
+The issue (filed at 5.12.0) calls this Release-only, because Debug did not weave the awaited statement's values (#212).
+At 5.27.2 Debug weaves them too, and Debug mis-reads, and in one shape crashes.
+
+Every verifier error the weave added in this dive is StackUnexpected: the base `ldarg.0`/`ldloc` pushed is the wrong
+type for the `ldfld`. Exact text, P1 Release:
+  P1/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of
+  '[Probe213_P1_Release]P1+<AssertionPasses>d__5', Expected ref '[Probe213_P1_Release]P1')
+(Debug says "Found ref" where Release says "Found address of": a class state machine against a struct one.)
+
+================================================================================================================
+MAIN TABLE: shape x build
+  ILV+  = verifier errors the weave added
+  run   = the woven outcome; the UNWOVEN build passed in every case. "3/3" = the same in all three rounds
+  value = what the weave put in the values array for the key name (VALUES pass), and whether it is the right object
+  SM    = ldarg.0 is the state machine (inside MoveNext); THIS = it is `this` (a sync instance method)
+================================================================================================================
+
+P1   ctor (first, second, third); async; ThrowAsync lambda reads `third`
+     load: ldarg.0; ldfld P1::<third>P [SM]                    note: "Should throw InvalidOperationException" (no value shown)
+  Debug            ILV+1   CRASH 3/3 (AccessViolationException)        value: none reached Track
+  Release          ILV+1   pass 3/3                                    value: third = null                     WRONG
+  ReleaseDebugPlus ILV+1   pass 3/3                                    value: third = null                     WRONG
+
+P2   the issue's first shape: ctor (db, handlers, state), field _service, local cts, cancelled token
+     load: handlers = ldarg.0; ldfld P2::<handlers>P [SM];  cts = ldarg.0; ldfld <>8__1; ldfld <>c__DisplayClass4_0::cts (right)
+  Debug            ILV+1   pass 3/3                                    handlers = the test instance (P2)       WRONG; cts right
+  Release          ILV+1   pass 3/3                                    handlers = P2+<>c__DisplayClass4_0      WRONG; cts right
+  ReleaseDebugPlus ILV+1   pass 3/3                                    handlers = P2+<>c__DisplayClass4_0      WRONG; cts right
+
+P3   P1 made synchronous (control)    load: ldarg.0; ldfld P3::<third>P [THIS: right]
+  all three        ILV 0   pass                                        third = Harness(third)                  right
+
+P4   P1 with an ordinary field _third (control)    load: ldarg.0; ldfld <>4__this; ldfld P4::_third
+  all three        ILV 0   pass                                        _third = Harness(third)                 right
+
+P5   the statement reads the parameter, no lambda (third.ShouldNotBeNull(); third.ShouldBe(third); async)
+     no variable is captured; the call's own argument is copied off the stack (the #163 argument path)
+  all three        ILV 0   pass   note "Third should be 'Harness(third)'"   third = Harness(third)             right
+
+P6   ctor (only); async; `this` used only inside the lambda: <>4__this EXISTS but the arm never uses it
+     load: ldarg.0; ldfld P6::<only>P [SM]
+  Debug            ILV+1   pass 3/3                                    only = the test instance (P6)           WRONG
+  Release          ILV+1   CRASH 3/3 (AccessViolationException)        none reached Track
+  ReleaseDebugPlus ILV+1   CRASH 3/3 (AccessViolationException)        none reached Track
+
+P7   generic P7<T>(T value), run as P7<Harness>; async lambda reads value
+  all three        ILV 0   pass   no values call (the inner async lambda's state machine is not scanned)
+
+P8   expression-tree argument reads ctor parameter `expected` (FluentAssertions Contain(Expression<...>)), sync + async
+  all three        ILV 0   pass   no values call: the ldtoken arm skips <expected>P (its name has angle brackets); the
+                                  note keeps "x == expected" as code
+
+P9   async lambda: async () => { await Task.Yield(); await third.Run(...); }
+  all three        ILV 0   pass   no values call
+
+P10  lambda reads parameter third + field _field + local `local`; async
+     load: third = ldarg.0; ldfld P10::<third>P [SM]; local via <>8__1 (right); _field is never captured
+  Debug            ILV+1   pass 3/3                                    third = the test instance (P10)         WRONG; local right
+  Release          ILV+1   pass 3/3                                    third = P10+<>c__DisplayClass3_0        WRONG; local right
+  ReleaseDebugPlus ILV+1   pass 3/3                                    third = P10+<>c__DisplayClass3_0        WRONG; local right
+
+P11  a local function reads the parameter: compiles (passed as the method group `Body`)
+  all three        ILV 0   pass   note "Should throw InvalidOperationException Body"; no values call
+
+P12  crash hunt: the P1 shape with 1, 2, 4, 6 parameters, each with and without `long _n1; int _n2; long _n3` fields
+     (8 variants; the lambda reads the last parameter)    load: ldarg.0; ldfld P12_x::<pLast>P [SM]
+  Debug            ILV+1   pass 3/3 (all 8)                            pLast = the test instance               WRONG
+  Release          ILV+1   CRASH 3/3 (all 8, AccessViolationException) none reached Track
+  ReleaseDebugPlus ILV+1   CRASH 3/3 (all 8, AccessViolationException) none reached Track
+  Parameter count and the extra fields changed no outcome.
+
+P13  expression-tree predicate reads ANOTHER instance's field of the same class: new[] { 2 }.Should().Contain(x => x == other._id)
+     note: "New[] { 2 } should contain [ x => x == '2' ]" in every build: it shows 2 (RIGHT), read through the chain
+     other._id off a correctly captured `other`. The array also holds a mis-captured `_id` that no chain uses:
+  Debug   sync+async   ILV 0     pass 3/3   _id = int 1  (this._id: wrong instance; ldarg.0 = THIS / <>4__this._id)
+  Release sync         ILV 0     pass 3/3   _id = int 1  (this._id)
+  Release async        ILV+1     pass 3/3   _id = int -1 (read off the state machine: ldarg.0; ldfld P13::_id [SM])
+  ReleaseDebugPlus     as Release: sync _id = 1, async _id = -1 (ILV+1)
+  `other` = the real other instance in every build (right).
+
+P14  delegate lambda: Should.Throw<InvalidOperationException>(() => other.Fail()), where Fail reads _id and throws
+     only `other` is captured (_id is read inside Fail)
+  Debug sync+async     ILV 0     pass 3/3   other = the real other                       right
+  Release sync         ILV+1     woven THROWS NullReferenceException 3/3, unwoven passes; note FAIL "Should throw
+                                 InvalidOperationException" msg "Object reference not set..."; no values reached Track.
+                                 Cause: `ldloc 0; ldfld <>c__DisplayClass2_0::other`, where Release's local 0 holds the
+                                 P14, not the closure (a separate closure-local defect: verifier "Found ref P14, Expected
+                                 ref P14+<>c__DisplayClass2_0")
+  Release async        ILV 0     pass 3/3   other right
+  ReleaseDebugPlus     ILV 0     pass 3/3   other right
+
+P15  STATIC method with C c; _harness is an instance field of C
+     load: _harness = ldarg.0; ldfld C::_harness  (ldarg.0 is the FIRST PARAMETER)
+  First(C c)   Debug, ReleaseDebugPlus   pass 3/3   c right; _harness = Harness(c-harness), right only because ldarg.0 is c
+  First(C c)   Release (ILV+1)           pass 3/3   c = Harness(c-harness) = c._harness, WRONG (closure-local defect);
+                                                    _harness right
+  Second(int n, C c)  every build        woven THROWS NullReferenceException 3/3, unwoven passes: `ldfld C::_harness`
+                                         off the int (n = 7 used as an object address; an access violation that low
+                                         reads as NullReferenceException). ILV: Debug +1, Release +2 (+1 First), RDP +1
+
+P16  P15 async static
+     load: _harness = ldarg.0; ldfld C::_harness [SM]
+  Debug            ILV+2   pass 3/3   c right; _harness = C (the `c` argument itself, not c._harness)          WRONG
+  Release          ILV+2   pass 3/3   c right; _harness = P16+<>c__DisplayClassN_0 (the closure)              WRONG
+  ReleaseDebugPlus ILV+2   pass 3/3   c right; _harness = the closure                                          WRONG
+
+P17  the standalone arm, no lambda (the async variants also call a this-method, so MoveNext holds <>4__this)
+  (a) other._id.ShouldBe(2)   all builds, sync + async   ILV 0  pass   note "Other id should be 2": NO VALUE SHOWN,
+                              no values call (the subject is never scanned for values)
+  (b) 2.ShouldBe(other._id)   all builds, sync + async   ILV 0  pass   note "2 should be '2'": shows 2 (RIGHT), from
+                              the argument; the array holds other (right) and other._id = 2 (right)
+      async Release + ReleaseDebugPlus only: the array ALSO holds _id = int 1, from the standalone arm as
+      ldarg.0; ldfld <>4__this; ldfld P17::_id (this._id: wrong instance; valid IL; unused by the label)
+  Sync never captures _id (a plain class has no <>4__this, and the arm adds nothing without one); Debug async skips it
+  as a chain continuation of ldfld <other>5__1.
+
+================================================================================================================
+CRASH CASES
+================================================================================================================
+57 of the 216 runs killed the test host, each time and in every round: exit 0xC0000005 (STATUS_ACCESS_VIOLATION), with
+  Fatal error.
+  System.AccessViolationException: Attempted to read or write protected memory. ...
+     at System.Runtime.CompilerServices.CastHelpers.StelemRef(System.Object[], IntPtr, System.Object)
+     at P6+<AssertionPasses>d__2.MoveNext()
+  P1 Debug; P6 Release and ReleaseDebugPlus; all eight P12 variants in Release and ReleaseDebugPlus.
+No hangs, and no crash anywhere but this value-load. Two more cases change the outcome without crashing: P14 Release
+sync and P15.Second (every build) throw NullReferenceException where the unwoven build passes.
+Inversion against the issue: P1, the issue's surviving test, crashes in Debug at 5.27.2 and passes in Release (recording
+null), while P6 and P12 crash in Release. Whether a shape survives depends on what the state machine holds at the
+parameter's offset: the test instance (Debug, <>4__this), the closure (<>8__1), null, or non-object bytes (a crash).
+
+================================================================================================================
+OTHER MIS-MAPPED FIELD KINDS (the brief's last item)
+================================================================================================================
+  <Prop>k__BackingField: GetStateFieldOriginalName would read it as "Prop", but C# reads an auto or record property
+    through its getter (callvirt get_Prop), never by ldfld of the backing field in an assertion, so C# cannot reach it.
+  A field of an async lambda's own state machine: P7 and P9. The weave does not scan inside the inner state machine, so
+    nothing is captured there.
+  Reachable beyond primary-constructor parameters: another instance's field read as this.field (P13 ldtoken arm, P17
+    standalone arm), a static method's first parameter used as `this` (P15), an instance field of a parameter read off
+    the state machine (P16).
+
+SURPRISES
+  - Not Release-only (above).
+  - Shapes that never capture the value: P7, P8, P9, P11, and P17(a); P10's `_field` is never captured.
+  - A second defect, independent of the receiver: in plain Release a sync closure's base is loaded from a local that no
+    longer holds the display class (`ldloc ClosureLocalIndex`, AssertionWeaver.cs ~1788/~3182): P14 Release sync throws,
+    and P15.First Release records c._harness for c.
+  - Labels hide the wrong value almost everywhere: Shouldly's "Should throw X" drops the lambda, and a subject reads as
+    words. Only the values array shows it, so the woven note looks right while the array is wrong.

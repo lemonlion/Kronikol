@@ -1,0 +1,6 @@
+ENTER P17|ReleaseDebugPlus|AsyncA
+RESULT P17|ReleaseDebugPlus|AsyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+VALUES P17|ReleaseDebugPlus|AsyncA :: (no values call recorded)
+DONE P17|ReleaseDebugPlus|AsyncA
+TYPES P17|ReleaseDebugPlus|AsyncA :: (no values call recorded)
+ALLDONE P17

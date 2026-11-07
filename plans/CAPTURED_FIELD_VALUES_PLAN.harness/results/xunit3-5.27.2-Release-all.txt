@@ -1,0 +1,96 @@
+=================== run 1 of 3: xunit3-5.27.2 Release all (2026-10-29T08:43:48Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Release\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:01.47]   Discovering: XunitV3Repro
+[xUnit.net 00:00:01.69]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:01.91]   Starting:    XunitV3Repro
+Fatal error.
+System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+   at System.Object.GetType()
+   at Kronikol.Tracking.ChainValues.Keep(Kronikol.Tracking.AccessChain, Kronikol.Tracking.ChainRead, System.Func`3<System.Object,System.String,System.String>)
+   at Kronikol.Tracking.Track.ResolveVariableValues(System.String, System.String[], System.Object[])
+   at Kronikol.Tracking.Track.AssertionPassedWithValues(System.String, System.String[], System.Object[], System.String, Int32)
+   at WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext()
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV3Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecutionContextCallback(System.Object)
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(System.Threading.Thread, System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV3Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext(System.Threading.Thread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV3Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecuteFromThreadPool(System.Threading.Thread)
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+[xUnit.net 00:01:02.18]     [FATAL ERROR] Xunit.Sdk.TestPipelineException
+[xUnit.net 00:01:02.18]       Test process crashed with exit code -1073741819.
+[xUnit.net 00:01:02.18] Catastrophic failure: Test process crashed with exit code -1073741819.
+[xUnit.net 00:01:02.19]   Finished:    XunitV3Repro (ID = 'af7fd6f87d7f602af46f54a0029745f87b18066f7ea66da67ad4ade2a8cf4d98')
+No test is available in C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Release\net10.0\XunitV3Repro.dll. Make sure that test discoverer & executors are registered and platform & framework version settings are appropriate and try again.
+
+Test Run Failed.
+Additionally, path to test adapters can be specified using /TestAdapterPath command. Example  /TestAdapterPath:<pathToCustomAdapters>.
+exit code: 1
+report: none written
+=================== run 2 of 3: xunit3-5.27.2 Release all (2026-10-29T08:44:55Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Release\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.53]   Discovering: XunitV3Repro
+[xUnit.net 00:00:01.05]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:01.56]   Starting:    XunitV3Repro
+Fatal error.
+System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+   at System.Object.GetType()
+   at Kronikol.Tracking.ChainValues.Keep(Kronikol.Tracking.AccessChain, Kronikol.Tracking.ChainRead, System.Func`3<System.Object,System.String,System.String>)
+   at Kronikol.Tracking.Track.ResolveVariableValues(System.String, System.String[], System.Object[])
+   at Kronikol.Tracking.Track.AssertionPassedWithValues(System.String, System.String[], System.Object[], System.String, Int32)
+   at WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext()
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV3Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecutionContextCallback(System.Object)
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(System.Threading.Thread, System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV3Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext(System.Threading.Thread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV3Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecuteFromThreadPool(System.Threading.Thread)
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+[xUnit.net 00:01:01.75]     [FATAL ERROR] Xunit.Sdk.TestPipelineException
+[xUnit.net 00:01:01.75]       Test process crashed with exit code -1073741819.
+[xUnit.net 00:01:01.75] Catastrophic failure: Test process crashed with exit code -1073741819.
+[xUnit.net 00:01:01.75]   Finished:    XunitV3Repro (ID = 'af7fd6f87d7f602af46f54a0029745f87b18066f7ea66da67ad4ade2a8cf4d98')
+No test is available in C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Release\net10.0\XunitV3Repro.dll. Make sure that test discoverer & executors are registered and platform & framework version settings are appropriate and try again.
+
+Test Run Failed.
+Additionally, path to test adapters can be specified using /TestAdapterPath command. Example  /TestAdapterPath:<pathToCustomAdapters>.
+exit code: 1
+report: none written
+=================== run 3 of 3: xunit3-5.27.2 Release all (2026-10-29T08:46:00Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Release\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.36]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.79]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:01.12]   Starting:    XunitV3Repro
+Fatal error.
+System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+   at System.Object.GetType()
+   at Kronikol.Tracking.ChainValues.Keep(Kronikol.Tracking.AccessChain, Kronikol.Tracking.ChainRead, System.Func`3<System.Object,System.String,System.String>)
+   at Kronikol.Tracking.Track.ResolveVariableValues(System.String, System.String[], System.Object[])
+   at Kronikol.Tracking.Track.AssertionPassedWithValues(System.String, System.String[], System.Object[], System.String, Int32)
+   at WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext()
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV3Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecutionContextCallback(System.Object)
+   at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(System.Threading.Thread, System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV3Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].MoveNext(System.Threading.Thread)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[[System.Threading.Tasks.VoidTaskResult, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[WeaveRepro.SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8, XunitV3Repro, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]].ExecuteFromThreadPool(System.Threading.Thread)
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()
+   at System.Threading.Thread.StartCallback()
+[xUnit.net 00:01:01.24]     [FATAL ERROR] Xunit.Sdk.TestPipelineException
+[xUnit.net 00:01:01.24]       Test process crashed with exit code -1073741819.
+[xUnit.net 00:01:01.24] Catastrophic failure: Test process crashed with exit code -1073741819.
+[xUnit.net 00:01:01.25]   Finished:    XunitV3Repro (ID = 'af7fd6f87d7f602af46f54a0029745f87b18066f7ea66da67ad4ade2a8cf4d98')
+No test is available in C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Release\net10.0\XunitV3Repro.dll. Make sure that test discoverer & executors are registered and platform & framework version settings are appropriate and try again.
+
+Test Run Failed.
+Additionally, path to test adapters can be specified using /TestAdapterPath command. Example  /TestAdapterPath:<pathToCustomAdapters>.
+exit code: 1
+report: none written

@@ -1,0 +1,6 @@
+ENTER P18|ReleaseDebugPlus|Parameter
+RESULT P18|ReleaseDebugPlus|Parameter :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetParameter()) should be 'Harness(expected)']
+VALUES P18|ReleaseDebugPlus|Parameter :: [(await GetParameter()).ShouldBe(expected)] expected = Harness(expected) [the `expected` argument]
+DONE P18|ReleaseDebugPlus|Parameter
+TYPES P18|ReleaseDebugPlus|Parameter :: [(await GetParameter()).ShouldBe(expected)] expected = Harness(expected) [the `expected` argument]
+ALLDONE P18

@@ -1,0 +1,41 @@
+== Debug: woven 26, ILVerify errors added 7
+   IL: Pc/<Async_lambda_this_only>d__7.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Proto213_Debug]Pc+<Async_lambda_this_only>d__7', Expected ref '[Proto213_Debug]Pc')
+   IL: Pc/<Async_lambda_with_local>d__8.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 338, Found ref '[Proto213_Debug]Pc+<Async_lambda_with_local>d__8', Expected ref '[Proto213_Debug]Pc')
+   IL: Derived.Sync_generic_base_field: StackUnexpected: Unexpected type on the stack. (Offset 31, Found Int32, Expected ref '!0')
+   IL: Derived.Sync_generic_base_field: StackUnexpected: Unexpected type on the stack. (Offset 36, Found ref '!0', Expected ref 'object')
+   IL: Derived.Sync_lambda_generic_base_field: StackUnexpected: Unexpected type on the stack. (Offset 31, Found Int32, Expected ref '!0')
+   IL: Derived.Sync_lambda_generic_base_field: StackUnexpected: Unexpected type on the stack. (Offset 36, Found ref '!0', Expected ref 'object')
+   IL: Gen`1/<Async_generic_lambda>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 139, Found ref '[Proto213_Debug]Gen`1+<Async_generic_lambda>d__2<T0>', Expected ref '[Proto213_Debug]Gen`1<T0>')
+-- Receivers.Lambda_reads_another_objects_field: starting
+-- Receivers.Lambda_reads_another_objects_field: ran
+     pass | Should not throw
+-- Receivers.Async_another_objects_field: starting
+-- Receivers.Async_another_objects_field: ran
+     pass | Other id should be '42'
+     pass | Count should be 3
+-- Receivers.Static_parameters_field: starting
+-- Receivers.Static_parameters_field: ran
+     pass | Foo id should be '42'
+-- Receivers.Expression_tree_static_field: starting
+-- Receivers.Expression_tree_static_field: ran
+     pass | Items should contain [ x => x == 'a1' ]
+-- Derived.Sync_generic_base_field: starting
+-- Derived.Sync_generic_base_field: THREW BadImageFormatException: An attempt was made to load a program with an incorrect format. (0x8007000B)
+-- Derived.Async_generic_base_field: starting
+-- Derived.Async_generic_base_field: ran
+     pass | Value should be '5'
+-- Derived.Sync_lambda_generic_base_field: starting
+-- Derived.Sync_lambda_generic_base_field: THREW BadImageFormatException: An attempt was made to load a program with an incorrect format. (0x8007000B)
+-- Statics.Other_class_static: starting
+-- Statics.Other_class_static: ran
+     pass | Items should contain [ x => x == Defaults.Expected ]
+-- Statics.Async_own_static: starting
+-- Statics.Async_own_static: ran
+     pass | N should be 1
+     pass | Items should contain [ x => x == 'a1' ]
+-- InLambdas.Assertion_inside_lambda: starting
+-- InLambdas.Assertion_inside_lambda: ran
+     pass | List should contain [ x => x == local && x == 'a1' ]
+-- InLambdas.Nested_lambda_inside_lambda: starting
+-- InLambdas.Nested_lambda_inside_lambda: ran
+     pass | Should not throw

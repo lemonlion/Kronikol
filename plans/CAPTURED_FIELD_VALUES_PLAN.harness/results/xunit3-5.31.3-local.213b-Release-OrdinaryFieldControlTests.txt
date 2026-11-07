@@ -1,0 +1,102 @@
+=================== run 1 of 3: xunit3-5.31.3-local.213b Release OrdinaryFieldControlTests (2026-11-07T14:22:21Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OrdinaryFieldControlTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Release\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.35]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.77]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:01.16]   Starting:    XunitV3Repro
+  Passed WeaveRepro.OrdinaryFieldControlTests.Ordinary_field_control [103 ms]
+[xUnit.net 00:00:02.02]   Finished:    XunitV3Repro (ID = '391ccc09afded33d7f406e561aef493aa660625412f962d5585fac6491442167')
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 2.5546 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass    0.1s     0 calls  Ordinary field control
+1 scenarios
+--- s0
+s0  Ordinary Field Control Tests › Ordinary field control  [Passed]  0.1s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 2 of 3: xunit3-5.31.3-local.213b Release OrdinaryFieldControlTests (2026-11-07T14:22:30Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OrdinaryFieldControlTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Release\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.34]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.62]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.85]   Starting:    XunitV3Repro
+  Passed WeaveRepro.OrdinaryFieldControlTests.Ordinary_field_control [71 ms]
+[xUnit.net 00:00:01.47]   Finished:    XunitV3Repro (ID = '391ccc09afded33d7f406e561aef493aa660625412f962d5585fac6491442167')
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 2.2570 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.07s     0 calls  Ordinary field control
+1 scenarios
+--- s0
+s0  Ordinary Field Control Tests › Ordinary field control  [Passed]  0.07s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 3 of 3: xunit3-5.31.3-local.213b Release OrdinaryFieldControlTests (2026-11-07T14:22:39Z)
+dotnet test -c Release --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.OrdinaryFieldControlTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Release\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.26]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.58]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.91]   Starting:    XunitV3Repro
+  Passed WeaveRepro.OrdinaryFieldControlTests.Ordinary_field_control [108 ms]
+[xUnit.net 00:00:01.77]   Finished:    XunitV3Repro (ID = '391ccc09afded33d7f406e561aef493aa660625412f962d5585fac6491442167')
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 2.2948 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass    0.1s     0 calls  Ordinary field control
+1 scenarios
+--- s0
+s0  Ordinary Field Control Tests › Ordinary field control  [Passed]  0.1s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)

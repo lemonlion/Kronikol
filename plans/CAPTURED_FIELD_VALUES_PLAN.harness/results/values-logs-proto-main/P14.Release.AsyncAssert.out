@@ -1,0 +1,6 @@
+ENTER P14|Release|AsyncAssert
+RESULT P14|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P14|Release|AsyncAssert :: [await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })] other = UNCREATED (not an object this run made)
+DONE P14|Release|AsyncAssert
+TYPES P14|Release|AsyncAssert :: [await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })] other = UNCREATED P14: P14
+ALLDONE P14

@@ -1,0 +1,4 @@
+ENTER P12_6p_fields|ReleaseDebugPlus|AssertionPasses
+RESULT P12_6p_fields|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+DONE P12_6p_fields|ReleaseDebugPlus|AssertionPasses
+ALLDONE P12_6p_fields

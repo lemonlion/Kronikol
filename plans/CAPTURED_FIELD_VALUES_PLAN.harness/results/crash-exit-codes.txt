@@ -1,0 +1,17 @@
+# The test host's exit code at each crash site. xUnit v3's runner prints it ("Test process crashed with exit code -1073741819",
+# in every crashed run file under results/). Under xUnit v2, VSTest prints only "Test host process crashed : Fatal error.", so
+# one run of each xUnit v2 crash site was repeated with --diag, and these are vstest.console's lines from its log.
+# -1073741819 is 0xC0000005, STATUS_ACCESS_VIOLATION. dotnet test itself exits 1 in every crashed run.
+# KRONIKOL_HISTORY=off; dotnet test -c <config> --no-build --filter FullyQualifiedName~WeaveRepro.<class>. --diag:<log>
+
+## xunit2-5.27.2 Release IssueFirstShapeTests (crash site in results/xunit2-5.27.2-Release-IssueFirstShapeTests.txt)
+Executor.Execute: Exiting with exit code of 1
+TestHostManagerCallbacks.ExitCallBack: Testhost processId: 40568 exited with exitcode: -1073741819 error: 'Fatal error.
+
+## xunit2-5.27.2 Release SixParametersTests (crash site in results/xunit2-5.27.2-Release-SixParametersTests.txt)
+Executor.Execute: Exiting with exit code of 1
+TestHostManagerCallbacks.ExitCallBack: Testhost processId: 2532 exited with exitcode: -1073741819 error: 'Fatal error.
+
+## xunit2-5.27.2 Debug PrimaryConstructorParameterTests (crash site in results/xunit2-5.27.2-Debug-PrimaryConstructorParameterTests.txt)
+Executor.Execute: Exiting with exit code of 1
+TestHostManagerCallbacks.ExitCallBack: Testhost processId: 22580 exited with exitcode: -1073741819 error: 'Fatal error.

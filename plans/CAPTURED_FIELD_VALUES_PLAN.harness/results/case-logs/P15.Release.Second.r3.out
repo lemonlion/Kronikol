@@ -1,0 +1,4 @@
+ENTER P15|Release|Second
+RESULT P15|Release|Second :: unwoven=nothing :: woven=NullReferenceException: Object reference not set to an instance of an object. :: note=FAIL [Should throw InvalidOperationException] msg=Object reference not set to an instance of an object.
+DONE P15|Release|Second
+ALLDONE P15

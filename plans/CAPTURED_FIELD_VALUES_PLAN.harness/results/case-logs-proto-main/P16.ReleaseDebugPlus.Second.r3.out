@@ -1,0 +1,4 @@
+ENTER P16|ReleaseDebugPlus|Second
+RESULT P16|ReleaseDebugPlus|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+DONE P16|ReleaseDebugPlus|Second
+ALLDONE P16

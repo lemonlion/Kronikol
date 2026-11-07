@@ -1,0 +1,102 @@
+=================== run 1 of 3: xunit3-5.31.3-local.213b Debug ParametersAndValueFieldsTests (2026-11-07T14:18:55Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.ParametersAndValueFieldsTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.28]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.60]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.94]   Starting:    XunitV3Repro
+  Passed WeaveRepro.ParametersAndValueFieldsTests.Parameters_and_value_fields [198 ms]
+[xUnit.net 00:00:02.54]   Finished:    XunitV3Repro (ID = '02278748fd875f6589f6d503b5c393141c1c19f7cb6a3de77014d65fb2381e4b')
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 3.3284 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.18s     0 calls  Parameters and value fields
+1 scenarios
+--- s0
+s0  Parameters And Value Fields Tests › Parameters and value fields  [Passed]  0.18s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 2 of 3: xunit3-5.31.3-local.213b Debug ParametersAndValueFieldsTests (2026-11-07T14:19:07Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.ParametersAndValueFieldsTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.35]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.91]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:01.29]   Starting:    XunitV3Repro
+[xUnit.net 00:00:02.80]   Finished:    XunitV3Repro (ID = '02278748fd875f6589f6d503b5c393141c1c19f7cb6a3de77014d65fb2381e4b')
+  Passed WeaveRepro.ParametersAndValueFieldsTests.Parameters_and_value_fields [159 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 3.6405 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.15s     0 calls  Parameters and value fields
+1 scenarios
+--- s0
+s0  Parameters And Value Fields Tests › Parameters and value fields  [Passed]  0.15s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 3 of 3: xunit3-5.31.3-local.213b Debug ParametersAndValueFieldsTests (2026-11-07T14:19:19Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.ParametersAndValueFieldsTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.38]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.76]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:01.07]   Starting:    XunitV3Repro
+  Passed WeaveRepro.ParametersAndValueFieldsTests.Parameters_and_value_fields [132 ms]
+[xUnit.net 00:00:02.13]   Finished:    XunitV3Repro (ID = '02278748fd875f6589f6d503b5c393141c1c19f7cb6a3de77014d65fb2381e4b')
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 2.9610 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.12s     0 calls  Parameters and value fields
+1 scenarios
+--- s0
+s0  Parameters And Value Fields Tests › Parameters and value fields  [Passed]  0.12s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)

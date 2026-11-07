@@ -1,0 +1,6 @@
+ENTER P8|ReleaseDebugPlus|SyncAssert
+RESULT P8|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == 'Harness(expected)' ]]
+VALUES P8|ReleaseDebugPlus|SyncAssert :: [new List<Harness> { expected }.Should().Contain(x => x == expected)] expected = Harness(expected) [the `expected` argument]
+DONE P8|ReleaseDebugPlus|SyncAssert
+TYPES P8|ReleaseDebugPlus|SyncAssert :: [new List<Harness> { expected }.Should().Contain(x => x == expected)] expected = Harness(expected) [the `expected` argument]
+ALLDONE P8

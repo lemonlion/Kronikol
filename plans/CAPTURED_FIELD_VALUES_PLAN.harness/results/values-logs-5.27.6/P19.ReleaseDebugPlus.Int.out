@@ -1,0 +1,6 @@
+ENTER P19|ReleaseDebugPlus|Int
+RESULT P19|ReleaseDebugPlus|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+VALUES P19|ReleaseDebugPlus|Int :: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 0
+DONE P19|ReleaseDebugPlus|Int
+TYPES P19|ReleaseDebugPlus|Int :: [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 0
+ALLDONE P19

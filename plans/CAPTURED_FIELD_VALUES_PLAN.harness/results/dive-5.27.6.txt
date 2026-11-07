@@ -1,0 +1,891 @@
+# Probe213 static dive: weaver 5.27.6.0, runtime 10.0.11
+# Per shape x build: compile, weave (reflection), ILVerify errors the weave ADDED, and each
+# captured variable's metadata + its reconstructed value-load. No woven code is run here.
+
+=== P1 [Debug] ===
+  weavedCount=3; ILVerify errors the weave added=1
+    ILVERIFY+ P1/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P1_Debug]P1+<AssertionPasses>d__5', Expected ref '[Probe213_P1_Debug]P1')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P1::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P1::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P1 (MoveNext/method owner=P1/<AssertionPasses>d__5)
+  stmt <AssertionPasses>d__5::MoveNext L14 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__5::MoveNext L15 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P1 [Release] ===
+  weavedCount=3; ILVerify errors the weave added=1
+    ILVERIFY+ P1/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P1_Release]P1+<AssertionPasses>d__5', Expected ref '[Probe213_P1_Release]P1')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P1::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P1::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P1 (MoveNext/method owner=P1/<AssertionPasses>d__5)
+  stmt <AssertionPasses>d__5::MoveNext L14 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__5::MoveNext L15 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P1 [ReleaseDebugPlus] ===
+  weavedCount=3; ILVerify errors the weave added=1
+    ILVERIFY+ P1/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P1_ReleaseDebugPlus]P1+<AssertionPasses>d__5', Expected ref '[Probe213_P1_ReleaseDebugPlus]P1')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P1::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P1::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P1 (MoveNext/method owner=P1/<AssertionPasses>d__5)
+  stmt <AssertionPasses>d__5::MoveNext L14 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__5::MoveNext L15 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P10 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P10/<AssertionPasses>d__3.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 329, Found ref '[Probe213_P10_Debug]P10+<AssertionPasses>d__3', Expected ref '[Probe213_P10_Debug]P10')
+  stmt <AssertionPasses>d__3::MoveNext L14 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))"
+    captured 'local': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::local stateField=<AssertionPasses>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__3::<>8__1; ldfld <>c__DisplayClass3_0::local
+      stateField declaringType=P10/<AssertionPasses>d__3 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P10::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P10::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P10 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+
+=== P10 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P10/<AssertionPasses>d__3.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 308, Found address of '[Probe213_P10_Release]P10+<AssertionPasses>d__3', Expected ref '[Probe213_P10_Release]P10')
+  stmt <AssertionPasses>d__3::MoveNext L14 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))"
+    captured 'local': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::local stateField=<AssertionPasses>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__3::<>8__1; ldfld <>c__DisplayClass3_0::local
+      stateField declaringType=P10/<AssertionPasses>d__3 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P10::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P10::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P10 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+
+=== P10 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P10/<AssertionPasses>d__3.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 308, Found address of '[Probe213_P10_ReleaseDebugPlus]P10+<AssertionPasses>d__3', Expected ref '[Probe213_P10_ReleaseDebugPlus]P10')
+  stmt <AssertionPasses>d__3::MoveNext L14 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))"
+    captured 'local': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::local stateField=<AssertionPasses>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__3::<>8__1; ldfld <>c__DisplayClass3_0::local
+      stateField declaringType=P10/<AssertionPasses>d__3 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P10::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P10::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P10 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+
+=== P11 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(Body)"
+    captured: none
+
+=== P11 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(Body)"
+    captured: none
+
+=== P11 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(Body)"
+    captured: none
+
+=== P12_1p [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_1p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P12_1p_Debug]P12_1p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_1p_Debug]P12_1p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=null stateField=P12_1p::<p0>P param=-1 box=False
+      load: ldarg.0; ldfld P12_1p::<p0>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_1p (MoveNext/method owner=P12_1p/<AssertionPasses>d__2)
+
+=== P12_1p [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_1p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_1p_Release]P12_1p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_1p_Release]P12_1p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=null stateField=P12_1p::<p0>P param=-1 box=False
+      load: ldarg.0; ldfld P12_1p::<p0>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_1p (MoveNext/method owner=P12_1p/<AssertionPasses>d__2)
+
+=== P12_1p [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_1p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_1p_ReleaseDebugPlus]P12_1p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_1p_ReleaseDebugPlus]P12_1p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=null stateField=P12_1p::<p0>P param=-1 box=False
+      load: ldarg.0; ldfld P12_1p::<p0>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_1p (MoveNext/method owner=P12_1p/<AssertionPasses>d__2)
+
+=== P12_1p_fields [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_1p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P12_1p_fields_Debug]P12_1p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_1p_fields_Debug]P12_1p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=null stateField=P12_1p_fields::<p0>P param=-1 box=False
+      load: ldarg.0; ldfld P12_1p_fields::<p0>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_1p_fields (MoveNext/method owner=P12_1p_fields/<AssertionPasses>d__5)
+
+=== P12_1p_fields [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_1p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_1p_fields_Release]P12_1p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_1p_fields_Release]P12_1p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=null stateField=P12_1p_fields::<p0>P param=-1 box=False
+      load: ldarg.0; ldfld P12_1p_fields::<p0>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_1p_fields (MoveNext/method owner=P12_1p_fields/<AssertionPasses>d__5)
+
+=== P12_1p_fields [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_1p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_1p_fields_ReleaseDebugPlus]P12_1p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_1p_fields_ReleaseDebugPlus]P12_1p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=null stateField=P12_1p_fields::<p0>P param=-1 box=False
+      load: ldarg.0; ldfld P12_1p_fields::<p0>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_1p_fields (MoveNext/method owner=P12_1p_fields/<AssertionPasses>d__5)
+
+=== P12_2p [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_2p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P12_2p_Debug]P12_2p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_2p_Debug]P12_2p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=null stateField=P12_2p::<p1>P param=-1 box=False
+      load: ldarg.0; ldfld P12_2p::<p1>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_2p (MoveNext/method owner=P12_2p/<AssertionPasses>d__2)
+
+=== P12_2p [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_2p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_2p_Release]P12_2p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_2p_Release]P12_2p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=null stateField=P12_2p::<p1>P param=-1 box=False
+      load: ldarg.0; ldfld P12_2p::<p1>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_2p (MoveNext/method owner=P12_2p/<AssertionPasses>d__2)
+
+=== P12_2p [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_2p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_2p_ReleaseDebugPlus]P12_2p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_2p_ReleaseDebugPlus]P12_2p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=null stateField=P12_2p::<p1>P param=-1 box=False
+      load: ldarg.0; ldfld P12_2p::<p1>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_2p (MoveNext/method owner=P12_2p/<AssertionPasses>d__2)
+
+=== P12_2p_fields [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_2p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P12_2p_fields_Debug]P12_2p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_2p_fields_Debug]P12_2p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=null stateField=P12_2p_fields::<p1>P param=-1 box=False
+      load: ldarg.0; ldfld P12_2p_fields::<p1>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_2p_fields (MoveNext/method owner=P12_2p_fields/<AssertionPasses>d__5)
+
+=== P12_2p_fields [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_2p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_2p_fields_Release]P12_2p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_2p_fields_Release]P12_2p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=null stateField=P12_2p_fields::<p1>P param=-1 box=False
+      load: ldarg.0; ldfld P12_2p_fields::<p1>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_2p_fields (MoveNext/method owner=P12_2p_fields/<AssertionPasses>d__5)
+
+=== P12_2p_fields [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_2p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_2p_fields_ReleaseDebugPlus]P12_2p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_2p_fields_ReleaseDebugPlus]P12_2p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=null stateField=P12_2p_fields::<p1>P param=-1 box=False
+      load: ldarg.0; ldfld P12_2p_fields::<p1>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_2p_fields (MoveNext/method owner=P12_2p_fields/<AssertionPasses>d__5)
+
+=== P12_4p [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_4p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P12_4p_Debug]P12_4p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_4p_Debug]P12_4p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=null stateField=P12_4p::<p3>P param=-1 box=False
+      load: ldarg.0; ldfld P12_4p::<p3>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_4p (MoveNext/method owner=P12_4p/<AssertionPasses>d__2)
+
+=== P12_4p [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_4p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_4p_Release]P12_4p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_4p_Release]P12_4p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=null stateField=P12_4p::<p3>P param=-1 box=False
+      load: ldarg.0; ldfld P12_4p::<p3>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_4p (MoveNext/method owner=P12_4p/<AssertionPasses>d__2)
+
+=== P12_4p [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_4p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_4p_ReleaseDebugPlus]P12_4p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_4p_ReleaseDebugPlus]P12_4p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=null stateField=P12_4p::<p3>P param=-1 box=False
+      load: ldarg.0; ldfld P12_4p::<p3>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_4p (MoveNext/method owner=P12_4p/<AssertionPasses>d__2)
+
+=== P12_4p_fields [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_4p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P12_4p_fields_Debug]P12_4p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_4p_fields_Debug]P12_4p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=null stateField=P12_4p_fields::<p3>P param=-1 box=False
+      load: ldarg.0; ldfld P12_4p_fields::<p3>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_4p_fields (MoveNext/method owner=P12_4p_fields/<AssertionPasses>d__5)
+
+=== P12_4p_fields [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_4p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_4p_fields_Release]P12_4p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_4p_fields_Release]P12_4p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=null stateField=P12_4p_fields::<p3>P param=-1 box=False
+      load: ldarg.0; ldfld P12_4p_fields::<p3>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_4p_fields (MoveNext/method owner=P12_4p_fields/<AssertionPasses>d__5)
+
+=== P12_4p_fields [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_4p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_4p_fields_ReleaseDebugPlus]P12_4p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_4p_fields_ReleaseDebugPlus]P12_4p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=null stateField=P12_4p_fields::<p3>P param=-1 box=False
+      load: ldarg.0; ldfld P12_4p_fields::<p3>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_4p_fields (MoveNext/method owner=P12_4p_fields/<AssertionPasses>d__5)
+
+=== P12_6p [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_6p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P12_6p_Debug]P12_6p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_6p_Debug]P12_6p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=null stateField=P12_6p::<p5>P param=-1 box=False
+      load: ldarg.0; ldfld P12_6p::<p5>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_6p (MoveNext/method owner=P12_6p/<AssertionPasses>d__2)
+
+=== P12_6p [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_6p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_6p_Release]P12_6p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_6p_Release]P12_6p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=null stateField=P12_6p::<p5>P param=-1 box=False
+      load: ldarg.0; ldfld P12_6p::<p5>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_6p (MoveNext/method owner=P12_6p/<AssertionPasses>d__2)
+
+=== P12_6p [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_6p/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_6p_ReleaseDebugPlus]P12_6p+<AssertionPasses>d__2', Expected ref '[Probe213_P12_6p_ReleaseDebugPlus]P12_6p')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=null stateField=P12_6p::<p5>P param=-1 box=False
+      load: ldarg.0; ldfld P12_6p::<p5>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_6p (MoveNext/method owner=P12_6p/<AssertionPasses>d__2)
+
+=== P12_6p_fields [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_6p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P12_6p_fields_Debug]P12_6p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_6p_fields_Debug]P12_6p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=null stateField=P12_6p_fields::<p5>P param=-1 box=False
+      load: ldarg.0; ldfld P12_6p_fields::<p5>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_6p_fields (MoveNext/method owner=P12_6p_fields/<AssertionPasses>d__5)
+
+=== P12_6p_fields [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_6p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_6p_fields_Release]P12_6p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_6p_fields_Release]P12_6p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=null stateField=P12_6p_fields::<p5>P param=-1 box=False
+      load: ldarg.0; ldfld P12_6p_fields::<p5>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_6p_fields (MoveNext/method owner=P12_6p_fields/<AssertionPasses>d__5)
+
+=== P12_6p_fields [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P12_6p_fields/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P12_6p_fields_ReleaseDebugPlus]P12_6p_fields+<AssertionPasses>d__5', Expected ref '[Probe213_P12_6p_fields_ReleaseDebugPlus]P12_6p_fields')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=null stateField=P12_6p_fields::<p5>P param=-1 box=False
+      load: ldarg.0; ldfld P12_6p_fields::<p5>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P12_6p_fields (MoveNext/method owner=P12_6p_fields/<AssertionPasses>d__5)
+
+=== P13 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P13::SyncAssert L13 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::other
+    captured '_id': local=-1 closureLocal=-1 closureField=null stateField=P13::_id param=-1 box=True
+      load: ldarg.0; ldfld P13::_id; box Int32   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P13 (MoveNext/method owner=P13)
+  stmt <AsyncAssert>d__2::MoveNext L19 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass2_0::other stateField=<AsyncAssert>d__2::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__2::<>8__1; ldfld <>c__DisplayClass2_0::other
+      stateField declaringType=P13/<AsyncAssert>d__2 (MoveNext/method owner=P13/<AsyncAssert>d__2)
+    captured '_id': local=-1 closureLocal=-1 closureField=P13::_id stateField=<AsyncAssert>d__2::<>4__this param=-1 box=True
+      load: ldarg.0; ldfld <AsyncAssert>d__2::<>4__this; ldfld P13::_id; box Int32
+      stateField declaringType=P13/<AsyncAssert>d__2 (MoveNext/method owner=P13/<AsyncAssert>d__2)
+
+=== P13 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P13::SyncAssert L13 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::other
+    captured '_id': local=-1 closureLocal=-1 closureField=null stateField=P13::_id param=-1 box=True
+      load: ldarg.0; ldfld P13::_id; box Int32   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P13 (MoveNext/method owner=P13)
+  stmt <AsyncAssert>d__2::MoveNext L19 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass2_0::other stateField=<AsyncAssert>d__2::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__2::<>8__1; ldfld <>c__DisplayClass2_0::other
+      stateField declaringType=P13/<AsyncAssert>d__2 (MoveNext/method owner=P13/<AsyncAssert>d__2)
+
+=== P13 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P13::SyncAssert L13 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::other
+    captured '_id': local=-1 closureLocal=-1 closureField=null stateField=P13::_id param=-1 box=True
+      load: ldarg.0; ldfld P13::_id; box Int32   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P13 (MoveNext/method owner=P13)
+  stmt <AsyncAssert>d__2::MoveNext L19 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass2_0::other stateField=<AsyncAssert>d__2::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__2::<>8__1; ldfld <>c__DisplayClass2_0::other
+      stateField declaringType=P13/<AsyncAssert>d__2 (MoveNext/method owner=P13/<AsyncAssert>d__2)
+
+=== P14 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P14::SyncAssert L14 awaited=False "Should.Throw<InvalidOperationException>(() => other.Fail())"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass2_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass2_0::other
+  stmt <AsyncAssert>d__3::MoveNext L20 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::other stateField=<AsyncAssert>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__3::<>8__1; ldfld <>c__DisplayClass3_0::other
+      stateField declaringType=P14/<AsyncAssert>d__3 (MoveNext/method owner=P14/<AsyncAssert>d__3)
+
+=== P14 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P14::SyncAssert L14 awaited=False "Should.Throw<InvalidOperationException>(() => other.Fail())"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass2_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass2_0::other
+  stmt <AsyncAssert>d__3::MoveNext L20 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::other stateField=<AsyncAssert>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__3::<>8__1; ldfld <>c__DisplayClass3_0::other
+      stateField declaringType=P14/<AsyncAssert>d__3 (MoveNext/method owner=P14/<AsyncAssert>d__3)
+
+=== P14 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P14::SyncAssert L14 awaited=False "Should.Throw<InvalidOperationException>(() => other.Fail())"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass2_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass2_0::other
+  stmt <AsyncAssert>d__3::MoveNext L20 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::other stateField=<AsyncAssert>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__3::<>8__1; ldfld <>c__DisplayClass3_0::other
+      stateField declaringType=P14/<AsyncAssert>d__3 (MoveNext/method owner=P14/<AsyncAssert>d__3)
+
+=== P15 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P15::First L11 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass0_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass0_0::c
+  stmt P15::Second L15 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::c
+
+=== P15 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P15::First L11 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass0_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass0_0::c
+  stmt P15::Second L15 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::c
+
+=== P15 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P15::First L11 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass0_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass0_0::c
+  stmt P15::Second L15 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::c
+
+=== P16 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt <First>d__0::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass0_0::c stateField=<First>d__0::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <First>d__0::<>8__1; ldfld <>c__DisplayClass0_0::c
+      stateField declaringType=P16/<First>d__0 (MoveNext/method owner=P16/<First>d__0)
+  stmt <Second>d__1::MoveNext L17 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass1_0::c stateField=<Second>d__1::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <Second>d__1::<>8__1; ldfld <>c__DisplayClass1_0::c
+      stateField declaringType=P16/<Second>d__1 (MoveNext/method owner=P16/<Second>d__1)
+
+=== P16 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt <First>d__0::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass0_0::c stateField=<First>d__0::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <First>d__0::<>8__1; ldfld <>c__DisplayClass0_0::c
+      stateField declaringType=P16/<First>d__0 (MoveNext/method owner=P16/<First>d__0)
+  stmt <Second>d__1::MoveNext L17 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass1_0::c stateField=<Second>d__1::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <Second>d__1::<>8__1; ldfld <>c__DisplayClass1_0::c
+      stateField declaringType=P16/<Second>d__1 (MoveNext/method owner=P16/<Second>d__1)
+
+=== P16 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt <First>d__0::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass0_0::c stateField=<First>d__0::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <First>d__0::<>8__1; ldfld <>c__DisplayClass0_0::c
+      stateField declaringType=P16/<First>d__0 (MoveNext/method owner=P16/<First>d__0)
+  stmt <Second>d__1::MoveNext L17 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass1_0::c stateField=<Second>d__1::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <Second>d__1::<>8__1; ldfld <>c__DisplayClass1_0::c
+      stateField declaringType=P16/<Second>d__1 (MoveNext/method owner=P16/<Second>d__1)
+
+=== P17 [Debug] ===
+  weavedCount=4; ILVerify errors the weave added=0
+  stmt P17::SyncA L11 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt P17::SyncB L12 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=0 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 0
+  stmt <AsyncA>d__4::MoveNext L13 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt <AsyncB>d__5::MoveNext L14 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=-1 closureLocal=-1 closureField=null stateField=<AsyncB>d__5::<other>5__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncB>d__5::<other>5__1   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P17/<AsyncB>d__5 (MoveNext/method owner=P17/<AsyncB>d__5)
+
+=== P17 [Release] ===
+  weavedCount=4; ILVerify errors the weave added=0
+  stmt P17::SyncA L11 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt P17::SyncB L12 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=0 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 0
+  stmt <AsyncA>d__4::MoveNext L13 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt <AsyncB>d__5::MoveNext L14 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=2 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 2
+    captured '_id': local=-1 closureLocal=-1 closureField=P17::_id stateField=<AsyncB>d__5::<>4__this param=-1 box=True
+      load: ldarg.0; ldfld <AsyncB>d__5::<>4__this; ldfld P17::_id; box Int32
+      stateField declaringType=P17/<AsyncB>d__5 (MoveNext/method owner=P17/<AsyncB>d__5)
+
+=== P17 [ReleaseDebugPlus] ===
+  weavedCount=4; ILVerify errors the weave added=0
+  stmt P17::SyncA L11 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt P17::SyncB L12 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=0 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 0
+  stmt <AsyncA>d__4::MoveNext L13 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt <AsyncB>d__5::MoveNext L14 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=2 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 2
+    captured '_id': local=-1 closureLocal=-1 closureField=P17::_id stateField=<AsyncB>d__5::<>4__this param=-1 box=True
+      load: ldarg.0; ldfld <AsyncB>d__5::<>4__this; ldfld P17::_id; box Int32
+      stateField declaringType=P17/<AsyncB>d__5 (MoveNext/method owner=P17/<AsyncB>d__5)
+
+=== P18 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt <Field>d__6::MoveNext L20 awaited=True "(await GetField()).ShouldBe(_field)"
+    captured '_field': local=-1 closureLocal=-1 closureField=P18::_field stateField=<Field>d__6::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <Field>d__6::<>4__this; ldfld P18::_field
+      stateField declaringType=P18/<Field>d__6 (MoveNext/method owner=P18/<Field>d__6)
+  stmt <Parameter>d__5::MoveNext L15 awaited=True "(await GetParameter()).ShouldBe(expected)"
+    captured: none
+
+=== P18 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt <Field>d__6::MoveNext L20 awaited=True "(await GetField()).ShouldBe(_field)"
+    captured '_field': local=-1 closureLocal=-1 closureField=P18::_field stateField=<Field>d__6::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <Field>d__6::<>4__this; ldfld P18::_field
+      stateField declaringType=P18/<Field>d__6 (MoveNext/method owner=P18/<Field>d__6)
+  stmt <Parameter>d__5::MoveNext L15 awaited=True "(await GetParameter()).ShouldBe(expected)"
+    captured: none
+
+=== P18 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt <Field>d__6::MoveNext L20 awaited=True "(await GetField()).ShouldBe(_field)"
+    captured '_field': local=-1 closureLocal=-1 closureField=P18::_field stateField=<Field>d__6::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <Field>d__6::<>4__this; ldfld P18::_field
+      stateField declaringType=P18/<Field>d__6 (MoveNext/method owner=P18/<Field>d__6)
+  stmt <Parameter>d__5::MoveNext L15 awaited=True "(await GetParameter()).ShouldBe(expected)"
+    captured: none
+
+=== P19 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=2
+    ILVERIFY+ P19/<Int>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 139, Found ref '[Probe213_P19_Debug]P19+<Int>d__4', Expected ref '[Probe213_P19_Debug]P19')
+    ILVERIFY+ P19/<Long>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 139, Found ref '[Probe213_P19_Debug]P19+<Long>d__5', Expected ref '[Probe213_P19_Debug]P19')
+  stmt <Int>d__4::MoveNext L12 awaited=False "third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))"
+    captured 'count': local=-1 closureLocal=-1 closureField=null stateField=P19::<count>P param=-1 box=True
+      load: ldarg.0; ldfld P19::<count>P; box Int32   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P19 (MoveNext/method owner=P19/<Int>d__4)
+  stmt <Long>d__5::MoveNext L17 awaited=False "third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))"
+    captured 'total': local=-1 closureLocal=-1 closureField=null stateField=P19::<total>P param=-1 box=True
+      load: ldarg.0; ldfld P19::<total>P; box Int64   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P19 (MoveNext/method owner=P19/<Long>d__5)
+
+=== P19 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=2
+    ILVERIFY+ P19/<Int>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 136, Found address of '[Probe213_P19_Release]P19+<Int>d__4', Expected ref '[Probe213_P19_Release]P19')
+    ILVERIFY+ P19/<Long>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 136, Found address of '[Probe213_P19_Release]P19+<Long>d__5', Expected ref '[Probe213_P19_Release]P19')
+  stmt <Int>d__4::MoveNext L12 awaited=False "third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))"
+    captured 'count': local=-1 closureLocal=-1 closureField=null stateField=P19::<count>P param=-1 box=True
+      load: ldarg.0; ldfld P19::<count>P; box Int32   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P19 (MoveNext/method owner=P19/<Int>d__4)
+  stmt <Long>d__5::MoveNext L17 awaited=False "third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))"
+    captured 'total': local=-1 closureLocal=-1 closureField=null stateField=P19::<total>P param=-1 box=True
+      load: ldarg.0; ldfld P19::<total>P; box Int64   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P19 (MoveNext/method owner=P19/<Long>d__5)
+
+=== P19 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=2
+    ILVERIFY+ P19/<Int>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 136, Found address of '[Probe213_P19_ReleaseDebugPlus]P19+<Int>d__4', Expected ref '[Probe213_P19_ReleaseDebugPlus]P19')
+    ILVERIFY+ P19/<Long>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 136, Found address of '[Probe213_P19_ReleaseDebugPlus]P19+<Long>d__5', Expected ref '[Probe213_P19_ReleaseDebugPlus]P19')
+  stmt <Int>d__4::MoveNext L12 awaited=False "third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))"
+    captured 'count': local=-1 closureLocal=-1 closureField=null stateField=P19::<count>P param=-1 box=True
+      load: ldarg.0; ldfld P19::<count>P; box Int32   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P19 (MoveNext/method owner=P19/<Int>d__4)
+  stmt <Long>d__5::MoveNext L17 awaited=False "third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))"
+    captured 'total': local=-1 closureLocal=-1 closureField=null stateField=P19::<total>P param=-1 box=True
+      load: ldarg.0; ldfld P19::<total>P; box Int64   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P19 (MoveNext/method owner=P19/<Long>d__5)
+
+=== P2 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P2/<AssertionPasses>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 338, Found ref '[Probe213_P2_Debug]P2+<AssertionPasses>d__4', Expected ref '[Probe213_P2_Debug]P2')
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))"
+    captured 'cts': local=-1 closureLocal=-1 closureField=<>c__DisplayClass4_0::cts stateField=<AssertionPasses>d__4::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>8__1; ldfld <>c__DisplayClass4_0::cts
+      stateField declaringType=P2/<AssertionPasses>d__4 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+    captured 'handlers': local=-1 closureLocal=-1 closureField=null stateField=P2::<handlers>P param=-1 box=False
+      load: ldarg.0; ldfld P2::<handlers>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P2 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+
+=== P2 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P2/<AssertionPasses>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 326, Found address of '[Probe213_P2_Release]P2+<AssertionPasses>d__4', Expected ref '[Probe213_P2_Release]P2')
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))"
+    captured 'cts': local=-1 closureLocal=-1 closureField=<>c__DisplayClass4_0::cts stateField=<AssertionPasses>d__4::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>8__1; ldfld <>c__DisplayClass4_0::cts
+      stateField declaringType=P2/<AssertionPasses>d__4 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+    captured 'handlers': local=-1 closureLocal=-1 closureField=null stateField=P2::<handlers>P param=-1 box=False
+      load: ldarg.0; ldfld P2::<handlers>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P2 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+
+=== P2 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P2/<AssertionPasses>d__4.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 326, Found address of '[Probe213_P2_ReleaseDebugPlus]P2+<AssertionPasses>d__4', Expected ref '[Probe213_P2_ReleaseDebugPlus]P2')
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))"
+    captured 'cts': local=-1 closureLocal=-1 closureField=<>c__DisplayClass4_0::cts stateField=<AssertionPasses>d__4::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>8__1; ldfld <>c__DisplayClass4_0::cts
+      stateField declaringType=P2/<AssertionPasses>d__4 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+    captured 'handlers': local=-1 closureLocal=-1 closureField=null stateField=P2::<handlers>P param=-1 box=False
+      load: ldarg.0; ldfld P2::<handlers>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P2 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+
+=== P20 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P20::<LocalFunction>g__Check|0_0 L16 awaited=False "actual.ShouldBe(expected)"
+    captured 'expected': local=-1 closureLocal=-1 closureField=null stateField=<>c__DisplayClass0_0::expected param=-1 box=False
+      load: ldarg.0; ldfld <>c__DisplayClass0_0::expected   <-- ldarg.0 is the first parameter
+      stateField declaringType=P20/<>c__DisplayClass0_0 (MoveNext/method owner=P20)
+  stmt P20::<LocalFunction>g__Check|0_0 L17 awaited=False "new[] { actual }.ShouldContain(expected)"
+    captured 'actual': local=-1 closureLocal=-1 closureField=null stateField=<>c__DisplayClass0_0::actual param=-1 box=False
+      load: ldarg.0; ldfld <>c__DisplayClass0_0::actual   <-- ldarg.0 is the first parameter
+      stateField declaringType=P20/<>c__DisplayClass0_0 (MoveNext/method owner=P20)
+    captured 'expected': local=-1 closureLocal=-1 closureField=null stateField=<>c__DisplayClass0_0::expected param=-1 box=False
+      load: ldarg.0; ldfld <>c__DisplayClass0_0::expected   <-- ldarg.0 is the first parameter
+      stateField declaringType=P20/<>c__DisplayClass0_0 (MoveNext/method owner=P20)
+
+=== P20 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P20::<LocalFunction>g__Check|0_0 L16 awaited=False "actual.ShouldBe(expected)"
+    captured 'expected': local=-1 closureLocal=-1 closureField=null stateField=<>c__DisplayClass0_0::expected param=-1 box=False
+      load: ldarg.0; ldfld <>c__DisplayClass0_0::expected   <-- ldarg.0 is the first parameter
+      stateField declaringType=P20/<>c__DisplayClass0_0 (MoveNext/method owner=P20)
+  stmt P20::<LocalFunction>g__Check|0_0 L17 awaited=False "new[] { actual }.ShouldContain(expected)"
+    captured 'actual': local=-1 closureLocal=-1 closureField=null stateField=<>c__DisplayClass0_0::actual param=-1 box=False
+      load: ldarg.0; ldfld <>c__DisplayClass0_0::actual   <-- ldarg.0 is the first parameter
+      stateField declaringType=P20/<>c__DisplayClass0_0 (MoveNext/method owner=P20)
+    captured 'expected': local=-1 closureLocal=-1 closureField=null stateField=<>c__DisplayClass0_0::expected param=-1 box=False
+      load: ldarg.0; ldfld <>c__DisplayClass0_0::expected   <-- ldarg.0 is the first parameter
+      stateField declaringType=P20/<>c__DisplayClass0_0 (MoveNext/method owner=P20)
+
+=== P20 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P20::<LocalFunction>g__Check|0_0 L16 awaited=False "actual.ShouldBe(expected)"
+    captured 'expected': local=-1 closureLocal=-1 closureField=null stateField=<>c__DisplayClass0_0::expected param=-1 box=False
+      load: ldarg.0; ldfld <>c__DisplayClass0_0::expected   <-- ldarg.0 is the first parameter
+      stateField declaringType=P20/<>c__DisplayClass0_0 (MoveNext/method owner=P20)
+  stmt P20::<LocalFunction>g__Check|0_0 L17 awaited=False "new[] { actual }.ShouldContain(expected)"
+    captured 'actual': local=-1 closureLocal=-1 closureField=null stateField=<>c__DisplayClass0_0::actual param=-1 box=False
+      load: ldarg.0; ldfld <>c__DisplayClass0_0::actual   <-- ldarg.0 is the first parameter
+      stateField declaringType=P20/<>c__DisplayClass0_0 (MoveNext/method owner=P20)
+    captured 'expected': local=-1 closureLocal=-1 closureField=null stateField=<>c__DisplayClass0_0::expected param=-1 box=False
+      load: ldarg.0; ldfld <>c__DisplayClass0_0::expected   <-- ldarg.0 is the first parameter
+      stateField declaringType=P20/<>c__DisplayClass0_0 (MoveNext/method owner=P20)
+
+=== P21 [Debug] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt P21::Sync L11 awaited=False "2.ShouldBe(c._id)"
+    captured '_id': local=-1 closureLocal=-1 closureField=null stateField=C::_id param=-1 box=True
+      load: ldarg.0; ldfld C::_id; box Int32   <-- ldarg.0 is the first parameter
+      stateField declaringType=C (MoveNext/method owner=P21)
+  stmt P21::Sync L12 awaited=False "new[] { 2 }.ShouldContain(c._id)"
+    captured '_id': local=-1 closureLocal=-1 closureField=null stateField=C::_id param=-1 box=True
+      load: ldarg.0; ldfld C::_id; box Int32   <-- ldarg.0 is the first parameter
+      stateField declaringType=C (MoveNext/method owner=P21)
+  stmt <Async>d__1::MoveNext L17 awaited=True "(await Task.FromResult(2)).ShouldBe(c._id)"
+    captured 'c': local=-1 closureLocal=-1 closureField=null stateField=<Async>d__1::c param=-1 box=False
+      load: ldarg.0; ldfld <Async>d__1::c   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P21/<Async>d__1 (MoveNext/method owner=P21/<Async>d__1)
+
+=== P21 [Release] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt P21::Sync L11 awaited=False "2.ShouldBe(c._id)"
+    captured '_id': local=-1 closureLocal=-1 closureField=null stateField=C::_id param=-1 box=True
+      load: ldarg.0; ldfld C::_id; box Int32   <-- ldarg.0 is the first parameter
+      stateField declaringType=C (MoveNext/method owner=P21)
+  stmt P21::Sync L12 awaited=False "new[] { 2 }.ShouldContain(c._id)"
+    captured '_id': local=-1 closureLocal=-1 closureField=null stateField=C::_id param=-1 box=True
+      load: ldarg.0; ldfld C::_id; box Int32   <-- ldarg.0 is the first parameter
+      stateField declaringType=C (MoveNext/method owner=P21)
+  stmt <Async>d__1::MoveNext L17 awaited=True "(await Task.FromResult(2)).ShouldBe(c._id)"
+    captured 'c': local=-1 closureLocal=-1 closureField=null stateField=<Async>d__1::c param=-1 box=False
+      load: ldarg.0; ldfld <Async>d__1::c   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P21/<Async>d__1 (MoveNext/method owner=P21/<Async>d__1)
+
+=== P21 [ReleaseDebugPlus] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt P21::Sync L11 awaited=False "2.ShouldBe(c._id)"
+    captured '_id': local=-1 closureLocal=-1 closureField=null stateField=C::_id param=-1 box=True
+      load: ldarg.0; ldfld C::_id; box Int32   <-- ldarg.0 is the first parameter
+      stateField declaringType=C (MoveNext/method owner=P21)
+  stmt P21::Sync L12 awaited=False "new[] { 2 }.ShouldContain(c._id)"
+    captured '_id': local=-1 closureLocal=-1 closureField=null stateField=C::_id param=-1 box=True
+      load: ldarg.0; ldfld C::_id; box Int32   <-- ldarg.0 is the first parameter
+      stateField declaringType=C (MoveNext/method owner=P21)
+  stmt <Async>d__1::MoveNext L17 awaited=True "(await Task.FromResult(2)).ShouldBe(c._id)"
+    captured 'c': local=-1 closureLocal=-1 closureField=null stateField=<Async>d__1::c param=-1 box=False
+      load: ldarg.0; ldfld <Async>d__1::c   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P21/<Async>d__1 (MoveNext/method owner=P21/<Async>d__1)
+
+=== P22 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await FluentActions.Awaiting(() => third.Run(() => throw new InvalidOperationException())) .Should().ThrowAsync<InvalidOperationException>()"
+    captured: none
+
+=== P22 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await FluentActions.Awaiting(() => third.Run(() => throw new InvalidOperationException())) .Should().ThrowAsync<InvalidOperationException>()"
+    captured: none
+
+=== P22 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await FluentActions.Awaiting(() => third.Run(() => throw new InvalidOperationException())) .Should().ThrowAsync<InvalidOperationException>()"
+    captured: none
+
+=== P22b [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P22b/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 139, Found ref '[Probe213_P22b_Debug]P22b+<AssertionPasses>d__5', Expected ref '[Probe213_P22b_Debug]P22b')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=False "new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P22b::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P22b::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P22b (MoveNext/method owner=P22b/<AssertionPasses>d__5)
+
+=== P22b [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P22b/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 136, Found address of '[Probe213_P22b_Release]P22b+<AssertionPasses>d__5', Expected ref '[Probe213_P22b_Release]P22b')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=False "new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P22b::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P22b::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P22b (MoveNext/method owner=P22b/<AssertionPasses>d__5)
+
+=== P22b [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P22b/<AssertionPasses>d__5.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 136, Found address of '[Probe213_P22b_ReleaseDebugPlus]P22b+<AssertionPasses>d__5', Expected ref '[Probe213_P22b_ReleaseDebugPlus]P22b')
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=False "new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P22b::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P22b::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P22b (MoveNext/method owner=P22b/<AssertionPasses>d__5)
+
+=== P23 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=2
+    ILVERIFY+ P23/<>c__DisplayClass2_0.<InAClosure>b__0: StackUnexpected: Unexpected type on the stack. (Offset 38, Found ref '[Probe213_P23_Debug]P23+<>c__DisplayClass2_0', Expected ref '[Probe213_P23_Debug]P23')
+    ILVERIFY+ P23/<>c__DisplayClass3_0/<<InAnAsyncClosure>b__0>d.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 306, Found ref '[Probe213_P23_Debug]P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d', Expected ref '[Probe213_P23_Debug]P23')
+  stmt <>c__DisplayClass2_0::<InAClosure>b__0 L16 awaited=False "Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P23::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P23::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P23 (MoveNext/method owner=P23/<>c__DisplayClass2_0)
+  stmt <<InAnAsyncClosure>b__0>d::MoveNext L26 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P23::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P23::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P23 (MoveNext/method owner=P23/<>c__DisplayClass3_0/<<InAnAsyncClosure>b__0>d)
+
+=== P23 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=2
+    ILVERIFY+ P23/<>c__DisplayClass2_0.<InAClosure>b__0: StackUnexpected: Unexpected type on the stack. (Offset 36, Found ref '[Probe213_P23_Release]P23+<>c__DisplayClass2_0', Expected ref '[Probe213_P23_Release]P23')
+    ILVERIFY+ P23/<>c__DisplayClass3_0/<<InAnAsyncClosure>b__0>d.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 274, Found address of '[Probe213_P23_Release]P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d', Expected ref '[Probe213_P23_Release]P23')
+  stmt <>c__DisplayClass2_0::<InAClosure>b__0 L16 awaited=False "Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P23::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P23::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P23 (MoveNext/method owner=P23/<>c__DisplayClass2_0)
+  stmt <<InAnAsyncClosure>b__0>d::MoveNext L26 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P23::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P23::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P23 (MoveNext/method owner=P23/<>c__DisplayClass3_0/<<InAnAsyncClosure>b__0>d)
+
+=== P23 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=2
+    ILVERIFY+ P23/<>c__DisplayClass2_0.<InAClosure>b__0: StackUnexpected: Unexpected type on the stack. (Offset 36, Found ref '[Probe213_P23_ReleaseDebugPlus]P23+<>c__DisplayClass2_0', Expected ref '[Probe213_P23_ReleaseDebugPlus]P23')
+    ILVERIFY+ P23/<>c__DisplayClass3_0/<<InAnAsyncClosure>b__0>d.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 274, Found address of '[Probe213_P23_ReleaseDebugPlus]P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d', Expected ref '[Probe213_P23_ReleaseDebugPlus]P23')
+  stmt <>c__DisplayClass2_0::<InAClosure>b__0 L16 awaited=False "Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P23::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P23::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P23 (MoveNext/method owner=P23/<>c__DisplayClass2_0)
+  stmt <<InAnAsyncClosure>b__0>d::MoveNext L26 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P23::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P23::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P23 (MoveNext/method owner=P23/<>c__DisplayClass3_0/<<InAnAsyncClosure>b__0>d)
+
+=== P3 [Debug] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt P3::AssertionPasses L12 awaited=False "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P3::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P3::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P3 (MoveNext/method owner=P3)
+  stmt P3::AssertionPasses L13 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt P3::AssertionPasses L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P3 [Release] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt P3::AssertionPasses L12 awaited=False "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P3::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P3::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P3 (MoveNext/method owner=P3)
+  stmt P3::AssertionPasses L13 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt P3::AssertionPasses L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P3 [ReleaseDebugPlus] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt P3::AssertionPasses L12 awaited=False "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P3::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P3::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P3 (MoveNext/method owner=P3)
+  stmt P3::AssertionPasses L13 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt P3::AssertionPasses L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P4 [Debug] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+    captured '_third': local=-1 closureLocal=-1 closureField=P4::_third stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P4::_third
+      stateField declaringType=P4/<AssertionPasses>d__4 (MoveNext/method owner=P4/<AssertionPasses>d__4)
+  stmt <AssertionPasses>d__4::MoveNext L17 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L18 awaited=False "(_first, _second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P4 [Release] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+    captured '_third': local=-1 closureLocal=-1 closureField=P4::_third stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P4::_third
+      stateField declaringType=P4/<AssertionPasses>d__4 (MoveNext/method owner=P4/<AssertionPasses>d__4)
+  stmt <AssertionPasses>d__4::MoveNext L17 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L18 awaited=False "(_first, _second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P4 [ReleaseDebugPlus] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+    captured '_third': local=-1 closureLocal=-1 closureField=P4::_third stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P4::_third
+      stateField declaringType=P4/<AssertionPasses>d__4 (MoveNext/method owner=P4/<AssertionPasses>d__4)
+  stmt <AssertionPasses>d__4::MoveNext L17 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L18 awaited=False "(_first, _second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P5 [Debug] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L12 awaited=False "third.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L13 awaited=False "third.ShouldBe(third)"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P5 [Release] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L12 awaited=False "third.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L13 awaited=False "third.ShouldBe(third)"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P5 [ReleaseDebugPlus] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L12 awaited=False "third.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L13 awaited=False "third.ShouldBe(third)"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P6 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P6/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 258, Found ref '[Probe213_P6_Debug]P6+<AssertionPasses>d__2', Expected ref '[Probe213_P6_Debug]P6')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))"
+    captured 'only': local=-1 closureLocal=-1 closureField=null stateField=P6::<only>P param=-1 box=False
+      load: ldarg.0; ldfld P6::<only>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P6 (MoveNext/method owner=P6/<AssertionPasses>d__2)
+
+=== P6 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P6/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P6_Release]P6+<AssertionPasses>d__2', Expected ref '[Probe213_P6_Release]P6')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))"
+    captured 'only': local=-1 closureLocal=-1 closureField=null stateField=P6::<only>P param=-1 box=False
+      load: ldarg.0; ldfld P6::<only>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P6 (MoveNext/method owner=P6/<AssertionPasses>d__2)
+
+=== P6 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=1
+    ILVERIFY+ P6/<AssertionPasses>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 242, Found address of '[Probe213_P6_ReleaseDebugPlus]P6+<AssertionPasses>d__2', Expected ref '[Probe213_P6_ReleaseDebugPlus]P6')
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))"
+    captured 'only': local=-1 closureLocal=-1 closureField=null stateField=P6::<only>P param=-1 box=False
+      load: ldarg.0; ldfld P6::<only>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P6 (MoveNext/method owner=P6/<AssertionPasses>d__2)
+
+=== P7 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { System.Console.WriteLine(value); await Task.Yield(); throw new InvalidOperationException(); })"
+    captured: none
+
+=== P7 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { System.Console.WriteLine(value); await Task.Yield(); throw new InvalidOperationException(); })"
+    captured: none
+
+=== P7 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { System.Console.WriteLine(value); await Task.Yield(); throw new InvalidOperationException(); })"
+    captured: none
+
+=== P8 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P8::SyncAssert L12 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured: none
+  stmt <AsyncAssert>d__3::MoveNext L17 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured: none
+
+=== P8 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P8::SyncAssert L12 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured: none
+  stmt <AsyncAssert>d__3::MoveNext L17 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured: none
+
+=== P8 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P8::SyncAssert L12 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured: none
+  stmt <AsyncAssert>d__3::MoveNext L17 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured: none
+
+=== P9 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L11 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { await Task.Yield(); await third.Run(() => throw new InvalidOperationException()); })"
+    captured: none
+
+=== P9 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L11 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { await Task.Yield(); await third.Run(() => throw new InvalidOperationException()); })"
+    captured: none
+
+=== P9 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L11 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { await Task.Yield(); await third.Run(() => throw new InvalidOperationException()); })"
+    captured: none
+
+# end

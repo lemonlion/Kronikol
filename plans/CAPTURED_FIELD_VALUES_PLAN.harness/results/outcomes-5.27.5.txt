@@ -1,0 +1,196 @@
+# xunit2-5.27.5-Debug-IssueFirstShapeTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+# xunit2-5.27.5-Debug-OneParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+# xunit2-5.27.5-Debug-OrdinaryFieldControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.27.5-Debug-ParametersAndValueFieldsTests.txt
+  run 1: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext); dotnet test exit 1
+# xunit2-5.27.5-Debug-PrimaryConstructorParameterTests.txt
+  run 1: crashed (AccessViolationException: StelemRef < PrimaryConstructorParameterTests+<Issue_second_test_verbatim>d__5.MoveNext); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < PrimaryConstructorParameterTests+<Issue_second_test_verbatim>d__5.MoveNext); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < PrimaryConstructorParameterTests+<Issue_second_test_verbatim>d__5.MoveNext); dotnet test exit 1
+# xunit2-5.27.5-Debug-SixParametersTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.27.5-Debug-SyncMethodControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.27.5-Debug-all.txt
+  run 1: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < PrimaryConstructorParameterTests+<Issue_second_test_verbatim>d__5.MoveNext); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext); dotnet test exit 1
+# xunit2-5.27.5-Release-IssueFirstShapeTests.txt
+  run 1: crashed (AccessViolationException: StelemRef < IssueFirstShapeTests+<Issue_first_shape>d__6.MoveNext); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < IssueFirstShapeTests+<Issue_first_shape>d__6.MoveNext); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < IssueFirstShapeTests+<Issue_first_shape>d__6.MoveNext); dotnet test exit 1
+# xunit2-5.27.5-Release-OneParameterTests.txt
+  run 1: crashed (AccessViolationException: StelemRef < OneParameterTests+<One_parameter>d__3.MoveNext); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < OneParameterTests+<One_parameter>d__3.MoveNext); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < OneParameterTests+<One_parameter>d__3.MoveNext); dotnet test exit 1
+# xunit2-5.27.5-Release-OrdinaryFieldControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.27.5-Release-ParametersAndValueFieldsTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.27.5-Release-PrimaryConstructorParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.27.5-Release-SixParametersTests.txt
+  run 1: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext); dotnet test exit 1
+  run 2: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext); dotnet test exit 1
+  run 3: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext); dotnet test exit 1
+# xunit2-5.27.5-Release-SyncMethodControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit2-5.27.5-Release-all.txt
+  run 1: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < OneParameterTests+<One_parameter>d__3.MoveNext); dotnet test exit 1
+  run 3: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext); dotnet test exit 1
+# xunit3-5.27.5-Debug-IssueFirstShapeTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Service should not be null
+    s0/d0/n1  ✓ Should throw OperationCanceledException
+# xunit3-5.27.5-Debug-OneParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+# xunit3-5.27.5-Debug-OrdinaryFieldControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.27.5-Debug-ParametersAndValueFieldsTests.txt
+  run 1: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext; process exit code -1073741819); dotnet test exit 1
+# xunit3-5.27.5-Debug-PrimaryConstructorParameterTests.txt
+  run 1: crashed (AccessViolationException: StelemRef < PrimaryConstructorParameterTests+<Issue_second_test_verbatim>d__5.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < PrimaryConstructorParameterTests+<Issue_second_test_verbatim>d__5.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < PrimaryConstructorParameterTests+<Issue_second_test_verbatim>d__5.MoveNext; process exit code -1073741819); dotnet test exit 1
+# xunit3-5.27.5-Debug-SixParametersTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.27.5-Debug-SyncMethodControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.27.5-Debug-all.txt
+  run 1: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < ParametersAndValueFieldsTests+<Parameters_and_value_fields>d__7.MoveNext; process exit code -1073741819); dotnet test exit 1
+# xunit3-5.27.5-Release-IssueFirstShapeTests.txt
+  run 1: crashed (AccessViolationException: StelemRef < IssueFirstShapeTests+<Issue_first_shape>d__6.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < IssueFirstShapeTests+<Issue_first_shape>d__6.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < IssueFirstShapeTests+<Issue_first_shape>d__6.MoveNext; process exit code -1073741819); dotnet test exit 1
+# xunit3-5.27.5-Release-OneParameterTests.txt
+  run 1: crashed (AccessViolationException: StelemRef < OneParameterTests+<One_parameter>d__3.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 2: crashed (AccessViolationException: StelemRef < OneParameterTests+<One_parameter>d__3.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 3: crashed (AccessViolationException: StelemRef < OneParameterTests+<One_parameter>d__3.MoveNext; process exit code -1073741819); dotnet test exit 1
+# xunit3-5.27.5-Release-OrdinaryFieldControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.27.5-Release-ParametersAndValueFieldsTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.27.5-Release-PrimaryConstructorParameterTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.27.5-Release-SixParametersTests.txt
+  run 1: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 2: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 3: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext; process exit code -1073741819); dotnet test exit 1
+# xunit3-5.27.5-Release-SyncMethodControlTests.txt
+  run 1: passed (1 test); dotnet test exit 0
+  run 2: passed (1 test); dotnet test exit 0
+  run 3: passed (1 test); dotnet test exit 0
+  notes (runs 1, 2, 3):
+    s0/d0/n0  ✓ Should throw InvalidOperationException
+    s0/d0/n1  ✓ Exception should not be null
+    s0/d0/n2  ✓ (first, second) should not be (null, null)
+# xunit3-5.27.5-Release-all.txt
+  run 1: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 2: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext; process exit code -1073741819); dotnet test exit 1
+  run 3: crashed (AccessViolationException: GetType < Keep < ResolveVariableValues < AssertionPassedWithValues < SixParametersTests+<Six_parameters_lambda_reads_the_sixth>d__8.MoveNext; process exit code -1073741819); dotnet test exit 1

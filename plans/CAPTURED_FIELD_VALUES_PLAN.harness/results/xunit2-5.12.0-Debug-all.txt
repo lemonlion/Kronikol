@@ -1,0 +1,132 @@
+=================== run 1 of 3: xunit2-5.12.0 Debug all (2026-10-29T09:10:09Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2-5.12.0\bin\Debug\net10.0\XunitV2Repro512.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.58]   Discovering: XunitV2Repro512
+[xUnit.net 00:00:00.61]   Discovered:  XunitV2Repro512
+[xUnit.net 00:00:00.79]   Starting:    XunitV2Repro512
+Report diagnostics: 6 log entries across 2 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2-5.12.0\bin\Debug\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:01.42]   Finished:    XunitV2Repro512
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [193 ms]
+  Passed WeaveRepro.PrimaryConstructorParameterTests.Issue_second_test_verbatim [195 ms]
+
+Test Run Successful.
+Total tests: 2
+     Passed: 2
+ Total time: 2.3796 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.19s     0 calls  Issue first shape
+s1    pass    0.2s     0 calls  Issue second test verbatim
+2 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.19s
+s0/d0  1 notes
+
+n0        30 B  ✓ Service should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s1
+s1  Primary Constructor Parameter Tests › Issue second test verbatim  [Passed]  0.2s
+s1/d0  2 notes
+
+n0        32 B  ✓ Exception should not be null
+n1        46 B  ✓ (first, second) should not be (null, null)
+note s1/d0/nN for one in full
+--- s1/d0/n0 in full
+✓ Exception should not be null
+--- s1/d0/n1 in full
+✓ (first, second) should not be (null, null)
+=================== run 2 of 3: xunit2-5.12.0 Debug all (2026-10-29T09:10:21Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2-5.12.0\bin\Debug\net10.0\XunitV2Repro512.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.14]   Discovering: XunitV2Repro512
+[xUnit.net 00:00:00.19]   Discovered:  XunitV2Repro512
+[xUnit.net 00:00:00.24]   Starting:    XunitV2Repro512
+Report diagnostics: 6 log entries across 2 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2-5.12.0\bin\Debug\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.88]   Finished:    XunitV2Repro512
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [33 ms]
+  Passed WeaveRepro.PrimaryConstructorParameterTests.Issue_second_test_verbatim [38 ms]
+
+Test Run Successful.
+Total tests: 2
+     Passed: 2
+ Total time: 1.7575 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.03s     0 calls  Issue first shape
+s1    pass   0.04s     0 calls  Issue second test verbatim
+2 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.03s
+s0/d0  1 notes
+
+n0        30 B  ✓ Service should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s1
+s1  Primary Constructor Parameter Tests › Issue second test verbatim  [Passed]  0.04s
+s1/d0  2 notes
+
+n0        32 B  ✓ Exception should not be null
+n1        46 B  ✓ (first, second) should not be (null, null)
+note s1/d0/nN for one in full
+--- s1/d0/n0 in full
+✓ Exception should not be null
+--- s1/d0/n1 in full
+✓ (first, second) should not be (null, null)
+=================== run 3 of 3: xunit2-5.12.0 Debug all (2026-10-29T09:10:31Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2-5.12.0\bin\Debug\net10.0\XunitV2Repro512.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.13]   Discovering: XunitV2Repro512
+[xUnit.net 00:00:00.18]   Discovered:  XunitV2Repro512
+[xUnit.net 00:00:00.22]   Starting:    XunitV2Repro512
+Report diagnostics: 6 log entries across 2 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2-5.12.0\bin\Debug\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.80]   Finished:    XunitV2Repro512
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [29 ms]
+  Passed WeaveRepro.PrimaryConstructorParameterTests.Issue_second_test_verbatim [33 ms]
+
+Test Run Successful.
+Total tests: 2
+     Passed: 2
+ Total time: 1.6047 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.03s     0 calls  Issue first shape
+s1    pass   0.03s     0 calls  Issue second test verbatim
+2 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.03s
+s0/d0  1 notes
+
+n0        30 B  ✓ Service should not be null
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s1
+s1  Primary Constructor Parameter Tests › Issue second test verbatim  [Passed]  0.03s
+s1/d0  2 notes
+
+n0        32 B  ✓ Exception should not be null
+n1        46 B  ✓ (first, second) should not be (null, null)
+note s1/d0/nN for one in full
+--- s1/d0/n0 in full
+✓ Exception should not be null
+--- s1/d0/n1 in full
+✓ (first, second) should not be (null, null)

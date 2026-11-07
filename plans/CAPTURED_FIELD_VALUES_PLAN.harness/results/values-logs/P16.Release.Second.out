@@ -1,0 +1,6 @@
+ENTER P16|Release|Second
+RESULT P16|Release|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P16|Release|Second :: [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2], _harness = UNCREATED (not an object this run made)
+DONE P16|Release|Second
+TYPES P16|Release|Second :: [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2], _harness = UNCREATED P16+<>c__DisplayClass1_0: P16+<>c__DisplayClass1_0
+ALLDONE P16

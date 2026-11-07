@@ -1,0 +1,347 @@
+# VALUES pass: 129 cases, one per process, recorder on; label main-5.31.1; repo /c/Code/Kronikol-213r
+P1|Debug|AssertionPasses :: HOST-CRASH System.AccessViolationException in P1+<AssertionPasses>d__5.MoveNext() (rc=139): no values reached Track
+P1|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+    VALUES [_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = null
+    TYPES  [_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = null
+P1|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+    VALUES [_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = null
+    TYPES  [_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = null
+P10|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = the test instance (P10)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED Harness: Harness(local), third = the test instance (P10)
+P10|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = UNCREATED (not an object this run made)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED Harness: Harness(local), third = UNCREATED P10+<>c__DisplayClass3_0: P10+<>c__DisplayClass3_0
+P10|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED (not an object this run made), third = UNCREATED (not an object this run made)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))] local = UNCREATED Harness: Harness(local), third = UNCREATED P10+<>c__DisplayClass3_0: P10+<>c__DisplayClass3_0
+P11|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException Body]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P11|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException Body]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P11|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException Body]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P12_1p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = the test instance (P12_1p)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = the test instance (P12_1p)
+P12_1p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_1p+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P12_1p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_1p+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P12_1p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = the test instance (P12_1p_fields)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))] p0 = the test instance (P12_1p_fields)
+P12_1p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_1p_fields+<AssertionPasses>d__5.MoveNext() (rc=139): no values reached Track
+P12_1p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_1p_fields+<AssertionPasses>d__5.MoveNext() (rc=139): no values reached Track
+P12_2p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = the test instance (P12_2p)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = the test instance (P12_2p)
+P12_2p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_2p+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P12_2p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_2p+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P12_2p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = the test instance (P12_2p_fields)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = the test instance (P12_2p_fields)
+P12_2p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_2p_fields+<AssertionPasses>d__5.MoveNext() (rc=139): no values reached Track
+P12_2p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_2p_fields+<AssertionPasses>d__5.MoveNext() (rc=139): no values reached Track
+P12_4p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = the test instance (P12_4p)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = the test instance (P12_4p)
+P12_4p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_4p+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P12_4p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_4p+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P12_4p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = the test instance (P12_4p_fields)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))] p3 = the test instance (P12_4p_fields)
+P12_4p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_4p_fields+<AssertionPasses>d__5.MoveNext() (rc=139): no values reached Track
+P12_4p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_4p_fields+<AssertionPasses>d__5.MoveNext() (rc=139): no values reached Track
+P12_6p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = the test instance (P12_6p)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = the test instance (P12_6p)
+P12_6p|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_6p+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P12_6p|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_6p+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P12_6p_fields|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = the test instance (P12_6p_fields)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))] p5 = the test instance (P12_6p_fields)
+P12_6p_fields|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_6p_fields+<AssertionPasses>d__5.MoveNext() (rc=139): no values reached Track
+P12_6p_fields|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException in P12_6p_fields+<AssertionPasses>d__5.MoveNext() (rc=139): no values reached Track
+P13|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+    VALUES [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made), _id = int 1
+    TYPES  [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED P13: P13, _id = int 1
+P13|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+    VALUES [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made), _id = int 1
+    TYPES  [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED P13: P13, _id = int 1
+P13|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+    VALUES [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made), _id = int 1
+    TYPES  [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED P13: P13, _id = int 1
+P13|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+    VALUES [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made)
+    TYPES  [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED P13: P13
+P13|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+    VALUES [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made), _id = int 1
+    TYPES  [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED P13: P13, _id = int 1
+P13|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 2 } should contain [ x => x == '2' ]]
+    VALUES [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED (not an object this run made)
+    TYPES  [new[] { 2 }.Should().Contain(x => x == other._id)] other = UNCREATED P13: P13
+P14|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => other.Fail())] other = UNCREATED (not an object this run made)
+    TYPES  [Should.Throw<InvalidOperationException>(() => other.Fail())] other = UNCREATED P14: P14
+P14|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })] other = UNCREATED (not an object this run made)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })] other = UNCREATED P14: P14
+P14|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P14|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })] other = UNCREATED (not an object this run made)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })] other = UNCREATED P14: P14
+P14|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => other.Fail())] other = UNCREATED (not an object this run made)
+    TYPES  [Should.Throw<InvalidOperationException>(() => other.Fail())] other = UNCREATED P14: P14
+P14|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })] other = UNCREATED (not an object this run made)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })] other = UNCREATED P14: P14
+P15|Debug|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2]
+    TYPES  [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2]
+P15|Debug|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2]
+    TYPES  [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2]
+P15|Release|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P15|Release|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P15|ReleaseDebugPlus|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2]
+    TYPES  [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2]
+P15|ReleaseDebugPlus|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2]
+    TYPES  [Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] c = C [the `c` argument, _id=2]
+P16|Debug|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+P16|Debug|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+P16|Release|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+P16|Release|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+P16|ReleaseDebugPlus|First :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+P16|ReleaseDebugPlus|Second :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))] c = C [the `c` argument, _id=2]
+P17|Debug|SyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P17|Debug|SyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+    VALUES [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), other._id = int 2
+    TYPES  [2.ShouldBe(other._id)] other = UNCREATED P17: P17, other._id = int 2
+P17|Debug|AsyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P17|Debug|AsyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+    VALUES [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), other._id = int 2
+    TYPES  [2.ShouldBe(other._id)] other = UNCREATED P17: P17, other._id = int 2
+P17|Release|SyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P17|Release|SyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+    VALUES [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), other._id = int 2
+    TYPES  [2.ShouldBe(other._id)] other = UNCREATED P17: P17, other._id = int 2
+P17|Release|AsyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P17|Release|AsyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+    VALUES [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), _id = int 1, other._id = int 2
+    TYPES  [2.ShouldBe(other._id)] other = UNCREATED P17: P17, _id = int 1, other._id = int 2
+P17|ReleaseDebugPlus|SyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P17|ReleaseDebugPlus|SyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+    VALUES [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), other._id = int 2
+    TYPES  [2.ShouldBe(other._id)] other = UNCREATED P17: P17, other._id = int 2
+P17|ReleaseDebugPlus|AsyncA :: unwoven=nothing :: woven=nothing :: note=PASS [Other id should be 2]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P17|ReleaseDebugPlus|AsyncB :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2']
+    VALUES [2.ShouldBe(other._id)] other = UNCREATED (not an object this run made), _id = int 1, other._id = int 2
+    TYPES  [2.ShouldBe(other._id)] other = UNCREATED P17: P17, _id = int 1, other._id = int 2
+P18|Debug|Parameter :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetParameter()) should be expected]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P18|Debug|Field :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetField()) should be 'Harness(field)']
+    VALUES [(await GetField()).ShouldBe(_field)] _field = UNCREATED (not an object this run made)
+    TYPES  [(await GetField()).ShouldBe(_field)] _field = UNCREATED Harness: Harness(field)
+P18|Release|Parameter :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetParameter()) should be expected]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P18|Release|Field :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetField()) should be 'Harness(field)']
+    VALUES [(await GetField()).ShouldBe(_field)] _field = UNCREATED (not an object this run made)
+    TYPES  [(await GetField()).ShouldBe(_field)] _field = UNCREATED Harness: Harness(field)
+P18|ReleaseDebugPlus|Parameter :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetParameter()) should be expected]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P18|ReleaseDebugPlus|Field :: unwoven=nothing :: woven=nothing :: note=PASS [(await GetField()) should be 'Harness(field)']
+    VALUES [(await GetField()).ShouldBe(_field)] _field = UNCREATED (not an object this run made)
+    TYPES  [(await GetField()).ShouldBe(_field)] _field = UNCREATED Harness: Harness(field)
+P19|Debug|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('-1684314640') ]]
+    VALUES [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int -1684314640
+    TYPES  [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int -1684314640
+P19|Debug|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('4294967295') ]]
+    VALUES [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 4294967295
+    TYPES  [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 4294967295
+P19|Release|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+    VALUES [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 0
+    TYPES  [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 0
+P19|Release|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('1825127992360') ]]
+    VALUES [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 1825127992360
+    TYPES  [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 1825127992360
+P19|ReleaseDebugPlus|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+    VALUES [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 0
+    TYPES  [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(count))] count = int 0
+P19|ReleaseDebugPlus|Long :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('2354189201424') ]]
+    VALUES [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 2354189201424
+    TYPES  [third.ShouldSatisfyAllConditions(h => GC.KeepAlive(total))] total = long 2354189201424
+P2|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+    VALUES [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = the test instance (P2)
+    TYPES  [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED System.Threading.CancellationTokenSource: System.Threading.CancellationTokenSource, handlers = the test instance (P2)
+P2|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+    VALUES [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = UNCREATED (not an object this run made)
+    TYPES  [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED System.Threading.CancellationTokenSource: System.Threading.CancellationTokenSource, handlers = UNCREATED P2+<>c__DisplayClass4_0: P2+<>c__DisplayClass4_0
+P2|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+    VALUES [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED (not an object this run made), handlers = UNCREATED (not an object this run made)
+    TYPES  [_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))] cts = UNCREATED System.Threading.CancellationTokenSource: System.Threading.CancellationTokenSource, handlers = UNCREATED P2+<>c__DisplayClass4_0: P2+<>c__DisplayClass4_0
+P20|Debug|LocalFunction :: unwoven=nothing :: woven=nothing :: note=PASS [Actual should be 'Harness(expected)'] || PASS [New[] { actual } should contain 'Harness(expected)']
+    VALUES [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] actual = UNCREATED (not an object this run made), expected = UNCREATED (not an object this run made)
+    TYPES  [actual.ShouldBe(expected)] expected = UNCREATED Harness: Harness(expected) || [new[] { actual }.ShouldContain(expected)] actual = UNCREATED Harness: Harness(expected), expected = UNCREATED Harness: Harness(expected)
+P20|Release|LocalFunction :: unwoven=nothing :: woven=nothing :: note=PASS [Actual should be 'Harness(expected)'] || PASS [New[] { actual } should contain 'Harness(expected)']
+    VALUES [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] actual = UNCREATED (not an object this run made), expected = UNCREATED (not an object this run made)
+    TYPES  [actual.ShouldBe(expected)] expected = UNCREATED Harness: Harness(expected) || [new[] { actual }.ShouldContain(expected)] actual = UNCREATED Harness: Harness(expected), expected = UNCREATED Harness: Harness(expected)
+P20|ReleaseDebugPlus|LocalFunction :: unwoven=nothing :: woven=nothing :: note=PASS [Actual should be 'Harness(expected)'] || PASS [New[] { actual } should contain 'Harness(expected)']
+    VALUES [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] actual = UNCREATED (not an object this run made), expected = UNCREATED (not an object this run made)
+    TYPES  [actual.ShouldBe(expected)] expected = UNCREATED Harness: Harness(expected) || [new[] { actual }.ShouldContain(expected)] actual = UNCREATED Harness: Harness(expected), expected = UNCREATED Harness: Harness(expected)
+P21|Debug|Sync :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2'] || PASS [New[] { 2 } should contain '2']
+    VALUES [2.ShouldBe(c._id)] _id = int 2, c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] _id = int 2, c._id = int 2
+    TYPES  [2.ShouldBe(c._id)] _id = int 2, c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] _id = int 2, c._id = int 2
+P21|Debug|Async :: unwoven=nothing :: woven=nothing :: note=PASS [(await Task.FromResult(2)) should be '2']
+    VALUES [(await Task.FromResult(2)).ShouldBe(c._id)] c = C [the `c` argument, _id=2]
+    TYPES  [(await Task.FromResult(2)).ShouldBe(c._id)] c = C [the `c` argument, _id=2]
+P21|Release|Sync :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2'] || PASS [New[] { 2 } should contain '2']
+    VALUES [2.ShouldBe(c._id)] _id = int 2, c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] _id = int 2, c._id = int 2
+    TYPES  [2.ShouldBe(c._id)] _id = int 2, c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] _id = int 2, c._id = int 2
+P21|Release|Async :: unwoven=nothing :: woven=nothing :: note=PASS [(await Task.FromResult(2)) should be '2']
+    VALUES [(await Task.FromResult(2)).ShouldBe(c._id)] c = C [the `c` argument, _id=2]
+    TYPES  [(await Task.FromResult(2)).ShouldBe(c._id)] c = C [the `c` argument, _id=2]
+P21|ReleaseDebugPlus|Sync :: unwoven=nothing :: woven=nothing :: note=PASS [2 should be '2'] || PASS [New[] { 2 } should contain '2']
+    VALUES [2.ShouldBe(c._id)] _id = int 2, c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] _id = int 2, c._id = int 2
+    TYPES  [2.ShouldBe(c._id)] _id = int 2, c._id = int 2 || [new[] { 2 }.ShouldContain(c._id)] _id = int 2, c._id = int 2
+P21|ReleaseDebugPlus|Async :: unwoven=nothing :: woven=nothing :: note=PASS [(await Task.FromResult(2)) should be '2']
+    VALUES [(await Task.FromResult(2)).ShouldBe(c._id)] c = C [the `c` argument, _id=2]
+    TYPES  [(await Task.FromResult(2)).ShouldBe(c._id)] c = C [the `c` argument, _id=2]
+P22|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P22|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P22|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Fluent actions awaiting(() => third.Run(() => throw new InvalidOperationException())) should throw async ~<InvalidOperationException>]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P22b|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1+AsyncStateMachineBox`1[System.Threading.Tas...') ]]
+    VALUES [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = the entry's own Task (its async state-machine box)
+    TYPES  [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = the entry's own Task (its async state-machine box)
+P22b|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+    VALUES [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+    TYPES  [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+P22b|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('null') ]]
+    VALUES [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+    TYPES  [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = null
+P23|Debug|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+    TYPES  [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED Harness: Harness(local)
+P23|Debug|InAnAsyncClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = UNCREATED (not an object this run made)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = UNCREATED P23+<>c__DisplayClass3_0: P23+<>c__DisplayClass3_0
+P23|Release|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+    TYPES  [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED Harness: Harness(local)
+P23|Release|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139): no values reached Track
+P23|ReleaseDebugPlus|InAClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED (not an object this run made)
+    TYPES  [Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = UNCREATED Harness: Harness(local)
+P23|ReleaseDebugPlus|InAnAsyncClosure :: HOST-CRASH System.AccessViolationException in P23+<>c__DisplayClass3_0+<<InAnAsyncClosure>b__0>d.MoveNext() (rc=139): no values reached Track
+P3|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+    VALUES [_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = Harness(third) [the `third` argument]
+    TYPES  [_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = Harness(third) [the `third` argument]
+P3|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+    VALUES [_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = Harness(third) [the `third` argument]
+    TYPES  [_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = Harness(third) [the `third` argument]
+P3|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(first, second) should not be (null, null)]
+    VALUES [_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = Harness(third) [the `third` argument]
+    TYPES  [_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())] third = Harness(third) [the `third` argument]
+P4|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(_first, _second) should not be (null, null)]
+    VALUES [_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))] _third = UNCREATED (not an object this run made)
+    TYPES  [_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))] _third = UNCREATED Harness: Harness(third)
+P4|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(_first, _second) should not be (null, null)]
+    VALUES [_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))] _third = UNCREATED (not an object this run made)
+    TYPES  [_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))] _third = UNCREATED Harness: Harness(third)
+P4|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException] || PASS [Exception should not be null] || PASS [(_first, _second) should not be (null, null)]
+    VALUES [_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))] _third = UNCREATED (not an object this run made)
+    TYPES  [_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))] _third = UNCREATED Harness: Harness(third)
+P5|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Third should not be null] || PASS [Third should be 'Harness(third)'] || PASS [(first, second) should not be (null, null)]
+    VALUES [third.ShouldBe(third)] third = Harness(third) [the `third` argument]
+    TYPES  [third.ShouldBe(third)] third = Harness(third) [the `third` argument]
+P5|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Third should not be null] || PASS [Third should be 'Harness(third)'] || PASS [(first, second) should not be (null, null)]
+    VALUES [third.ShouldBe(third)] third = Harness(third) [the `third` argument]
+    TYPES  [third.ShouldBe(third)] third = Harness(third) [the `third` argument]
+P5|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Third should not be null] || PASS [Third should be 'Harness(third)'] || PASS [(first, second) should not be (null, null)]
+    VALUES [third.ShouldBe(third)] third = Harness(third) [the `third` argument]
+    TYPES  [third.ShouldBe(third)] third = Harness(third) [the `third` argument]
+P6|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES [await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))] only = the test instance (P6)
+    TYPES  [await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))] only = the test instance (P6)
+P6|Release|AssertionPasses :: HOST-CRASH System.AccessViolationException in P6+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P6|ReleaseDebugPlus|AssertionPasses :: HOST-CRASH System.AccessViolationException in P6+<AssertionPasses>d__2.MoveNext() (rc=139): no values reached Track
+P7|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P7|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P7|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P8|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P8|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P8|Release|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P8|Release|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P8|ReleaseDebugPlus|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P8|ReleaseDebugPlus|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P9|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P9|Release|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+P9|ReleaseDebugPlus|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+    VALUES (no values call recorded)
+    TYPES  (no values call recorded)
+VALUES PASS COMPLETE

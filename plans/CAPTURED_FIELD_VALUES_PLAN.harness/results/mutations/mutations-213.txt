@@ -1,0 +1,11 @@
+M1: CAUGHT in 221s; A_note_draws_the_value_the_source_names x9
+M2: CAUGHT in 174s; The_values_are_the_objects_the_source_names x4
+M3: CAUGHT in 162s; The_load_check_drops_a_field_read_off_a_static_methods_first_argument x1
+M4: CAUGHT in 149s; A_note_draws_the_value_the_source_names x30, A_woven_shape_runs_as_the_unwoven_one x51, A_woven_shape_verifies x45, The_load_check_drops_a_field_read_off_a_static_methods_first_argument x1, The_load_check_drops_another_types_field_and_does_not_carry_it x1, The_load_check_reads_a_closure_field_only_off_a_local_of_its_type x1, The_scratch_cases_run_and_draw_what_their_source_names x3, The_values_are_the_objects_the_source_names x51
+M5: CAUGHT in 139s; The_values_are_the_objects_the_source_names x4
+M6: CAUGHT in 140s; The_scratch_cases_run_and_draw_what_their_source_names x3
+M7: CAUGHT in 151s; The_values_are_the_objects_the_source_names x5
+M8: SURVIVED in 158s; 
+M9: CAUGHT in 147s; The_scratch_cases_run_and_draw_what_their_source_names x3
+M11: CAUGHT in 154s; The_scratch_cases_run_and_draw_what_their_source_names x3
+M12: CAUGHT in 232s; The_load_check_drops_another_types_field_and_does_not_carry_it x1

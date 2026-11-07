@@ -1,0 +1,6 @@
+ENTER P23|Debug|InAnAsyncClosure
+RESULT P23|Debug|InAnAsyncClosure :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P23|Debug|InAnAsyncClosure :: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = UNCREATED (not an object this run made)
+DONE P23|Debug|InAnAsyncClosure
+TYPES P23|Debug|InAnAsyncClosure :: [await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))] third = UNCREATED P23+<>c__DisplayClass3_0: P23+<>c__DisplayClass3_0
+ALLDONE P23

@@ -1,0 +1,4 @@
+ENTER P19|ReleaseDebugPlus|Int
+RESULT P19|ReleaseDebugPlus|Int :: unwoven=nothing :: woven=nothing :: note=PASS [Third should satisfy all conditions [ h => GC.KeepAlive('0') ]]
+DONE P19|ReleaseDebugPlus|Int
+ALLDONE P19

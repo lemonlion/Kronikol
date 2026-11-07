@@ -1,0 +1,6 @@
+ENTER P8|Debug|AsyncAssert
+RESULT P8|Debug|AsyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == expected ]]
+VALUES P8|Debug|AsyncAssert :: (no values call recorded)
+DONE P8|Debug|AsyncAssert
+TYPES P8|Debug|AsyncAssert :: (no values call recorded)
+ALLDONE P8

@@ -1,0 +1,102 @@
+=================== run 1 of 3: xunit2-5.27.2 Debug IssueFirstShapeTests (2026-10-29T08:40:30Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.IssueFirstShapeTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.09]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.12]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.15]   Starting:    XunitV2Repro
+Report diagnostics: 4 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.65]   Finished:    XunitV2Repro
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [39 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.1601 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.04s     0 calls  Issue first shape
+1 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.04s
+s0/d0  2 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+=================== run 2 of 3: xunit2-5.27.2 Debug IssueFirstShapeTests (2026-10-29T08:40:40Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.IssueFirstShapeTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.08]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.11]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.13]   Starting:    XunitV2Repro
+Report diagnostics: 4 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.70]   Finished:    XunitV2Repro
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [39 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.9369 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.04s     0 calls  Issue first shape
+1 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.04s
+s0/d0  2 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+=================== run 3 of 3: xunit2-5.27.2 Debug IssueFirstShapeTests (2026-10-29T08:40:47Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.IssueFirstShapeTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\XunitV2Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.0.2+dd36e86129 (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.08]   Discovering: XunitV2Repro
+[xUnit.net 00:00:00.11]   Discovered:  XunitV2Repro
+[xUnit.net 00:00:00.13]   Starting:    XunitV2Repro
+Report diagnostics: 4 log entries across 1 test(s).
+Warning: InternalFlowSpanStore has 0 spans - activity diagrams will be empty.
+Kronikol: reports written to C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV2\bin\Debug\net10.0\Reports  (TestRunReport.html � TestRunReport.krkl � Failures.md)
+[xUnit.net 00:00:00.66]   Finished:    XunitV2Repro
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [40 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.1602 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.04s     0 calls  Issue first shape
+1 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.04s
+s0/d0  2 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException

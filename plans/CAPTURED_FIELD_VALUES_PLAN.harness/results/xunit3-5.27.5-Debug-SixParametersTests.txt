@@ -1,0 +1,102 @@
+=================== run 1 of 3: xunit3-5.27.5 Debug SixParametersTests (2026-10-29T11:09:23Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.SixParametersTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.29]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.57]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.86]   Starting:    XunitV3Repro
+  Passed WeaveRepro.SixParametersTests.Six_parameters_lambda_reads_the_sixth [107 ms]
+[xUnit.net 00:00:01.99]   Finished:    XunitV3Repro (ID = 'aa46f697c438926010bf732309c43f8abf3f0bf4056e205fef34c54b2fc893ef')
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 2.8580 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass    0.1s     0 calls  Six parameters lambda reads the sixth
+1 scenarios
+--- s0
+s0  Six Parameters Tests › Six parameters lambda reads the sixth  [Passed]  0.1s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 2 of 3: xunit3-5.27.5 Debug SixParametersTests (2026-10-29T11:09:34Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.SixParametersTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.36]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.73]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:01.03]   Starting:    XunitV3Repro
+  Passed WeaveRepro.SixParametersTests.Six_parameters_lambda_reads_the_sixth [106 ms]
+[xUnit.net 00:00:01.98]   Finished:    XunitV3Repro (ID = 'aa46f697c438926010bf732309c43f8abf3f0bf4056e205fef34c54b2fc893ef')
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 2.8587 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass    0.1s     0 calls  Six parameters lambda reads the sixth
+1 scenarios
+--- s0
+s0  Six Parameters Tests › Six parameters lambda reads the sixth  [Passed]  0.1s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)
+=================== run 3 of 3: xunit3-5.27.5 Debug SixParametersTests (2026-10-29T11:09:43Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.SixParametersTests.
+Test run for C:\Code\Kronikol-213\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.31]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.68]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:01.02]   Starting:    XunitV3Repro
+  Passed WeaveRepro.SixParametersTests.Six_parameters_lambda_reads_the_sixth [124 ms]
+[xUnit.net 00:00:01.89]   Finished:    XunitV3Repro (ID = 'aa46f697c438926010bf732309c43f8abf3f0bf4056e205fef34c54b2fc893ef')
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 2.4519 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.12s     0 calls  Six parameters lambda reads the sixth
+1 scenarios
+--- s0
+s0  Six Parameters Tests › Six parameters lambda reads the sixth  [Passed]  0.12s
+s0/d0  3 notes
+
+n0        42 B  ✓ Should throw InvalidOperationException
+n1        32 B  ✓ Exception should not be null
+n2        46 B  ✓ (first, second) should not be (null, null)
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Should throw InvalidOperationException
+--- s0/d0/n1 in full
+✓ Exception should not be null
+--- s0/d0/n2 in full
+✓ (first, second) should not be (null, null)

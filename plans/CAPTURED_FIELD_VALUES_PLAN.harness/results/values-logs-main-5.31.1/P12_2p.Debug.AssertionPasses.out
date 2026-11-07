@@ -1,0 +1,6 @@
+ENTER P12_2p|Debug|AssertionPasses
+RESULT P12_2p|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw InvalidOperationException]
+VALUES P12_2p|Debug|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = the test instance (P12_2p)
+DONE P12_2p|Debug|AssertionPasses
+TYPES P12_2p|Debug|AssertionPasses :: [await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))] p1 = the test instance (P12_2p)
+ALLDONE P12_2p

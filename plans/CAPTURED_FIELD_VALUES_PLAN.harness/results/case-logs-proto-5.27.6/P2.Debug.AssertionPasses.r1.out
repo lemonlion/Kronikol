@@ -1,0 +1,4 @@
+ENTER P2|Debug|AssertionPasses
+RESULT P2|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [Should throw OperationCanceledException]
+DONE P2|Debug|AssertionPasses
+ALLDONE P2

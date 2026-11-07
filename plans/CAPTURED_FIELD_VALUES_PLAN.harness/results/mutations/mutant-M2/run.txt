@@ -1,0 +1,42 @@
+Test run for C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\bin\Debug\net10.0\Kronikol.Tests.AssertionTracking.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:05.80]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(id: "P13d", build: Release, entry: "SyncAssert") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(id: "P13d", build: Release, entry: "SyncAssert") [3 s]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: ["P13d Release SyncAssert [Should.NotThrow(() => GC."···]
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1162
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeDirectByRefWithFewArgs(Object obj, Span`1 copyOfArgs, BindingFlags invokeAttr)
+[xUnit.net 00:00:42.52]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(id: "P13d", build: Debug, entry: "SyncAssert") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(id: "P13d", build: Debug, entry: "SyncAssert") [328 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: ["P13d Debug SyncAssert [Should.NotThrow(() => GC.Ke"···]
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1162
+   at InvokeStub_CapturedFieldValueTests.The_values_are_the_objects_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:45.31]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(id: "P13d", build: ReleaseDebugPlus, entry: "SyncAssert") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(id: "P13d", build: ReleaseDebugPlus, entry: "SyncAssert") [300 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: ["P13d ReleaseDebugPlus SyncAssert [Should.NotThrow("···]
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1162
+   at InvokeStub_CapturedFieldValueTests.The_values_are_the_objects_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+[xUnit.net 00:00:52.20]     Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(id: "P13d", build: Debug, entry: "AsyncAssert") [FAIL]
+  Failed Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(id: "P13d", build: Debug, entry: "AsyncAssert") [319 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: ["P13d Debug AsyncAssert [Should.NotThrow(() => GC.K"···]
+  Stack Trace:
+     at Kronikol.Tests.AssertionTracking.CapturedFieldValueTests.The_values_are_the_objects_the_source_names(String id, BuildConfiguration build, String entry) in C:\Code\Kronikol-213q\tests\Kronikol.Tests.AssertionTracking\CapturedFieldValueTests.cs:line 1162
+   at InvokeStub_CapturedFieldValueTests.The_values_are_the_objects_the_source_names(Object, Span`1)
+   at System.Reflection.MethodBaseInvoker.InvokeWithFewArgs(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+WARNING: Overwriting results file: C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\results\mutations\mutant-M2\run.trx
+Results File: C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\results\mutations\mutant-M2\run.trx
+
+Failed!  - Failed:     4, Passed:   495, Skipped:     0, Total:   499, Duration: 3 m 3 s - Kronikol.Tests.AssertionTracking.dll (net10.0)

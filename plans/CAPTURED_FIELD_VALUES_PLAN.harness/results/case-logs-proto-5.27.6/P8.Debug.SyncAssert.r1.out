@@ -1,0 +1,4 @@
+ENTER P8|Debug|SyncAssert
+RESULT P8|Debug|SyncAssert :: unwoven=nothing :: woven=nothing :: note=PASS [New List~<Harness> { expected } should contain [ x => x == 'Harness(expected)' ]]
+DONE P8|Debug|SyncAssert
+ALLDONE P8

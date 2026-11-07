@@ -1,0 +1,852 @@
+Probe213 dive on the #213 prototype (CAPTURED_FIELD_VALUES_PLAN 4.1 a to e)
+==========================================================================
+
+Weaver: the prototype (../prototype.patch) on 5.27.2 (e4a1c82a), in C:/Code/Kronikol-213p. Its assembly version still
+reads 5.27.2.0: the prototype bumps nothing. Runtime .NET 10.0.11, SDK 10.0.300, Windows 11 x64, 2026-10-29.
+
+Probe: ../probe/Probe213Tests.cs as copied to the harness at 08:48 (md5 98b72c8a3fcec4f5d007b55fe8749e3b), dropped into
+the worktree's test project and run with
+    KRONIKOL_213_DIVE=<file> dotnet test tests/Kronikol.Tests.AssertionTracking -f net10.0 --no-build --filter "FullyQualifiedName~Probe213"
+(2 passed: Dive wrote the dump below; Case is gated on its own variables and did nothing). The working copy in
+C:/Code/Kronikol-213/tests differs from the harness copy only in Case's DONE markers, so the Dive is the same.
+Static only: nothing woven is run here. The 5.27.2 column is results/dive-raw-5.27.2.txt, the same probe on 5.27.2.
+
+1. Against 5.27.2, shape by shape
+---------------------------------
+"woven" is the weave's count of statements (the same in both); "ILVerify+" is the errors the weave added; "values
+captured" lists each captured variable of every statement the probe dumps (a name twice = two statements).
+
+shape          build               woven  ILVerify+  values captured (all statements)
+                                          5.27.2/pr  5.27.2 -> prototype
+----------------------------------------------------------------------------------------------------
+P1             Debug                   3      1 / 0  third -> third
+P1             Release                 3      1 / 0  third -> third
+P1             ReleaseDebugPlus        3      1 / 0  third -> third
+P2             Debug                   1      1 / 0  cts, handlers -> cts, handlers
+P2             Release                 1      1 / 0  cts, handlers -> cts, handlers
+P2             ReleaseDebugPlus        1      1 / 0  cts, handlers -> cts, handlers
+P3             Debug                   3      0 / 0  third -> third
+P3             Release                 3      0 / 0  third -> third
+P3             ReleaseDebugPlus        3      0 / 0  third -> third
+P4             Debug                   3      0 / 0  _third -> _third
+P4             Release                 3      0 / 0  _third -> _third
+P4             ReleaseDebugPlus        3      0 / 0  _third -> _third
+P5             Debug                   3      0 / 0  - -> third   (differs)
+P5             Release                 3      0 / 0  - -> third   (differs)
+P5             ReleaseDebugPlus        3      0 / 0  - -> third   (differs)
+P6             Debug                   1      1 / 0  only -> only
+P6             Release                 1      1 / 0  only -> only
+P6             ReleaseDebugPlus        1      1 / 0  only -> only
+P7             Debug                   1      0 / 0  - -> -
+P7             Release                 1      0 / 0  - -> -
+P7             ReleaseDebugPlus        1      0 / 0  - -> -
+P8             Debug                   2      0 / 0  - -> expected, expected   (differs)
+P8             Release                 2      0 / 0  - -> expected, expected   (differs)
+P8             ReleaseDebugPlus        2      0 / 0  - -> expected, expected   (differs)
+P9             Debug                   1      0 / 0  - -> -
+P9             Release                 1      0 / 0  - -> -
+P9             ReleaseDebugPlus        1      0 / 0  - -> -
+P10            Debug                   1      1 / 0  local, third -> local, third
+P10            Release                 1      1 / 0  local, third -> local, third
+P10            ReleaseDebugPlus        1      1 / 0  local, third -> local, third
+P11            Debug                   1      0 / 0  - -> -
+P11            Release                 1      0 / 0  - -> -
+P11            ReleaseDebugPlus        1      0 / 0  - -> -
+P12_1p         Debug                   1      1 / 0  p0 -> p0
+P12_1p         Release                 1      1 / 0  p0 -> p0
+P12_1p         ReleaseDebugPlus        1      1 / 0  p0 -> p0
+P12_1p_fields  Debug                   1      1 / 0  p0 -> p0
+P12_1p_fields  Release                 1      1 / 0  p0 -> p0
+P12_1p_fields  ReleaseDebugPlus        1      1 / 0  p0 -> p0
+P12_2p         Debug                   1      1 / 0  p1 -> p1
+P12_2p         Release                 1      1 / 0  p1 -> p1
+P12_2p         ReleaseDebugPlus        1      1 / 0  p1 -> p1
+P12_2p_fields  Debug                   1      1 / 0  p1 -> p1
+P12_2p_fields  Release                 1      1 / 0  p1 -> p1
+P12_2p_fields  ReleaseDebugPlus        1      1 / 0  p1 -> p1
+P12_4p         Debug                   1      1 / 0  p3 -> p3
+P12_4p         Release                 1      1 / 0  p3 -> p3
+P12_4p         ReleaseDebugPlus        1      1 / 0  p3 -> p3
+P12_4p_fields  Debug                   1      1 / 0  p3 -> p3
+P12_4p_fields  Release                 1      1 / 0  p3 -> p3
+P12_4p_fields  ReleaseDebugPlus        1      1 / 0  p3 -> p3
+P12_6p         Debug                   1      1 / 0  p5 -> p5
+P12_6p         Release                 1      1 / 0  p5 -> p5
+P12_6p         ReleaseDebugPlus        1      1 / 0  p5 -> p5
+P12_6p_fields  Debug                   1      1 / 0  p5 -> p5
+P12_6p_fields  Release                 1      1 / 0  p5 -> p5
+P12_6p_fields  ReleaseDebugPlus        1      1 / 0  p5 -> p5
+P13            Debug                   2      0 / 0  _id, _id, other, other -> other, other   (differs)
+P13            Release                 2      1 / 0  _id, _id, other, other -> other, other   (differs)
+P13            ReleaseDebugPlus        2      1 / 0  _id, _id, other, other -> other, other   (differs)
+P14            Debug                   2      0 / 0  other, other -> other, other
+P14            Release                 2      1 / 0  other, other -> other, other
+P14            ReleaseDebugPlus        2      0 / 0  other, other -> other, other
+P15            Debug                   2      1 / 0  _harness, _harness, c, c -> c, c   (differs)
+P15            Release                 2      3 / 0  _harness, _harness, c, c -> c, c   (differs)
+P15            ReleaseDebugPlus        2      1 / 0  _harness, _harness, c, c -> c, c   (differs)
+P16            Debug                   2      2 / 0  _harness, _harness, c, c -> c, c   (differs)
+P16            Release                 2      2 / 0  _harness, _harness, c, c -> c, c   (differs)
+P16            ReleaseDebugPlus        2      2 / 0  _harness, _harness, c, c -> c, c   (differs)
+P17            Debug                   4      0 / 0  other, other -> other, other
+P17            Release                 4      0 / 0  _id, other, other -> other, other   (differs)
+P17            ReleaseDebugPlus        4      0 / 0  _id, other, other -> other, other   (differs)
+----------------------------------------------------------------------------------------------------
+ILVerify errors the weave added, all shapes and builds: 5.27.2 50, prototype 0
+
+What differs, and why:
+  P5          third, an argument the statement reads itself in an async method, is now captured (F4). Checked on the
+              UNWOVEN IL (FindAssertionStatements by reflection, as the probe calls it): in Debug the chained arm takes
+              ldarg.0; ldfld <>4__this; ldfld <third>P; in Release and debug-plus Release the standalone arm takes
+              ldloc.1; ldfld <third>P, local 1 being stored from ldarg.0; ldfld <>4__this. The subjects (third in
+              third.ShouldNotBeNull(), (first, second)) are not scanned in either weaver: a Shouldly call's scan starts
+              after its subject.
+  P8          expected, a primary constructor's parameter in an expression tree, is now captured, sync and async (F5).
+  P13         _id is no longer captured: the expression tree reads other._id, a field of another object. 5.27.2 read
+              this._id for it (the wrong object); in the async Release MoveNext, which keeps no <>4__this, it read
+              _id off the state machine itself (the ILVerify error: found address of the state machine, expected P13).
+  P15, P16    _harness is no longer captured: the static methods' lambdas read c._harness. 5.27.2 read it off
+              ldarg.0, which in a static method is the first parameter (an int in Second) and in P16's MoveNext the
+              state machine.
+  P17         _id is no longer captured in Release: the statement reads other._id off a local of MoveNext's own, and
+              5.27.2 read this._id through <>4__this for it (the right type, the wrong object).
+  P1, P2, P6, P10, P12_*: the same names are captured, now loaded through <>4__this instead of off the state machine.
+
+Caveat on reading this dump (both columns): the probe's DumpStatements runs FindAssertionStatements on the WOVEN
+assembly, so its "captured"/"load" lines are a re-detection over IL that also holds the weave's own loads and spill
+locals (for example 5.27.2's P15 Release shows c through ldloc 0, while its ILVerify error shows the real weave read a
+closure field off ldarg.0). The ILVerify+ column is the real weave's.
+
+2. The prototype's loads, shape by shape
+----------------------------------------
+Each captured variable as its statement line, name and the load the weave emits (as the dive reconstructs it from
+the variable's metadata). [THIS] = ldarg.0 is this, in a synchronous instance method; [SM] = ldarg.0 is the state
+machine in its MoveNext, for a field of the state machine itself (P17's hoisted <other>5__1). No load reads a field
+of one type off another.
+
+shape          build             IL+  captured -> load
+-------------- ----------------- ---  ----------------------------------------------------------------------
+P1             Debug               0  L13 third -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P1::<third>P
+P1             Release             0  L13 third -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P1::<third>P
+P1             ReleaseDebugPlus    0  L13 third -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P1::<third>P
+P10            Debug               0  L14 local -> ldarg.0; ldfld <AssertionPasses>d__3::<>8__1; ldfld <>c__DisplayClass3_0::local
+                                      L14 third -> ldarg.0; ldfld <AssertionPasses>d__3::<>4__this; ldfld P10::<third>P
+P10            Release             0  L14 local -> ldarg.0; ldfld <AssertionPasses>d__3::<>8__1; ldfld <>c__DisplayClass3_0::local
+                                      L14 third -> ldarg.0; ldfld <AssertionPasses>d__3::<>4__this; ldfld P10::<third>P
+P10            ReleaseDebugPlus    0  L14 local -> ldarg.0; ldfld <AssertionPasses>d__3::<>8__1; ldfld <>c__DisplayClass3_0::local
+                                      L14 third -> ldarg.0; ldfld <AssertionPasses>d__3::<>4__this; ldfld P10::<third>P
+P11            Debug               0  (no values captured)
+P11            Release             0  (no values captured)
+P11            ReleaseDebugPlus    0  (no values captured)
+P12_1p         Debug               0  L12 p0 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_1p::<p0>P
+P12_1p         Release             0  L12 p0 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_1p::<p0>P
+P12_1p         ReleaseDebugPlus    0  L12 p0 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_1p::<p0>P
+P12_1p_fields  Debug               0  L13 p0 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_1p_fields::<p0>P
+P12_1p_fields  Release             0  L13 p0 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_1p_fields::<p0>P
+P12_1p_fields  ReleaseDebugPlus    0  L13 p0 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_1p_fields::<p0>P
+P12_2p         Debug               0  L12 p1 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_2p::<p1>P
+P12_2p         Release             0  L12 p1 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_2p::<p1>P
+P12_2p         ReleaseDebugPlus    0  L12 p1 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_2p::<p1>P
+P12_2p_fields  Debug               0  L13 p1 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_2p_fields::<p1>P
+P12_2p_fields  Release             0  L13 p1 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_2p_fields::<p1>P
+P12_2p_fields  ReleaseDebugPlus    0  L13 p1 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_2p_fields::<p1>P
+P12_4p         Debug               0  L12 p3 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_4p::<p3>P
+P12_4p         Release             0  L12 p3 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_4p::<p3>P
+P12_4p         ReleaseDebugPlus    0  L12 p3 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_4p::<p3>P
+P12_4p_fields  Debug               0  L13 p3 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_4p_fields::<p3>P
+P12_4p_fields  Release             0  L13 p3 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_4p_fields::<p3>P
+P12_4p_fields  ReleaseDebugPlus    0  L13 p3 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_4p_fields::<p3>P
+P12_6p         Debug               0  L12 p5 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_6p::<p5>P
+P12_6p         Release             0  L12 p5 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_6p::<p5>P
+P12_6p         ReleaseDebugPlus    0  L12 p5 -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_6p::<p5>P
+P12_6p_fields  Debug               0  L13 p5 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_6p_fields::<p5>P
+P12_6p_fields  Release             0  L13 p5 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_6p_fields::<p5>P
+P12_6p_fields  ReleaseDebugPlus    0  L13 p5 -> ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_6p_fields::<p5>P
+P13            Debug               0  L13 other -> ldloc 0; ldfld <>c__DisplayClass1_0::other
+                                      L19 other -> ldarg.0; ldfld <AsyncAssert>d__2::<>8__1; ldfld <>c__DisplayClass2_0::other
+P13            Release             0  L13 other -> ldloc 0; ldfld <>c__DisplayClass1_0::other
+                                      L19 other -> ldarg.0; ldfld <AsyncAssert>d__2::<>8__1; ldfld <>c__DisplayClass2_0::other
+P13            ReleaseDebugPlus    0  L13 other -> ldloc 0; ldfld <>c__DisplayClass1_0::other
+                                      L19 other -> ldarg.0; ldfld <AsyncAssert>d__2::<>8__1; ldfld <>c__DisplayClass2_0::other
+P14            Debug               0  L14 other -> ldloc 0; ldfld <>c__DisplayClass2_0::other
+                                      L20 other -> ldarg.0; ldfld <AsyncAssert>d__3::<>8__1; ldfld <>c__DisplayClass3_0::other
+P14            Release             0  L14 other -> ldloc 0; ldfld <>c__DisplayClass2_0::other
+                                      L20 other -> ldarg.0; ldfld <AsyncAssert>d__3::<>8__1; ldfld <>c__DisplayClass3_0::other
+P14            ReleaseDebugPlus    0  L14 other -> ldloc 0; ldfld <>c__DisplayClass2_0::other
+                                      L20 other -> ldarg.0; ldfld <AsyncAssert>d__3::<>8__1; ldfld <>c__DisplayClass3_0::other
+P15            Debug               0  L11 c -> ldloc 0; ldfld <>c__DisplayClass0_0::c
+                                      L15 c -> ldloc 0; ldfld <>c__DisplayClass1_0::c
+P15            Release             0  L11 c -> ldloc 0; ldfld <>c__DisplayClass0_0::c
+                                      L15 c -> ldloc 0; ldfld <>c__DisplayClass1_0::c
+P15            ReleaseDebugPlus    0  L11 c -> ldloc 0; ldfld <>c__DisplayClass0_0::c
+                                      L15 c -> ldloc 0; ldfld <>c__DisplayClass1_0::c
+P16            Debug               0  L12 c -> ldarg.0; ldfld <First>d__0::<>8__1; ldfld <>c__DisplayClass0_0::c
+                                      L17 c -> ldarg.0; ldfld <Second>d__1::<>8__1; ldfld <>c__DisplayClass1_0::c
+P16            Release             0  L12 c -> ldarg.0; ldfld <First>d__0::<>8__1; ldfld <>c__DisplayClass0_0::c
+                                      L17 c -> ldarg.0; ldfld <Second>d__1::<>8__1; ldfld <>c__DisplayClass1_0::c
+P16            ReleaseDebugPlus    0  L12 c -> ldarg.0; ldfld <First>d__0::<>8__1; ldfld <>c__DisplayClass0_0::c
+                                      L17 c -> ldarg.0; ldfld <Second>d__1::<>8__1; ldfld <>c__DisplayClass1_0::c
+P17            Debug               0  L12 other -> ldloc 0
+                                      L14 other -> ldarg.0; ldfld <AsyncB>d__5::<other>5__1 [SM]
+P17            Release             0  L12 other -> ldloc 0
+                                      L14 other -> ldloc 2
+P17            ReleaseDebugPlus    0  L12 other -> ldloc 0
+                                      L14 other -> ldloc 2
+P2             Debug               0  L16 cts -> ldarg.0; ldfld <AssertionPasses>d__4::<>8__1; ldfld <>c__DisplayClass4_0::cts
+                                      L16 handlers -> ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P2::<handlers>P
+P2             Release             0  L16 cts -> ldarg.0; ldfld <AssertionPasses>d__4::<>8__1; ldfld <>c__DisplayClass4_0::cts
+                                      L16 handlers -> ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P2::<handlers>P
+P2             ReleaseDebugPlus    0  L16 cts -> ldarg.0; ldfld <AssertionPasses>d__4::<>8__1; ldfld <>c__DisplayClass4_0::cts
+                                      L16 handlers -> ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P2::<handlers>P
+P3             Debug               0  L12 third -> ldarg.0; ldfld P3::<third>P [THIS]
+P3             Release             0  L12 third -> ldarg.0; ldfld P3::<third>P [THIS]
+P3             ReleaseDebugPlus    0  L12 third -> ldarg.0; ldfld P3::<third>P [THIS]
+P4             Debug               0  L16 _third -> ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P4::_third
+P4             Release             0  L16 _third -> ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P4::_third
+P4             ReleaseDebugPlus    0  L16 _third -> ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P4::_third
+P5             Debug               0  L13 third -> ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P5::<third>P
+P5             Release             0  L13 third -> ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P5::<third>P
+P5             ReleaseDebugPlus    0  L13 third -> ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P5::<third>P
+P6             Debug               0  L12 only -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P6::<only>P
+P6             Release             0  L12 only -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P6::<only>P
+P6             ReleaseDebugPlus    0  L12 only -> ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P6::<only>P
+P7             Debug               0  (no values captured)
+P7             Release             0  (no values captured)
+P7             ReleaseDebugPlus    0  (no values captured)
+P8             Debug               0  L12 expected -> ldarg.0; ldfld P8::<expected>P [THIS]
+                                      L17 expected -> ldarg.0; ldfld <AsyncAssert>d__3::<>4__this; ldfld P8::<expected>P
+P8             Release             0  L12 expected -> ldarg.0; ldfld P8::<expected>P [THIS]
+                                      L17 expected -> ldarg.0; ldfld <AsyncAssert>d__3::<>4__this; ldfld P8::<expected>P
+P8             ReleaseDebugPlus    0  L12 expected -> ldarg.0; ldfld P8::<expected>P [THIS]
+                                      L17 expected -> ldarg.0; ldfld <AsyncAssert>d__3::<>4__this; ldfld P8::<expected>P
+P9             Debug               0  (no values captured)
+P9             Release             0  (no values captured)
+P9             ReleaseDebugPlus    0  (no values captured)
+
+3. The dive's own dump (Probe213Tests.Dive, unedited)
+-----------------------------------------------------
+
+# Probe213 static dive: weaver 5.27.2.0, runtime 10.0.11
+# Per shape x build: compile, weave (reflection), ILVerify errors the weave ADDED, and each
+# captured variable's metadata + its reconstructed value-load. No woven code is run here.
+
+=== P1 [Debug] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+    captured 'third': local=-1 closureLocal=-1 closureField=P1::<third>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P1::<third>P
+      stateField declaringType=P1/<AssertionPasses>d__5 (MoveNext/method owner=P1/<AssertionPasses>d__5)
+  stmt <AssertionPasses>d__5::MoveNext L14 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__5::MoveNext L15 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P1 [Release] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+    captured 'third': local=-1 closureLocal=-1 closureField=P1::<third>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P1::<third>P
+      stateField declaringType=P1/<AssertionPasses>d__5 (MoveNext/method owner=P1/<AssertionPasses>d__5)
+  stmt <AssertionPasses>d__5::MoveNext L14 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__5::MoveNext L15 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P1 [ReleaseDebugPlus] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()))"
+    captured 'third': local=-1 closureLocal=-1 closureField=P1::<third>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P1::<third>P
+      stateField declaringType=P1/<AssertionPasses>d__5 (MoveNext/method owner=P1/<AssertionPasses>d__5)
+  stmt <AssertionPasses>d__5::MoveNext L14 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__5::MoveNext L15 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P10 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__3::MoveNext L14 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))"
+    captured 'local': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::local stateField=<AssertionPasses>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__3::<>8__1; ldfld <>c__DisplayClass3_0::local
+      stateField declaringType=P10/<AssertionPasses>d__3 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+    captured 'third': local=-1 closureLocal=-1 closureField=P10::<third>P stateField=<AssertionPasses>d__3::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__3::<>4__this; ldfld P10::<third>P
+      stateField declaringType=P10/<AssertionPasses>d__3 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+
+=== P10 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__3::MoveNext L14 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))"
+    captured 'local': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::local stateField=<AssertionPasses>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__3::<>8__1; ldfld <>c__DisplayClass3_0::local
+      stateField declaringType=P10/<AssertionPasses>d__3 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+    captured 'third': local=-1 closureLocal=-1 closureField=P10::<third>P stateField=<AssertionPasses>d__3::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__3::<>4__this; ldfld P10::<third>P
+      stateField declaringType=P10/<AssertionPasses>d__3 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+
+=== P10 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__3::MoveNext L14 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => third.Run(() => { GC.KeepAlive(_field); GC.KeepAlive(local); throw new InvalidOperationException(); }))"
+    captured 'local': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::local stateField=<AssertionPasses>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__3::<>8__1; ldfld <>c__DisplayClass3_0::local
+      stateField declaringType=P10/<AssertionPasses>d__3 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+    captured 'third': local=-1 closureLocal=-1 closureField=P10::<third>P stateField=<AssertionPasses>d__3::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__3::<>4__this; ldfld P10::<third>P
+      stateField declaringType=P10/<AssertionPasses>d__3 (MoveNext/method owner=P10/<AssertionPasses>d__3)
+
+=== P11 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(Body)"
+    captured: none
+
+=== P11 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(Body)"
+    captured: none
+
+=== P11 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(Body)"
+    captured: none
+
+=== P12_1p [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=P12_1p::<p0>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_1p::<p0>P
+      stateField declaringType=P12_1p/<AssertionPasses>d__2 (MoveNext/method owner=P12_1p/<AssertionPasses>d__2)
+
+=== P12_1p [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=P12_1p::<p0>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_1p::<p0>P
+      stateField declaringType=P12_1p/<AssertionPasses>d__2 (MoveNext/method owner=P12_1p/<AssertionPasses>d__2)
+
+=== P12_1p [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=P12_1p::<p0>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_1p::<p0>P
+      stateField declaringType=P12_1p/<AssertionPasses>d__2 (MoveNext/method owner=P12_1p/<AssertionPasses>d__2)
+
+=== P12_1p_fields [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=P12_1p_fields::<p0>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_1p_fields::<p0>P
+      stateField declaringType=P12_1p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_1p_fields/<AssertionPasses>d__5)
+
+=== P12_1p_fields [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=P12_1p_fields::<p0>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_1p_fields::<p0>P
+      stateField declaringType=P12_1p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_1p_fields/<AssertionPasses>d__5)
+
+=== P12_1p_fields [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p0.Run(() => throw new InvalidOperationException()))"
+    captured 'p0': local=-1 closureLocal=-1 closureField=P12_1p_fields::<p0>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_1p_fields::<p0>P
+      stateField declaringType=P12_1p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_1p_fields/<AssertionPasses>d__5)
+
+=== P12_2p [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=P12_2p::<p1>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_2p::<p1>P
+      stateField declaringType=P12_2p/<AssertionPasses>d__2 (MoveNext/method owner=P12_2p/<AssertionPasses>d__2)
+
+=== P12_2p [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=P12_2p::<p1>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_2p::<p1>P
+      stateField declaringType=P12_2p/<AssertionPasses>d__2 (MoveNext/method owner=P12_2p/<AssertionPasses>d__2)
+
+=== P12_2p [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=P12_2p::<p1>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_2p::<p1>P
+      stateField declaringType=P12_2p/<AssertionPasses>d__2 (MoveNext/method owner=P12_2p/<AssertionPasses>d__2)
+
+=== P12_2p_fields [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=P12_2p_fields::<p1>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_2p_fields::<p1>P
+      stateField declaringType=P12_2p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_2p_fields/<AssertionPasses>d__5)
+
+=== P12_2p_fields [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=P12_2p_fields::<p1>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_2p_fields::<p1>P
+      stateField declaringType=P12_2p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_2p_fields/<AssertionPasses>d__5)
+
+=== P12_2p_fields [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p1.Run(() => throw new InvalidOperationException()))"
+    captured 'p1': local=-1 closureLocal=-1 closureField=P12_2p_fields::<p1>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_2p_fields::<p1>P
+      stateField declaringType=P12_2p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_2p_fields/<AssertionPasses>d__5)
+
+=== P12_4p [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=P12_4p::<p3>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_4p::<p3>P
+      stateField declaringType=P12_4p/<AssertionPasses>d__2 (MoveNext/method owner=P12_4p/<AssertionPasses>d__2)
+
+=== P12_4p [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=P12_4p::<p3>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_4p::<p3>P
+      stateField declaringType=P12_4p/<AssertionPasses>d__2 (MoveNext/method owner=P12_4p/<AssertionPasses>d__2)
+
+=== P12_4p [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=P12_4p::<p3>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_4p::<p3>P
+      stateField declaringType=P12_4p/<AssertionPasses>d__2 (MoveNext/method owner=P12_4p/<AssertionPasses>d__2)
+
+=== P12_4p_fields [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=P12_4p_fields::<p3>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_4p_fields::<p3>P
+      stateField declaringType=P12_4p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_4p_fields/<AssertionPasses>d__5)
+
+=== P12_4p_fields [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=P12_4p_fields::<p3>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_4p_fields::<p3>P
+      stateField declaringType=P12_4p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_4p_fields/<AssertionPasses>d__5)
+
+=== P12_4p_fields [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p3.Run(() => throw new InvalidOperationException()))"
+    captured 'p3': local=-1 closureLocal=-1 closureField=P12_4p_fields::<p3>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_4p_fields::<p3>P
+      stateField declaringType=P12_4p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_4p_fields/<AssertionPasses>d__5)
+
+=== P12_6p [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=P12_6p::<p5>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_6p::<p5>P
+      stateField declaringType=P12_6p/<AssertionPasses>d__2 (MoveNext/method owner=P12_6p/<AssertionPasses>d__2)
+
+=== P12_6p [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=P12_6p::<p5>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_6p::<p5>P
+      stateField declaringType=P12_6p/<AssertionPasses>d__2 (MoveNext/method owner=P12_6p/<AssertionPasses>d__2)
+
+=== P12_6p [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=P12_6p::<p5>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P12_6p::<p5>P
+      stateField declaringType=P12_6p/<AssertionPasses>d__2 (MoveNext/method owner=P12_6p/<AssertionPasses>d__2)
+
+=== P12_6p_fields [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=P12_6p_fields::<p5>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_6p_fields::<p5>P
+      stateField declaringType=P12_6p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_6p_fields/<AssertionPasses>d__5)
+
+=== P12_6p_fields [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=P12_6p_fields::<p5>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_6p_fields::<p5>P
+      stateField declaringType=P12_6p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_6p_fields/<AssertionPasses>d__5)
+
+=== P12_6p_fields [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__5::MoveNext L13 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => p5.Run(() => throw new InvalidOperationException()))"
+    captured 'p5': local=-1 closureLocal=-1 closureField=P12_6p_fields::<p5>P stateField=<AssertionPasses>d__5::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__5::<>4__this; ldfld P12_6p_fields::<p5>P
+      stateField declaringType=P12_6p_fields/<AssertionPasses>d__5 (MoveNext/method owner=P12_6p_fields/<AssertionPasses>d__5)
+
+=== P13 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P13::SyncAssert L13 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::other
+  stmt <AsyncAssert>d__2::MoveNext L19 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass2_0::other stateField=<AsyncAssert>d__2::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__2::<>8__1; ldfld <>c__DisplayClass2_0::other
+      stateField declaringType=P13/<AsyncAssert>d__2 (MoveNext/method owner=P13/<AsyncAssert>d__2)
+
+=== P13 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P13::SyncAssert L13 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::other
+  stmt <AsyncAssert>d__2::MoveNext L19 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass2_0::other stateField=<AsyncAssert>d__2::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__2::<>8__1; ldfld <>c__DisplayClass2_0::other
+      stateField declaringType=P13/<AsyncAssert>d__2 (MoveNext/method owner=P13/<AsyncAssert>d__2)
+
+=== P13 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P13::SyncAssert L13 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::other
+  stmt <AsyncAssert>d__2::MoveNext L19 awaited=False "new[] { 2 }.Should().Contain(x => x == other._id)"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass2_0::other stateField=<AsyncAssert>d__2::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__2::<>8__1; ldfld <>c__DisplayClass2_0::other
+      stateField declaringType=P13/<AsyncAssert>d__2 (MoveNext/method owner=P13/<AsyncAssert>d__2)
+
+=== P14 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P14::SyncAssert L14 awaited=False "Should.Throw<InvalidOperationException>(() => other.Fail())"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass2_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass2_0::other
+  stmt <AsyncAssert>d__3::MoveNext L20 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::other stateField=<AsyncAssert>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__3::<>8__1; ldfld <>c__DisplayClass3_0::other
+      stateField declaringType=P14/<AsyncAssert>d__3 (MoveNext/method owner=P14/<AsyncAssert>d__3)
+
+=== P14 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P14::SyncAssert L14 awaited=False "Should.Throw<InvalidOperationException>(() => other.Fail())"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass2_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass2_0::other
+  stmt <AsyncAssert>d__3::MoveNext L20 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::other stateField=<AsyncAssert>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__3::<>8__1; ldfld <>c__DisplayClass3_0::other
+      stateField declaringType=P14/<AsyncAssert>d__3 (MoveNext/method owner=P14/<AsyncAssert>d__3)
+
+=== P14 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P14::SyncAssert L14 awaited=False "Should.Throw<InvalidOperationException>(() => other.Fail())"
+    captured 'other': local=-1 closureLocal=0 closureField=<>c__DisplayClass2_0::other stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass2_0::other
+  stmt <AsyncAssert>d__3::MoveNext L20 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => { other.Fail(); return Task.CompletedTask; })"
+    captured 'other': local=-1 closureLocal=-1 closureField=<>c__DisplayClass3_0::other stateField=<AsyncAssert>d__3::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__3::<>8__1; ldfld <>c__DisplayClass3_0::other
+      stateField declaringType=P14/<AsyncAssert>d__3 (MoveNext/method owner=P14/<AsyncAssert>d__3)
+
+=== P15 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P15::First L11 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass0_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass0_0::c
+  stmt P15::Second L15 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::c
+
+=== P15 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P15::First L11 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass0_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass0_0::c
+  stmt P15::Second L15 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::c
+
+=== P15 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P15::First L11 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass0_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass0_0::c
+  stmt P15::Second L15 awaited=False "Should.Throw<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'c': local=-1 closureLocal=0 closureField=<>c__DisplayClass1_0::c stateField=null param=-1 box=False
+      load: ldloc 0; ldfld <>c__DisplayClass1_0::c
+
+=== P16 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt <First>d__0::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass0_0::c stateField=<First>d__0::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <First>d__0::<>8__1; ldfld <>c__DisplayClass0_0::c
+      stateField declaringType=P16/<First>d__0 (MoveNext/method owner=P16/<First>d__0)
+  stmt <Second>d__1::MoveNext L17 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass1_0::c stateField=<Second>d__1::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <Second>d__1::<>8__1; ldfld <>c__DisplayClass1_0::c
+      stateField declaringType=P16/<Second>d__1 (MoveNext/method owner=P16/<Second>d__1)
+
+=== P16 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt <First>d__0::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass0_0::c stateField=<First>d__0::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <First>d__0::<>8__1; ldfld <>c__DisplayClass0_0::c
+      stateField declaringType=P16/<First>d__0 (MoveNext/method owner=P16/<First>d__0)
+  stmt <Second>d__1::MoveNext L17 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass1_0::c stateField=<Second>d__1::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <Second>d__1::<>8__1; ldfld <>c__DisplayClass1_0::c
+      stateField declaringType=P16/<Second>d__1 (MoveNext/method owner=P16/<Second>d__1)
+
+=== P16 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt <First>d__0::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass0_0::c stateField=<First>d__0::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <First>d__0::<>8__1; ldfld <>c__DisplayClass0_0::c
+      stateField declaringType=P16/<First>d__0 (MoveNext/method owner=P16/<First>d__0)
+  stmt <Second>d__1::MoveNext L17 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => c._harness.Run(() => throw new InvalidOperationException()))"
+    captured 'c': local=-1 closureLocal=-1 closureField=<>c__DisplayClass1_0::c stateField=<Second>d__1::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <Second>d__1::<>8__1; ldfld <>c__DisplayClass1_0::c
+      stateField declaringType=P16/<Second>d__1 (MoveNext/method owner=P16/<Second>d__1)
+
+=== P17 [Debug] ===
+  weavedCount=4; ILVerify errors the weave added=0
+  stmt P17::SyncA L11 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt P17::SyncB L12 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=0 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 0
+  stmt <AsyncA>d__4::MoveNext L13 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt <AsyncB>d__5::MoveNext L14 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=-1 closureLocal=-1 closureField=null stateField=<AsyncB>d__5::<other>5__1 param=-1 box=False
+      load: ldarg.0; ldfld <AsyncB>d__5::<other>5__1   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P17/<AsyncB>d__5 (MoveNext/method owner=P17/<AsyncB>d__5)
+
+=== P17 [Release] ===
+  weavedCount=4; ILVerify errors the weave added=0
+  stmt P17::SyncA L11 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt P17::SyncB L12 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=0 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 0
+  stmt <AsyncA>d__4::MoveNext L13 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt <AsyncB>d__5::MoveNext L14 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=2 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 2
+
+=== P17 [ReleaseDebugPlus] ===
+  weavedCount=4; ILVerify errors the weave added=0
+  stmt P17::SyncA L11 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt P17::SyncB L12 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=0 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 0
+  stmt <AsyncA>d__4::MoveNext L13 awaited=False "other._id.ShouldBe(2)"
+    captured: none
+  stmt <AsyncB>d__5::MoveNext L14 awaited=False "2.ShouldBe(other._id)"
+    captured 'other': local=2 closureLocal=-1 closureField=null stateField=null param=-1 box=False
+      load: ldloc 2
+
+=== P2 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))"
+    captured 'cts': local=-1 closureLocal=-1 closureField=<>c__DisplayClass4_0::cts stateField=<AssertionPasses>d__4::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>8__1; ldfld <>c__DisplayClass4_0::cts
+      stateField declaringType=P2/<AssertionPasses>d__4 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+    captured 'handlers': local=-1 closureLocal=-1 closureField=P2::<handlers>P stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P2::<handlers>P
+      stateField declaringType=P2/<AssertionPasses>d__4 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+
+=== P2 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))"
+    captured 'cts': local=-1 closureLocal=-1 closureField=<>c__DisplayClass4_0::cts stateField=<AssertionPasses>d__4::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>8__1; ldfld <>c__DisplayClass4_0::cts
+      stateField declaringType=P2/<AssertionPasses>d__4 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+    captured 'handlers': local=-1 closureLocal=-1 closureField=P2::<handlers>P stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P2::<handlers>P
+      stateField declaringType=P2/<AssertionPasses>d__4 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+
+=== P2 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<OperationCanceledException>(() => handlers.Run(nameof(Harness), () => _service!.Start(cts.Token)))"
+    captured 'cts': local=-1 closureLocal=-1 closureField=<>c__DisplayClass4_0::cts stateField=<AssertionPasses>d__4::<>8__1 param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>8__1; ldfld <>c__DisplayClass4_0::cts
+      stateField declaringType=P2/<AssertionPasses>d__4 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+    captured 'handlers': local=-1 closureLocal=-1 closureField=P2::<handlers>P stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P2::<handlers>P
+      stateField declaringType=P2/<AssertionPasses>d__4 (MoveNext/method owner=P2/<AssertionPasses>d__4)
+
+=== P3 [Debug] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt P3::AssertionPasses L12 awaited=False "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P3::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P3::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P3 (MoveNext/method owner=P3)
+  stmt P3::AssertionPasses L13 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt P3::AssertionPasses L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P3 [Release] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt P3::AssertionPasses L12 awaited=False "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P3::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P3::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P3 (MoveNext/method owner=P3)
+  stmt P3::AssertionPasses L13 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt P3::AssertionPasses L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P3 [ReleaseDebugPlus] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt P3::AssertionPasses L12 awaited=False "_exception = Should.Throw<InvalidOperationException>(() => third.Run(() => throw new InvalidOperationException()).GetAwaiter().GetResult())"
+    captured 'third': local=-1 closureLocal=-1 closureField=null stateField=P3::<third>P param=-1 box=False
+      load: ldarg.0; ldfld P3::<third>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P3 (MoveNext/method owner=P3)
+  stmt P3::AssertionPasses L13 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt P3::AssertionPasses L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P4 [Debug] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+    captured '_third': local=-1 closureLocal=-1 closureField=P4::_third stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P4::_third
+      stateField declaringType=P4/<AssertionPasses>d__4 (MoveNext/method owner=P4/<AssertionPasses>d__4)
+  stmt <AssertionPasses>d__4::MoveNext L17 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L18 awaited=False "(_first, _second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P4 [Release] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+    captured '_third': local=-1 closureLocal=-1 closureField=P4::_third stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P4::_third
+      stateField declaringType=P4/<AssertionPasses>d__4 (MoveNext/method owner=P4/<AssertionPasses>d__4)
+  stmt <AssertionPasses>d__4::MoveNext L17 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L18 awaited=False "(_first, _second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P4 [ReleaseDebugPlus] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L16 awaited=True "_exception = await Should.ThrowAsync<InvalidOperationException>(() => _third.Run(() => throw new InvalidOperationException()))"
+    captured '_third': local=-1 closureLocal=-1 closureField=P4::_third stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P4::_third
+      stateField declaringType=P4/<AssertionPasses>d__4 (MoveNext/method owner=P4/<AssertionPasses>d__4)
+  stmt <AssertionPasses>d__4::MoveNext L17 awaited=False "_exception.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L18 awaited=False "(_first, _second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P5 [Debug] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L12 awaited=False "third.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L13 awaited=False "third.ShouldBe(third)"
+    captured 'third': local=-1 closureLocal=-1 closureField=P5::<third>P stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P5::<third>P
+      stateField declaringType=P5/<AssertionPasses>d__4 (MoveNext/method owner=P5/<AssertionPasses>d__4)
+  stmt <AssertionPasses>d__4::MoveNext L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P5 [Release] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L12 awaited=False "third.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L13 awaited=False "third.ShouldBe(third)"
+    captured 'third': local=-1 closureLocal=-1 closureField=P5::<third>P stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P5::<third>P
+      stateField declaringType=P5/<AssertionPasses>d__4 (MoveNext/method owner=P5/<AssertionPasses>d__4)
+  stmt <AssertionPasses>d__4::MoveNext L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P5 [ReleaseDebugPlus] ===
+  weavedCount=3; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__4::MoveNext L12 awaited=False "third.ShouldNotBeNull()"
+    captured: none
+  stmt <AssertionPasses>d__4::MoveNext L13 awaited=False "third.ShouldBe(third)"
+    captured 'third': local=-1 closureLocal=-1 closureField=P5::<third>P stateField=<AssertionPasses>d__4::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__4::<>4__this; ldfld P5::<third>P
+      stateField declaringType=P5/<AssertionPasses>d__4 (MoveNext/method owner=P5/<AssertionPasses>d__4)
+  stmt <AssertionPasses>d__4::MoveNext L14 awaited=False "(first, second).ShouldNotBe((null, null))"
+    captured: none
+
+=== P6 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))"
+    captured 'only': local=-1 closureLocal=-1 closureField=P6::<only>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P6::<only>P
+      stateField declaringType=P6/<AssertionPasses>d__2 (MoveNext/method owner=P6/<AssertionPasses>d__2)
+
+=== P6 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))"
+    captured 'only': local=-1 closureLocal=-1 closureField=P6::<only>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P6::<only>P
+      stateField declaringType=P6/<AssertionPasses>d__2 (MoveNext/method owner=P6/<AssertionPasses>d__2)
+
+=== P6 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(() => only.Run(() => throw new InvalidOperationException()))"
+    captured 'only': local=-1 closureLocal=-1 closureField=P6::<only>P stateField=<AssertionPasses>d__2::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AssertionPasses>d__2::<>4__this; ldfld P6::<only>P
+      stateField declaringType=P6/<AssertionPasses>d__2 (MoveNext/method owner=P6/<AssertionPasses>d__2)
+
+=== P7 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { System.Console.WriteLine(value); await Task.Yield(); throw new InvalidOperationException(); })"
+    captured: none
+
+=== P7 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { System.Console.WriteLine(value); await Task.Yield(); throw new InvalidOperationException(); })"
+    captured: none
+
+=== P7 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L12 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { System.Console.WriteLine(value); await Task.Yield(); throw new InvalidOperationException(); })"
+    captured: none
+
+=== P8 [Debug] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P8::SyncAssert L12 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured 'expected': local=-1 closureLocal=-1 closureField=null stateField=P8::<expected>P param=-1 box=False
+      load: ldarg.0; ldfld P8::<expected>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P8 (MoveNext/method owner=P8)
+  stmt <AsyncAssert>d__3::MoveNext L17 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured 'expected': local=-1 closureLocal=-1 closureField=P8::<expected>P stateField=<AsyncAssert>d__3::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__3::<>4__this; ldfld P8::<expected>P
+      stateField declaringType=P8/<AsyncAssert>d__3 (MoveNext/method owner=P8/<AsyncAssert>d__3)
+
+=== P8 [Release] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P8::SyncAssert L12 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured 'expected': local=-1 closureLocal=-1 closureField=null stateField=P8::<expected>P param=-1 box=False
+      load: ldarg.0; ldfld P8::<expected>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P8 (MoveNext/method owner=P8)
+  stmt <AsyncAssert>d__3::MoveNext L17 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured 'expected': local=-1 closureLocal=-1 closureField=P8::<expected>P stateField=<AsyncAssert>d__3::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__3::<>4__this; ldfld P8::<expected>P
+      stateField declaringType=P8/<AsyncAssert>d__3 (MoveNext/method owner=P8/<AsyncAssert>d__3)
+
+=== P8 [ReleaseDebugPlus] ===
+  weavedCount=2; ILVerify errors the weave added=0
+  stmt P8::SyncAssert L12 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured 'expected': local=-1 closureLocal=-1 closureField=null stateField=P8::<expected>P param=-1 box=False
+      load: ldarg.0; ldfld P8::<expected>P   <-- ldarg.0 is the state machine / this
+      stateField declaringType=P8 (MoveNext/method owner=P8)
+  stmt <AsyncAssert>d__3::MoveNext L17 awaited=False "new List<Harness> { expected }.Should().Contain(x => x == expected)"
+    captured 'expected': local=-1 closureLocal=-1 closureField=P8::<expected>P stateField=<AsyncAssert>d__3::<>4__this param=-1 box=False
+      load: ldarg.0; ldfld <AsyncAssert>d__3::<>4__this; ldfld P8::<expected>P
+      stateField declaringType=P8/<AsyncAssert>d__3 (MoveNext/method owner=P8/<AsyncAssert>d__3)
+
+=== P9 [Debug] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L11 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { await Task.Yield(); await third.Run(() => throw new InvalidOperationException()); })"
+    captured: none
+
+=== P9 [Release] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L11 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { await Task.Yield(); await third.Run(() => throw new InvalidOperationException()); })"
+    captured: none
+
+=== P9 [ReleaseDebugPlus] ===
+  weavedCount=1; ILVerify errors the weave added=0
+  stmt <AssertionPasses>d__2::MoveNext L11 awaited=True "await Should.ThrowAsync<InvalidOperationException>(async () => { await Task.Yield(); await third.Run(() => throw new InvalidOperationException()); })"
+    captured: none
+
+# end

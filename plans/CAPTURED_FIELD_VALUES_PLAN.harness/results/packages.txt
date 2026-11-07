@@ -1,0 +1,18 @@
+# Kronikol packages used by the harness, checked 2026-10-29 on Windows 11, SDK 10.0.300, runtime 10.0.11
+# nuget.org flat container (https://api.nuget.org/v3-flatcontainer/<id>/index.json): newest listed version per package
+kronikol.xunit2: newest listed 5.27.2; 5.12.0 listed: yes
+kronikol.xunit3: newest listed 5.27.2; 5.12.0 listed: yes
+kronikol.assertiontracking: newest listed 5.27.2; 5.12.0 listed: yes
+kronikol: newest listed 5.27.2; 5.12.0 listed: yes
+
+# Each package as restored (global packages folder), against the .nupkg downloaded from nuget.org's flat container
+# source = .nupkg.metadata's source; nupkg = the cached .nupkg against the downloaded one; dlls = every .dll in the package against its extracted copy
+kronikol.assertiontracking 5.27.2: source https://api.nuget.org/v3/index.json; nupkg byte-identical; dlls 5 compared, 0 differ; sha512 6aDWSXxFnRwbTQ3PhDskGWlUSa29RkQ+b57lcCVAbhbxKNEs0lvTE2O9klWJqRPt8wVmpm4r4sIVPV0gCFD9Jw==
+kronikol.xunit2 5.27.2: source https://api.nuget.org/v3/index.json; nupkg byte-identical; dlls 1 compared, 0 differ; sha512 tdrzNVOHaYw9gnZvvl32fpGfgd34vj7U6qrgFVY3exPfbOISmeEJfVUhpNQlqaN1sW35c9KwqxZtZfl3cXND2w==
+kronikol.xunit3 5.27.2: source https://api.nuget.org/v3/index.json; nupkg byte-identical; dlls 1 compared, 0 differ; sha512 5QqzX1SpY5adiv9o5nmkpglX6OYCYcwmLh7I0JqBJJwIS+mojcXa/P2RoUrNqIIplfJCADm7zvGec5joY4YHaw==
+kronikol 5.27.2: source https://api.nuget.org/v3/index.json; nupkg byte-identical; dlls 1 compared, 0 differ; sha512 JTir3itqbQ+K58gxXPvaEeyptsEhllVS+OQGIj76rtQnSW64B+AjPJWKb5Iw0MaNS5lWSCUsGH9l8heoosye9w==
+kronikol.assertiontracking 5.12.0: source https://api.nuget.org/v3/index.json; nupkg byte-identical; dlls 5 compared, 0 differ; sha512 JjSj21cy17wgm4SiJkvl8TrALwy9C30PNlC8egVipxtNM5GdQVkNsnuSGGdWMRMd22e1B+r54p5RxTPCaBsV7Q==
+kronikol.xunit2 5.12.0: source https://api.nuget.org/v3/index.json; nupkg byte-identical; dlls 1 compared, 0 differ; sha512 pvjBx1MWaa8qfoP3DLmtGBMtb8z+C5otxYifMgTYuG0pFrGOqJ4cep6iG9VBnTk3egI7ZB2yTLYTaGUeZYyUWQ==
+kronikol 5.12.0: source https://api.nuget.org/v3/index.json; nupkg byte-identical; dlls 1 compared, 0 differ; sha512 R8S3qmNt1FE5Bvpq+EFWiYAjNW0qS9Djsl6QfImNnIIcIyileFpzjTF9+w9stbOuahlW+Bj2e2pknAY+bBQ8NQ==
+
+# Assembly informational version the report records (Run.json kronikolVersion): 5.27.2+e4a1c82a98662e62d68c374368ede61e1fea1300

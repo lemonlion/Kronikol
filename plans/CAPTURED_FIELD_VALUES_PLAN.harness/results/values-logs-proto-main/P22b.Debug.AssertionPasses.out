@@ -1,0 +1,6 @@
+ENTER P22b|Debug|AssertionPasses
+RESULT P22b|Debug|AssertionPasses :: unwoven=nothing :: woven=nothing :: note=PASS [New[] { 1 } should all satisfy [ x => GC.KeepAlive('Harness(third)') ]]
+VALUES P22b|Debug|AssertionPasses :: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = Harness(third) [the `third` argument]
+DONE P22b|Debug|AssertionPasses
+TYPES P22b|Debug|AssertionPasses :: [new[] { 1 }.Should().AllSatisfy(x => GC.KeepAlive(third))] third = Harness(third) [the `third` argument]
+ALLDONE P22b

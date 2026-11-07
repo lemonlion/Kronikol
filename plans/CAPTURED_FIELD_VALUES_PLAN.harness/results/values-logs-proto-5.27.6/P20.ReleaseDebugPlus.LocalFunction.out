@@ -1,0 +1,6 @@
+ENTER P20|ReleaseDebugPlus|LocalFunction
+RESULT P20|ReleaseDebugPlus|LocalFunction :: unwoven=nothing :: woven=nothing :: note=PASS [Actual should be 'Harness(expected)'] || PASS [New[] { actual } should contain 'Harness(expected)']
+VALUES P20|ReleaseDebugPlus|LocalFunction :: [actual.ShouldBe(expected)] expected = UNCREATED (not an object this run made) || [new[] { actual }.ShouldContain(expected)] expected = UNCREATED (not an object this run made)
+DONE P20|ReleaseDebugPlus|LocalFunction
+TYPES P20|ReleaseDebugPlus|LocalFunction :: [actual.ShouldBe(expected)] expected = UNCREATED Harness: Harness(expected) || [new[] { actual }.ShouldContain(expected)] expected = UNCREATED Harness: Harness(expected)
+ALLDONE P20

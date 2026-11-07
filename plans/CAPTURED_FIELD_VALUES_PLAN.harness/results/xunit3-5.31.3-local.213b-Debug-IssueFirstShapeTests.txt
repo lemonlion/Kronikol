@@ -1,0 +1,93 @@
+=================== run 1 of 3: xunit3-5.31.3-local.213b Debug IssueFirstShapeTests (2026-11-07T14:16:45Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.IssueFirstShapeTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.19]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.40]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.59]   Starting:    XunitV3Repro
+[xUnit.net 00:00:01.16]   Finished:    XunitV3Repro (ID = '02278748fd875f6589f6d503b5c393141c1c19f7cb6a3de77014d65fb2381e4b')
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [64 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.6359 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.06s     0 calls  Issue first shape
+1 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.06s
+s0/d0  2 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+=================== run 2 of 3: xunit3-5.31.3-local.213b Debug IssueFirstShapeTests (2026-11-07T14:16:51Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.IssueFirstShapeTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.18]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.38]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.59]   Starting:    XunitV3Repro
+[xUnit.net 00:00:01.21]   Finished:    XunitV3Repro (ID = '02278748fd875f6589f6d503b5c393141c1c19f7cb6a3de77014d65fb2381e4b')
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [67 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.7316 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.06s     0 calls  Issue first shape
+1 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.06s
+s0/d0  2 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException
+=================== run 3 of 3: xunit3-5.31.3-local.213b Debug IssueFirstShapeTests (2026-11-07T14:16:57Z)
+dotnet test -c Debug --no-build --logger console;verbosity=normal --filter FullyQualifiedName~WeaveRepro.IssueFirstShapeTests.
+Test run for C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\repro\XunitV3\bin\Debug\net10.0\XunitV3Repro.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.19]   Discovering: XunitV3Repro
+[xUnit.net 00:00:00.41]   Discovered:  XunitV3Repro
+[xUnit.net 00:00:00.60]   Starting:    XunitV3Repro
+[xUnit.net 00:00:01.16]   Finished:    XunitV3Repro (ID = '02278748fd875f6589f6d503b5c393141c1c19f7cb6a3de77014d65fb2381e4b')
+  Passed WeaveRepro.IssueFirstShapeTests.Issue_first_shape [66 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 1.6768 Seconds
+exit code: 0
+report: written
+--- scenarios
+s0    pass   0.06s     0 calls  Issue first shape
+1 scenarios
+--- s0
+s0  Issue First Shape Tests › Issue first shape  [Passed]  0.06s
+s0/d0  2 notes
+
+n0        30 B  ✓ Service should not be null
+n1        43 B  ✓ Should throw OperationCanceledException
+note s0/d0/nN for one in full
+--- s0/d0/n0 in full
+✓ Service should not be null
+--- s0/d0/n1 in full
+✓ Should throw OperationCanceledException

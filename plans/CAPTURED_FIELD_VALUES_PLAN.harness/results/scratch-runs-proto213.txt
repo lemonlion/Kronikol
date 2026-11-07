@@ -1,0 +1,196 @@
+Runtime check of the #213 prototype against 5.27.2 (the implementer's own shapes, not the probe)
+================================================================================================
+
+What: 19 methods, each built in Debug, Release and debug-plus Release (TestAssemblyBuilder.BuildConfiguration),
+woven, checked by ILVerify (WovenIl.NewErrors), then RUN under a test identity of their own, with the notes they drew.
+The fixture is a scratch fact that never went into the patch or the suite run: its source is kept at
+~/AppData/Local/Temp/claude/c--Code-Kronikol/6b20fb3b-c145-4cb8-b106-6fc8f4934d7f/scratchpad/scratch213/Proto213ScratchTests.cs
+(class Pc(Harness first, Harness second, Harness third) has a long as its first field, the crash shape).
+5.27.2 is the same test DLL with the 5.27.2 weaver DLL swapped in. Each 5.27.2 build crashed the test process with
+0xC0000005 (Debug at Pc.Async_lambda_this_only, both Releases at Gen<T>.Async_generic_lambda), so a second 5.27.2
+run left Pc and Gen<T> out to reach the rest. "not reached" = left out of both 5.27.2 runs by those crashes.
+
+The two prototype ILVerify errors (Gen<T>.Async_generic_lambda, every build) are D-B of AWAITED_ASSERTION_VALUES_PLAN
+(<>4__this named on the open generic state machine, as 5.27.2's async arms name it); the runtime accepts the read.
+#211's OwnField removes them once this rides on it.
+
+=== Debug: ILVerify errors the weave added: 5.27.2 9, prototype 2
+    prototype IL: Gen`1/<Async_generic_lambda>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 139, Found ref 'Gen`1+<Async_generic_lambda>d__2<T0>', Expected ref 'Gen`1+<Async_generic_lambda>d__2')
+    prototype IL: Gen`1/<Async_generic_lambda>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 144, Found ref 'Gen`1<!0>', Expected ref 'Gen`1<T0>')
+  Pc.Async_lambda_this_only
+      5.27.2:    CRASHED the process (0xC0000005)
+      prototype: ran :: Should throw InvalidOperationException | Exception should not be null | (first, second) should not be (null, null)
+  Pc.Async_lambda_with_local
+      5.27.2:    not reached (the process had crashed)
+      prototype: ran :: Should throw OperationCanceledException
+  Pc.Async_statement_names_parameter
+      5.27.2:    not reached (the process had crashed)
+      prototype: ran :: Third name should be 'third' | First name should be 'first' | Count should be 7
+  Pc.Sync_lambda_and_statement
+      5.27.2:    not reached (the process had crashed)
+      prototype: ran :: Should throw InvalidOperationException | Third name should be 'third'
+  Pc.Sync_expression_tree
+      5.27.2:    not reached (the process had crashed)
+      prototype: ran :: Items should contain [ x => x == 'a1' && 'first' == "first" ]
+  Pc.Async_expression_tree
+      5.27.2:    not reached (the process had crashed)
+      prototype: ran :: Items should contain [ x => x != 'third' ]
+  Receivers.Lambda_reads_another_objects_field
+      5.27.2:    ran :: Should not throw
+      prototype: ran :: Should not throw
+  Receivers.Async_another_objects_field
+      5.27.2:    ran :: Other id should be '42' | Count should be 3
+      prototype: ran :: Other id should be '42' | Count should be 3
+  Receivers.Static_parameters_field
+      5.27.2:    ran :: Foo id should be '42'
+      prototype: ran :: Foo id should be '42'
+  Receivers.Expression_tree_static_field
+      5.27.2:    ran :: Items should contain [ x => x == 'a1' ]
+      prototype: ran :: Items should contain [ x => x == 'a1' ]
+  Derived.Sync_generic_base_field
+      5.27.2:    THREW BadImageFormatException: An attempt was made to load a program with an incorrect format. (0x8007000B)
+      prototype: ran :: Value should be '5'
+  Derived.Async_generic_base_field
+      5.27.2:    ran :: Value should be '5'
+      prototype: ran :: Value should be '5'
+  Derived.Sync_lambda_generic_base_field
+      5.27.2:    THREW BadImageFormatException: An attempt was made to load a program with an incorrect format. (0x8007000B)
+      prototype: ran :: Should not throw
+  Statics.Other_class_static
+      5.27.2:    ran :: Items should contain [ x => x == Defaults.Expected ]
+      prototype: ran :: Items should contain [ x => x == Defaults.Expected ]
+  Statics.Async_own_static
+      5.27.2:    ran :: N should be 1 | Items should contain [ x => x == 'a1' ]
+      prototype: ran :: N should be 1 | Items should contain [ x => x == 'a1' ]
+  Gen`1.Async_generic_lambda
+      5.27.2:    not reached (the process had crashed)
+      prototype: ran :: Should not throw
+  Gen`1.Sync_generic_expression
+      5.27.2:    not reached (the process had crashed)
+      prototype: ran :: New List~<T> { value } should contain [ x => Equals(x, 'v') ]
+  InLambdas.Assertion_inside_lambda
+      5.27.2:    ran :: List should contain [ x => x == local && x == 'a1' ]
+      prototype: ran :: List should contain [ x => x == 'a1' && x == 'a1' ]
+  InLambdas.Nested_lambda_inside_lambda
+      5.27.2:    ran :: Should not throw
+      prototype: ran :: Should not throw
+=== Release: ILVerify errors the weave added: 5.27.2 12, prototype 2
+    prototype IL: Gen`1/<Async_generic_lambda>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 136, Found address of 'Gen`1+<Async_generic_lambda>d__2<T0>', Expected readonly address of 'Gen`1+<Async_generic_lambda>d__2')
+    prototype IL: Gen`1/<Async_generic_lambda>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 141, Found ref 'Gen`1<!0>', Expected ref 'Gen`1<T0>')
+  Pc.Async_lambda_this_only
+      5.27.2:    ran :: Should throw InvalidOperationException | Exception should not be null | (first, second) should not be (null, null)
+      prototype: ran :: Should throw InvalidOperationException | Exception should not be null | (first, second) should not be (null, null)
+  Pc.Async_lambda_with_local
+      5.27.2:    ran :: Should throw OperationCanceledException
+      prototype: ran :: Should throw OperationCanceledException
+  Pc.Async_statement_names_parameter
+      5.27.2:    ran :: Third name should be 'third' | First name should be 'first' | Count should be 7
+      prototype: ran :: Third name should be 'third' | First name should be 'first' | Count should be 7
+  Pc.Sync_lambda_and_statement
+      5.27.2:    ran :: Should throw InvalidOperationException | Third name should be 'third'
+      prototype: ran :: Should throw InvalidOperationException | Third name should be 'third'
+  Pc.Sync_expression_tree
+      5.27.2:    ran :: Items should contain [ x => x == 'a1' && first.Name == "first" ]
+      prototype: ran :: Items should contain [ x => x == 'a1' && 'first' == "first" ]
+  Pc.Async_expression_tree
+      5.27.2:    ran :: Items should contain [ x => x != third.Name ]
+      prototype: ran :: Items should contain [ x => x != 'third' ]
+  Receivers.Lambda_reads_another_objects_field
+      5.27.2:    ran :: Should not throw
+      prototype: ran :: Should not throw
+  Receivers.Async_another_objects_field
+      5.27.2:    ran :: Other id should be '42' | Count should be 3
+      prototype: ran :: Other id should be '42' | Count should be 3
+  Receivers.Static_parameters_field
+      5.27.2:    ran :: Foo id should be '42'
+      prototype: ran :: Foo id should be '42'
+  Receivers.Expression_tree_static_field
+      5.27.2:    ran :: Items should contain [ x => x == 'a1' ]
+      prototype: ran :: Items should contain [ x => x == 'a1' ]
+  Derived.Sync_generic_base_field
+      5.27.2:    THREW BadImageFormatException: An attempt was made to load a program with an incorrect format. (0x8007000B)
+      prototype: ran :: Value should be '5'
+  Derived.Async_generic_base_field
+      5.27.2:    ran :: Value should be '5'
+      prototype: ran :: Value should be '5'
+  Derived.Sync_lambda_generic_base_field
+      5.27.2:    THREW BadImageFormatException: An attempt was made to load a program with an incorrect format. (0x8007000B)
+      prototype: ran :: Should not throw
+  Statics.Other_class_static
+      5.27.2:    ran :: Items should contain [ x => x == Defaults.Expected ]
+      prototype: ran :: Items should contain [ x => x == Defaults.Expected ]
+  Statics.Async_own_static
+      5.27.2:    ran :: N should be 1 | Items should contain [ x => x == 'a1' ]
+      prototype: ran :: N should be 1 | Items should contain [ x => x == 'a1' ]
+  Gen`1.Async_generic_lambda
+      5.27.2:    CRASHED the process (0xC0000005)
+      prototype: ran :: Should not throw
+  Gen`1.Sync_generic_expression
+      5.27.2:    not reached (the process had crashed)
+      prototype: ran :: New List~<T> { value } should contain [ x => Equals(x, 'v') ]
+  InLambdas.Assertion_inside_lambda
+      5.27.2:    ran :: List should contain [ x => x == local && x == 'a1' ]
+      prototype: ran :: List should contain [ x => x == 'a1' && x == 'a1' ]
+  InLambdas.Nested_lambda_inside_lambda
+      5.27.2:    ran :: Should not throw
+      prototype: ran :: Should not throw
+=== ReleaseDebugPlus: ILVerify errors the weave added: 5.27.2 10, prototype 2
+    prototype IL: Gen`1/<Async_generic_lambda>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 136, Found address of 'Gen`1+<Async_generic_lambda>d__2<T0>', Expected readonly address of 'Gen`1+<Async_generic_lambda>d__2')
+    prototype IL: Gen`1/<Async_generic_lambda>d__2.MoveNext: StackUnexpected: Unexpected type on the stack. (Offset 141, Found ref 'Gen`1<!0>', Expected ref 'Gen`1<T0>')
+  Pc.Async_lambda_this_only
+      5.27.2:    ran :: Should throw InvalidOperationException | Exception should not be null | (first, second) should not be (null, null)
+      prototype: ran :: Should throw InvalidOperationException | Exception should not be null | (first, second) should not be (null, null)
+  Pc.Async_lambda_with_local
+      5.27.2:    ran :: Should throw OperationCanceledException
+      prototype: ran :: Should throw OperationCanceledException
+  Pc.Async_statement_names_parameter
+      5.27.2:    ran :: Third name should be 'third' | First name should be 'first' | Count should be 7
+      prototype: ran :: Third name should be 'third' | First name should be 'first' | Count should be 7
+  Pc.Sync_lambda_and_statement
+      5.27.2:    ran :: Should throw InvalidOperationException | Third name should be 'third'
+      prototype: ran :: Should throw InvalidOperationException | Third name should be 'third'
+  Pc.Sync_expression_tree
+      5.27.2:    ran :: Items should contain [ x => x == 'a1' && first.Name == "first" ]
+      prototype: ran :: Items should contain [ x => x == 'a1' && 'first' == "first" ]
+  Pc.Async_expression_tree
+      5.27.2:    ran :: Items should contain [ x => x != third.Name ]
+      prototype: ran :: Items should contain [ x => x != 'third' ]
+  Receivers.Lambda_reads_another_objects_field
+      5.27.2:    ran :: Should not throw
+      prototype: ran :: Should not throw
+  Receivers.Async_another_objects_field
+      5.27.2:    ran :: Other id should be '42' | Count should be 3
+      prototype: ran :: Other id should be '42' | Count should be 3
+  Receivers.Static_parameters_field
+      5.27.2:    ran :: Foo id should be '42'
+      prototype: ran :: Foo id should be '42'
+  Receivers.Expression_tree_static_field
+      5.27.2:    ran :: Items should contain [ x => x == 'a1' ]
+      prototype: ran :: Items should contain [ x => x == 'a1' ]
+  Derived.Sync_generic_base_field
+      5.27.2:    THREW BadImageFormatException: An attempt was made to load a program with an incorrect format. (0x8007000B)
+      prototype: ran :: Value should be '5'
+  Derived.Async_generic_base_field
+      5.27.2:    ran :: Value should be '5'
+      prototype: ran :: Value should be '5'
+  Derived.Sync_lambda_generic_base_field
+      5.27.2:    THREW BadImageFormatException: An attempt was made to load a program with an incorrect format. (0x8007000B)
+      prototype: ran :: Should not throw
+  Statics.Other_class_static
+      5.27.2:    ran :: Items should contain [ x => x == Defaults.Expected ]
+      prototype: ran :: Items should contain [ x => x == Defaults.Expected ]
+  Statics.Async_own_static
+      5.27.2:    ran :: N should be 1 | Items should contain [ x => x == 'a1' ]
+      prototype: ran :: N should be 1 | Items should contain [ x => x == 'a1' ]
+  Gen`1.Async_generic_lambda
+      5.27.2:    CRASHED the process (0xC0000005)
+      prototype: ran :: Should not throw
+  Gen`1.Sync_generic_expression
+      5.27.2:    not reached (the process had crashed)
+      prototype: ran :: New List~<T> { value } should contain [ x => Equals(x, 'v') ]
+  InLambdas.Assertion_inside_lambda
+      5.27.2:    ran :: List should contain [ x => x == local && x == 'a1' ]
+      prototype: ran :: List should contain [ x => x == 'a1' && x == 'a1' ]
+  InLambdas.Nested_lambda_inside_lambda
+      5.27.2:    ran :: Should not throw
+      prototype: ran :: Should not throw

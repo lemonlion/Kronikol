@@ -1,0 +1,5 @@
+Test run for C:\Code\Kronikol-213r\tests\Kronikol.Tests.StepTracking\bin\Debug\net10.0\Kronikol.Tests.StepTracking.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+Results File: C:\Code\Kronikol-213r\plans\CAPTURED_FIELD_VALUES_PLAN.harness\results\steptracking-213.trx
+
+Passed!  - Failed:     0, Passed:  2237, Skipped:     0, Total:  2237, Duration: 3 m 7 s - Kronikol.Tests.StepTracking.dll (net10.0)

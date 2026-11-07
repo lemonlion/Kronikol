@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.32.1] - 2026-11-07
+
+The patch part moves (5.32.0 to 5.32.1): each change is a bug fix in which object the assertion weaver reads a field's value off for a note, with nothing new to call (#213, `plans/CAPTURED_FIELD_VALUES_PLAN.md`).
+
+### Fixed
+
+- **An assertion whose lambda uses a primary constructor's parameter could end the test process.** A class keeps such a parameter in a field, and the weave read that field off `ldarg.0`, which in an `async` method is the state machine and in a lambda that also captures a local is the closure. So the note took whatever lay at that offset of another object, as in `await Should.ThrowAsync<InvalidOperationException>(() => third.Run(...))` in a class declared `class Steps(Harness first, Harness second, Harness third)`. Where those bytes were not a reference, the process died with an access violation (`0xC0000005`), with no result for any test in it and no report. Which build crashed depended on the state machine's layout: the issue's own second test passed in Release and crashed in Debug, which weaves an awaited assertion since 5.26.1, and its first test crashed in Release. Elsewhere the values recorded null, the test class's own instance or another object, and a parameter of a value type read as a number that changed from run to run. The weave now reads the parameter off the instance, through the state machine's or the closure's `<>4__this`, in Debug and in Release, through Shouldly's lambdas and through FluentAssertions' after `.Should()`.
+- **A field read off another object is no longer also read off the test class.** In `new[] { 2 }.Should().Contain(x => x == other._id)`, `Should.NotThrow(() => GC.KeepAlive(other._id))` and `2.ShouldBe(other._id)`, with `other` another instance of the test class, the values could also hold this instance's `_id`, depending on the build. No label used that value.
+- **A field read where two paths of the code meet is not taken for a field of the test class.** In `2.ShouldBe((_parent ?? this)._depth)` the weave took the instruction before the read for its object, so the values held this instance's `_depth` whichever object the code read it off. Such a value is left out now.
+- **One check where the weave emits its loads.** Whichever way a value was captured, the weave checks each field against the object it reads it off before it emits the read, and a value that fails is left out of the note and is not carried across an `await`.
+
+### Changed
+
+- An awaited statement that names a primary constructor's parameter draws its value, as an ordinary field's does: `(await GetParameter()) should be 'Harness(expected)'` where the note drew `... should be expected`.
+- An expression tree's primary-constructor parameter draws its value, and so does a member read through it: `x == 'Harness(expected)'` for `x == expected`, `'first' == "first"` for `first.Name == "first"`, and in a generic class `Equals(x, 'v')` for `Equals(x, value)`.
+- An expression tree inside a lambda that the weave weaves as a method of its own draws the closure's own field: `x == 'a1' && x == 'a1'` where the note drew `x == local && x == 'a1'`.
+- A parameter of a value type draws its own number: `GC.KeepAlive('7')` where the note drew whatever lay at the field's offset.
+
+**Behaviour changes:** the labels above show a value where they showed the name as written, or a wrong value, and a value that was a crash is now the right one. Report output moves only there, so golden pins do not, and the Kronikol4J ledger has the entry.
+
 ## [5.32.0] - 2026-11-07
 
 The minor part moves (5.31.2 to 5.32.0): a new option, `TestTrackingMessageHandlerOptions.TestDouble`, which says what answers a tracking handler's calls. Its default keeps the behaviour of 5.31.2, and a new option is a minor bump all the same. It closes #219 (`plans/WHAT_ANSWERS_PLAN.md` R2).
