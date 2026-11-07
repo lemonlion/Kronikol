@@ -7,14 +7,15 @@ into the repository. `tidy.py` replaces that directory's path with `<scratch>` i
 
 | Folder | What it shows | Results |
 |---|---|---|
-| `p1-forwarders/` | The issue's two forwarders (`Onward`, verbatim from #219, and `SendingThrough`, built from its description) and the same shapes over a stub and over TestServer, each tracked by the released handler: what it writes as `testDouble`, the `traceparent` the server got, whether the transport started a span, and the span the call's response names. `run.sh` then runs `query parties` on the report, with the `query.cs` the run wrote beside it. | `results-5.27.2.txt` |
+| `p1-forwarders/` | The issue's two forwarders (`Onward`, verbatim from #219, and `SendingThrough`, built from its description) and the same shapes over a stub and over TestServer, each tracked by the released handler: what it writes as `testDouble`, the `traceparent` the server got, whether the transport started a span, and the span the call's response names. `run.sh` then runs `query parties` on the report, with the `query.cs` the run wrote beside it. | `results-5.27.2.txt`, `results-5.31.1.txt` |
 | `p2-follow/` | The walk section 5.1 proposes, as a copy outside Kronikol, beside today's walk, over 22 shapes: the issue's, plain transports, stubs, Moq, RichardSzalay.MockHttp with and without a fallback client, JustEat's interceptor, routers, a handler that holds itself, a lambda forwarder and one through `IHttpClientFactory`. Then the forwarded socket calls sent with no `traceparent` written first, to see what the transport writes and which request the response names. Then what each walk costs per call. | `results.txt` |
-| `p3-own-spans/` | `CallOwnSpanThroughTheHandlerTests.Calls_a_host_makes_at_once_each_open_the_spans_of_their_own_call` (4.26.5) on the released handler, with each forwarder between it and the socket transport: how many spans each call's internal-flow popup holds. | `results-5.27.2.txt` |
-| `prototype/` | `r1-walk.patch`: a prototype of section 5.1 on `753f17f9` (`HandlerChain`, and the handler reading its two answers from it and the transport's span from `response.RequestMessage`). Research, not R1: it was written before any fact, which R1 may not do. `run.sh` runs P1 and P3 against a tree with the patch applied; `facts-prototype.txt` is the run of the 297 existing facts nearest the change on that tree. | `results-prototype.txt`, `facts-prototype.txt` |
+| `p3-own-spans/` | `CallOwnSpanThroughTheHandlerTests.Calls_a_host_makes_at_once_each_open_the_spans_of_their_own_call` (4.26.5) on the released handler, with each forwarder between it and the socket transport: how many spans each call's internal-flow popup holds. | `results-5.27.2.txt`, `results-5.31.1.txt` |
+| `prototype/` | `r1-walk.patch`: a prototype of section 5.1 on `753f17f9`, which also applies to `896ddad3` (5.31.1), each hunk three lines up (`HandlerChain`, and the handler reading its two answers from it and the transport's span from `response.RequestMessage`). Research, not R1: it was written before any fact, which R1 may not do. `run.sh` runs P1 and P3 against a tree with the patch applied; `facts-prototype.txt` is the run of the 297 existing facts nearest the change on that tree. | `results-prototype.txt`, `facts-prototype.txt` |
 
 To run them again:
 
 ```bash
+# each probe names the release it runs on (#:package Kronikol@5.27.2); edit that line to run another
 p1-forwarders/run.sh <reports dir> > p1-forwarders/results-5.27.2.txt
 (cd p2-follow && dotnet run --file follow.cs > results.txt)
 (cd p3-own-spans && dotnet run --file own-spans.cs > results-5.27.2.txt)
@@ -25,3 +26,8 @@ python tidy.py <results file> <scratch dir>
 
 The timings in `p2-follow/results.txt` were taken while other sessions ran builds on the same machine, so read them
 for their order of magnitude only.
+
+P3's span counts vary from run to run: in five more runs on each of 5.27.2 and 5.31.1 (2026-11-07), a call behind
+`Onward` opened 6 spans (once 5) and one behind `SendingThrough` 6, 5 or 4, as one or two transport spans of other
+calls fell in or out of its popup. Each forwarded popup held both other calls' service spans in every run, and each
+direct call its own 2 spans.

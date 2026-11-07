@@ -1,29 +1,31 @@
 # What answers a tracked call: follow the call past a forwarder, and let a handler say (#219)
 
-**Written:** 2026-10-29, kronikol-07, at `753f17f9` (5.27.2), and moved onto `54e8ee82` (5.27.5; 5.27.3 to 5.27.5
-changed none of the code or plan lines it cites) · **Status:** a draft, not green-lit. Nothing in `src/` is changed; a
+**Written:** 2026-10-29, kronikol-07, at `753f17f9` (5.27.2), and moved onto `54e8ee82` (5.27.5). Checked again on
+2026-11-07 and moved onto `896ddad3` (5.31.1): its claims hold there, its probes answer as before on the published
+5.31.1, and its handler citations are three lines higher, as 5.30.2 shortened the handler above the walk (section 11)
+· **Status:** a draft, not green-lit. Nothing in `src/` is changed; a
 prototype of R1 is a patch in the harness. · **Issue:** #219, open, filed by the owner on 2026-10-28 on 5.17.0. ·
 **Harness:** [`WHAT_ANSWERS_PLAN.harness/`](WHAT_ANSWERS_PLAN.harness/README.md), every probe re-runnable.
 
-Code citations hold at every commit from `753f17f9` to `7d06fd92` (5.27.7), checked again there; wiki citations are to
-the wiki's `origin/master` at `2c545b0`; Kronikol4J citations are to its `main` at `77811b4`.
+Code citations are to `896ddad3` (5.31.1), checked there; wiki citations are to the wiki's `origin/master` at
+`f73bdd6`; Kronikol4J citations are to its `main` at `07bdba4`.
 
 ---
 
 ## 0. Summary
 
 **The cause.** `TestTrackingMessageHandler` answers two questions about every call from one walk of its chain,
-`EndOfChain` (`src/Kronikol/Tracking/TestTrackingMessageHandler.cs:409-415`): does the transport write the call's
+`EndOfChain` (`src/Kronikol/Tracking/TestTrackingMessageHandler.cs:406-412`): does the transport write the call's
 `traceparent` (since 4.14.3), and did a test double answer the call (since 5.16.0). The walk follows
 `DelegatingHandler.InnerHandler` and stops at the first handler that is not a `DelegatingHandler`, which it reads as
 where the call ends. A handler that hands the call on another way, through an `HttpMessageInvoker` or an `HttpClient`
 it holds, is read as the end. Both answers then go wrong:
 
 - **The mark.** Any end the handler does not know as a transport is named as the double that answered
-  (`:424-429`). This breaks the field's own contract: a capturer writes `testDouble` only when it saw a double answer.
+  (`:421-426`). This breaks the field's own contract: a capturer writes `testDouble` only when it saw a double answer.
   The handler never sees an answer, only a type it does not know.
 - **The trace context.** An end that is no socket transport makes the handler write the `traceparent` itself, naming
-  the caller's span (`:178-187`). The transport then leaves it alone, so the next host's spans hang under the caller's
+  the caller's span (`:175-184`). The transport then leaves it alone, so the next host's spans hang under the caller's
   request instead of under the call. The handler's own comment says this breaks Application Insights' dependency
   correlation. The call's response then names the caller's span too, so every call a host makes under one request
   opens that request's whole internal flow. 4.26.5 fixed that fault for a direct transport.
@@ -32,13 +34,14 @@ The issue reports the first. The second is unreported and comes from the same wa
 mark has one input, the chain, so the test or library that knows what answers (a stub on a socket, an app hosted in
 process as a stub) cannot say.
 
-**Measured on 5.27.2** (P1, P3):
+**Measured on 5.27.2, and again on 5.31.1** (P1, P3):
 
 - Every call through either of the issue's forwarders is marked with the forwarder's name, wherever it goes. A real
   service on a socket and an app hosted on TestServer read as `double`, `observed`, and a stub behind `Onward` reads as
   `Onward`.
 - Behind either forwarder, a call over a socket sends the caller's span while the transport has started its own.
-- Each of three calls a host makes at once opens a popup of 6 spans, all three calls' work, where 2 are its own.
+- Each of three calls a host makes at once opens a popup of up to 6 spans holding all three calls' work, where 2
+  are its own.
 
 **The suggestion in the issue** (a `TestDouble` option: unset reads the chain, a name marks every call, empty marks
 none) is the right fix for what no walk can see, and becomes R2. On its own it does not reach the cause:
@@ -92,8 +95,9 @@ The issue also says no call to WireMock can be marked, since the mark is set ins
 It suggests `string? TestDouble` on the handler's options (`null` reads the chain, a name marks every call, an empty
 string marks none), "or a resolver given the request, if per-call matters".
 
-The handler has not changed since 5.16.0 (`git log v5.16.0..54e8ee82` on the handler and its options is empty), so
-5.17.0, 5.27.2 (where the probes ran) and 5.27.5 behave alike.
+The walk, the mark and the trace context have not changed since 5.16.0. `git log v5.16.0..896ddad3` on the handler and
+its options gives 5.30.2, 5.31.0 and 5.31.1, which changed only how the handler reads the step type. So 5.17.0 behaves
+as 5.27.2 and 5.31.1 do, where the probes ran.
 
 Three open siblings explain why the library forwards at all:
 
@@ -108,7 +112,8 @@ None is a prerequisite here. Forwarders are an ordinary .NET shape, written by s
 
 ## 2. What happens, measured
 
-**P1** (`p1-forwarders/results-5.27.2.txt`). Each shape is tracked by the released handler under a caller's span, as a
+**P1** (`p1-forwarders/results-5.27.2.txt`; `results-5.31.1.txt` gives every row the same).
+Each shape is tracked by the released handler under a caller's span, as a
 host serving a request makes its calls. The socket service is Kestrel on a free loopback port; the in-process one is
 the same endpoint on TestServer; the factory client is what `WebApplicationFactory.CreateClient()` builds (its redirect
 and cookie handlers over TestServer's handler).
@@ -131,7 +136,7 @@ and the two on TestServer, and the stub behind `Onward`, a double under the forw
 `service.json` gives each of them `doubleCalls: 1`, and its hashed `behaviour.parties` carries each party's kind
 (`src/Kronikol/Reports/ServiceCardWriter.cs:135-147`).
 
-**P3** (`p3-own-spans/results-5.27.2.txt`) runs the repository's own fact for 4.26.5,
+**P3** (`p3-own-spans/results-5.27.2.txt`, `results-5.31.1.txt`) runs the repository's own fact for 4.26.5,
 `CallOwnSpanThroughTheHandlerTests.Calls_a_host_makes_at_once_each_open_the_spans_of_their_own_call`, on the released
 handler with a forwarder between it and the socket transport. The host makes three calls at once under its request
 span:
@@ -140,7 +145,11 @@ span:
 |---|---|
 | nothing | 2 spans: its transport's and its service's work |
 | `Onward` | 6 spans: all three transports' and all three services' work |
-| `SendingThrough` | 6 spans, the same |
+| `SendingThrough` | 4 to 6 spans: all three services' work, and two or three transports' |
+
+The counts behind a forwarder vary from run to run, on 5.27.2 and 5.31.1 alike, as other calls' transport spans fall in
+or out of a popup (five more runs on each, in the harness README; a call behind `Onward` once opened 5). In every run
+each forwarded popup held both other calls' service work, and each direct call its own 2 spans.
 
 ---
 
@@ -150,9 +159,9 @@ span:
 
 | Release | What the walk decides | Where |
 |---|---|---|
-| 4.14.3 (`f9c67188`, 2026-10-08, `GRPC_IDENTITY_PROPAGATION_PLAN.md` R3) | Whether the transport writes the `traceparent` itself: `SocketsHttpHandler`, and `HttpClientHandler` on it, run the framework's DiagnosticsHandler; TestServer's in-memory handler does not | `TransportPropagatesTraceContext`, `:406` |
-| 4.26.5 (`b5806ae9`, 2026-10-17) | Nothing new, but relies on the first: the response names the span the transport put in that `traceparent`, so each call a host makes keeps a span of its own | `TransportSpan`, `:361-373`; `InternalFlowSegmentBuilder.cs:224-230`, `OwnSpans` `:706-731` |
-| 5.16.0 (`15a95d4c`, 2026-10-28, #190 R3) | Whether a double answered: the end's type name when it is no transport the handler knows | `EndOfChain` `:409-415`, `AnsweringTestDouble` `:424-429` |
+| 4.14.3 (`f9c67188`, 2026-10-08, `GRPC_IDENTITY_PROPAGATION_PLAN.md` R3) | Whether the transport writes the `traceparent` itself: `SocketsHttpHandler`, and `HttpClientHandler` on it, run the framework's DiagnosticsHandler; TestServer's in-memory handler does not | `TransportPropagatesTraceContext`, `:403` |
+| 4.26.5 (`b5806ae9`, 2026-10-17) | Nothing new, but relies on the first: the response names the span the transport put in that `traceparent`, so each call a host makes keeps a span of its own | `TransportSpan`, `:358-370`; `InternalFlowSegmentBuilder.cs:224-230`, `OwnSpans` `:706-734` |
+| 5.16.0 (`15a95d4c`, 2026-10-28, #190 R3) | Whether a double answered: the end's type name when it is no transport the handler knows | `EndOfChain` `:406-412`, `AnsweringTestDouble` `:421-426` |
 
 ### 3.2 The walk reads the chain's shape, not where the call goes
 
@@ -163,8 +172,8 @@ for the one reason:
 
 - **The mark.** "Not a transport I know" becomes "a double answered", and the forwarder is named.
 - **The trace context.** "Not a socket transport" makes the handler write the `traceparent` with the caller's span
-  (`:178-187`). The transport's DiagnosticsHandler leaves a `traceparent` it finds: in P1 it started its span and the
-  server still got the caller's. `TransportSpan` then sees a header that was there before the send (`:291`, `:369`),
+  (`:175-184`). The transport's DiagnosticsHandler leaves a `traceparent` it finds: in P1 it started its span and the
+  server still got the caller's. `TransportSpan` then sees a header that was there before the send (`:288`, `:366`),
   so the response names the caller's span too, which is what P3 counts.
 
 ### 3.3 The rule claims what it did not see
@@ -187,7 +196,7 @@ The gap was known and recorded as by design: "A transport of your own at the end
 
 ### 3.4 Nobody who knows can say
 
-The mark has one input, the chain (`:262`). The test or the library that wired the chain knows what a walk can never
+The mark has one input, the chain (`:259`). The test or the library that wired the chain knows what a walk can never
 see: a stub on a socket (WireMock, a container), an app hosted on TestServer as a stub, or a forwarder that finds its
 way onward only when the call comes.
 
@@ -272,7 +281,7 @@ The walk runs once per call, at the top of `SendAsync` after the excluded-host c
 
 ### 5.3 The transport's span from the request the transport sent
 
-`TransportSpan` (`:367-373`) reads the `traceparent` the transport added from the request the handler was given. A
+`TransportSpan` (`:364-370`) reads the `traceparent` the transport added from the request the handler was given. A
 forwarder that sends a copy hands the transport another request, so the header lands on the copy: in P2, the copy
 carries the transport's span and the original does not.
 
@@ -315,6 +324,8 @@ On P1's and P3's shapes the prototype gives (`prototype/results-prototype.txt`):
 - **A forwarder that finds its way onward only when the call comes**: one that asks an `IHttpClientFactory` or an
   `IServiceProvider`, uses a static, or sends through a delegate. It still reads as the double that answered (P2's last
   row). Following delegates was not taken (5.8 d). R2's empty value covers it, and the wiki names it.
+- **A handler that keeps its ways onward in an array or a collection** (a router keyed by host): only fields declared
+  as a handler or an invoker are followed, so it reads as the double that answered, as today (5.8 k).
 - **A stub that holds a transport it never uses** reads as handing calls to it: no mark, and the `traceparent` is left
   to a transport that never runs. The stub ignores the header, so the only loss is the mark, in the safe direction.
 - **MockHttp with a fallback client** stays marked: the fallback client is held by an object of MockHttp's own (its
@@ -337,7 +348,7 @@ public string? TestDouble { get; set; }
 
 - **Semantics.** `null` uses R1's walk. Blank marks nothing, as a blank mark already marks nothing in a capture
   (`src/Kronikol/Ingestion/InteractionRecord.cs:359`). Any other value is written as given, on both halves and on a
-  send that threw, where the walk's mark goes today (`:286`, `:326`, `:355`).
+  send that threw, where the walk's mark goes today (`:283`, `:323`, `:352`).
 - **It says nothing about the trace context**, which stays R1's.
 - **It reaches every handler made from the options.** That covers `new TestTrackingMessageHandler(options)`,
   `TrackDependenciesForDiagrams` (every client of the host, so coarse by design; a value per client or per request
@@ -357,6 +368,8 @@ public string? TestDouble { get; set; }
   - `src/Kronikol/TestTrackingHttpClientFactory.cs:15`;
   - `src/Kronikol/Tracking/TrackingHttpMessageHandlerBuilderFilter.cs:23`;
   - `src/Kronikol/WebApplicationFactoryExtensions.cs:32-33`.
+- **History's call lines.** `InteractionShape` reads no `testDouble`, so no fingerprint moves and its rule stays
+  (`tests/Kronikol.Tests/History/HistoryGuard.cs`).
 - **The other trackers.** Only this handler walks a chain or decides a `traceparent` from one (READ: grep of `src/` for
   `is SocketsHttpHandler`, `is HttpClientHandler` and `traceparent`).
 - **Kronikol4J.** The port writes no `testDouble`, and its OkHttp interceptor writes a `traceparent` by its
@@ -402,6 +415,10 @@ i. **Spotting WireMock by port, host or headers.** "A port proves nothing" (`PAR
 j. **Caching the walk per handler.** A chain of delegating handlers cannot change after its first send, but a
    forwarder's fields can. A walk through one costs a few hundred nanoseconds (P2), so it runs per call.
 
+k. **Following arrays and collections of handlers.** An array could be read without running code, but a collection is
+   read only by running its code, and the walk runs none (5.1). Neither of the issue's shapes needs it, and R2's empty
+   value covers a router that reaches a transport. It can follow when a suite shows one.
+
 ---
 
 ## 6. Releases
@@ -420,7 +437,8 @@ the repository's rule asks.
 - `src/Kronikol/Tracking/TestTrackingMessageHandler.cs`: the two answers from one walk, and `TransportSpan` reading
   `response.RequestMessage`. The private doc comments of the removed methods go with them.
 
-**Facts, each red on today's code before its own code is written** (P1 and P3 show the red behaviour on 5.27.2).
+**Facts, each red on today's code before its own code is written** (P1 and P3 show the red behaviour on 5.27.2
+and 5.31.1).
 Classes that read the request log join `[Collection("DiagramsFetcher")]`, as `HandlerTestDoubleTests` does. Servers
 bind free loopback ports only.
 
@@ -462,8 +480,8 @@ bind free loopback ports only.
 
 16. `A_call_a_forwarder_hands_to_a_socket_names_the_span_its_transport_started`, over `Onward` and `SendingThrough`.
     Red: the response names the host's span.
-17. `Calls_a_host_makes_at_once_through_a_forwarder_each_open_the_spans_of_their_own_call`, P3's shape. Red: 6 spans
-    each.
+17. `Calls_a_host_makes_at_once_through_a_forwarder_each_open_the_spans_of_their_own_call`, P3's shape. Red: each
+    holds all three services' work. It asserts which services a popup holds, never a count, which varies (2).
 
 **Playwright** (CLAUDE.md: what a reader sees). `ArrowLinkOpensPopupTests`:
 
@@ -473,7 +491,7 @@ bind free loopback ports only.
     - The calls go through the real handler and a forwarder to a socket server, as `CallOwnSpanThroughTheHandlerTests`
       makes them, from a new `ReportTestHelper` method.
     - Each arrow is clicked by a dispatched event and its popup is read: 2 spans and its own service only.
-    - Red on 5.27.2: each popup holds all three.
+    - Red on 5.27.2 and 5.31.1: each popup holds all three services' work.
     - It keeps the suite's rules: `PollingInterval = 200`, `.First` on shared selectors, no forced click, no network
       mock.
 
@@ -492,14 +510,14 @@ bind free loopback ports only.
 
 Run the full core and E2E suites, as each release does.
 
-**Docs** (wiki at `2c545b0`):
+**Docs** (wiki at `f73bdd6`):
 
 - `Tracking-Dependencies.md:98-111`. The handler follows a call past a handler that hands it on: one that holds another
   handler, an `HttpMessageInvoker` or an `HttpClient`. Say what it cannot follow (a factory, a service provider, a
-  static, a delegate), what reads as what, and that before R1 every call through such a handler was marked with its
-  name.
+  static, a delegate, a collection), what reads as what, and that before R1 every call through such a handler was
+  marked with its name.
 - `Internal-Flow-Tracking.md:15`. A call handed to a socket through a forwarder gets the transport's span too.
-- `Service-Card.md:160-161`. Add R1 to the upgrades that move the hash once: a party reached through a forwarder
+- `Service-Card.md:160-163`. Add R1 to the upgrades that move the hash once: a party reached through a forwarder
   changes kind.
 - `CHANGELOG.md`, with a behaviour change paragraph. Calls through a forwarder to a transport lose their mark, and one to
   a stub takes the stub's name. Parties read `double` through them may read `unknown`. `doubleCalls` and the card's
@@ -620,13 +638,13 @@ Run the full core and E2E suites, as each release does.
 
 | # | Assumption | Basis | If wrong |
 |---|---|---|---|
-| A1 | `HttpMessageInvoker` keeps its handler in a field named `_handler` | SOURCE: dotnet/runtime `v8.0.0`, `v9.0.0`, `v10.0.0` and `main` (`HttpMessageInvoker.cs:14`), corefx `release/2.1` (`:16`); RUN: P2 reads it on 10.0.11 | The accessor throws `MissingFieldException`, caught: the invoker is an end of unknown kind, so no mark and the handler writes the `traceparent`, today's reading of a forwarder. Fact 11 fails on the first CI run of that runtime |
+| A1 | `HttpMessageInvoker` keeps its handler in a field named `_handler` | SOURCE: dotnet/runtime `v8.0.0`, `v9.0.0`, `v10.0.0` and `main` (`HttpMessageInvoker.cs:14`, read again 2026-11-07), corefx `release/2.1` (`:16`); RUN: P2 reads it on 10.0.11 | The accessor throws `MissingFieldException`, caught: the invoker is an end of unknown kind, so no mark and the handler writes the `traceparent`, today's reading of a forwarder. Fact 11 fails on the first CI run of that runtime |
 | A2 | A socket transport names the request it sent in `response.RequestMessage` | RUN: P2 (the copy, carrying the transport's span) | A copy forwarder's response names the caller's span, as today; nothing else changes |
 | A3 | DiagnosticsHandler leaves a `traceparent` the request carries | RUN: P1 (the transport started a span; the server got the caller's) | The trace context defect would not exist, and 5.2's `traceparent` column would be moot |
 | A4 | A handler that holds a handler or an invoker hands calls to it | DESIGN, a heuristic; P2 shows where it is wrong (a stub holding a transport it never uses) | That stub loses its mark, the safe direction. A forwarder holding its way onward in any other form keeps today's reading |
 | A5 | The walk costs too little to matter | RUN: P2, 23 ns on a chain that ends in a transport and 320 to 615 ns through a forwarder or to a stub, timed while other sessions built | It could be cached per handler for delegating chains, which cannot change after the first send |
 | A6 | The issue's shapes are as P1 builds them | ISSUE: `Onward` verbatim; `SendingThrough` from "sends a copy of each request through that client" | A copy without the headers changes nothing: the transport writes its `traceparent` on the copy either way |
-| A7 | No Kronikol-made chain, example or fixture ends in a forwarder | READ (5.7) | A golden pin moves in R1's full run, and is then explained there |
+| A7 | No Kronikol-made chain, example or fixture ends in a forwarder | READ (5.7), at `54e8ee82` and again at `896ddad3` | A golden pin moves in R1's full run, and is then explained there |
 | A8 | Nothing else reads the walk | READ: `EndOfChain` and its two callers are private | none |
 
 ---
@@ -653,3 +671,17 @@ Run the full core and E2E suites, as each release does.
     each. They changed no file cited here but `CHANGELOG.md`, now cited by entry rather than by line, and rows of
     `ROADMAP.md` and `PLANS_STATUS.md` that the plan does not cite. Its releases name no number until they are pushed
     (section 6).
+- 2026-11-07, kronikol-07, at the owner's request to make sure the plan is "fully complete, accurate", with any deep
+  dive that might change it:
+  - Moved the branch onto `896ddad3` (5.31.1), 41 commits on. Of the code the plan cites only the handler changed:
+    5.30.2, 5.31.0 and 5.31.1 changed how it reads the step type, and 5.30.2's three fewer fields put every handler
+    citation three lines higher. `OwnSpans` ends at `:734`, where the plan said `:731`. On the wiki, now `f73bdd6`,
+    only `Service-Card.md`'s list item grew, to `:160-163`; on Kronikol4J, now `07bdba4`, both citations hold.
+  - Ran P1 and P3 on the published 5.31.1. P1 answers every row as on 5.27.2. P3's counts vary from run to run on both
+    releases (section 2), which the one run of 2026-10-29 did not show, so fact 17 asserts services, not a count.
+  - Read again: `_handler` on dotnet/runtime `main` (A1); the core package targets net10.0, where `UnsafeAccessor`
+    exists; `r1-walk.patch` applies to `896ddad3`; every reader of the mark, among them the overview's and the call
+    graph's counts, and none of history's call lines (5.7); no example, fixture or Kronikol-made chain with a
+    forwarder (A7); no code that copies the options member by member, so R2's option reaches every record copy.
+    #219, #157, #207 and #208 are open, with no comment since.
+  - Added 5.5's collection limit, 5.8 k and 5.7's history line.

@@ -1,0 +1,16 @@
+Kronikol 5.31.1.0, runtime 10.0.11
+
+SocketsHttpHandler
+  /service-0/health      its popup: 2 spans, 0 of the other calls' work: server /service-0/health, transport
+  /service-1/health      its popup: 2 spans, 0 of the other calls' work: server /service-1/health, transport
+  /service-2/health      its popup: 2 spans, 0 of the other calls' work: server /service-2/health, transport
+
+Onward over sockets
+  /service-0/health      its popup: 6 spans, 2 of the other calls' work: server /service-0/health, server /service-1/health, server /service-2/health, transport, transport, transport
+  /service-1/health      its popup: 6 spans, 2 of the other calls' work: server /service-0/health, server /service-1/health, server /service-2/health, transport, transport, transport
+  /service-2/health      its popup: 6 spans, 2 of the other calls' work: server /service-0/health, server /service-1/health, server /service-2/health, transport, transport, transport
+
+SendingThrough a socket client
+  /service-0/health      its popup: 6 spans, 2 of the other calls' work: server /service-0/health, server /service-1/health, server /service-2/health, transport, transport, transport
+  /service-1/health      its popup: 5 spans, 2 of the other calls' work: server /service-0/health, server /service-1/health, server /service-2/health, transport, transport
+  /service-2/health      its popup: 5 spans, 2 of the other calls' work: server /service-0/health, server /service-1/health, server /service-2/health, transport, transport
